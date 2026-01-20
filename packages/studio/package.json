@@ -1,0 +1,20 @@
+{
+  "name": "@wire-dsl/studio",
+  "version": "0.0.1",
+  "description": "WireDSL Studio - Visual WYSIWYG editor (Roadmap)",
+  "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "dev": "echo 'Studio in development'",
+    "build": "echo 'Studio in development'",
+    "test": "echo 'Studio in development'"
+  },
+  "dependencies": {
+    "@wire-dsl/core": "workspace:*"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

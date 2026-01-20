@@ -1,0 +1,51 @@
+{
+  "name": "wire-dsl-monorepo",
+  "version": "0.0.1",
+  "description": "WireDSL - Wireframes as Code. Declarative wireframing with AI-powered generation.",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/core",
+    "packages/cli",
+    "packages/web",
+    "packages/studio",
+    "packages/ai-backend"
+  ],
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "build:core": "turbo build --filter=@wire-dsl/core",
+    "build:cli": "turbo build --filter=@wire-dsl/cli",
+    "build:web": "turbo build --filter=@wire-dsl/web",
+    "build:studio": "turbo build --filter=@wire-dsl/studio",
+    "build:ai": "turbo build --filter=@wire-dsl/ai-backend",
+    "test": "turbo test",
+    "test:core": "turbo test --filter=@wire-dsl/core",
+    "test:cli": "turbo test --filter=@wire-dsl/cli",
+    "test:web": "turbo test --filter=@wire-dsl/web",
+    "test:studio": "turbo test --filter=@wire-dsl/studio",
+    "test:ai": "turbo test --filter=@wire-dsl/ai-backend",
+    "lint": "turbo lint",
+    "lint:fix": "turbo lint:fix",
+    "format": "prettier --write \"packages/**/*.{ts,tsx,json,md}\"",
+    "type-check": "turbo type-check",
+    "clean": "turbo clean && rm -rf node_modules",
+    "changeset": "changeset",
+    "version": "changeset version",
+    "release": "changeset publish"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.27.0",
+    "@typescript-eslint/eslint-plugin": "^6.16.0",
+    "@typescript-eslint/parser": "^6.16.0",
+    "eslint": "^8.56.0",
+    "prettier": "^3.1.0",
+    "turbo": "^1.11.0",
+    "typescript": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@8.15.0"
+}

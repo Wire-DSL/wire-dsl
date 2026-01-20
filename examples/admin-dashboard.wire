@@ -1,0 +1,54 @@
+project "Admin Dashboard" {
+  tokens density: normal
+
+  screen UsersList {
+    layout split(sidebar: 260, gap: md) {
+      left: sidebar {
+        component SidebarMenu items: ["Users", "Roles", "Permissions", "Audit"]
+      }
+
+      right: stack(gap: md, padding: lg) {
+        component Heading text: "Users"
+
+        layout grid(columns: 12, gap: md) {
+          cell span: 8 {
+            component Input label: "Search user" placeholder: "name, email..."
+          }
+          cell span: 4 align: end {
+            component Button text: "Create user" onClick: goto("UserCreate")
+          }
+        }
+
+        component Table
+          columns: ["Name", "Email", "Status", "Role"]
+          rowsMock: 8
+          onRowClick: goto("UserDetail")
+      }
+    }
+  }
+
+  screen UserDetail {
+    layout stack(gap: md, padding: lg) {
+      component Breadcrumbs items: ["Users", "User detail"]
+      
+      layout grid(columns: 12, gap: md) {
+        cell span: 8 {
+          component Panel title: "Profile" height: 240
+        }
+        cell span: 4 {
+          component Panel title: "Actions" height: 240
+        }
+      }
+
+      component Tabs items: ["Permissions", "Sessions", "Audit log"]
+      component Panel title: "Content" height: 320
+    }
+  }
+
+  screen UserCreate {
+    layout stack(gap: md, padding: lg) {
+      component Heading text: "Create User"
+      component Panel title: "User Form" height: 420
+    }
+  }
+}

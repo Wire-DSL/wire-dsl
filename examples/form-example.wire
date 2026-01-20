@@ -1,0 +1,27 @@
+project "Contact Form" {
+  tokens density: normal
+
+  screen ContactForm {
+    layout stack(gap: md, padding: lg) {
+      component Heading text: "Contact Us"
+      
+      component Input label: "Full Name" placeholder: "John Doe"
+      component Input label: "Email" placeholder: "john@example.com"
+      component Select label: "Topic" options: ["Support", "Sales", "Feedback"]
+      component Textarea label: "Message" rows: 6
+      
+      layout stack(direction: horizontal, gap: sm) {
+        component Button text: "Cancel" variant: secondary
+        component Button text: "Submit" variant: primary onClick: goto("ThankYou")
+      }
+    }
+  }
+
+  screen ThankYou {
+    layout stack(gap: md, padding: xl) {
+      component Heading text: "Thank You!"
+      component Text content: "We'll get back to you soon."
+      component Button text: "Back to Home" onClick: goto("ContactForm")
+    }
+  }
+}

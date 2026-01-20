@@ -1,0 +1,187 @@
+{
+  "irVersion": "1.0",
+  "project": {
+    "id": "proj_admin_dashboard",
+    "name": "Admin Dashboard",
+    "tokens": {
+      "density": "normal",
+      "spacing": "md",
+      "radius": "md",
+      "stroke": "normal",
+      "font": "base"
+    },
+    "screens": [
+      {
+        "id": "UsersList",
+        "name": "Users List",
+        "viewport": { "width": 1280, "height": 720 },
+        "root": { "ref": "node_users_root" }
+      },
+      {
+        "id": "UserDetail",
+        "name": "User Detail",
+        "viewport": { "width": 1280, "height": 720 },
+        "root": { "ref": "node_userdetail_root" }
+      },
+      {
+        "id": "UserCreate",
+        "name": "Create User",
+        "viewport": { "width": 1280, "height": 720 },
+        "root": { "ref": "node_usercreate_root" }
+      }
+    ],
+    "nodes": {
+      "node_users_root": {
+        "id": "node_users_root",
+        "kind": "container",
+        "layout": { "type": "split", "props": { "sidebarWidth": 260, "gap": "md" } },
+        "children": [
+          { "slot": "left", "ref": "node_users_sidebar" },
+          { "slot": "right", "ref": "node_users_main" }
+        ]
+      },
+      "node_users_sidebar": {
+        "id": "node_users_sidebar",
+        "kind": "container",
+        "layout": { "type": "stack", "props": { "direction": "vertical", "gap": "sm" } },
+        "style": { "padding": "md" },
+        "children": [{ "slot": "child", "ref": "cmp_sidebar_menu" }]
+      },
+      "node_users_main": {
+        "id": "node_users_main",
+        "kind": "container",
+        "layout": { "type": "stack", "props": { "direction": "vertical", "gap": "md" } },
+        "style": { "padding": "lg" },
+        "children": [
+          { "slot": "child", "ref": "cmp_heading_users" },
+          { "slot": "child", "ref": "node_users_actions_grid" },
+          { "slot": "child", "ref": "cmp_users_table" }
+        ]
+      },
+      "node_users_actions_grid": {
+        "id": "node_users_actions_grid",
+        "kind": "container",
+        "layout": { "type": "grid", "props": { "columns": 12, "gap": "md" } },
+        "children": [
+          { "slot": "cell", "ref": "cmp_user_search", "grid": { "colSpan": 8 } },
+          { "slot": "cell", "ref": "cmp_create_user", "grid": { "colSpan": 4, "align": "end" } }
+        ]
+      },
+      "cmp_sidebar_menu": {
+        "id": "cmp_sidebar_menu",
+        "kind": "component",
+        "componentType": "SidebarMenu",
+        "props": {
+          "items": [
+            { "label": "Users", "active": true, "action": { "type": "goto", "targetScreenId": "UsersList" } },
+            { "label": "Roles", "active": false },
+            { "label": "Permissions", "active": false },
+            { "label": "Audit", "active": false }
+          ]
+        }
+      },
+      "cmp_heading_users": {
+        "id": "cmp_heading_users",
+        "kind": "component",
+        "componentType": "Heading",
+        "props": { "text": "Users" }
+      },
+      "cmp_user_search": {
+        "id": "cmp_user_search",
+        "kind": "component",
+        "componentType": "Input",
+        "props": { "label": "Search user", "placeholder": "name, email..." }
+      },
+      "cmp_create_user": {
+        "id": "cmp_create_user",
+        "kind": "component",
+        "componentType": "Button",
+        "props": { "text": "Create user", "variant": "primary" },
+        "events": [{ "event": "onClick", "action": { "type": "goto", "targetScreenId": "UserCreate" } }]
+      },
+      "cmp_users_table": {
+        "id": "cmp_users_table",
+        "kind": "component",
+        "componentType": "Table",
+        "props": {
+          "columns": ["Name", "Email", "Status", "Role"],
+          "rowsMock": 8
+        },
+        "events": [{ "event": "onRowClick", "action": { "type": "goto", "targetScreenId": "UserDetail" } }]
+      },
+      "node_userdetail_root": {
+        "id": "node_userdetail_root",
+        "kind": "container",
+        "layout": { "type": "stack", "props": { "direction": "vertical", "gap": "md" } },
+        "style": { "padding": "lg" },
+        "children": [
+          { "slot": "child", "ref": "cmp_breadcrumbs" },
+          { "slot": "child", "ref": "node_detail_grid" },
+          { "slot": "child", "ref": "cmp_tabs" },
+          { "slot": "child", "ref": "cmp_panel_content" }
+        ]
+      },
+      "cmp_breadcrumbs": {
+        "id": "cmp_breadcrumbs",
+        "kind": "component",
+        "componentType": "Breadcrumbs",
+        "props": { "items": ["Users", "User detail"] }
+      },
+      "node_detail_grid": {
+        "id": "node_detail_grid",
+        "kind": "container",
+        "layout": { "type": "grid", "props": { "columns": 12, "gap": "md" } },
+        "children": [
+          { "slot": "cell", "ref": "cmp_panel_profile", "grid": { "colSpan": 8 } },
+          { "slot": "cell", "ref": "cmp_panel_actions", "grid": { "colSpan": 4 } }
+        ]
+      },
+      "cmp_panel_profile": {
+        "id": "cmp_panel_profile",
+        "kind": "component",
+        "componentType": "Panel",
+        "props": { "title": "Profile", "height": { "mode": "fixed", "value": 240 } }
+      },
+      "cmp_panel_actions": {
+        "id": "cmp_panel_actions",
+        "kind": "component",
+        "componentType": "Panel",
+        "props": { "title": "Actions", "height": { "mode": "fixed", "value": 240 } }
+      },
+      "cmp_tabs": {
+        "id": "cmp_tabs",
+        "kind": "component",
+        "componentType": "Tabs",
+        "props": { "items": ["Permissions", "Sessions", "Audit log"], "activeIndex": 0 }
+      },
+      "cmp_panel_content": {
+        "id": "cmp_panel_content",
+        "kind": "component",
+        "componentType": "Panel",
+        "props": { "title": "Content", "height": { "mode": "fixed", "value": 320 } }
+      },
+      "node_usercreate_root": {
+        "id": "node_usercreate_root",
+        "kind": "container",
+        "layout": { "type": "stack", "props": { "direction": "vertical", "gap": "md" } },
+        "style": { "padding": "lg" },
+        "children": [
+          { "slot": "child", "ref": "cmp_heading_create" },
+          { "slot": "child", "ref": "cmp_panel_form" }
+        ]
+      },
+      "cmp_heading_create": {
+        "id": "cmp_heading_create",
+        "kind": "component",
+        "componentType": "Heading",
+        "props": { "text": "Create User" }
+      },
+      "cmp_panel_form": {
+        "id": "cmp_panel_form",
+        "kind": "component",
+        "componentType": "Panel",
+        "props": { "title": "User Form", "height": { "mode": "fixed", "value": 420 } }
+      }
+    }
+  }
+}
