@@ -17,7 +17,7 @@ export interface SVGRenderOptions {
   height?: number;
   theme?: 'light' | 'dark';
   includeLabels?: boolean;
-  screenName?: string;  // Select specific screen by name
+  screenName?: string; // Select specific screen by name
 }
 
 export interface SVGComponent {
@@ -62,7 +62,7 @@ export class SVGRenderer {
   private options: Required<Omit<SVGRenderOptions, 'screenName'>> & { screenName?: string };
   private theme: typeof THEMES.light;
   private selectedScreenName?: string;
-  private renderedNodeIds: Set<string> = new Set();  // Track nodes rendered in current pass
+  private renderedNodeIds: Set<string> = new Set(); // Track nodes rendered in current pass
 
   constructor(ir: IRContract, layout: LayoutResult, options?: SVGRenderOptions) {
     this.ir = ir;
@@ -87,7 +87,7 @@ export class SVGRenderer {
    * Get list of available screens in the project
    */
   getAvailableScreens(): Array<{ name: string; id: string }> {
-    return this.ir.project.screens.map(screen => ({
+    return this.ir.project.screens.map((screen) => ({
       name: screen.name,
       id: screen.id,
     }));
@@ -102,7 +102,7 @@ export class SVGRenderer {
 
     if (this.selectedScreenName) {
       const found = this.ir.project.screens.find(
-        s => s.name.toLowerCase() === this.selectedScreenName!.toLowerCase()
+        (s) => s.name.toLowerCase() === this.selectedScreenName!.toLowerCase()
       );
       if (found) {
         screen = found;
@@ -198,7 +198,7 @@ export class SVGRenderer {
         return this.renderTable(node, pos);
       case 'ChartPlaceholder':
         return this.renderChartPlaceholder(node, pos);
-      
+
       // Text/Content components
       case 'Text':
         return this.renderText(node, pos);
@@ -206,7 +206,7 @@ export class SVGRenderer {
         return this.renderLabel(node, pos);
       case 'Code':
         return this.renderCode(node, pos);
-      
+
       // Form components
       case 'Textarea':
         return this.renderTextarea(node, pos);
@@ -218,7 +218,7 @@ export class SVGRenderer {
         return this.renderRadio(node, pos);
       case 'Toggle':
         return this.renderToggle(node, pos);
-      
+
       // Layout/Structure components
       case 'Sidebar':
         return this.renderSidebar(node, pos);
@@ -226,7 +226,7 @@ export class SVGRenderer {
         return this.renderTabs(node, pos);
       case 'Divider':
         return this.renderDivider(node, pos);
-      
+
       // Feedback/Alert components
       case 'Alert':
         return this.renderAlert(node, pos);
@@ -236,7 +236,7 @@ export class SVGRenderer {
         return this.renderModal(node, pos);
       case 'List':
         return this.renderList(node, pos);
-      
+
       default:
         return this.renderGenericComponent(node, pos);
     }
@@ -334,18 +334,20 @@ export class SVGRenderer {
     const actions = String(node.props.actions || '');
     const user = String(node.props.user || '');
 
-    // Calculate title position: center vertically or at top with subtitle
+    // Calculate title position: center vertically or padded with subtitle
+    const titleLineHeight = 18;
+    const paddingTop = 24; // adjusted top padding
+
     let titleY: number;
-    let subtitleY: number = 0;  // Initialize to avoid usage before assignment
+    let subtitleY: number = 0; // Initialize to avoid usage before assignment
 
     if (subtitle) {
-      // Title at top, subtitle below
-      titleY = pos.y + 16;  // 16px from top
-      subtitleY = pos.y + 34;  // 18px gap between title and subtitle
+      // Title near top with fixed padding; subtitle below with comfortable gap
+      titleY = pos.y + paddingTop;
+      subtitleY = titleY + 20; // gap between title baseline and subtitle baseline
     } else {
       // Center title vertically when no subtitle
-      const contentHeight = 18;  // Approximate height of title text
-      titleY = pos.y + (pos.height - contentHeight) / 2 + 10;
+      titleY = pos.y + pos.height / 2 + titleLineHeight / 2 - 4; // centered with slight upward shift
     }
 
     let svg = `<g>
@@ -375,9 +377,9 @@ export class SVGRenderer {
     if (user) {
       const badgeHeight = 28;
       const badgePaddingX = 12;
-      const badgeX = pos.x + pos.width - 16 - badgePaddingX * 2 - (user.length * 7.5);
+      const badgeX = pos.x + pos.width - 16 - badgePaddingX * 2 - user.length * 7.5;
       const badgeY = pos.y + 12;
-      
+
       svg += `
     <!-- User badge -->
     <rect x="${badgeX}" y="${badgeY}" 
@@ -395,10 +397,13 @@ export class SVGRenderer {
 
     // Actions (as buttons on the right)
     if (actions) {
-      const actionList = actions.split(',').map(a => a.trim()).filter(Boolean);
+      const actionList = actions
+        .split(',')
+        .map((a) => a.trim())
+        .filter(Boolean);
       const buttonWidth = 100;
       const buttonHeight = 32;
-      const buttonStartX = pos.x + pos.width - 16 - (actionList.length * (buttonWidth + 8));
+      const buttonStartX = pos.x + pos.width - 16 - actionList.length * (buttonWidth + 8);
       const buttonY = pos.y + (pos.height - buttonHeight) / 2;
 
       actionList.forEach((action, idx) => {
@@ -426,14 +431,12 @@ export class SVGRenderer {
   private renderTable(node: IRComponentNode, pos: any): string {
     const title = String(node.props.title || '');
     const columnsStr = String(node.props.columns || 'Col1,Col2,Col3');
-    const columns = columnsStr.split(',').map(c => c.trim());
+    const columns = columnsStr.split(',').map((c) => c.trim());
     const rowCount = Number(node.props.rows || 5);
     const mockStr = String(node.props.mock || '');
 
     // Parse mock types, default to "item" if not specified
-    const mockTypes = mockStr 
-      ? mockStr.split(',').map(m => m.trim())
-      : columns.map(() => 'item');
+    const mockTypes = mockStr ? mockStr.split(',').map((m) => m.trim()) : columns.map(() => 'item');
 
     // Ensure we have a mock type for each column (pad with 'item' if needed)
     while (mockTypes.length < columns.length) {
@@ -443,7 +446,7 @@ export class SVGRenderer {
     const headerHeight = 44;
     const rowHeight = 36;
     const colWidth = pos.width / columns.length;
-    
+
     // Generate mock rows based on mock types
     const mockRows: Record<string, string>[] = [];
     for (let rowIdx = 0; rowIdx < rowCount; rowIdx++) {
@@ -491,7 +494,7 @@ export class SVGRenderer {
     // Data rows (render all, don't restrict by height)
     mockRows.forEach((row, rowIdx) => {
       const rowY = headerY + headerHeight + rowIdx * rowHeight;
-      
+
       // Row separator
       svg += `
     <line x1="${pos.x}" y1="${rowY + rowHeight}" x2="${pos.x + pos.width}" y2="${rowY + rowHeight}" 
@@ -723,10 +726,10 @@ export class SVGRenderer {
     const title = String(node.props.title || 'Sidebar');
     const itemsStr = String(node.props.items || '');
     const activeItem = String(node.props.active || '');
-    
+
     let items: string[] = [];
     if (itemsStr) {
-      items = itemsStr.split(',').map(i => i.trim());
+      items = itemsStr.split(',').map((i) => i.trim());
     } else {
       // Generate mock items
       const itemCount = Number(node.props.itemsMock || 6);
@@ -756,7 +759,7 @@ export class SVGRenderer {
     items.forEach((item, i) => {
       const itemY = pos.y + titleHeight + padding + i * itemHeight;
       const isActive = item === activeItem;
-      
+
       svg += `
     <rect x="${pos.x + 8}" y="${itemY}" 
           width="${pos.width - 16}" height="36" 
@@ -776,7 +779,7 @@ export class SVGRenderer {
   private renderTabs(node: IRComponentNode, pos: any): string {
     // Read items prop instead of tabs, or fall back to empty
     const itemsStr = String(node.props.items || '');
-    const tabs = itemsStr ? itemsStr.split(',').map(t => t.trim()) : ['Tab 1', 'Tab 2', 'Tab 3'];
+    const tabs = itemsStr ? itemsStr.split(',').map((t) => t.trim()) : ['Tab 1', 'Tab 2', 'Tab 3'];
     const tabWidth = pos.width / tabs.length;
 
     let svg = `<g>
@@ -883,10 +886,10 @@ export class SVGRenderer {
     const padding = 16;
     const headerHeight = 48;
 
-      // Use full-canvas overlay so it sits above prior content
-      const overlayHeight = Math.max(this.options.height, this.calculateContentHeight());
-      const modalX = (this.options.width - pos.width) / 2;
-      const modalY = Math.max(40, (overlayHeight - pos.height) / 2);
+    // Use full-canvas overlay so it sits above prior content
+    const overlayHeight = Math.max(this.options.height, this.calculateContentHeight());
+    const modalX = (this.options.width - pos.width) / 2;
+    const modalY = Math.max(40, (overlayHeight - pos.height) / 2);
 
     return `<g>
     <!-- Modal backdrop -->
@@ -932,10 +935,10 @@ export class SVGRenderer {
   private renderList(node: IRComponentNode, pos: any): string {
     const title = String(node.props.title || '');
     const itemsStr = String(node.props.items || '');
-    
+
     let items: string[] = [];
     if (itemsStr) {
-      items = itemsStr.split(',').map(i => i.trim());
+      items = itemsStr.split(',').map((i) => i.trim());
     } else {
       // Generate mock items
       const itemCount = Number(node.props.itemsMock || 4);
@@ -985,7 +988,6 @@ export class SVGRenderer {
     svg += '\n  </g>';
     return svg;
   }
-
 
   private renderGenericComponent(node: IRComponentNode, pos: any): string {
     return `<g>

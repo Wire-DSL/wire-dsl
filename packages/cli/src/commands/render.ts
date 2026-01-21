@@ -2,6 +2,7 @@ import { readFile, writeFile, mkdir, stat } from 'fs/promises';
 import path from 'path';
 import chalk from 'chalk';
 import ora from 'ora';
+import chokidar from 'chokidar';
 import { LayoutEngine, SVGRenderer, generateIR, parseWireDSL } from '@wire-dsl/core';
 
 type RenderOptions = {
@@ -10,6 +11,7 @@ type RenderOptions = {
   theme?: 'light' | 'dark';
   width?: number;
   height?: number;
+  watch?: boolean;
 };
 
 /**
@@ -35,112 +37,124 @@ function sanitizeScreenName(name: string): string {
 }
 
 export const renderCommand = async (input: string, options: RenderOptions = {}): Promise<void> => {
-  const spinner = ora(`Rendering ${input}`).start();
+  const resolvedInputPath = path.resolve(process.cwd(), input);
 
-  try {
-    const resolvedInputPath = path.resolve(process.cwd(), input);
-    const source = await readFile(resolvedInputPath, 'utf8');
+  const renderOnce = async () => {
+    const spinner = ora(`Rendering ${input}`).start();
 
-    const ast = parseWireDSL(source);
-    const ir = generateIR(ast);
+    try {
+      const source = await readFile(resolvedInputPath, 'utf8');
 
-    const layout = new LayoutEngine(ir).calculate();
-    const baseViewport = ir.project.screens[0]?.viewport ?? { width: 1280, height: 720 };
+      const ast = parseWireDSL(source);
+      const ir = generateIR(ast);
 
-    // Determine which screens to render
-    let screensToRender = ir.project.screens;
-    if (options.screen) {
-      const found = ir.project.screens.find(
-        s => s.name.toLowerCase() === options.screen!.toLowerCase()
-      );
-      if (!found) {
-        spinner.fail(`Screen not found: ${options.screen}`);
-        console.error(
-          chalk.red(
-            `Available screens: ${ir.project.screens.map(s => s.name).join(', ')}`
-          )
+      const layout = new LayoutEngine(ir).calculate();
+      const baseViewport = ir.project.screens[0]?.viewport ?? { width: 1280, height: 720 };
+
+      // Determine which screens to render
+      let screensToRender = ir.project.screens;
+      if (options.screen) {
+        const found = ir.project.screens.find(
+          (s) => s.name.toLowerCase() === options.screen!.toLowerCase()
         );
-        process.exitCode = 1;
-        return;
-      }
-      screensToRender = [found];
-    }
-
-    // Determine output path(s)
-    const basename = path.basename(resolvedInputPath, path.extname(resolvedInputPath));
-
-    // If multiple screens, always output to directory
-    const multiScreen = screensToRender.length > 1;
-    let outputDir: string | null = null;
-
-    if (multiScreen) {
-      if (options.out) {
-        // Check if path is directory or if it looks like a directory
-        const isDir = await isDirectory(options.out);
-        if (isDir) {
-          outputDir = path.resolve(process.cwd(), options.out);
-        } else {
-          // If user gave a file path for multi-screen, use its directory
-          outputDir = path.dirname(path.resolve(process.cwd(), options.out));
+        if (!found) {
+          spinner.fail(`Screen not found: ${options.screen}`);
+          console.error(
+            chalk.red(`Available screens: ${ir.project.screens.map((s) => s.name).join(', ')}`)
+          );
+          process.exitCode = 1;
+          return;
         }
-      } else {
-        // Default to current directory
-        outputDir = process.cwd();
+        screensToRender = [found];
       }
 
-      // Ensure directory exists
-      try {
-        await mkdir(outputDir, { recursive: true });
-      } catch {
-        // Directory may already exist
-      }
-    }
+      // Determine output path(s)
+      const basename = path.basename(resolvedInputPath, path.extname(resolvedInputPath));
 
-    // Render each screen
-    const renderedFiles: string[] = [];
-
-    for (const screen of screensToRender) {
-      const renderer = new SVGRenderer(ir, layout, {
-        width: options.width ?? baseViewport.width,
-        height: options.height ?? baseViewport.height,
-        theme: options.theme ?? 'light',
-        includeLabels: true,
-        screenName: screen.name,
-      });
-
-      const svg = renderer.render();
+      // If multiple screens, always output to directory
+      const multiScreen = screensToRender.length > 1;
+      let outputDir: string | null = null;
 
       if (multiScreen) {
-        // Output to directory with screen name
-        const sanitizedScreenName = sanitizeScreenName(screen.name);
-        const fileName = `${basename}-${sanitizedScreenName}.svg`;
-        const filePath = path.join(outputDir!, fileName);
-        await writeFile(filePath, svg, 'utf8');
-        renderedFiles.push(filePath);
-      } else if (options.out) {
-        // Single screen with output path
-        const outPath = path.resolve(process.cwd(), options.out);
-        await writeFile(outPath, svg, 'utf8');
-        renderedFiles.push(outPath);
-      } else {
-        // Single screen to stdout
-        spinner.succeed('Rendered SVG');
-        process.stdout.write(svg + '\n');
-        return;
-      }
-    }
+        if (options.out) {
+          // Check if path is directory or if it looks like a directory
+          const isDir = await isDirectory(options.out);
+          if (isDir) {
+            outputDir = path.resolve(process.cwd(), options.out);
+          } else {
+            // If user gave a file path for multi-screen, use its directory
+            outputDir = path.dirname(path.resolve(process.cwd(), options.out));
+          }
+        } else {
+          // Default to current directory
+          outputDir = process.cwd();
+        }
 
-    // Report success
-    if (renderedFiles.length === 1) {
-      spinner.succeed(`SVG written to ${renderedFiles[0]}`);
-    } else {
-      spinner.succeed(`${renderedFiles.length} SVG files written:`);
-      renderedFiles.forEach(file => console.log(`  ${chalk.cyan(file)}`));
+        // Ensure directory exists
+        try {
+          await mkdir(outputDir, { recursive: true });
+        } catch {
+          // Directory may already exist
+        }
+      }
+
+      // Render each screen
+      const renderedFiles: string[] = [];
+
+      for (const screen of screensToRender) {
+        const renderer = new SVGRenderer(ir, layout, {
+          width: options.width ?? baseViewport.width,
+          height: options.height ?? baseViewport.height,
+          theme: options.theme ?? 'light',
+          includeLabels: true,
+          screenName: screen.name,
+        });
+
+        const svg = renderer.render();
+
+        if (multiScreen) {
+          // Output to directory with screen name
+          const sanitizedScreenName = sanitizeScreenName(screen.name);
+          const fileName = `${basename}-${sanitizedScreenName}.svg`;
+          const filePath = path.join(outputDir!, fileName);
+          await writeFile(filePath, svg, 'utf8');
+          renderedFiles.push(filePath);
+        } else if (options.out) {
+          // Single screen with output path
+          const outPath = path.resolve(process.cwd(), options.out);
+          await writeFile(outPath, svg, 'utf8');
+          renderedFiles.push(outPath);
+        } else {
+          // Single screen to stdout
+          spinner.succeed('Rendered SVG');
+          process.stdout.write(svg + '\n');
+          return;
+        }
+      }
+
+      // Report success
+      if (renderedFiles.length === 1) {
+        spinner.succeed(`SVG written to ${renderedFiles[0]}`);
+      } else {
+        spinner.succeed(`${renderedFiles.length} SVG files written:`);
+        renderedFiles.forEach((file) => console.log(`  ${chalk.cyan(file)}`));
+      }
+    } catch (error: any) {
+      spinner.fail('Render failed');
+      const message = error?.message || 'Unknown error';
+      console.error(chalk.red(message));
+      process.exitCode = 1;
     }
-  } catch (error: any) {
-    spinner.fail('Render failed');
-    const message = error?.message || 'Unknown error';
-    console.error(chalk.red(message));
-    process.exitCode = 1;
+  };
+
+  await renderOnce();
+
+  if (options.watch) {
+    console.log(chalk.cyan(`Watching for changes: ${resolvedInputPath}`));
+    const watcher = chokidar.watch(resolvedInputPath, { ignoreInitial: true });
+
+    watcher.on('change', async () => {
+      await renderOnce();
+    });
   }
 };

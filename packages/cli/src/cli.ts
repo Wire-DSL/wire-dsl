@@ -16,11 +16,15 @@ program.name('wire').description('WireDSL - Wireframes as Code').version('0.0.1'
 program
   .command('render <input>')
   .description('Render .wire file to SVG')
-  .option('-o, --out <path>', 'Output path (file or directory, defaults to stdout)')
+  .option(
+    '-o, --out <path>, --output <path>',
+    'Output path (file or directory, defaults to stdout)'
+  )
   .option('-s, --screen <name>', 'Render specific screen by name (defaults to all screens)')
   .option('--width <number>', 'Override viewport width')
   .option('--height <number>', 'Override viewport height')
   .option('--theme <theme>', 'Theme (light|dark)', 'light')
+  .option('-w, --watch', 'Watch input file and re-render on changes')
   .action((input, options) => {
     const width = options.width ? Number(options.width) : undefined;
     const height = options.height ? Number(options.height) : undefined;
@@ -32,6 +36,7 @@ program
       width,
       height,
       theme,
+      watch: Boolean(options.watch),
     });
   });
 

@@ -4,25 +4,54 @@
 // Deterministic mock data for idempotent rendering
 
 const MOCK_NAMES = ['Juan', 'María', 'Carlos', 'Sofia', 'Alex', 'Luna', 'Diego', 'Emma'];
-const MOCK_LAST_NAMES = ['García', 'López', 'Rodríguez', 'Martínez', 'Pérez', 'Sánchez', 'Torres', 'Flores'];
+const MOCK_LAST_NAMES = [
+  'García',
+  'López',
+  'Rodríguez',
+  'Martínez',
+  'Pérez',
+  'Sánchez',
+  'Torres',
+  'Flores',
+];
 const MOCK_STATUSES = ['Active', 'Pending', 'Completed', 'On Hold', 'Review', 'Approved'];
 const MOCK_STAGES = ['Lead', 'Qualified', 'Proposal', 'Negotiation', 'Won', 'Lost'];
-const MOCK_EMAILS = ['juan@example.com', 'maria@example.com', 'carlos@example.com', 'sofia@example.com', 'alex@example.com', 'luna@example.com'];
+const MOCK_EMAILS = [
+  'juan@example.com',
+  'maria@example.com',
+  'carlos@example.com',
+  'sofia@example.com',
+  'alex@example.com',
+  'luna@example.com',
+];
 
 export class MockDataGenerator {
   private static customMocks: Record<string, string[]> = {};
 
   /**
    * Set custom mocks from project metadata
-   * Format: { "status": "Active,Pending,Completed", "stage": "Lead,Won,Lost" }
+   * Accepts string (comma-separated) or string[] values; ignores others.
+   * Format: { "status": "Active,Pending,Completed", "stage": ["Lead","Won","Lost"] }
    */
-  static setCustomMocks(mocks: Record<string, string>): void {
+  static setCustomMocks(mocks: Record<string, unknown>): void {
     this.customMocks = {};
-    for (const [key, values] of Object.entries(mocks)) {
-      this.customMocks[key.toLowerCase()] = values
-        .split(',')
-        .map(v => v.trim())
-        .filter(v => v.length > 0);
+    for (const [key, rawValues] of Object.entries(mocks)) {
+      let values: string[] = [];
+
+      if (typeof rawValues === 'string') {
+        values = rawValues
+          .split(',')
+          .map((v) => v.trim())
+          .filter((v) => v.length > 0);
+      } else if (Array.isArray(rawValues)) {
+        values = rawValues
+          .map((v) => (typeof v === 'string' ? v.trim() : ''))
+          .filter((v) => v.length > 0);
+      }
+
+      if (values.length > 0) {
+        this.customMocks[key.toLowerCase()] = values;
+      }
     }
   }
 
@@ -104,7 +133,7 @@ export class MockDataGenerator {
    * columns: "id,name,status,amount"
    */
   static generateMockRow(columns: string, rowIndex: number): Record<string, string> {
-    const columnNames = columns.split(',').map(c => c.trim());
+    const columnNames = columns.split(',').map((c) => c.trim());
     const row: Record<string, string> = {};
 
     columnNames.forEach((col) => {

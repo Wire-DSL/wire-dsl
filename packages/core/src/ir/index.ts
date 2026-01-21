@@ -23,7 +23,7 @@ export interface IRProject {
   id: string;
   name: string;
   tokens: IRTokens;
-  mocks: Record<string, string>;
+  mocks: Record<string, unknown>;
   screens: IRScreen[];
   nodes: Record<string, IRNode>;
 }
@@ -99,7 +99,7 @@ const IRContainerNodeSchema = z.object({
   id: z.string(),
   kind: z.literal('container'),
   containerType: z.enum(['stack', 'grid', 'split']),
-  params: z.record(z.union([z.string(), z.number()])),
+  params: z.record(z.string(), z.union([z.string(), z.number()])),
   children: z.array(z.object({ ref: z.string() })),
   style: IRStyleSchema,
   meta: IRMetaSchema,
@@ -109,7 +109,7 @@ const IRComponentNodeSchema = z.object({
   id: z.string(),
   kind: z.literal('component'),
   componentType: z.string(),
-  props: z.record(z.union([z.string(), z.number()])),
+  props: z.record(z.string(), z.union([z.string(), z.number()])),
   style: IRStyleSchema,
   meta: IRMetaSchema,
 });
@@ -127,9 +127,9 @@ const IRProjectSchema = z.object({
   id: z.string(),
   name: z.string(),
   tokens: IRTokensSchema,
-  mocks: z.record(z.string()),
+  mocks: z.record(z.string(), z.unknown()),
   screens: z.array(IRScreenSchema),
-  nodes: z.record(IRNodeSchema),
+  nodes: z.record(z.string(), IRNodeSchema),
 });
 
 const IRContractSchema = z.object({
