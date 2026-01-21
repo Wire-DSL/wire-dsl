@@ -1,4 +1,4 @@
-project "Form Example" {
+project "Form Example - Two Columns" {
   tokens density: normal
   tokens spacing: md
 
@@ -8,32 +8,44 @@ project "Form Example" {
       
       component Text content: "Please fill in all required fields below"
 
-      layout stack(direction: vertical, gap: md) {
-        component Input label: "Full Name" placeholder: "John Doe"
+      layout grid(columns: 12, gap: md) {
+        cell span: 6 {
+          component Input label: "Full Name" placeholder: "John Doe"
+        }
         
-        component Input label: "Email" placeholder: "john@example.com"
+        cell span: 6 {
+          component Input label: "Email" placeholder: "john@example.com"
+        }
+
+        cell span: 12 {
+          component Textarea label: "Bio" placeholder: "Tell us about yourself..."
+        }
         
-        component Textarea label: "Bio" placeholder: "Tell us about yourself..."
+        cell span: 6 {
+          component Select label: "Country" placeholder: "Select a country"
+        }
         
-        component Select label: "Country" placeholder: "Select a country"
-        
+        cell span: 6 {
+          component Select label: "State" placeholder: "Select a state"
+        }
+      }
+
+      layout stack(direction: horizontal, gap: lg) {
         layout stack(direction: vertical, gap: sm) {
           component Heading text: "Preferences"
-          
           component Checkbox label: "Subscribe to newsletter" checked: "true"
           component Checkbox label: "Enable notifications" checked: "false"
         }
         
         layout stack(direction: vertical, gap: sm) {
           component Heading text: "Account Type"
-          
           component Radio label: "Personal" checked: "true"
           component Radio label: "Business" checked: "false"
         }
-        
-        layout stack(direction: horizontal, gap: md) {
-          component Toggle label: "Terms & Conditions" enabled: "true"
-        }
+      }
+
+      layout stack(direction: horizontal, gap: md) {
+        component Toggle label: "Terms & Conditions" enabled: "true"
       }
 
       layout stack(direction: horizontal, gap: md) {
@@ -43,4 +55,3 @@ project "Form Example" {
     }
   }
 }
-

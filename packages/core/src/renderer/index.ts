@@ -1,5 +1,6 @@
 import type { IRContract, IRNode, IRComponentNode } from '../ir/index';
 import type { LayoutResult } from '../layout/index';
+import { MockDataGenerator } from './mock-data';
 
 /**
  * SVG Renderer
@@ -70,6 +71,11 @@ export class SVGRenderer {
       includeLabels: options?.includeLabels ?? true,
     };
     this.theme = THEMES[this.options.theme];
+
+    // Initialize MockDataGenerator with custom mocks from project metadata
+    if (ir.project.mocks && Object.keys(ir.project.mocks).length > 0) {
+      MockDataGenerator.setCustomMocks(ir.project.mocks);
+    }
   }
 
   render(): string {
@@ -82,11 +88,30 @@ export class SVGRenderer {
     // Render root and all children
     this.renderNode(rootId, children);
 
-    // Build SVG
-    return `<svg width="${this.options.width}" height="${this.options.height}" viewBox="0 0 ${this.options.width} ${this.options.height}" xmlns="http://www.w3.org/2000/svg">
+    // Calculate actual content height
+    const actualHeight = this.calculateContentHeight();
+
+    // Build SVG with auto-calculated height
+    const svgHeight = Math.max(this.options.height, actualHeight);
+
+    return `<svg width="${this.options.width}" height="${svgHeight}" viewBox="0 0 ${this.options.width} ${svgHeight}" xmlns="http://www.w3.org/2000/svg">
   <rect width="100%" height="100%" fill="${this.theme.bg}"/>
   ${children.join('\n  ')}
 </svg>`;
+  }
+
+  private calculateContentHeight(): number {
+    let maxY = 0;
+
+    // Find the lowest y position + height
+    for (const [, pos] of Object.entries(this.layout)) {
+      const bottom = pos.y + pos.height;
+      if (bottom > maxY) {
+        maxY = bottom;
+      }
+    }
+
+    return Math.max(maxY + 40, this.options.height); // Add 40px padding at bottom
   }
 
   private renderNode(nodeId: string, output: string[]): void {
@@ -114,6 +139,7 @@ export class SVGRenderer {
     pos: { x: number; y: number; width: number; height: number }
   ): string {
     switch (node.componentType) {
+      // Existing components
       case 'Heading':
         return this.renderHeading(node, pos);
       case 'Button':
@@ -128,6 +154,45 @@ export class SVGRenderer {
         return this.renderTable(node, pos);
       case 'ChartPlaceholder':
         return this.renderChartPlaceholder(node, pos);
+      
+      // Text/Content components
+      case 'Text':
+        return this.renderText(node, pos);
+      case 'Label':
+        return this.renderLabel(node, pos);
+      case 'Code':
+        return this.renderCode(node, pos);
+      
+      // Form components
+      case 'Textarea':
+        return this.renderTextarea(node, pos);
+      case 'Select':
+        return this.renderSelect(node, pos);
+      case 'Checkbox':
+        return this.renderCheckbox(node, pos);
+      case 'Radio':
+        return this.renderRadio(node, pos);
+      case 'Toggle':
+        return this.renderToggle(node, pos);
+      
+      // Layout/Structure components
+      case 'Sidebar':
+        return this.renderSidebar(node, pos);
+      case 'Tabs':
+        return this.renderTabs(node, pos);
+      case 'Divider':
+        return this.renderDivider(node, pos);
+      
+      // Feedback/Alert components
+      case 'Alert':
+        return this.renderAlert(node, pos);
+      case 'Badge':
+        return this.renderBadge(node, pos);
+      case 'Modal':
+        return this.renderModal(node, pos);
+      case 'List':
+        return this.renderList(node, pos);
+      
       default:
         return this.renderGenericComponent(node, pos);
     }
@@ -221,28 +286,116 @@ export class SVGRenderer {
 
   private renderTopbar(node: IRComponentNode, pos: any): string {
     const title = String(node.props.title || 'App');
+    const subtitle = String(node.props.subtitle || '');
+    const actions = String(node.props.actions || '');
+    const user = String(node.props.user || '');
 
-    return `<g>
+    let svg = `<g>
     <rect x="${pos.x}" y="${pos.y}" 
           width="${pos.width}" height="${pos.height}" 
           fill="${this.theme.cardBg}" 
           stroke="${this.theme.border}" 
           stroke-width="1"/>
-    <text x="${pos.x + 16}" y="${pos.y + pos.height / 2 + 6}" 
+    
+    <!-- Title -->
+    <text x="${pos.x + 16}" y="${pos.y + 24}" 
           font-family="system-ui, -apple-system, sans-serif" 
-          font-size="16" 
+          font-size="18" 
           font-weight="600" 
-          fill="${this.theme.text}">${this.escapeXml(title)}</text>
-  </g>`;
+          fill="${this.theme.text}">${this.escapeXml(title)}</text>`;
+
+    // Subtitle
+    if (subtitle) {
+      svg += `
+    <text x="${pos.x + 16}" y="${pos.y + 42}" 
+          font-family="system-ui, -apple-system, sans-serif" 
+          font-size="13" 
+          fill="${this.theme.textMuted}">${this.escapeXml(subtitle)}</text>`;
+    }
+
+    // User badge (top-right, above actions)
+    if (user) {
+      const badgeHeight = 28;
+      const badgePaddingX = 12;
+      const badgeX = pos.x + pos.width - 16 - badgePaddingX * 2 - (user.length * 7.5);
+      const badgeY = pos.y + 12;
+      
+      svg += `
+    <!-- User badge -->
+    <rect x="${badgeX}" y="${badgeY}" 
+          width="${badgePaddingX * 2 + user.length * 7.5}" height="${badgeHeight}" 
+          rx="4" 
+          fill="${this.theme.cardBg}" 
+          stroke="${this.theme.border}" 
+          stroke-width="1"/>
+    <text x="${badgeX + badgePaddingX + user.length * 3.75}" y="${badgeY + badgeHeight / 2 + 4}" 
+          font-family="system-ui, -apple-system, sans-serif" 
+          font-size="12" 
+          fill="${this.theme.text}" 
+          text-anchor="middle">${this.escapeXml(user)}</text>`;
+    }
+
+    // Actions (as buttons on the right)
+    if (actions) {
+      const actionList = actions.split(',').map(a => a.trim()).filter(Boolean);
+      const buttonWidth = 100;
+      const buttonHeight = 32;
+      const buttonStartX = pos.x + pos.width - 16 - (actionList.length * (buttonWidth + 8));
+      const buttonY = pos.y + (pos.height - buttonHeight) / 2;
+
+      actionList.forEach((action, idx) => {
+        const bx = buttonStartX + idx * (buttonWidth + 8);
+        svg += `
+    <!-- Action button: ${action} -->
+    <rect x="${bx}" y="${buttonY}" 
+          width="${buttonWidth}" height="${buttonHeight}" 
+          rx="6" 
+          fill="${this.theme.primary}" 
+          stroke="none"/>
+    <text x="${bx + buttonWidth / 2}" y="${buttonY + buttonHeight / 2 + 4}" 
+          font-family="system-ui, -apple-system, sans-serif" 
+          font-size="12" 
+          font-weight="600" 
+          fill="white" 
+          text-anchor="middle">${this.escapeXml(action)}</text>`;
+      });
+    }
+
+    svg += '\n  </g>';
+    return svg;
   }
 
   private renderTable(node: IRComponentNode, pos: any): string {
-    const columns = String(node.props.columns || 'Col1,Col2,Col3').split(',');
-    const rowsMock = Number(node.props.rowsMock || 3);
+    const title = String(node.props.title || '');
+    const columnsStr = String(node.props.columns || 'Col1,Col2,Col3');
+    const columns = columnsStr.split(',').map(c => c.trim());
+    const rowCount = Number(node.props.rows || 5);
+    const mockStr = String(node.props.mock || '');
 
-    const headerHeight = 40;
+    // Parse mock types, default to "item" if not specified
+    const mockTypes = mockStr 
+      ? mockStr.split(',').map(m => m.trim())
+      : columns.map(() => 'item');
+
+    // Ensure we have a mock type for each column (pad with 'item' if needed)
+    while (mockTypes.length < columns.length) {
+      mockTypes.push('item');
+    }
+
+    const headerHeight = 44;
     const rowHeight = 36;
     const colWidth = pos.width / columns.length;
+    
+    // Generate mock rows based on mock types
+    const mockRows: Record<string, string>[] = [];
+    for (let rowIdx = 0; rowIdx < rowCount; rowIdx++) {
+      const row: Record<string, string> = {};
+      columns.forEach((col, colIdx) => {
+        const mockType = mockTypes[colIdx] || 'item';
+        row[col] = MockDataGenerator.getMockValue(mockType, rowIdx);
+      });
+      mockRows.push(row);
+    }
 
     let svg = `<g>
     <rect x="${pos.x}" y="${pos.y}" 
@@ -252,23 +405,50 @@ export class SVGRenderer {
           stroke="${this.theme.border}" 
           stroke-width="1"/>`;
 
-    // Header
+    // Title
+    if (title) {
+      svg += `
+    <text x="${pos.x + 16}" y="${pos.y + 24}" 
+          font-family="system-ui, -apple-system, sans-serif" 
+          font-size="13" 
+          font-weight="600" 
+          fill="${this.theme.text}">${this.escapeXml(title)}</text>`;
+    }
+
+    // Header row
+    const headerY = pos.y + (title ? 32 : 0);
+    svg += `
+    <line x1="${pos.x}" y1="${headerY + headerHeight}" x2="${pos.x + pos.width}" y2="${headerY + headerHeight}" 
+          stroke="${this.theme.border}" stroke-width="1"/>`;
+
     columns.forEach((col, i) => {
       svg += `
-    <text x="${pos.x + i * colWidth + 16}" y="${pos.y + 26}" 
+    <text x="${pos.x + i * colWidth + 12}" y="${headerY + 26}" 
           font-family="system-ui, -apple-system, sans-serif" 
-          font-size="12" 
+          font-size="11" 
           font-weight="600" 
-          fill="${this.theme.textMuted}">${this.escapeXml(col.trim())}</text>`;
+          fill="${this.theme.textMuted}">${this.escapeXml(col)}</text>`;
     });
 
-    // Rows
-    for (let row = 0; row < rowsMock; row++) {
-      const rowY = pos.y + headerHeight + row * rowHeight;
+    // Data rows (render all, don't restrict by height)
+    mockRows.forEach((row, rowIdx) => {
+      const rowY = headerY + headerHeight + rowIdx * rowHeight;
+      
+      // Row separator
       svg += `
-    <line x1="${pos.x}" y1="${rowY}" x2="${pos.x + pos.width}" y2="${rowY}" 
-          stroke="${this.theme.border}" stroke-width="1"/>`;
-    }
+    <line x1="${pos.x}" y1="${rowY + rowHeight}" x2="${pos.x + pos.width}" y2="${rowY + rowHeight}" 
+          stroke="${this.theme.border}" stroke-width="0.5"/>`;
+
+      // Row data
+      columns.forEach((col, colIdx) => {
+        const cellValue = row[col] || '';
+        svg += `
+    <text x="${pos.x + colIdx * colWidth + 12}" y="${rowY + 22}" 
+          font-family="system-ui, -apple-system, sans-serif" 
+          font-size="12" 
+          fill="${this.theme.text}">${this.escapeXml(cellValue)}</text>`;
+      });
+    });
 
     svg += '\n  </g>';
     return svg;
@@ -291,6 +471,463 @@ export class SVGRenderer {
           text-anchor="middle">[${this.escapeXml(type.toUpperCase())} CHART]</text>
   </g>`;
   }
+
+  // ============================================================================
+  // TEXT/CONTENT COMPONENTS
+  // ============================================================================
+
+  private renderText(node: IRComponentNode, pos: any): string {
+    const text = String(node.props.text || 'Text content');
+    const fontSize = 14;
+
+    return `<g>
+    <text x="${pos.x + 8}" y="${pos.y + 16}" 
+          font-family="system-ui, -apple-system, sans-serif" 
+          font-size="${fontSize}" 
+          fill="${this.theme.text}">${this.escapeXml(text)}</text>
+  </g>`;
+  }
+
+  private renderLabel(node: IRComponentNode, pos: any): string {
+    const text = String(node.props.text || 'Label');
+
+    return `<g>
+    <text x="${pos.x}" y="${pos.y + 12}" 
+          font-family="system-ui, -apple-system, sans-serif" 
+          font-size="12" 
+          fill="${this.theme.textMuted}">${this.escapeXml(text)}</text>
+  </g>`;
+  }
+
+  private renderCode(node: IRComponentNode, pos: any): string {
+    const code = String(node.props.code || 'const x = 42;');
+
+    return `<g>
+    <rect x="${pos.x}" y="${pos.y}" 
+          width="${pos.width}" height="${pos.height}" 
+          rx="4" 
+          fill="${this.theme.bg}" 
+          stroke="${this.theme.border}" 
+          stroke-width="1"/>
+    <text x="${pos.x + 8}" y="${pos.y + 18}" 
+          font-family="monospace" 
+          font-size="11" 
+          fill="${this.theme.text}">${this.escapeXml(code.substring(0, 30))}</text>
+  </g>`;
+  }
+
+  // ============================================================================
+  // FORM COMPONENTS
+  // ============================================================================
+
+  private renderTextarea(node: IRComponentNode, pos: any): string {
+    const label = String(node.props.label || '');
+    const placeholder = String(node.props.placeholder || 'Enter text...');
+
+    return `<g>
+    ${
+      label
+        ? `<text x="${pos.x}" y="${pos.y - 6}" 
+          font-family="system-ui, -apple-system, sans-serif" 
+          font-size="12" 
+          fill="${this.theme.text}">${this.escapeXml(label)}</text>`
+        : ''
+    }
+    <rect x="${pos.x}" y="${pos.y}" 
+          width="${pos.width}" height="${pos.height}" 
+          rx="6" 
+          fill="${this.theme.cardBg}" 
+          stroke="${this.theme.border}" 
+          stroke-width="1"/>
+    <text x="${pos.x + 12}" y="${pos.y + 20}" 
+          font-family="system-ui, -apple-system, sans-serif" 
+          font-size="13" 
+          fill="${this.theme.textMuted}">${this.escapeXml(placeholder)}</text>
+  </g>`;
+  }
+
+  private renderSelect(node: IRComponentNode, pos: any): string {
+    const label = String(node.props.label || '');
+    const placeholder = String(node.props.placeholder || 'Select...');
+
+    return `<g>
+    ${
+      label
+        ? `<text x="${pos.x}" y="${pos.y - 6}" 
+          font-family="system-ui, -apple-system, sans-serif" 
+          font-size="12" 
+          fill="${this.theme.text}">${this.escapeXml(label)}</text>`
+        : ''
+    }
+    <rect x="${pos.x}" y="${pos.y}" 
+          width="${pos.width}" height="${pos.height}" 
+          rx="6" 
+          fill="${this.theme.cardBg}" 
+          stroke="${this.theme.border}" 
+          stroke-width="1"/>
+    <text x="${pos.x + 12}" y="${pos.y + pos.height / 2 + 5}" 
+          font-family="system-ui, -apple-system, sans-serif" 
+          font-size="14" 
+          fill="${this.theme.textMuted}">${this.escapeXml(placeholder)}</text>
+    <text x="${pos.x + pos.width - 20}" y="${pos.y + pos.height / 2 + 5}" 
+          font-family="system-ui, -apple-system, sans-serif" 
+          font-size="16" 
+          fill="${this.theme.textMuted}">▼</text>
+  </g>`;
+  }
+
+  private renderCheckbox(node: IRComponentNode, pos: any): string {
+    const label = String(node.props.label || 'Checkbox');
+    const checked = String(node.props.checked || 'false').toLowerCase() === 'true';
+
+    const checkboxSize = 18;
+    const checkboxY = pos.y + pos.height / 2 - checkboxSize / 2;
+
+    return `<g>
+    <rect x="${pos.x}" y="${checkboxY}" 
+          width="${checkboxSize}" height="${checkboxSize}" 
+          rx="4" 
+          fill="${checked ? this.theme.primary : this.theme.cardBg}" 
+          stroke="${this.theme.border}" 
+          stroke-width="1"/>
+    ${
+      checked
+        ? `<text x="${pos.x + checkboxSize / 2}" y="${checkboxY + 14}" 
+          font-family="system-ui, -apple-system, sans-serif" 
+          font-size="12" 
+          fill="white" 
+          text-anchor="middle">✓</text>`
+        : ''
+    }
+    <text x="${pos.x + checkboxSize + 12}" y="${pos.y + pos.height / 2 + 5}" 
+          font-family="system-ui, -apple-system, sans-serif" 
+          font-size="14" 
+          fill="${this.theme.text}">${this.escapeXml(label)}</text>
+  </g>`;
+  }
+
+  private renderRadio(node: IRComponentNode, pos: any): string {
+    const label = String(node.props.label || 'Radio');
+    const checked = String(node.props.checked || 'false').toLowerCase() === 'true';
+
+    const radioSize = 16;
+    const radioY = pos.y + pos.height / 2 - radioSize / 2;
+
+    return `<g>
+    <circle cx="${pos.x + radioSize / 2}" cy="${radioY + radioSize / 2}" 
+            r="${radioSize / 2}" 
+            fill="${this.theme.cardBg}" 
+            stroke="${this.theme.border}" 
+            stroke-width="1"/>
+    ${
+      checked
+        ? `<circle cx="${pos.x + radioSize / 2}" cy="${radioY + radioSize / 2}" 
+            r="${radioSize / 3.5}" 
+            fill="${this.theme.primary}"/>`
+        : ''
+    }
+    <text x="${pos.x + radioSize + 12}" y="${pos.y + pos.height / 2 + 5}" 
+          font-family="system-ui, -apple-system, sans-serif" 
+          font-size="14" 
+          fill="${this.theme.text}">${this.escapeXml(label)}</text>
+  </g>`;
+  }
+
+  private renderToggle(node: IRComponentNode, pos: any): string {
+    const label = String(node.props.label || 'Toggle');
+    const enabled = String(node.props.enabled || 'false').toLowerCase() === 'true';
+
+    const toggleWidth = 40;
+    const toggleHeight = 20;
+    const toggleY = pos.y + pos.height / 2 - toggleHeight / 2;
+
+    return `<g>
+    <rect x="${pos.x}" y="${toggleY}" 
+          width="${toggleWidth}" height="${toggleHeight}" 
+          rx="10" 
+          fill="${enabled ? this.theme.primary : this.theme.border}" 
+          stroke="none"/>
+    <circle cx="${pos.x + (enabled ? toggleWidth - 10 : 10)}" cy="${toggleY + toggleHeight / 2}" 
+            r="8" 
+            fill="white"/>
+    <text x="${pos.x + toggleWidth + 12}" y="${pos.y + pos.height / 2 + 5}" 
+          font-family="system-ui, -apple-system, sans-serif" 
+          font-size="14" 
+          fill="${this.theme.text}">${this.escapeXml(label)}</text>
+  </g>`;
+  }
+
+  // ============================================================================
+  // LAYOUT/STRUCTURE COMPONENTS
+  // ============================================================================
+
+  private renderSidebar(node: IRComponentNode, pos: any): string {
+    const title = String(node.props.title || 'Sidebar');
+    const itemsStr = String(node.props.items || '');
+    const activeItem = String(node.props.active || '');
+    
+    let items: string[] = [];
+    if (itemsStr) {
+      items = itemsStr.split(',').map(i => i.trim());
+    } else {
+      // Generate mock items
+      const itemCount = Number(node.props.itemsMock || 6);
+      items = MockDataGenerator.generateMockList('name', itemCount);
+    }
+
+    const itemHeight = 40;
+    const padding = 16;
+    const titleHeight = 40;
+
+    let svg = `<g>
+    <rect x="${pos.x}" y="${pos.y}" 
+          width="${pos.width}" height="${pos.height}" 
+          fill="${this.theme.cardBg}" 
+          stroke="${this.theme.border}" 
+          stroke-width="1"/>
+    <!-- Title -->
+    <text x="${pos.x + padding}" y="${pos.y + padding + 8}" 
+          font-family="system-ui, -apple-system, sans-serif" 
+          font-size="14" 
+          font-weight="600" 
+          fill="${this.theme.text}">${this.escapeXml(title)}</text>
+    <line x1="${pos.x}" y1="${pos.y + titleHeight}" x2="${pos.x + pos.width}" y2="${pos.y + titleHeight}" 
+          stroke="${this.theme.border}" stroke-width="1"/>`;
+
+    // Render items (without height restriction, allow overflow)
+    items.forEach((item, i) => {
+      const itemY = pos.y + titleHeight + padding + i * itemHeight;
+      const isActive = item === activeItem;
+      
+      svg += `
+    <rect x="${pos.x + 8}" y="${itemY}" 
+          width="${pos.width - 16}" height="36" 
+          rx="4" 
+          fill="${isActive ? this.theme.primary : 'transparent'}" 
+          stroke="none"/>
+    <text x="${pos.x + 16}" y="${itemY + 22}" 
+          font-family="system-ui, -apple-system, sans-serif" 
+          font-size="13" 
+          fill="${isActive ? 'white' : this.theme.textMuted}">${this.escapeXml(item)}</text>`;
+    });
+
+    svg += '\n  </g>';
+    return svg;
+  }
+
+  private renderTabs(node: IRComponentNode, pos: any): string {
+    // Read items prop instead of tabs, or fall back to empty
+    const itemsStr = String(node.props.items || '');
+    const tabs = itemsStr ? itemsStr.split(',').map(t => t.trim()) : ['Tab 1', 'Tab 2', 'Tab 3'];
+    const tabWidth = pos.width / tabs.length;
+
+    let svg = `<g>
+    <!-- Tab headers -->`;
+
+    tabs.forEach((tab, i) => {
+      const tabX = pos.x + i * tabWidth;
+      const isActive = i === 0;
+
+      svg += `
+    <rect x="${tabX}" y="${pos.y}" 
+          width="${tabWidth}" height="44" 
+          fill="${isActive ? this.theme.primary : 'transparent'}" 
+          stroke="${isActive ? 'none' : this.theme.border}" 
+          stroke-width="1"/>
+    <text x="${tabX + tabWidth / 2}" y="${pos.y + 28}" 
+          font-family="system-ui, -apple-system, sans-serif" 
+          font-size="13" 
+          font-weight="${isActive ? '600' : '500'}" 
+          fill="${isActive ? 'white' : this.theme.text}" 
+          text-anchor="middle">${this.escapeXml(tab)}</text>`;
+    });
+
+    svg += `
+    <!-- Tab content area -->
+    <rect x="${pos.x}" y="${pos.y + 44}" 
+          width="${pos.width}" height="${pos.height - 44}" 
+          fill="${this.theme.cardBg}" 
+          stroke="${this.theme.border}" 
+          stroke-width="1"/>
+  </g>`;
+    return svg;
+  }
+
+  private renderDivider(node: IRComponentNode, pos: any): string {
+    return `<g>
+    <line x1="${pos.x}" y1="${pos.y + pos.height / 2}" 
+          x2="${pos.x + pos.width}" y2="${pos.y + pos.height / 2}" 
+          stroke="${this.theme.border}" 
+          stroke-width="1"/>
+  </g>`;
+  }
+
+  // ============================================================================
+  // FEEDBACK/ALERT COMPONENTS
+  // ============================================================================
+
+  private renderAlert(node: IRComponentNode, pos: any): string {
+    const type = String(node.props.type || 'info');
+    const message = String(node.props.message || 'Alert message');
+
+    const typeColors: Record<string, string> = {
+      info: '#3B82F6',
+      warning: '#F59E0B',
+      error: '#EF4444',
+      success: '#10B981',
+    };
+
+    const bgColor = typeColors[type] || typeColors.info;
+
+    return `<g>
+    <rect x="${pos.x}" y="${pos.y}" 
+          width="${pos.width}" height="${pos.height}" 
+          rx="6" 
+          fill="${bgColor}15" 
+          stroke="${bgColor}" 
+          stroke-width="1"/>
+    <rect x="${pos.x}" y="${pos.y}" 
+          width="4" height="${pos.height}" 
+          rx="6" 
+          fill="${bgColor}"/>
+    <text x="${pos.x + 16}" y="${pos.y + pos.height / 2 + 5}" 
+          font-family="system-ui, -apple-system, sans-serif" 
+          font-size="13" 
+          fill="${bgColor}">${this.escapeXml(message)}</text>
+  </g>`;
+  }
+
+  private renderBadge(node: IRComponentNode, pos: any): string {
+    const text = String(node.props.text || 'Badge');
+    const variant = String(node.props.variant || 'default');
+
+    const bgColor = variant === 'primary' ? this.theme.primary : this.theme.border;
+    const textColor = variant === 'primary' ? 'white' : this.theme.text;
+
+    return `<g>
+    <rect x="${pos.x}" y="${pos.y}" 
+          width="${pos.width}" height="${pos.height}" 
+          rx="${pos.height / 2}" 
+          fill="${bgColor}" 
+          stroke="none"/>
+    <text x="${pos.x + pos.width / 2}" y="${pos.y + pos.height / 2 + 4}" 
+          font-family="system-ui, -apple-system, sans-serif" 
+          font-size="12" 
+          font-weight="600" 
+          fill="${textColor}" 
+          text-anchor="middle">${this.escapeXml(text)}</text>
+  </g>`;
+  }
+
+  private renderModal(node: IRComponentNode, pos: any): string {
+    const title = String(node.props.title || 'Modal');
+
+    const padding = 16;
+    const headerHeight = 48;
+
+      // Use full-canvas overlay so it sits above prior content
+      const overlayHeight = Math.max(this.options.height, this.calculateContentHeight());
+      const modalX = (this.options.width - pos.width) / 2;
+      const modalY = Math.max(40, (overlayHeight - pos.height) / 2);
+
+    return `<g>
+    <!-- Modal backdrop -->
+      <rect x="0" y="0" 
+        width="${this.options.width}" height="${overlayHeight}" 
+        fill="black" opacity="0.28"/>
+    
+    <!-- Modal box -->
+      <rect x="${modalX}" y="${modalY}" 
+        width="${pos.width}" height="${pos.height}" 
+          rx="8" 
+          fill="${this.theme.cardBg}" 
+        stroke="${this.theme.border}" 
+          stroke-width="1"/>
+    
+    <!-- Header -->
+      <line x1="${modalX}" y1="${modalY + headerHeight}" 
+        x2="${modalX + pos.width}" y2="${modalY + headerHeight}" 
+          stroke="${this.theme.border}" 
+          stroke-width="1"/>
+    
+      <text x="${modalX + padding}" y="${modalY + padding + 16}" 
+          font-family="system-ui, -apple-system, sans-serif" 
+          font-size="16" 
+          font-weight="600" 
+          fill="${this.theme.text}">${this.escapeXml(title)}</text>
+    
+    <!-- Close button -->
+      <text x="${modalX + pos.width - 16}" y="${modalY + padding + 12}" 
+          font-family="system-ui, -apple-system, sans-serif" 
+          font-size="18" 
+          fill="${this.theme.textMuted}">✕</text>
+    
+    <!-- Content placeholder -->
+      <text x="${modalX + pos.width / 2}" y="${modalY + headerHeight + (pos.height - headerHeight) / 2}" 
+          font-family="system-ui, -apple-system, sans-serif" 
+          font-size="13" 
+          fill="${this.theme.textMuted}" 
+          text-anchor="middle">Modal content</text>
+  </g>`;
+  }
+
+  private renderList(node: IRComponentNode, pos: any): string {
+    const title = String(node.props.title || '');
+    const itemsStr = String(node.props.items || '');
+    
+    let items: string[] = [];
+    if (itemsStr) {
+      items = itemsStr.split(',').map(i => i.trim());
+    } else {
+      // Generate mock items
+      const itemCount = Number(node.props.itemsMock || 4);
+      items = MockDataGenerator.generateMockList('name', itemCount);
+    }
+
+    const padding = 12;
+    const itemHeight = 36;
+    const titleHeight = title ? 40 : 0;
+
+    let svg = `<g>
+    <rect x="${pos.x}" y="${pos.y}" 
+          width="${pos.width}" height="${pos.height}" 
+          rx="8" 
+          fill="${this.theme.cardBg}" 
+          stroke="${this.theme.border}" 
+          stroke-width="1"/>`;
+
+    // Title
+    if (title) {
+      svg += `
+    <text x="${pos.x + padding}" y="${pos.y + 26}" 
+          font-family="system-ui, -apple-system, sans-serif" 
+          font-size="13" 
+          font-weight="600" 
+          fill="${this.theme.text}">${this.escapeXml(title)}</text>
+    <line x1="${pos.x}" y1="${pos.y + titleHeight}" x2="${pos.x + pos.width}" y2="${pos.y + titleHeight}" 
+          stroke="${this.theme.border}" stroke-width="1"/>`;
+    }
+
+    // Items
+    items.forEach((item, i) => {
+      const itemY = pos.y + titleHeight + i * itemHeight;
+      if (itemY + itemHeight < pos.y + pos.height) {
+        svg += `
+    <line x1="${pos.x}" y1="${itemY + itemHeight}" 
+          x2="${pos.x + pos.width}" y2="${itemY + itemHeight}" 
+          stroke="${this.theme.border}" 
+          stroke-width="0.5"/>
+    <text x="${pos.x + padding}" y="${itemY + 24}" 
+          font-family="system-ui, -apple-system, sans-serif" 
+          font-size="13" 
+          fill="${this.theme.text}">${this.escapeXml(item)}</text>`;
+      }
+    });
+
+    svg += '\n  </g>';
+    return svg;
+  }
+
 
   private renderGenericComponent(node: IRComponentNode, pos: any): string {
     return `<g>

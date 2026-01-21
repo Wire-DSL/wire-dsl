@@ -1,0 +1,60 @@
+project "Analytics Dashboard" {
+  tokens density: normal
+  tokens spacing: md
+
+  screen Dashboard {
+    layout stack(direction: vertical, gap: lg, padding: xl) {
+      component Topbar title: "Analytics" subtitle: "Realtime overview" actions: "Refresh"
+
+      layout split(sidebar: 260, gap: lg) {
+        // Sidebar filters
+        layout stack(direction: vertical, gap: md, padding: md) {
+          component Heading text: "Filters"
+          component Select label: "Date Range" placeholder: "Last 7 days"
+          component Select label: "Channel" placeholder: "All channels"
+          component Select label: "Region" placeholder: "Global"
+          component Divider text: "Notify"
+          component Checkbox label: "Email alerts" checked: "true"
+          component Checkbox label: "Slack alerts" checked: "false"
+        }
+
+        // Main content
+        layout stack(direction: vertical, gap: lg) {
+          // KPI badges row
+          layout grid(columns: 12, gap: md) {
+            cell span: 3 { component Badge text: "+12%" variant: "success" }
+            cell span: 3 { component Badge text: "-3%" variant: "error" }
+            cell span: 3 { component Badge text: "4.5k" variant: "primary" }
+            cell span: 3 { component Badge text: "1.2k" variant: "secondary" }
+          }
+
+          // Tabs for sections
+          component Tabs items: "Overview,Traffic,Revenue,Engagement"
+
+          // Charts grid
+          layout grid(columns: 12, gap: md) {
+            cell span: 6 { component ChartPlaceholder title: "Traffic" subtitle: "Visitors by source" }
+            cell span: 6 { component ChartPlaceholder title: "Conversion" subtitle: "Funnel" }
+            cell span: 12 { component ChartPlaceholder title: "Engagement" subtitle: "Session duration" }
+          }
+
+          // Alerts
+          layout stack(direction: vertical, gap: sm) {
+            component Alert text: "Traffic spike detected on mobile" variant: "warning"
+            component Alert text: "Sync delayed for EU region" variant: "error"
+          }
+
+          // Sessions table
+          component Table title: "Sessions" columns: "User,Country,Device,Time" rows: "10"
+
+          // Events list with divider and modal hint
+          layout stack(direction: vertical, gap: md) {
+            component Divider text: "Latest events"
+            component List title: "Events" items: "Login,Purchase,Invite,Logout,Password Reset"
+            component Modal title: "Session details" description: "Modal preview placeholder"
+          }
+        }
+      }
+    }
+  }
+}

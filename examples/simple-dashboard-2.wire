@@ -1,0 +1,29 @@
+project "Simple Dashboard" {
+  tokens density: comfortable
+  tokens spacing: lg
+
+  screen Dashboard {
+    layout stack(direction: vertical, gap: lg, padding: xl) {
+      component Topbar title: "Dashboard"
+      
+      layout grid(columns: 12, gap: lg) {
+        cell span: 3 {
+          component Card title: "Total Users"
+        }
+        cell span: 3 {
+          component Card title: "Active Sessions"
+        }
+        cell span: 3 {
+          component Card title: "Revenue"
+        }
+        cell span: 3 {
+          component Button text: "Revenue 2"
+        }
+      }
+
+      component ChartPlaceholder type: "bar" height: 300
+
+      component Table columns: "Date,Event,User" rowsMock: 5
+    }
+  }
+}

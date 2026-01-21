@@ -23,6 +23,7 @@ export interface IRProject {
   id: string;
   name: string;
   tokens: IRTokens;
+  mocks: Record<string, string>;
   screens: IRScreen[];
   nodes: Record<string, IRNode>;
 }
@@ -126,6 +127,7 @@ const IRProjectSchema = z.object({
   id: z.string(),
   name: z.string(),
   tokens: IRTokensSchema,
+  mocks: z.record(z.string()),
   screens: z.array(IRScreenSchema),
   nodes: z.record(IRNodeSchema),
 });
@@ -183,6 +185,7 @@ export class IRGenerator {
       id: this.sanitizeId(ast.name),
       name: ast.name,
       tokens: this.tokens,
+      mocks: ast.mocks || {},
       screens,
       nodes: this.nodes,
     };

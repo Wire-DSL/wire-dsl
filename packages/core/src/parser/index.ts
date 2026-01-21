@@ -28,6 +28,7 @@ const Screen = createToken({ name: 'Screen', pattern: /screen/ });
 const Layout = createToken({ name: 'Layout', pattern: /layout/ });
 const Component = createToken({ name: 'Component', pattern: /component/ });
 const Tokens = createToken({ name: 'Tokens', pattern: /tokens/ });
+const Mocks = createToken({ name: 'Mocks', pattern: /mocks/ });
 const Cell = createToken({ name: 'Cell', pattern: /cell/ });
 
 // Punctuation
@@ -78,6 +79,7 @@ const allTokens = [
   Layout,
   Component,
   Tokens,
+  Mocks,
   Cell,
   // Punctuation
   LCurly,
@@ -112,6 +114,7 @@ class WireDSLParser extends CstParser {
     this.MANY(() => {
       this.OR([
         { ALT: () => this.SUBRULE(this.tokensDecl) },
+        { ALT: () => this.SUBRULE(this.mocksDecl) },
         { ALT: () => this.SUBRULE(this.screen) },
       ]);
     });
@@ -124,6 +127,23 @@ class WireDSLParser extends CstParser {
     this.CONSUME(Identifier, { LABEL: 'tokenKey' });
     this.CONSUME(Colon);
     this.CONSUME2(Identifier, { LABEL: 'tokenValue' });
+  });
+
+  // mocks { status: "A,B,C" ... }
+  private mocksDecl = this.RULE('mocksDecl', () => {
+    this.CONSUME(Mocks);
+    this.CONSUME(LCurly);
+    this.MANY(() => {
+      this.SUBRULE(this.mockEntry);
+    });
+    this.CONSUME(RCurly);
+  });
+
+  // status: "A,B,C"
+  private mockEntry = this.RULE('mockEntry', () => {
+    this.CONSUME(Identifier, { LABEL: 'mockKey' });
+    this.CONSUME(Colon);
+    this.CONSUME(StringLiteral, { LABEL: 'mockValue' });
   });
 
   // screen Main { ... }
@@ -210,6 +230,7 @@ export interface AST {
   type: 'project';
   name: string;
   tokens: Record<string, string>;
+  mocks: Record<string, string>;
   screens: ASTScreen[];
 }
 
@@ -254,6 +275,7 @@ class WireDSLVisitor extends BaseCstVisitor {
   project(ctx: any): AST {
     const projectName = ctx.projectName[0].image.slice(1, -1); // Remove quotes
     const tokens: Record<string, string> = {};
+    const mocks: Record<string, string> = {};
     const screens: ASTScreen[] = [];
 
     if (ctx.tokensDecl) {
@@ -261,6 +283,11 @@ class WireDSLVisitor extends BaseCstVisitor {
         const result = this.visit(tokenDecl);
         tokens[result.key] = result.value;
       });
+    }
+
+    if (ctx.mocksDecl && ctx.mocksDecl.length > 0) {
+      const mocksBlock = this.visit(ctx.mocksDecl[0]);
+      Object.assign(mocks, mocksBlock);
     }
 
     if (ctx.screen) {
@@ -273,6 +300,7 @@ class WireDSLVisitor extends BaseCstVisitor {
       type: 'project',
       name: projectName,
       tokens,
+      mocks,
       screens,
     };
   }
@@ -282,6 +310,23 @@ class WireDSLVisitor extends BaseCstVisitor {
       key: ctx.tokenKey[0].image,
       value: ctx.tokenValue[0].image,
     };
+  }
+
+  mocksDecl(ctx: any) {
+    const mocks: Record<string, string> = {};
+    if (ctx.mockEntry) {
+      ctx.mockEntry.forEach((entry: any) => {
+        const { key, value } = this.visit(entry);
+        mocks[key] = value;
+      });
+    }
+    return mocks;
+  }
+
+  mockEntry(ctx: any) {
+    const key = ctx.mockKey[0].image;
+    const value = ctx.mockValue[0].image.slice(1, -1); // Remove quotes
+    return { key, value };
   }
 
   screen(ctx: any): ASTScreen {
@@ -378,15 +423,16 @@ class WireDSLVisitor extends BaseCstVisitor {
 
   property(ctx: any) {
     const key = ctx.propKey[0].image;
-    let value: string | number = ctx.propValue[0].image;
+    const rawValue: string = ctx.propValue[0].image;
+    let value: string | number = rawValue;
 
     // Remove quotes from strings
-    if (value.startsWith('"')) {
-      value = value.slice(1, -1);
+    if (typeof rawValue === 'string' && rawValue.startsWith('"')) {
+      value = rawValue.slice(1, -1);
     }
     // Parse numbers
-    else if (!isNaN(Number(value))) {
-      value = Number(value);
+    else if (!isNaN(Number(rawValue))) {
+      value = Number(rawValue);
     }
 
     return { key, value };

@@ -1,0 +1,58 @@
+project "CRM Dashboard" {
+  tokens density: normal
+  tokens spacing: md
+
+  mocks {
+    status: "Active,Pending,Completed,On Hold,Review"
+  }
+
+  screen CRM {
+    layout stack(direction: vertical, gap: lg, padding: xl) {
+      component Topbar title: "CRM" user: "Juan García"
+
+      layout split(sidebar: 240, gap: lg) {
+        // Sidebar nav
+        component Sidebar title: "Navigation" items: "Dashboard,Contacts,Deals,Tasks,Reports,Settings" active: "Deals"
+
+        // Main content
+        layout stack(direction: vertical, gap: lg) {
+          // Tabs
+          component Tabs items: "Overview,Pipeline,Activity"
+
+          // KPI badges row
+          layout grid(columns: 12, gap: md) {
+            cell span: 3 { component Badge text: "$120k MRR" variant: "primary" }
+            cell span: 3 { component Badge text: "42 Deals Won" variant: "success" }
+            cell span: 3 { component Badge text: "32% Win Rate" variant: "secondary" }
+            cell span: 3 { component Badge text: "85 New Leads" variant: "primary" }
+          }
+
+          // Charts row
+          layout grid(columns: 12, gap: md) {
+            cell span: 6 { component ChartPlaceholder title: "Pipeline" subtitle: "By stage" }
+            cell span: 6 { component ChartPlaceholder title: "Leads by source" subtitle: "Last 30 days" }
+          }
+
+          // Activity section
+          layout stack(direction: vertical, gap: md) {
+            component Alert text: "2 SLAs at risk" variant: "warning"
+            component List title: "Recent activity" items: "New lead created,Deal moved to Proposal,Note added,Task completed,Email sent"
+          }
+
+          // Deals table
+          component Table title: "Deals" columns: "ID,Account,Stage,Owner,Amount" rows: "10" mock: "id,account,status,literal:-,amount"
+
+          // Notes and quick actions
+          layout stack(direction: vertical, gap: sm) {
+            component Heading text: "Notes"
+            component Textarea label: "Add note" placeholder: "Log a quick update..."
+            layout stack(direction: horizontal, gap: md) {
+              component Button text: "Save"
+              component Button text: "Share" variant: "primary"
+            }
+          }
+        }
+      }
+    }
+  }
+}

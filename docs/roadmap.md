@@ -214,6 +214,116 @@ Este roadmap describe las fases de desarrollo del proyecto WireDSL, desde el MVP
 
 ---
 
+## Fase 4.5: VS Code Extension (High Priority) 🚀
+
+**Objetivo**: Herramienta de desarrollo local con preview en tiempo real. Permite a diseñadores/desarrolladores iterar rápidamente sin línea de comandos.
+
+### Entregables
+
+#### 4.5.1 Core IDE Features
+
+- [ ] Syntax highlighting + colorization para .wire
+- [ ] Autocomplete inteligente:
+  - Componentes soportados con props
+  - Layouts (stack, grid, split) con parámetros
+  - Tokens (density, spacing, radius, stroke, font)
+  - Screens existentes para `goto()`
+- [ ] Code snippets:
+  - `project-template` → boilerplate básico
+  - `screen-template` → nueva screen
+  - `card-grid-template` → grid de 3 cards
+  - `form-template` → form layout
+- [ ] Error highlighting inline:
+  - Errores de lexer/parser con posición
+  - Validación semántica (componentes desconocidos, props obligatorias)
+  - Sugerencias de fixes
+- [ ] Go to Definition:
+  - Click en screen name → navega a su definición
+  - Click en componente → muestra signature
+- [ ] Document formatting: `wire --format <file>`
+
+#### 4.5.2 Live Preview Panel
+
+**Experiencia de usuario:**
+```
+[Editor .wire]  |  [Preview SVG]
+(izquierda)     |  (derecha, tiempo real)
+                |
+Guardar archivo → Hot reload 50ms → Preview actualiza
+```
+
+**Features:**
+- [ ] Webview panel en VS Code (open: `cmd+shift+p → Wire: Open Preview`)
+- [ ] Renderización SVG en vivo al editar (debounce 500ms)
+- [ ] Sincronización automática: cambio en archivo → preview actualiza
+- [ ] Selector de screen (dropdown) para proyectos multi-screen
+- [ ] Controles de viewport:
+  - Ancho/alto custom (ej. 1280x720, mobile 375x667)
+  - Zoom (50%, 75%, 100%, 125%, 150%)
+  - Toggle theme (light/dark)
+- [ ] Exportación rápida:
+  - Botón "Export as SVG" → descarga `.svg`
+  - Copia SVG al clipboard
+
+#### 4.5.3 Developer Tools & Debugging
+
+- [ ] **Overlay modes:**
+  - Grid overlay (mostrar grid de 12 columnas)
+  - Bounding boxes (cada componente)
+  - Medidas (width/height/margin/padding)
+  - Densidad (normal, comfortable, compact)
+  
+- [ ] **Inspector:**
+  - Hover en preview → mostrar props del componente
+  - Click en componente → abrir definición en editor
+  - Tree view lateral con jerarquía de componentes
+  
+- [ ] **Console:**
+  - Errores/warnings/info del parser
+  - Acceso a AST, IR, Layout (JSON viewer)
+  - Validación results
+
+#### 4.5.4 Project Integration
+
+- [ ] Multi-file projects:
+  - Abrir carpeta wire-project
+  - Detectar múltiples `.wire` files
+  - Dropdown para elegir qué archivo renderizar
+  
+- [ ] Configuración (`vscode.wire.json`):
+  - `exportDir`: dónde guardar exports
+  - `previewTheme`: tema default
+  - `debugMode`: mostrar overlays por defecto
+  - `autoSave`: auto-exportar al guardar
+
+#### 4.5.5 Commands
+
+- `Wire: Open Preview` - Abre panel de preview
+- `Wire: Export to SVG` - Exporta current screen a SVG
+- `Wire: Format Document` - Auto-format .wire
+- `Wire: Validate File` - Validación completa
+- `Wire: Show AST` - Debug: muestra AST JSON
+- `Wire: Show IR` - Debug: muestra IR JSON
+- `Wire: Show Layout` - Debug: muestra Layout JSON
+- `Wire: Toggle Grid Overlay` - Muestra/oculta grid
+- `Wire: Next Screen` / `Wire: Prev Screen` - Navegar multi-screen
+
+### Tests
+
+- [ ] Integration tests extension ↔ VS Code API
+- [ ] Tests de hot reload (timing)
+- [ ] Tests de multi-file projects
+- [ ] Tests de export en formato esperado
+
+### Documentación
+
+- [ ] Guía de instalación (marketplace)
+- [ ] Tutorial: crear primera screen con preview
+- [ ] Keyboard shortcuts reference
+- [ ] Troubleshooting (parser errors, performance)
+
+---
+
 ## Fase 5: AI Patterns y Tooling 🤖
 
 **Objetivo**: Optimizar para generación por IA y mejorar developer experience.
@@ -250,13 +360,36 @@ Este roadmap describe las fases de desarrollo del proyecto WireDSL, desde el MVP
 - [ ] Árbol de componentes
 - [ ] Hot reload en development
 
-#### 5.5 VS Code Extension
+#### 5.5 Componentes Personalizados (Custom Components)
 
-- [ ] Syntax highlighting
-- [ ] Autocomplete
-- [ ] Snippets
-- [ ] Live preview
-- [ ] Error highlighting
+- [ ] Plugin system para extender componentes
+- [ ] Registro de componentes custom
+- [ ] Props validation con JSON Schema
+- [ ] Importación desde librerías NPM
+
+
+##### 5.5.4 Commands
+
+- [ ] `Wire: Open Preview` - Abre el panel de preview
+- [ ] `Wire: Export to SVG` - Exporta screen actual a SVG
+- [ ] `Wire: Validate File` - Valida sintaxis/semántica
+- [ ] `Wire: Format Document` - Auto-format .wire
+- [ ] `Wire: Initialize Project` - Scaffolding desde template
+
+##### 5.5.5 Settings
+
+- [ ] Preview autoreload (on/off)
+- [ ] Theme en preview (light/dark)
+- [ ] Grid overlay default (on/off)
+- [ ] Viewport size override
+- [ ] Export directory
+
+##### 5.5.6 Architecture
+
+- [ ] WebView + iframe para preview (sandbox)
+- [ ] Worker thread para parser (no bloquea UI)
+- [ ] Comunicación VS Code API ↔ Webview via postMessage
+- [ ] Importación de @wire-dsl/core en webview
 
 #### 5.6 Documentation Site
 
@@ -510,11 +643,16 @@ project "E-commerce" {
 
 ## Timeline Estimado
 
-| Fase                             | Duración        | Estado                    |
-| -------------------------------- | --------------- | ------------------------- |
-| Fase 1: MVP                      | 8-10 semanas    | 📋 Planeado               |
-| Fase 2: Interacción              | 4-6 semanas     | 📋 Planeado               |
-| Fase 3: Componentes              | 4-6 semanas     | 📋 Planeado               |
+| Fase                                   | Duración        | Estado                    |
+| -------------------------------------- | --------------- | ------------------------- |
+| Fase 1: MVP (Core + CLI)               | 8-10 semanas    | ✅ En curso               |
+| Fase 2: Interacción                    | 4-6 semanas     | 📋 Planeado               |
+| Fase 3: Componentes                    | 4-6 semanas     | 📋 Planeado               |
+| Fase 4: Export (SVG, PNG, PDF, HTML)   | 3-4 semanas     | 📋 Planeado               |
+| **Fase 4.5: VS Code Extension (HIGH)** | **3-4 semanas** | **📋 Planeado (Next!)**   |
+| Fase 5: AI & Tooling                   | 4-6 semanas     | 📋 Planeado               |
+| Fase 6: Performance & Escalabilidad    | 2-3 semanas     | 📋 Backlog                |
+| Fase 7: Plugin System & Ecosistema     | Ongoing         | 💡 Visión a largo plazo   |
 | Fase 4: Export                   | 3-4 semanas     | 📋 Planeado               |
 | Fase 5: AI Tooling               | 6-8 semanas     | 📋 Planeado               |
 | Fase 6: Performance              | 2-3 semanas     | 💭 Futuro                 |
