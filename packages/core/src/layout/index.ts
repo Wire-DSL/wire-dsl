@@ -133,6 +133,9 @@ export class LayoutEngine {
       case 'split':
         this.calculateSplit(node, innerX, innerY, innerWidth, innerHeight);
         break;
+      case 'panel':
+        this.calculatePanel(node, innerX, innerY, innerWidth, innerHeight);
+        break;
     }
 
     // For vertical stacks, recalculate container height based on actual children positions
@@ -427,6 +430,14 @@ export class LayoutEngine {
       const contentWidth = width - sidebarWidth - gap;
       this.calculateNode(node.children[1].ref, contentX, y, contentWidth, height, 'split');
     }
+  }
+
+  private calculatePanel(node: IRNode, x: number, y: number, width: number, height: number): void {
+    if (node.kind !== 'container' || node.children.length === 0) return;
+
+    // Panel has exactly one child
+    const childRef = node.children[0];
+    this.calculateNode(childRef.ref, x, y, width, height, 'panel');
   }
 
   private calculateComponent(

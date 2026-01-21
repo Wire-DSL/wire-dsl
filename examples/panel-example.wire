@@ -1,0 +1,33 @@
+project "Panel Example" {
+  tokens density: comfortable
+  tokens spacing: md
+
+  screen Dashboard {
+    layout stack(direction: vertical, gap: lg, padding: xl) {
+      component Topbar title: "Panel Component Demo"
+      
+      layout panel(padding: lg) {
+        layout stack(direction: vertical, gap: md) {
+          component Heading text: "Panel with Stack"
+          component Card title: "Card inside Panel"
+          component Input placeholder: "Text inside panel"
+        }
+      }
+
+      layout panel(padding: md) {
+        component Card title: "Simple Card in Panel"
+      }
+
+      layout panel(padding: xl) {
+        layout grid(columns: 12, gap: md) {
+          cell span: 6 {
+            component Card title: "Left Column"
+          }
+          cell span: 6 {
+            component Card title: "Right Column"
+          }
+        }
+      }
+    }
+  }
+}

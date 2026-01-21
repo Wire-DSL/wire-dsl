@@ -167,6 +167,11 @@ export class SVGRenderer {
     this.renderedNodeIds.add(nodeId);
 
     if (node.kind === 'container') {
+      // Special handling for panel: render border
+      if (node.containerType === 'panel') {
+        this.renderPanelBorder(pos, output);
+      }
+
       // Render container (usually invisible, just layout)
       node.children.forEach((childRef) => {
         this.renderNode(childRef.ref, output);
@@ -434,6 +439,19 @@ export class SVGRenderer {
 
     svg += '\n  </g>';
     return svg;
+  }
+
+  private renderPanelBorder(pos: any, output: string[]): void {
+    // Render panel border as a rectangle with no fill, just stroke
+    const svg = `<g>
+    <rect x="${pos.x}" y="${pos.y}" 
+          width="${pos.width}" height="${pos.height}" 
+          rx="8" 
+          fill="none" 
+          stroke="${this.theme.border}" 
+          stroke-width="1"/>
+    </g>`;
+    output.push(svg);
   }
 
   private renderTable(node: IRComponentNode, pos: any): string {
