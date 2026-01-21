@@ -25,18 +25,18 @@
     "access": "public"
   },
   "dependencies": {
-    "hono": "^3.11.0",
-    "zod": "^3.22.0"
+    "hono": "4.11.4",
+    "zod": "4.3.5"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20231121.0",
-    "@types/node": "^20.10.0",
-    "@typescript-eslint/eslint-plugin": "^6.16.0",
-    "@typescript-eslint/parser": "^6.16.0",
-    "esbuild": "^0.19.0",
-    "eslint": "^8.56.0",
-    "typescript": "^5.3.0",
-    "wrangler": "^3.25.0"
+    "@cloudflare/workers-types": "4.20260120.0",
+    "@types/node": "25.0.9",
+    "@typescript-eslint/eslint-plugin": "8.53.1",
+    "@typescript-eslint/parser": "8.53.1",
+    "esbuild": "0.27.2",
+    "eslint": "9.39.2",
+    "typescript": "5.9.3",
+    "wrangler": "4.59.3"
   },
   "engines": {
     "node": ">=20.0.0"
