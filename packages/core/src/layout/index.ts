@@ -152,7 +152,7 @@ export class LayoutEngine {
         // If explicit height in props
         if (childNode?.kind === 'component' && childNode.props.height) {
           childHeight = Number(childNode.props.height);
-        } 
+        }
         // If it's a container (layout), calculate height from its children
         else if (childNode?.kind === 'container') {
           childHeight = this.calculateContainerHeight(childNode, width);
@@ -174,7 +174,7 @@ export class LayoutEngine {
       // horizontal - calculate height from tallest child
       let currentX = x;
       const childWidth = this.calculateChildWidth(children.length, width, gap);
-      
+
       // Calculate max height of children
       let stackHeight = 0;
       children.forEach((childRef) => {
@@ -457,10 +457,12 @@ export class LayoutEngine {
       }
       const rowCount = Number(node.props.rows || 5);
       const hasTitle = !!node.props.title;
+      const hasPagination = String(node.props.pagination) === 'true';
       const headerHeight = 44;
       const rowHeight = 36;
       const titleHeight = hasTitle ? 32 : 0;
-      return titleHeight + headerHeight + (rowCount * rowHeight);
+      const paginationHeight = hasPagination ? 64 : 0; // 16px gap + 32px buttons + 16px bottom margin
+      return titleHeight + headerHeight + rowCount * rowHeight + paginationHeight;
     }
 
     // Taller components

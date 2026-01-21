@@ -40,6 +40,7 @@ const THEMES = {
     textMuted: '#64748B',
     primary: '#3B82F6',
     primaryHover: '#2563EB',
+    primaryLight: '#EFF6FF',
   },
   dark: {
     bg: '#0F172A',
@@ -49,6 +50,7 @@ const THEMES = {
     textMuted: '#94A3B8',
     primary: '#60A5FA',
     primaryHover: '#3B82F6',
+    primaryLight: '#1E3A8A',
   },
 };
 
@@ -198,6 +200,10 @@ export class SVGRenderer {
         return this.renderTable(node, pos);
       case 'ChartPlaceholder':
         return this.renderChartPlaceholder(node, pos);
+      case 'Breadcrumbs':
+        return this.renderBreadcrumbs(node, pos);
+      case 'SidebarMenu':
+        return this.renderSidebarMenu(node, pos);
 
       // Text/Content components
       case 'Text':
@@ -434,6 +440,10 @@ export class SVGRenderer {
     const columns = columnsStr.split(',').map((c) => c.trim());
     const rowCount = Number(node.props.rows || 5);
     const mockStr = String(node.props.mock || '');
+    const paginationValue = String(node.props.pagination || 'false');
+    const pagination = paginationValue === 'true';
+    const pageCount = Number(node.props.pages || 5);
+    const paginationAlign = String(node.props.paginationAlign || 'right'); // left, center, right
 
     // Parse mock types, default to "item" if not specified
     const mockTypes = mockStr ? mockStr.split(',').map((m) => m.trim()) : columns.map(() => 'item');
@@ -510,6 +520,76 @@ export class SVGRenderer {
           fill="${this.theme.text}">${this.escapeXml(cellValue)}</text>`;
       });
     });
+
+    // Render pagination if enabled
+    if (pagination) {
+      const paginationY = headerY + headerHeight + mockRows.length * rowHeight + 16;
+      const buttonWidth = 40;
+      const buttonHeight = 32;
+      const gap = 8;
+      const totalWidth = (pageCount + 2) * (buttonWidth + gap) - gap; // +2 for prev/next buttons
+
+      // Calculate startX based on alignment
+      let startX: number;
+      if (paginationAlign === 'left') {
+        startX = pos.x + 16;
+      } else if (paginationAlign === 'center') {
+        startX = pos.x + (pos.width - totalWidth) / 2;
+      } else {
+        // right (default)
+        startX = pos.x + pos.width - totalWidth - 16;
+      }
+
+      // Previous button
+      svg += `
+    <rect x="${startX}" y="${paginationY}" 
+          width="${buttonWidth}" height="${buttonHeight}" 
+          rx="4" 
+          fill="${this.theme.cardBg}" 
+          stroke="${this.theme.border}" 
+          stroke-width="1"/>
+    <text x="${startX + buttonWidth / 2}" y="${paginationY + buttonHeight / 2 + 4}" 
+          font-family="system-ui, -apple-system, sans-serif" 
+          font-size="14" 
+          fill="${this.theme.text}" 
+          text-anchor="middle">&lt;</text>`;
+
+      // Page number buttons
+      for (let i = 1; i <= pageCount; i++) {
+        const btnX = startX + (buttonWidth + gap) * i;
+        const isActive = i === 1; // First page is active by default
+        const bgColor = isActive ? this.theme.primary : this.theme.cardBg;
+        const textColor = isActive ? '#FFFFFF' : this.theme.text;
+
+        svg += `
+    <rect x="${btnX}" y="${paginationY}" 
+          width="${buttonWidth}" height="${buttonHeight}" 
+          rx="4" 
+          fill="${bgColor}" 
+          stroke="${this.theme.border}" 
+          stroke-width="1"/>
+    <text x="${btnX + buttonWidth / 2}" y="${paginationY + buttonHeight / 2 + 4}" 
+          font-family="system-ui, -apple-system, sans-serif" 
+          font-size="14" 
+          fill="${textColor}" 
+          text-anchor="middle">${i}</text>`;
+      }
+
+      // Next button
+      const nextX = startX + (buttonWidth + gap) * (pageCount + 1);
+      svg += `
+    <rect x="${nextX}" y="${paginationY}" 
+          width="${buttonWidth}" height="${buttonHeight}" 
+          rx="4" 
+          fill="${this.theme.cardBg}" 
+          stroke="${this.theme.border}" 
+          stroke-width="1"/>
+    <text x="${nextX + buttonWidth / 2}" y="${paginationY + buttonHeight / 2 + 4}" 
+          font-family="system-ui, -apple-system, sans-serif" 
+          font-size="14" 
+          fill="${this.theme.text}" 
+          text-anchor="middle">&gt;</text>`;
+    }
 
     svg += '\n  </g>';
     return svg;
@@ -1004,6 +1084,86 @@ export class SVGRenderer {
           fill="${this.theme.textMuted}" 
           text-anchor="middle">${node.componentType}</text>
   </g>`;
+  }
+
+  private renderBreadcrumbs(node: IRComponentNode, pos: any): string {
+    const itemsStr = String(node.props.items || 'Home');
+    const items = itemsStr.split(',').map((s) => s.trim());
+    const separator = String(node.props.separator || '/');
+    const fontSize = 12;
+    const separatorWidth = 20; // Increased for spacing
+    const itemSpacing = 8;
+
+    let currentX = pos.x;
+    let svg = '<g>';
+
+    items.forEach((item, index) => {
+      const isLast = index === items.length - 1;
+      const textColor = isLast ? this.theme.text : this.theme.textMuted;
+      const fontWeight = isLast ? '500' : '400';
+
+      svg += `
+    <text x="${currentX}" y="${pos.y + pos.height / 2 + 4}" 
+          font-family="system-ui, -apple-system, sans-serif" 
+          font-size="${fontSize}" 
+          font-weight="${fontWeight}" 
+          fill="${textColor}">${this.escapeXml(item)}</text>`;
+
+      // Estimate text width (rough approximation)
+      const textWidth = item.length * 6.5;
+      currentX += textWidth + itemSpacing;
+
+      // Add separator with spacing (except after last item)
+      if (!isLast) {
+        svg += `
+    <text x="${currentX + 4}" y="${pos.y + pos.height / 2 + 4}" 
+          font-family="system-ui, -apple-system, sans-serif" 
+          font-size="${fontSize}" 
+          fill="${this.theme.textMuted}">${this.escapeXml(separator)}</text>`;
+        currentX += separatorWidth;
+      }
+    });
+
+    svg += '\n  </g>';
+    return svg;
+  }
+
+  private renderSidebarMenu(node: IRComponentNode, pos: any): string {
+    const itemsStr = String(node.props.items || 'Item 1,Item 2,Item 3');
+    const items = itemsStr.split(',').map((s) => s.trim());
+    const itemHeight = 40;
+    const fontSize = 14;
+    const activeIndex = Number(node.props.active || 0); // First item active by default
+
+    let svg = '<g>';
+
+    items.forEach((item, index) => {
+      const itemY = pos.y + index * itemHeight;
+      const isActive = index === activeIndex;
+      const bgColor = isActive ? this.theme.primaryLight : 'transparent';
+      const textColor = isActive ? this.theme.primary : this.theme.text;
+      const fontWeight = isActive ? '500' : '400';
+
+      // Item background (only if active)
+      if (isActive) {
+        svg += `
+    <rect x="${pos.x}" y="${itemY}" 
+          width="${pos.width}" height="${itemHeight}" 
+          rx="6" 
+          fill="${bgColor}"/>`;
+      }
+
+      // Item text
+      svg += `
+    <text x="${pos.x + 12}" y="${itemY + itemHeight / 2 + 5}" 
+          font-family="system-ui, -apple-system, sans-serif" 
+          font-size="${fontSize}" 
+          font-weight="${fontWeight}" 
+          fill="${textColor}">${this.escapeXml(item)}</text>`;
+    });
+
+    svg += '\n  </g>';
+    return svg;
   }
 
   private escapeXml(text: string): string {
