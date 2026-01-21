@@ -269,19 +269,16 @@ export class SVGRenderer {
     const textColor = variant === 'primary' ? '#FFFFFF' : this.theme.text;
     const borderColor = variant === 'primary' ? this.theme.primary : this.theme.border;
 
-    // Add horizontal padding to button
-    const paddingX = 16;
-    const buttonX = pos.x + paddingX;
-    const buttonWidth = Math.max(pos.width - paddingX * 2, 60); // Minimum 60px width
+    const buttonWidth = Math.max(pos.width, 60); // Minimum 60px width
 
     return `<g>
-    <rect x="${buttonX}" y="${pos.y}" 
+    <rect x="${pos.x}" y="${pos.y}" 
           width="${buttonWidth}" height="${pos.height}" 
           rx="6" 
           fill="${bgColor}" 
           stroke="${borderColor}" 
           stroke-width="1"/>
-    <text x="${buttonX + buttonWidth / 2}" y="${pos.y + pos.height / 2 + 5}" 
+    <text x="${pos.x + buttonWidth / 2}" y="${pos.y + pos.height / 2 + 5}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="14" 
           font-weight="500" 
