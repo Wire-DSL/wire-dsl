@@ -1,18 +1,24 @@
-import { readFile, writeFile, mkdir, stat } from 'fs/promises';
+import { readFile, mkdir, stat } from 'fs/promises';
 import path from 'path';
 import chalk from 'chalk';
 import ora from 'ora';
 import chokidar from 'chokidar';
 import { LayoutEngine, SVGRenderer, generateIR, parseWireDSL } from '@wire-dsl/core';
+import { exportSVG, exportPNG, exportMultipagePDF } from './exporters';
 
 type RenderOptions = {
   out?: string;
+  svg?: string;
+  pdf?: string;
+  png?: string;
   screen?: string;
   theme?: 'light' | 'dark';
   width?: number;
   height?: number;
   watch?: boolean;
 };
+
+type ExportFormat = 'svg' | 'pdf' | 'png';
 
 /**
  * Check if path is a directory
@@ -36,8 +42,40 @@ function sanitizeScreenName(name: string): string {
     .replace(/[^a-z0-9-]/g, '');
 }
 
+/**
+ * Detect export format from file path extension
+ */
+function detectFormat(filePath: string): ExportFormat {
+  const ext = path.extname(filePath).toLowerCase();
+  if (ext === '.pdf') return 'pdf';
+  if (ext === '.png') return 'png';
+  return 'svg'; // default
+}
+
+/**
+ * Determine output format and path based on options
+ */
+function resolveOutputFormat(options: RenderOptions): {
+  format: ExportFormat;
+  outputPath?: string;
+} {
+  // Explicit format flags take priority
+  if (options.pdf) return { format: 'pdf', outputPath: options.pdf };
+  if (options.png) return { format: 'png', outputPath: options.png };
+  if (options.svg) return { format: 'svg', outputPath: options.svg };
+
+  // Auto-detect from --out
+  if (options.out) {
+    return { format: detectFormat(options.out), outputPath: options.out };
+  }
+
+  // No output specified = stdout SVG
+  return { format: 'svg' };
+}
+
 export const renderCommand = async (input: string, options: RenderOptions = {}): Promise<void> => {
   const resolvedInputPath = path.resolve(process.cwd(), input);
+  const { format, outputPath } = resolveOutputFormat(options);
 
   const renderOnce = async () => {
     const spinner = ora(`Rendering ${input}`).start();
@@ -68,76 +106,117 @@ export const renderCommand = async (input: string, options: RenderOptions = {}):
         screensToRender = [found];
       }
 
-      // Determine output path(s)
       const basename = path.basename(resolvedInputPath, path.extname(resolvedInputPath));
-
-      // If multiple screens, always output to directory
       const multiScreen = screensToRender.length > 1;
-      let outputDir: string | null = null;
 
-      if (multiScreen) {
-        if (options.out) {
-          // Check if path is directory or if it looks like a directory
-          const isDir = await isDirectory(options.out);
-          if (isDir) {
-            outputDir = path.resolve(process.cwd(), options.out);
-          } else {
-            // If user gave a file path for multi-screen, use its directory
-            outputDir = path.dirname(path.resolve(process.cwd(), options.out));
-          }
-        } else {
-          // Default to current directory
-          outputDir = process.cwd();
-        }
+      // Render all screens to SVG first (respect each screen viewport unless overridden)
+      const renderedScreens = screensToRender.map((screen) => {
+        const viewport = screen.viewport ?? baseViewport;
+        const width = options.width ?? viewport.width;
+        const height = options.height ?? viewport.height;
 
-        // Ensure directory exists
-        try {
-          await mkdir(outputDir, { recursive: true });
-        } catch {
-          // Directory may already exist
-        }
-      }
-
-      // Render each screen
-      const renderedFiles: string[] = [];
-
-      for (const screen of screensToRender) {
         const renderer = new SVGRenderer(ir, layout, {
-          width: options.width ?? baseViewport.width,
-          height: options.height ?? baseViewport.height,
+          width,
+          height,
           theme: options.theme ?? 'light',
           includeLabels: true,
           screenName: screen.name,
         });
 
-        const svg = renderer.render();
+        return {
+          name: screen.name,
+          svg: renderer.render(),
+          width,
+          height,
+        };
+      });
 
-        if (multiScreen) {
-          // Output to directory with screen name
-          const sanitizedScreenName = sanitizeScreenName(screen.name);
-          const fileName = `${basename}-${sanitizedScreenName}.svg`;
-          const filePath = path.join(outputDir!, fileName);
-          await writeFile(filePath, svg, 'utf8');
-          renderedFiles.push(filePath);
-        } else if (options.out) {
-          // Single screen with output path
-          const outPath = path.resolve(process.cwd(), options.out);
-          await writeFile(outPath, svg, 'utf8');
-          renderedFiles.push(outPath);
-        } else {
-          // Single screen to stdout
-          spinner.succeed('Rendered SVG');
-          process.stdout.write(svg + '\n');
-          return;
-        }
+      // No output path = stdout SVG (first screen only)
+      if (!outputPath) {
+        spinner.succeed('Rendered SVG');
+        process.stdout.write(renderedScreens[0].svg + '\n');
+        return;
       }
 
-      // Report success
-      if (renderedFiles.length === 1) {
-        spinner.succeed(`SVG written to ${renderedFiles[0]}`);
+      // Handle different export formats
+      const renderedFiles: string[] = [];
+
+      if (format === 'pdf') {
+        // PDF: always single file with all screens as pages
+        let pdfPath = outputPath;
+
+        // If output is a directory, generate filename
+        const isDir = await isDirectory(outputPath);
+        if (isDir) {
+          pdfPath = path.join(outputPath, `${basename}.pdf`);
+        } else if (!pdfPath.endsWith('.pdf')) {
+          pdfPath += '.pdf';
+        }
+
+        await exportMultipagePDF(renderedScreens, pdfPath);
+        renderedFiles.push(pdfPath);
+
+        spinner.succeed(
+          `PDF written to ${chalk.cyan(pdfPath)} (${renderedScreens.length} page${renderedScreens.length > 1 ? 's' : ''})`
+        );
+      } else if (format === 'png') {
+        // PNG: requires directory for multiple screens
+        let outputDir = outputPath;
+        const isDir = await isDirectory(outputPath);
+
+        if (!isDir && multiScreen) {
+          spinner.warn('PNG export with multiple screens requires a directory');
+          outputDir = path.dirname(outputPath);
+        }
+
+        await mkdir(outputDir, { recursive: true }).catch(() => {});
+
+        for (const screen of renderedScreens) {
+          const sanitizedName = sanitizeScreenName(screen.name);
+          const fileName = multiScreen
+            ? `${basename}-${sanitizedName}.png`
+            : path.basename(outputPath).endsWith('.png')
+              ? path.basename(outputPath)
+              : `${basename}.png`;
+
+          const filePath = isDir || multiScreen ? path.join(outputDir, fileName) : outputPath;
+
+          await exportPNG(screen.svg, filePath, screen.width, screen.height);
+          renderedFiles.push(filePath);
+        }
+
+        if (renderedFiles.length === 1) {
+          spinner.succeed(`PNG written to ${chalk.cyan(renderedFiles[0])}`);
+        } else {
+          spinner.succeed(`${renderedFiles.length} PNG files written:`);
+          renderedFiles.forEach((file) => console.log(`  ${chalk.cyan(file)}`));
+        }
       } else {
-        spinner.succeed(`${renderedFiles.length} SVG files written:`);
-        renderedFiles.forEach((file) => console.log(`  ${chalk.cyan(file)}`));
+        // SVG: directory for multiple screens, file for single screen
+        let outputDir = outputPath;
+        const isDir = await isDirectory(outputPath);
+
+        if (multiScreen || isDir) {
+          if (!isDir) {
+            outputDir = path.dirname(outputPath);
+          }
+          await mkdir(outputDir, { recursive: true }).catch(() => {});
+
+          for (const screen of renderedScreens) {
+            const sanitizedName = sanitizeScreenName(screen.name);
+            const fileName = `${basename}-${sanitizedName}.svg`;
+            const filePath = path.join(outputDir, fileName);
+            await exportSVG(screen.svg, filePath);
+            renderedFiles.push(filePath);
+          }
+
+          spinner.succeed(`${renderedFiles.length} SVG files written:`);
+          renderedFiles.forEach((file) => console.log(`  ${chalk.cyan(file)}`));
+        } else {
+          // Single screen to file
+          await exportSVG(renderedScreens[0].svg, outputPath);
+          spinner.succeed(`SVG written to ${chalk.cyan(outputPath)}`);
+        }
       }
     } catch (error: any) {
       spinner.fail('Render failed');

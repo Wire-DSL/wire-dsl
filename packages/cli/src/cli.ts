@@ -15,11 +15,14 @@ program.name('wire').description('WireDSL - Wireframes as Code').version('0.0.1'
 
 program
   .command('render <input>')
-  .description('Render .wire file to SVG')
+  .description('Render .wire file (default: PDF when saving, SVG to stdout)')
   .option(
     '-o, --out <path>, --output <path>',
-    'Output path (file or directory, defaults to stdout)'
+    'Output path (auto-detects format: .pdf/.svg/.png or directory for PDF)'
   )
+  .option('--svg <path>', 'Force SVG output (file or directory for multiple files)')
+  .option('--pdf <path>', 'Force PDF output (single file with all screens as pages)')
+  .option('--png <path>', 'Force PNG output (directory for multiple files)')
   .option('-s, --screen <name>', 'Render specific screen by name (defaults to all screens)')
   .option('--width <number>', 'Override viewport width')
   .option('--height <number>', 'Override viewport height')
@@ -32,6 +35,9 @@ program
 
     return renderCommand(input, {
       out: options.out,
+      svg: options.svg,
+      pdf: options.pdf,
+      png: options.png,
       screen: options.screen,
       width,
       height,
