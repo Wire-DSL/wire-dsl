@@ -250,6 +250,9 @@ export class IRGenerator {
     const style: IRStyle = {};
     if (layout.params.padding) {
       style.padding = String(layout.params.padding);
+    } else {
+      // Layouts without explicit padding have no padding by default
+      style.padding = 'none';
     }
     if (layout.params.gap) {
       style.gap = String(layout.params.gap);
@@ -294,7 +297,7 @@ export class IRGenerator {
       containerType: 'stack', // Cells contain content in a stack by default
       params: cell.props,
       children: childRefs,
-      style: {},
+      style: { padding: 'none' }, // Cells have no padding by default - grid gap handles spacing
       meta: { source: 'cell' },
     };
 

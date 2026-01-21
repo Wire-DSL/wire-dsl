@@ -76,9 +76,15 @@ layout stack(direction: vertical, gap: md, padding: lg) {
 **Propiedades**:
 
 - `direction`: `vertical` (default) | `horizontal`
-- `gap`: espaciado entre elementos (`xs`/`sm`/`md`/`lg`/`xl`)
-- `padding`: relleno interno
+- `gap`: espaciado entre elementos (`xs`=4px, `sm`=8px, `md`=16px, `lg`=24px, `xl`=32px)
+- `padding`: relleno interno (`xs`/`sm`/`md`/`lg`/`xl` o `none`=0px; **default: none si no se especifica**)
 - `align`: alineación (`start`/`center`/`end`)
+
+**⚠️ Nota sobre padding**:
+
+- Los layouts sin `padding` explícito tienen **0px de padding por defecto** (no heredan del proyecto)
+- Especifica `padding: md` o `padding: lg` si quieres márgenes internos
+- Evita acumular padding en layouts anidados; aplica solo en el nivel superior
 
 #### Grid
 
@@ -102,6 +108,8 @@ layout grid(columns: 12, gap: md) {
 - **Cell properties**:
   - `span`: columnas que ocupa (default: 12)
   - `align`: alineación dentro de la celda
+
+**⚠️ Nota sobre cells**: Las cells tienen **0px de padding por defecto**. El `gap` del grid maneja la separación entre columnas. No intentes agregar padding a las cells.
 
 #### Split
 

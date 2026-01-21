@@ -27,6 +27,7 @@ export interface LayoutResult {
 // ============================================================================
 
 const SPACING_VALUES: Record<string, number> = {
+  none: 0,
   xs: 4,
   sm: 8,
   md: 16,
@@ -50,6 +51,7 @@ export class LayoutEngine {
   private result: LayoutResult = {};
   private viewport: { width: number; height: number };
   private ir: IRContract;
+  private parentContainerTypes: Map<string, string> = new Map(); // Track parent container types
 
   constructor(ir: IRContract) {
     this.ir = ir;
@@ -72,9 +74,21 @@ export class LayoutEngine {
     return this.result;
   }
 
-  private calculateNode(nodeId: string, x: number, y: number, width: number, height: number): void {
+  private calculateNode(
+    nodeId: string,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    parentContainerType?: string
+  ): void {
     const node = this.nodes[nodeId];
     if (!node) return;
+
+    // Track parent container type for padding optimization
+    if (parentContainerType && node.kind === 'container') {
+      this.parentContainerTypes.set(nodeId, parentContainerType);
+    }
 
     if (node.kind === 'container') {
       this.calculateContainer(node, nodeId, x, y, width, height);
@@ -93,7 +107,7 @@ export class LayoutEngine {
   ): void {
     if (node.kind !== 'container') return;
 
-    // Apply padding
+    // Apply padding normally - children handle their own padding
     const padding = this.resolveSpacing(node.style.padding);
     const innerX = x + padding;
     const innerY = y + padding;
@@ -162,7 +176,7 @@ export class LayoutEngine {
           childHeight = this.getIntrinsicComponentHeight(childNode);
         }
 
-        this.calculateNode(childRef.ref, x, currentY, width, childHeight);
+        this.calculateNode(childRef.ref, x, currentY, width, childHeight, 'stack');
         currentY += childHeight;
 
         // Add gap except after last child
@@ -194,7 +208,7 @@ export class LayoutEngine {
 
       // Position children with calculated height
       children.forEach((childRef) => {
-        this.calculateNode(childRef.ref, currentX, y, childWidth, stackHeight);
+        this.calculateNode(childRef.ref, currentX, y, childWidth, stackHeight, 'stack');
         currentX += childWidth + gap;
       });
     }
@@ -391,7 +405,7 @@ export class LayoutEngine {
       const cellWidth = colWidth * span + gap * (span - 1);
       const cellX = x + col * (colWidth + gap);
 
-      this.calculateNode(childRef.ref, cellX, cellY, cellWidth, cellHeight);
+      this.calculateNode(childRef.ref, cellX, cellY, cellWidth, cellHeight, 'grid');
     });
   }
 
@@ -403,15 +417,15 @@ export class LayoutEngine {
 
     if (node.children.length === 1) {
       // Only one child, give it full width
-      this.calculateNode(node.children[0].ref, x, y, width, height);
+      this.calculateNode(node.children[0].ref, x, y, width, height, 'split');
     } else if (node.children.length >= 2) {
-      // Left sidebar
-      this.calculateNode(node.children[0].ref, x, y, sidebarWidth, height);
+      // Left sidebar - will have its left padding, but right padding handled by gap
+      this.calculateNode(node.children[0].ref, x, y, sidebarWidth, height, 'split');
 
-      // Right content
+      // Right content - will have its right padding, but left padding handled by gap
       const contentX = x + sidebarWidth + gap;
       const contentWidth = width - sidebarWidth - gap;
-      this.calculateNode(node.children[1].ref, contentX, y, contentWidth, height);
+      this.calculateNode(node.children[1].ref, contentX, y, contentWidth, height, 'split');
     }
   }
 
@@ -439,7 +453,8 @@ export class LayoutEngine {
 
   private resolveSpacing(spacing?: string): number {
     if (!spacing) return SPACING_VALUES[this.tokens.spacing];
-    return SPACING_VALUES[spacing] || SPACING_VALUES.md;
+    const value = SPACING_VALUES[spacing];
+    return value !== undefined ? value : SPACING_VALUES.md;
   }
 
   private getComponentHeight(): number {

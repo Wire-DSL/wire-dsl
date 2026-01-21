@@ -358,38 +358,38 @@ Para agregar un nuevo tipo de acción:
 
 ```typescript
 const project: Project = {
-  id: "proj_example",
-  name: "Example App",
+  id: 'proj_example',
+  name: 'Example App',
   tokens: {
-    density: "normal",
-    spacing: "md",
-    radius: "md",
-    stroke: "normal",
-    font: "base",
+    density: 'normal',
+    spacing: 'md',
+    radius: 'md',
+    stroke: 'normal',
+    font: 'base',
   },
   screens: [
     {
-      id: "Home",
-      name: "Home Screen",
+      id: 'Home',
+      name: 'Home Screen',
       viewport: { width: 1280, height: 720 },
-      root: { ref: "node_home_root" },
+      root: { ref: 'node_home_root' },
     },
   ],
   nodes: {
     node_home_root: {
-      id: "node_home_root",
-      kind: "container",
+      id: 'node_home_root',
+      kind: 'container',
       layout: {
-        type: "stack",
-        props: { direction: "vertical", gap: "md" },
+        type: 'stack',
+        props: { direction: 'vertical', gap: 'md' },
       },
-      children: [{ slot: "child", ref: "cmp_heading" }],
+      children: [{ slot: 'child', ref: 'cmp_heading' }],
     },
     cmp_heading: {
-      id: "cmp_heading",
-      kind: "component",
-      componentType: "Heading",
-      props: { text: "Welcome" },
+      id: 'cmp_heading',
+      kind: 'component',
+      componentType: 'Heading',
+      props: { text: 'Welcome' },
     },
   },
 };
@@ -448,33 +448,33 @@ type Node = ContainerNode | ComponentNode;
 
 interface BaseNode {
   id: string;
-  kind: "container" | "component";
+  kind: 'container' | 'component';
   style?: Style;
   meta?: Record<string, any>;
 }
 
 interface ContainerNode extends BaseNode {
-  kind: "container";
+  kind: 'container';
   layout: Layout;
   children: ChildRef[];
 }
 
 interface ComponentNode extends BaseNode {
-  kind: "component";
+  kind: 'component';
   componentType: ComponentType;
   props: Record<string, any>;
   events?: Event[];
 }
 
 interface Layout {
-  type: "stack" | "grid" | "split";
+  type: 'stack' | 'grid' | 'split';
   props: LayoutProps;
 }
 
 type LayoutProps = StackProps | GridProps | SplitProps;
 
 interface StackProps {
-  direction: "vertical" | "horizontal";
+  direction: 'vertical' | 'horizontal';
   gap: SpacingToken;
   align?: Align;
 }
@@ -505,7 +505,7 @@ interface GridMetadata {
 }
 
 interface Style {
-  padding?: SpacingToken;
+  padding?: SpacingToken; // Default: "none" (0px) if not specified. Use explicit value to apply padding.
   gap?: SpacingToken;
   align?: Align;
   justify?: Justify;
@@ -514,7 +514,7 @@ interface Style {
 }
 
 interface Size {
-  mode: "fixed" | "fill" | "content" | "percent";
+  mode: 'fixed' | 'fill' | 'content' | 'percent';
   value?: number;
 }
 
@@ -523,10 +523,10 @@ interface Event {
   action: Action;
 }
 
-type EventType = "onClick" | "onRowClick";
+type EventType = 'onClick' | 'onRowClick';
 
 interface Action {
-  type: "goto";
+  type: 'goto';
   targetScreenId: string;
 }
 
@@ -538,30 +538,30 @@ interface Tokens {
   font: FontToken;
 }
 
-type Density = "compact" | "normal" | "comfortable";
-type SpacingToken = "xs" | "sm" | "md" | "lg" | "xl";
-type RadiusToken = "none" | "sm" | "md" | "lg";
-type StrokeToken = "thin" | "normal";
-type FontToken = "base" | "title" | "mono";
-type Align = "start" | "center" | "end";
-type Justify = "start" | "center" | "end";
+type Density = 'compact' | 'normal' | 'comfortable';
+type SpacingToken = 'none' | 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+type RadiusToken = 'none' | 'sm' | 'md' | 'lg';
+type StrokeToken = 'thin' | 'normal';
+type FontToken = 'base' | 'title' | 'mono';
+type Align = 'start' | 'center' | 'end';
+type Justify = 'start' | 'center' | 'end';
 
 type ComponentType =
-  | "Heading"
-  | "Text"
-  | "Input"
-  | "Textarea"
-  | "Select"
-  | "Button"
-  | "IconButton"
-  | "SidebarMenu"
-  | "Topbar"
-  | "Breadcrumbs"
-  | "Tabs"
-  | "Table"
-  | "List"
-  | "Panel"
-  | "Card"
-  | "Divider"
-  | "ChartPlaceholder";
+  | 'Heading'
+  | 'Text'
+  | 'Input'
+  | 'Textarea'
+  | 'Select'
+  | 'Button'
+  | 'IconButton'
+  | 'SidebarMenu'
+  | 'Topbar'
+  | 'Breadcrumbs'
+  | 'Tabs'
+  | 'Table'
+  | 'List'
+  | 'Panel'
+  | 'Card'
+  | 'Divider'
+  | 'ChartPlaceholder';
 ```

@@ -29,10 +29,41 @@ project "Nombre" {
 
 ## Tokens (usar por defecto)
 
-- spacing: xs=4, sm=8, md=16 (default), lg=24, xl=32
-- density: compact | normal (default) | comfortable
-- radius: none | sm | md (default) | lg
-- stroke: thin | normal (default)
+- **spacing**: `xs`=4px, `sm`=8px, `md`=16px (default), `lg`=24px, `xl`=32px, `none`=0px
+- **density**: compact | normal (default) | comfortable
+- **radius**: none | sm | md (default) | lg
+- **stroke**: thin | normal (default)
+
+## Padding en Layouts y Cells
+
+**Comportamiento importante (cambio v2)**:
+
+- **Layouts sin `padding` explícito tienen 0px de padding** (anterior comportamiento asignaba el valor por defecto del proyecto)
+- **Cells (en grid) siempre tienen 0px de padding por defecto** para que el `gap` del grid maneje la separación
+- Para aplicar padding a un layout, especifica explícitamente: `padding: sm`, `padding: md`, `padding: lg`, etc.
+- Valores válidos: `none`, `xs`, `sm`, `md`, `lg`, `xl`
+
+**Ejemplos**:
+
+```wire
+// ✓ Correcto: stack con padding, contenido respeta márgenes
+layout stack(direction: vertical, gap: md, padding: lg) {
+  component Heading text: "Title"
+}
+
+// ✓ Correcto: stack sin padding (0px), hijos sin margen de contenedor
+layout stack(direction: vertical, gap: sm) {
+  component Heading text: "Title"
+  component Text content: "Subtitle"
+}
+
+// ✓ Correcto: grid con cells, gap maneja separación
+layout grid(columns: 12, gap: sm) {
+  cell span: 3 {
+    component Input label: "Field"
+  }
+}
+```
 
 ## Layouts y reglas
 
@@ -55,11 +86,11 @@ project "Nombre" {
 - **Select**: `label?` (string), `options?` (array/CSV), `placeholder?` (string). Ej: `component Select label: "Role" options: "Admin,User"`
 - **Button**: `text` (string, req), `variant?` (primary|secondary|ghost, default secondary), `onClick?` (goto("Screen")). Ej: `component Button text: "Save" variant: primary`
 - **IconButton**: `icon` (string, req). Ej: `component IconButton icon: "search"`
-- **SidebarMenu**: `items` (array de strings u objetos `{label, active?, action?}`). Ej: `component SidebarMenu items: "Home,Users,Settings"`
+- **SidebarMenu**: `items` (array/CSV, req), `active?` (number, índice del item activo, default 0). Ej: `component SidebarMenu items: "Home,Users,Settings" active: 1`
 - **Topbar**: `title?` (string). Ej: `component Topbar title: "Dashboard"`
-- **Breadcrumbs**: `items` (array/CSV, req). Ej: `component Breadcrumbs items: "Home,Users,Detail"`
+- **Breadcrumbs**: `items` (array/CSV, req), `separator?` (string, default "/"). Ej: `component Breadcrumbs items: "Home,Users,Detail" separator: ">"`
 - **Tabs**: `items` (array/CSV, req), `activeIndex?` (number, default 0). Ej: `component Tabs items: "Profile,Settings" activeIndex: 1`
-- **Table**: `columns` (array/CSV, req), `rowsMock?` (number, default 5), `rowHeight?` (number, default 40), `onRowClick?` (goto("Screen")). Ej: `component Table columns: "Name,Email,Status" rowsMock: 6`
+- **Table**: `columns` (array/CSV, req), `rows?` (number, default 5), `pagination?` (true|false, default false), `pages?` (number, default 5), `paginationAlign?` (left|center|right, default right), `rowHeight?` (number, default 40), `onRowClick?` (goto("Screen")). Ej: `component Table columns: "Name,Email,Status" rows: 6 pagination: true pages: 4`
 - **List**: `items` (array/CSV, req). Ej: `component List items: "Item 1,Item 2,Item 3"`
 - **Panel**: `title?` (string), `height?` (number px). Ej: `component Panel title: "User Info" height: 240`
 - **Card**: `title?` (string). Ej: `component Card title: "Stats"`
@@ -95,9 +126,12 @@ project "Nombre" {
   tokens density: normal
   tokens spacing: md
   ```
-- `layout stack(direction: vertical, gap: md, padding: lg)` para columnas únicas.
-- `grid(columns: 12, gap: md)` con spans 8/4 o 6/6 para dos columnas.
-- `rowsMock: 5..8` si no se especifica tamaño de tabla.
+- `layout stack(direction: vertical, gap: md, padding: lg)` para columnas únicas con márgenes.
+- `layout stack(direction: vertical, gap: sm)` para stacks internos sin padding adicional (evita acumulación de márgenes).
+- `grid(columns: 12, gap: sm)` con spans 8/4 o 6/6 para dos columnas (usa `gap: sm` para mejor espaciado en formularios).
+- `grid(columns: 12, gap: md)` si quieres mayor separación entre columnas.
+- `rows: 5..8` si no se especifica tamaño de tabla.
+- `pagination: true` en tablas cuando hay muchos datos.
 
 ## Plantilla de respuesta (obligatorio, solo código)
 
@@ -141,9 +175,9 @@ project "Dashboard" {
 
       layout stack(direction: vertical, gap: md, padding: lg) {
         component Topbar title: "Home"
-        layout grid(columns: 12, gap: md) {
+        layout grid(columns: 12, gap: sm) {
           cell span: 8 {
-            component Table columns: "Name,Email,Status,Role" rowsMock: 8
+            component Table columns: "Name,Email,Status,Role" rows: 8 pagination: true pages: 5
           }
           cell span: 4 {
             component Card title: "Stats"
@@ -167,7 +201,7 @@ project "User Form" {
   screen UserForm {
     layout stack(direction: vertical, gap: md, padding: lg) {
       component Heading text: "User"
-      layout grid(columns: 12, gap: md) {
+      layout grid(columns: 12, gap: sm) {
         cell span: 6 {
           component Input label: "Name" placeholder: "Full name"
         }
@@ -215,4 +249,5 @@ project "Detail" {
 - `cell span` fuera de rango o sin `columns` definido.
 - `split` sin `sidebar` o sin `right`.
 - Componentes sin props requeridas (p.ej., `Button` sin `text`, `Table` sin `columns`).
+- **Acumular padding en layouts anidados**: evita `stack(padding: lg) { stack(padding: md) { ... } }`. Usa padding solo en el nivel superior o especifica explícitamente `padding: none` en internos.
 - Salida con texto extra; debe ser solo el bloque `.wire`.

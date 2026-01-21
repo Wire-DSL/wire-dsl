@@ -253,7 +253,7 @@ export class SVGRenderer {
     const fontSize = 20;
 
     return `<g>
-    <text x="${pos.x + 8}" y="${pos.y + pos.height / 2 + 6}" 
+    <text x="${pos.x}" y="${pos.y + pos.height / 2 + 6}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="${fontSize}" 
           font-weight="600" 
@@ -269,14 +269,19 @@ export class SVGRenderer {
     const textColor = variant === 'primary' ? '#FFFFFF' : this.theme.text;
     const borderColor = variant === 'primary' ? this.theme.primary : this.theme.border;
 
+    // Add horizontal padding to button
+    const paddingX = 16;
+    const buttonX = pos.x + paddingX;
+    const buttonWidth = Math.max(pos.width - paddingX * 2, 60); // Minimum 60px width
+
     return `<g>
-    <rect x="${pos.x}" y="${pos.y}" 
-          width="${pos.width}" height="${pos.height}" 
+    <rect x="${buttonX}" y="${pos.y}" 
+          width="${buttonWidth}" height="${pos.height}" 
           rx="6" 
           fill="${bgColor}" 
           stroke="${borderColor}" 
           stroke-width="1"/>
-    <text x="${pos.x + pos.width / 2}" y="${pos.y + pos.height / 2 + 5}" 
+    <text x="${buttonX + buttonWidth / 2}" y="${pos.y + pos.height / 2 + 5}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="14" 
           font-weight="500" 
@@ -292,7 +297,7 @@ export class SVGRenderer {
     return `<g>
     ${
       label
-        ? `<text x="${pos.x}" y="${pos.y - 6}" 
+        ? `<text x="${pos.x + 8}" y="${pos.y - 6}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="12" 
           fill="${this.theme.text}">${this.escapeXml(label)}</text>`
@@ -622,7 +627,7 @@ export class SVGRenderer {
     const fontSize = 14;
 
     return `<g>
-    <text x="${pos.x + 8}" y="${pos.y + 16}" 
+    <text x="${pos.x}" y="${pos.y + 16}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="${fontSize}" 
           fill="${this.theme.text}">${this.escapeXml(text)}</text>
