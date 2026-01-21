@@ -347,23 +347,42 @@ class WireDSLVisitor extends BaseCstVisitor {
       Object.assign(params, paramResult);
     }
 
+    // Process children in the order they appear in the input
+    // We need to merge component, layout, and cell arrays while preserving order
+    const childNodes: Array<{ type: string; node: any; index: number }> = [];
+
     if (ctx.component) {
       ctx.component.forEach((comp: any) => {
-        children.push(this.visit(comp));
+        // Get the token position from the CST node (always present in Chevrotain)
+        const startToken = comp.children?.Component?.[0] || comp.children?.componentType?.[0];
+        childNodes.push({ type: 'component', node: comp, index: startToken.startOffset });
       });
     }
-
     if (ctx.layout) {
       ctx.layout.forEach((layout: any) => {
-        children.push(this.visit(layout));
+        const startToken = layout.children?.Layout?.[0] || layout.children?.layoutType?.[0];
+        childNodes.push({ type: 'layout', node: layout, index: startToken.startOffset });
+      });
+    }
+    if (ctx.cell) {
+      ctx.cell.forEach((cell: any) => {
+        const startToken = cell.children?.Cell?.[0];
+        childNodes.push({ type: 'cell', node: cell, index: startToken.startOffset });
       });
     }
 
-    if (ctx.cell) {
-      ctx.cell.forEach((cell: any) => {
-        children.push(this.visit(cell));
-      });
-    }
+    // Sort by token position in source
+    childNodes.sort((a, b) => a.index - b.index);
+
+    childNodes.forEach((item) => {
+      if (item.type === 'component') {
+        children.push(this.visit(item.node));
+      } else if (item.type === 'layout') {
+        children.push(this.visit(item.node));
+      } else if (item.type === 'cell') {
+        children.push(this.visit(item.node));
+      }
+    });
 
     return {
       type: 'layout',
@@ -384,17 +403,32 @@ class WireDSLVisitor extends BaseCstVisitor {
       });
     }
 
+    // Process children in the order they appear in the input
+    const childNodes: Array<{ type: string; node: any; index: number }> = [];
+
     if (ctx.component) {
       ctx.component.forEach((comp: any) => {
-        children.push(this.visit(comp));
+        const startToken = comp.children?.Component?.[0] || comp.children?.componentType?.[0];
+        childNodes.push({ type: 'component', node: comp, index: startToken.startOffset });
+      });
+    }
+    if (ctx.layout) {
+      ctx.layout.forEach((layout: any) => {
+        const startToken = layout.children?.Layout?.[0] || layout.children?.layoutType?.[0];
+        childNodes.push({ type: 'layout', node: layout, index: startToken.startOffset });
       });
     }
 
-    if (ctx.layout) {
-      ctx.layout.forEach((layout: any) => {
-        children.push(this.visit(layout));
-      });
-    }
+    // Sort by token position in source
+    childNodes.sort((a, b) => a.index - b.index);
+
+    childNodes.forEach((item) => {
+      if (item.type === 'component') {
+        children.push(this.visit(item.node));
+      } else if (item.type === 'layout') {
+        children.push(this.visit(item.node));
+      }
+    });
 
     return {
       type: 'cell',

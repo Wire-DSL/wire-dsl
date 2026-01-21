@@ -43,11 +43,13 @@ Define una pantalla/vista del prototipo.
 ```
 screen UsersList {
   layout split(sidebar: 260, gap: md) {
-    left: sidebar { ... }
-    right: stack { ... }
+    layout stack { ... }  // sidebar
+    layout stack { ... }  // contenido principal
   }
 }
 ```
+
+**Nota**: El `split` contiene dos layouts anidados SIN etiquetas `left:` ni `right:`. El primero es el sidebar, el segundo es el contenido.
 
 **Propiedades**:
 
@@ -107,15 +109,17 @@ Divide en dos paneles (sidebar + contenido principal).
 
 ```
 layout split(sidebar: 260, gap: md) {
-  left: sidebar {
+  layout stack {
     component SidebarMenu items: [...]
   }
 
-  right: stack {
+  layout stack {
     // contenido principal
   }
 }
 ```
+
+**⚠️ Importante**: NO usar `left:` ni `right:`. Son simplemente dos layouts anidados consecutivos.
 
 **Propiedades**:
 
@@ -282,11 +286,11 @@ project "Admin Dashboard" {
 
   screen UsersList {
     layout split(sidebar: 260, gap: md) {
-      left: sidebar {
+      layout stack(gap: lg, padding: lg) {
         component SidebarMenu items: ["Users", "Roles", "Permissions", "Audit"]
       }
 
-      right: stack(gap: md, padding: lg) {
+      layout stack(gap: md, padding: lg) {
         component Heading text: "Users"
 
         layout grid(columns: 12, gap: md) {

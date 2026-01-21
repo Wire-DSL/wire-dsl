@@ -538,7 +538,7 @@ export class SVGRenderer {
   // ============================================================================
 
   private renderText(node: IRComponentNode, pos: any): string {
-    const text = String(node.props.text || 'Text content');
+    const text = String(node.props.content || 'Text content');
     const fontSize = 14;
 
     return `<g>
