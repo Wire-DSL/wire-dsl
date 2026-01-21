@@ -1,0 +1,44 @@
+project "Auth Platform" {
+  tokens density: normal
+  tokens spacing: md
+
+  screen UsersList {
+    layout split(sidebar: 260, gap: md) {
+      layout stack(direction: vertical, gap: lg, padding: lg) {
+        layout stack(direction: vertical, gap: sm, padding: md) {
+          component Heading text: "Auth Platform"
+          component Text content: "Admin console"
+        }
+        component SidebarMenu items: "Listado de usuarios,Gestión de permisos,Definiciones"
+      }
+
+      layout stack(direction: vertical, gap: md, padding: lg) {
+        component Breadcrumbs items: "Home,Listado de usuarios" separator: ">"
+
+        layout stack(direction: vertical, gap: sm) {
+          component Heading text: "Listado de usuarios"
+          component Text content: "Lista usuarios para asignar permisos"
+        }
+
+        layout grid(columns: 12, gap: md) {
+          cell span: 3 {
+            component Input label: "Documento (CI)" placeholder: "0.000.000-0"
+          }
+          cell span: 5 {
+            component Input label: "Nombre" placeholder: "Ej: Juan Pérez"
+          }
+          cell span: 3 {
+            component Input label: "RUT Empresa" placeholder: "21000000000"
+          }
+          cell span: 1 {
+            component Button text: "Filtrar" variant: primary
+          }
+        }
+
+        component Table columns: "Nombre,Correo electrónico,RUT,Permisos,Acciones" rows: 6 pagination: true pages: 4
+
+        component Text content: "Auth Platform v1.0.0"
+      }
+    }
+  }
+}
