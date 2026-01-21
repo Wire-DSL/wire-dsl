@@ -17,6 +17,7 @@ export interface SVGRenderOptions {
   height?: number;
   theme?: 'light' | 'dark';
   includeLabels?: boolean;
+  screenName?: string;  // Select specific screen by name
 }
 
 export interface SVGComponent {
@@ -58,17 +59,21 @@ const THEMES = {
 export class SVGRenderer {
   private ir: IRContract;
   private layout: LayoutResult;
-  private options: Required<SVGRenderOptions>;
+  private options: Required<Omit<SVGRenderOptions, 'screenName'>> & { screenName?: string };
   private theme: typeof THEMES.light;
+  private selectedScreenName?: string;
+  private renderedNodeIds: Set<string> = new Set();  // Track nodes rendered in current pass
 
   constructor(ir: IRContract, layout: LayoutResult, options?: SVGRenderOptions) {
     this.ir = ir;
     this.layout = layout;
+    this.selectedScreenName = options?.screenName;
     this.options = {
       width: options?.width || 1280,
       height: options?.height || 720,
       theme: options?.theme || 'light',
       includeLabels: options?.includeLabels ?? true,
+      screenName: options?.screenName,
     };
     this.theme = THEMES[this.options.theme];
 
@@ -78,17 +83,50 @@ export class SVGRenderer {
     }
   }
 
+  /**
+   * Get list of available screens in the project
+   */
+  getAvailableScreens(): Array<{ name: string; id: string }> {
+    return this.ir.project.screens.map(screen => ({
+      name: screen.name,
+      id: screen.id,
+    }));
+  }
+
+  /**
+   * Get the currently selected or first screen
+   */
+  private getSelectedScreen(): { screen: any; name: string } {
+    let screen = this.ir.project.screens[0];
+    let screenName = screen?.name || 'Unknown';
+
+    if (this.selectedScreenName) {
+      const found = this.ir.project.screens.find(
+        s => s.name.toLowerCase() === this.selectedScreenName!.toLowerCase()
+      );
+      if (found) {
+        screen = found;
+        screenName = found.name;
+      }
+    }
+
+    return { screen, name: screenName };
+  }
+
   render(): string {
-    const screen = this.ir.project.screens[0];
+    const { screen } = this.getSelectedScreen();
     if (!screen) return '<svg></svg>';
 
     const rootId = screen.root.ref;
     const children: string[] = [];
 
+    // Reset rendered nodes tracking for this pass
+    this.renderedNodeIds.clear();
+
     // Render root and all children
     this.renderNode(rootId, children);
 
-    // Calculate actual content height
+    // Calculate actual content height (using only rendered nodes)
     const actualHeight = this.calculateContentHeight();
 
     // Build SVG with auto-calculated height
@@ -103,11 +141,14 @@ export class SVGRenderer {
   private calculateContentHeight(): number {
     let maxY = 0;
 
-    // Find the lowest y position + height
-    for (const [, pos] of Object.entries(this.layout)) {
-      const bottom = pos.y + pos.height;
-      if (bottom > maxY) {
-        maxY = bottom;
+    // Find the lowest y position + height (only for rendered nodes)
+    for (const nodeId of this.renderedNodeIds) {
+      const pos = this.layout[nodeId];
+      if (pos) {
+        const bottom = pos.y + pos.height;
+        if (bottom > maxY) {
+          maxY = bottom;
+        }
       }
     }
 
@@ -119,6 +160,9 @@ export class SVGRenderer {
     const pos = this.layout[nodeId];
 
     if (!node || !pos) return;
+
+    // Track this node as rendered (only valid nodes)
+    this.renderedNodeIds.add(nodeId);
 
     if (node.kind === 'container') {
       // Render container (usually invisible, just layout)
@@ -290,6 +334,20 @@ export class SVGRenderer {
     const actions = String(node.props.actions || '');
     const user = String(node.props.user || '');
 
+    // Calculate title position: center vertically or at top with subtitle
+    let titleY: number;
+    let subtitleY: number = 0;  // Initialize to avoid usage before assignment
+
+    if (subtitle) {
+      // Title at top, subtitle below
+      titleY = pos.y + 16;  // 16px from top
+      subtitleY = pos.y + 34;  // 18px gap between title and subtitle
+    } else {
+      // Center title vertically when no subtitle
+      const contentHeight = 18;  // Approximate height of title text
+      titleY = pos.y + (pos.height - contentHeight) / 2 + 10;
+    }
+
     let svg = `<g>
     <rect x="${pos.x}" y="${pos.y}" 
           width="${pos.width}" height="${pos.height}" 
@@ -298,7 +356,7 @@ export class SVGRenderer {
           stroke-width="1"/>
     
     <!-- Title -->
-    <text x="${pos.x + 16}" y="${pos.y + 24}" 
+    <text x="${pos.x + 16}" y="${titleY}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="18" 
           font-weight="600" 
@@ -307,7 +365,7 @@ export class SVGRenderer {
     // Subtitle
     if (subtitle) {
       svg += `
-    <text x="${pos.x + 16}" y="${pos.y + 42}" 
+    <text x="${pos.x + 16}" y="${subtitleY}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="13" 
           fill="${this.theme.textMuted}">${this.escapeXml(subtitle)}</text>`;

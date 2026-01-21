@@ -1,0 +1,29 @@
+project "Admin Dashboard Simple" {
+  tokens density: normal
+  tokens spacing: md
+
+  mocks {
+    status: "Active,Inactive,Pending"
+  }
+
+  screen Dashboard {
+    layout stack(direction: vertical, gap: lg, padding: lg) {
+      component Topbar title: "Dashboard" subtitle: "Main view"
+      component Badge label: "Count" value: "42"
+    }
+  }
+
+  screen Settings {
+    layout stack(direction: vertical, gap: lg, padding: lg) {
+      component Topbar title: "Settings"
+      component Input label: "Username" placeholder: "user@example.com"
+    }
+  }
+
+  screen Profile {
+    layout stack(direction: vertical, gap: lg, padding: lg) {
+      component Topbar title: "Profile" subtitle: "User info"
+      component Checkbox label: "Notifications enabled"
+    }
+  }
+}

@@ -1,0 +1,67 @@
+project "Multi-Screen Demo" {
+  tokens density: normal
+  tokens spacing: md
+
+  mocks {
+    status: "Active,Pending,Completed,On Hold,Review"
+    stage: "Lead,Qualified,Proposal,Negotiation,Won,Lost"
+  }
+
+  screen Dashboard {
+    layout stack(direction: vertical, gap: lg, padding: xl) {
+      component Topbar title: "Dashboard" subtitle: "Welcome back"
+      
+      layout grid(columns: 3, gap: lg) {
+        cell {
+          component Badge label: "Users" value: "2,543"
+        }
+        cell {
+          component Badge label: "Revenue" value: "$125K"
+        }
+        cell {
+          component Badge label: "Sessions" value: "842"
+        }
+      }
+      
+      component Table 
+        title: "Recent Activity"
+        columns: "ID,User,Status,Amount"
+        rows: 5
+        mock: "id,user,status,amount"
+    }
+  }
+
+  screen Settings {
+    layout stack(direction: vertical, gap: lg, padding: xl) {
+      component Topbar title: "Settings"
+      
+      component Alert type: "info" title: "Account Settings" message: "Manage your profile and preferences"
+      
+      component Textarea label: "Bio" placeholder: "Tell us about yourself"
+      
+      component Checkbox label: "Enable notifications"
+      
+      component Button text: "Save Changes"
+    }
+  }
+
+  screen Reports {
+    layout stack(direction: vertical, gap: lg, padding: xl) {
+      component Topbar title: "Reports" subtitle: "View analytics"
+      
+      layout grid(columns: 2, gap: lg) {
+        cell {
+          component Badge label: "Total Sales" value: "$45,200"
+        }
+        cell {
+          component Badge label: "Growth Rate" value: "+12.5%"
+        }
+      }
+      
+      component List 
+        title: "Top Performers"
+        items: "Alice Johnson,Bob Smith,Carol White,David Brown,Eva Martinez"
+    }
+  }
+}
+

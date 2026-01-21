@@ -1,0 +1,18 @@
+project "Topbar Test" {
+  tokens density: normal
+  tokens spacing: md
+
+  screen WithSubtitle {
+    layout stack(direction: vertical, gap: lg, padding: xl) {
+      component Topbar title: "With Subtitle" subtitle: "This has a subtitle"
+      component Badge label: "Test" value: "Content"
+    }
+  }
+
+  screen WithoutSubtitle {
+    layout stack(direction: vertical, gap: lg, padding: xl) {
+      component Topbar title: "No Subtitle"
+      component Badge label: "Test" value: "Content"
+    }
+  }
+}

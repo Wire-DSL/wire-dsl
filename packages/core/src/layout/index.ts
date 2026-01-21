@@ -61,9 +61,8 @@ export class LayoutEngine {
   calculate(): LayoutResult {
     this.result = {};
 
-    // Calculate layout for each screen's root
-    if (this.ir.project.screens.length > 0) {
-      const screen = this.ir.project.screens[0];
+    // Calculate layout for all screens
+    for (const screen of this.ir.project.screens) {
       const rootId = screen.root.ref;
       if (rootId) {
         this.calculateNode(rootId, 0, 0, this.viewport.width, this.viewport.height);
