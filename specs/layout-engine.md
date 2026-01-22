@@ -151,6 +151,71 @@ Similar a vertical, pero en eje X.
 
 **Reglas**:
 
+- Divide en dos columnas: sidebar (ancho fijo) + contenido (fill)
+- El ancho total es: `sidebarWidth + gap + remainingWidth`
+- Ambos children deben ser layouts (stack, grid, etc.)
+
+**Algoritmo**:
+
+1. Left child width = `sidebar` (parámetro)
+2. Right child width = `containerWidth - sidebarWidth - gap`
+3. Ambos usan toda la altura disponible (height: fill)
+
+---
+
+### Panel Layout
+
+```
+┌────────────────────────┐
+│ padding                │
+│  ┌──────────────────┐  │
+│  │   Single Child   │  │
+│  │  (stack/grid)    │  │
+│  └──────────────────┘  │
+│ padding                │
+└────────────────────────┘
+```
+
+**Propósito**: Contenedor especializado con un único hijo
+
+**Reglas**:
+
+- Acepta **exactamente un hijo** (validación en IR)
+- Aplica padding automático en todos los lados
+- El hijo ocupa todo el espacio disponible: `width: fill`, `height: fill`
+- Renderiza con borde y fondo opcional
+
+**Parámetros**:
+
+- `padding`: `xs` | `sm` | `md` | `lg` | `xl` (tamaño del relleno)
+- `background`: color de fondo (nombrado o hex)
+
+**Algoritmo**:
+
+1. Resolver padding a píxeles según token
+2. Calcular espacio disponible: `containerW/H - padding*2`
+3. Posicionar hijo a `(x + padding, y + padding)`
+4. Asignar tamaño: `width: fill`, `height: fill` (respecto al espacio disponible)
+
+**Ejemplo**:
+
+```
+layout panel(padding: md, background: lightGray) {
+  component Text content: "Contenido"
+}
+```
+
+Renderizado:
+- Rectángulo de fondo lightGray (#F3F4F6)
+- Borde gris 1px
+- Text centrado con padding de 16px (md = 16px)
+
+---
+
+
+
+**Reglas**:
+
 - Slot `left` tiene ancho fijo (`sidebarWidth`)
 - Slot `right` ocupa el resto
 - `gap` separa ambas regiones

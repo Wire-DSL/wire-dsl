@@ -8,12 +8,12 @@
 
 Has construido un **MVP completamente funcional**:
 
-✅ Parser (100%)  
-✅ IR Generator (100%)  
-✅ Layout Engine (100%)  
-✅ SVG Renderer con 25+ componentes (90%)  
-✅ CLI básico (70%)  
-✅ Multi-screen (100%)  
+✅ Parser
+✅ IR Generator
+✅ Layout Engine
+✅ SVG Renderer con 25+ componentes
+✅ CLI básico
+✅ Multi-screen
 ✅ Ejemplos funcionales
 
 **El motor de wireframes está listo para usar.**

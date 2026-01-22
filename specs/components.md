@@ -420,9 +420,6 @@ component List items: ["Item 1", "Item 2", "Item 3"]
 
 ## Componentes de Contenedor
 
-### Panel
-
-**Propósito**: Panel/tarjeta con título.
 
 **Props**:
 
@@ -452,6 +449,33 @@ component Panel title: "User Info" height: 240
   }
 }
 ```
+
+**Renderizado**:
+
+```
+┌─────────────────────────┐
+│ Panel background color  │
+│  (con borde gris)       │
+│                         │
+│  padding                │
+│  ┌───────────────────┐  │
+│  │  Child (stack)    │  │
+│  └───────────────────┘  │
+│                         │
+│  padding                │
+└─────────────────────────┘
+```
+
+**Diferencias con el componente Panel**:
+
+| Aspecto | Component Panel | Layout Panel |
+| --- | --- | --- |
+| Tipo | Componente wireframe | Contenedor layout |
+| Hijos | Solo contenido simulado | Cualquier contenido real |
+| Padding | Fijo | Configurable |
+| Background | No | Sí, configurable |
+| Uso | Mockups | Layouts reales |
+| Status | Deprecado | ✨ Recomendado |
 
 ---
 

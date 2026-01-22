@@ -22,7 +22,12 @@ Define el proyecto completo.
 
 ```
 project "Admin Dashboard" {
-  tokens density: normal
+  colors {
+    primary: #3B82F6
+    lightGray: #F3F4F6
+  }
+  
+  tokens density: normal, background: lightGray
 
   screen UsersList { ... }
   screen UserDetail { ... }
@@ -32,7 +37,26 @@ project "Admin Dashboard" {
 **Propiedades**:
 
 - `name`: Nombre del proyecto (string)
+- `colors`: Paleta de colores personalizada (opcional)
 - `tokens`: Configuración de tokens de diseño
+
+**Colors Block** (Opcional):
+
+Define colores reutilizables en todo el proyecto:
+
+```
+project "App" {
+  colors {
+    primary: #3B82F6
+    success: #10B981
+    warning: #F59E0B
+    lightGray: #F3F4F6
+  }
+  ...
+}
+```
+
+Después puedes usar estos nombres en `background` y otros properties.
 
 ---
 
@@ -49,11 +73,18 @@ screen UsersList {
 }
 ```
 
-**Nota**: El `split` contiene dos layouts anidados SIN etiquetas `left:` ni `right:`. El primero es el sidebar, el segundo es el contenido.
+**Con background parameter**:
+
+```
+screen Dashboard(background: lightGray) {
+  layout stack { ... }
+}
+```
 
 **Propiedades**:
 
 - `id`: Identificador único (derivado del nombre)
+- `background`: Color de fondo de la pantalla (opcional, nombrado o hex)
 - Debe contener exactamente un layout raíz
 
 ---
@@ -133,6 +164,40 @@ layout split(sidebar: 260, gap: md) {
 
 - `sidebar`: ancho del panel izquierdo (px)
 - `gap`: espaciado entre paneles
+
+#### Panel
+
+Contenedor especializado que:
+- Acepta un único hijo (stack, grid, o componente)
+- Aplica padding automáticamente
+- Renderiza con borde y fondo opcional
+
+```
+layout panel(padding: md, background: white) {
+  component Text content: "Panel content"
+}
+```
+
+O anidando un stack:
+
+```
+layout panel(padding: lg, background: lightGray) {
+  layout stack(gap: md) {
+    component Heading text: "Panel Title"
+    component Text content: "Panel body"
+  }
+}
+```
+
+**Propiedades**:
+
+- `padding`: relleno interno (`xs`/`sm`/`md`/`lg`/`xl`)
+- `background`: color de fondo (nombrado o hex, ej: `white`, `lightGray`, `#F3F4F6`)
+
+**Renderizado**: Se dibuja como un rectángulo con:
+- Borde gris
+- Fondo del color especificado (o blanco por defecto)
+- Contenido con el padding aplicado
 
 ---
 

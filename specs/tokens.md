@@ -10,6 +10,67 @@ Los tokens controlan:
 - Bordes y radios
 - Densidad de UI
 - Tipografía base
+- **Colores (fondos, backgrounds)**
+
+---
+
+## Background (Color de Fondo)
+
+Controla el color de fondo **por defecto** para todas las pantallas.
+
+| Token      | Descripción                    | Valor  |
+| ---------- | ------------------------------ | ------ |
+| `white`    | Blanco                         | #FFFFFF |
+| `black`    | Negro                          | #000000 |
+| `gray`     | Gris estándar                  | #6B7280 |
+| Custom     | Colores personalizados         | Custom |
+
+**Precedencia**:
+
+1. **Screen parameter** (más específico): `screen Dashboard(background: lightBlue)`
+2. **Project token** (default global): `tokens background: lightGray`
+3. **Theme default** (fallback): blanco (#FFFFFF)
+
+**Ejemplo DSL**:
+
+```
+project "App" {
+  colors {
+    lightGray: #F3F4F6
+    lightBlue: #DBEAFE
+  }
+  
+  tokens background: lightGray  // Default para todas las pantallas
+  
+  screen Dashboard {
+    // Usa background: lightGray (del token)
+  }
+  
+  screen Custom(background: lightBlue) {
+    // Override: usa lightBlue en lugar del token
+  }
+}
+```
+
+**En IR**:
+
+```json
+{
+  "tokens": {
+    "background": "lightGray"  // Token nivel proyecto
+  },
+  "screens": [
+    {
+      "name": "Dashboard",
+      "background": null  // Usa token
+    },
+    {
+      "name": "Custom",
+      "background": "lightBlue"  // Override de token
+    }
+  ]
+}
+```
 
 ---
 

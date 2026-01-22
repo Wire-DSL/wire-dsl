@@ -65,6 +65,11 @@ import { parseWireDSL } from '@wire-dsl/core';
 - **[specs/layout-engine.md](./specs/layout-engine.md)** - Layout algorithms
 - **[specs/components.md](./specs/components.md)** - Component library
 
+**Planning & Next Steps**
+
+- **[docs/RECOMMENDATION.md](./docs/RECOMMENDATION.md)** - What to do next
+- **[docs/ACTION_PLAN.md](./docs/ACTION_PLAN.md)** - Concrete tasks for next 2 weeks
+
 **Examples**
 
 - **[examples/](./examples/)** - Complete examples

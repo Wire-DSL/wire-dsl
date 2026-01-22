@@ -4,7 +4,15 @@ Guía rápida para navegar toda la documentación del proyecto.
 
 ---
 
-## 🚀 Comienza Aquí
+## ⭐ EMPIEZA AQUÍ (Updated 21 Jan)
+
+1. **[RECOMMENDATION.md](./RECOMMENDATION.md)** - Qué hacer próximo (con nuevas features)
+2. **[ACTION_PLAN.md](./ACTION_PLAN.md)** - Plan 2 semanas
+3. **[QUICK_START.md](./QUICK_START.md)** - Acceso rápido a documentación
+
+---
+
+## 🚀 Comienza Aquí (General)
 
 1. **[START_HERE.txt](./START_HERE.txt)** - Introducción general
 2. **[QUICKSTART.md](./QUICKSTART.md)** - Primeros pasos rápidos
@@ -14,7 +22,7 @@ Guía rápida para navegar toda la documentación del proyecto.
 
 ## 📚 Guías Principales
 
-### Componentes (NUEVO - Recientemente Documentado)
+### Componentes
 
 - **[COMPONENTS_STATUS.md](./COMPONENTS_STATUS.md)** ⭐ **EMPIEZA AQUÍ**
   - Estado actual de implementación
@@ -89,6 +97,10 @@ wireframes/
 │   ├── web/                      ← Web editor
 │   └── ai-backend/               ← Backend IA (experimental)
 ├── specs/                        ← Especificaciones formales
+│   ├── components.md
+│   ├── layout-engine.md
+│   ├── tokens.md
+│   └── ...
 ├── examples/                     ← Ejemplos .wire
 └── README.md
 ```
