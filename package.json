@@ -9,7 +9,8 @@
     "packages/cli",
     "packages/web",
     "packages/studio",
-    "packages/ai-backend"
+    "packages/ai-backend",
+    "packages/vscode-extension"
   ],
   "scripts": {
     "dev": "turbo dev",
