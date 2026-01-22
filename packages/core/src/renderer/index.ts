@@ -181,9 +181,12 @@ export class SVGRenderer {
     this.renderedNodeIds.add(nodeId);
 
     if (node.kind === 'container') {
-      // Special handling for panel: render border
+      // Special handling for panel and card: render border
       if (node.containerType === 'panel') {
         this.renderPanelBorder(node, pos, output);
+      }
+      if (node.containerType === 'card') {
+        this.renderCardBorder(node, pos, output);
       }
 
       // Render container (usually invisible, just layout)
@@ -261,6 +264,10 @@ export class SVGRenderer {
         return this.renderModal(node, pos);
       case 'List':
         return this.renderList(node, pos);
+      case 'StatCard':
+        return this.renderStatCard(node, pos);
+      case 'Image':
+        return this.renderImage(node, pos);
 
       default:
         return this.renderGenericComponent(node, pos);
@@ -472,6 +479,41 @@ export class SVGRenderer {
           fill="${fillColor}" 
           stroke="${this.theme.border}" 
           stroke-width="1"/>
+    </g>`;
+    output.push(svg);
+  }
+
+  private renderCardBorder(node: IRNode, pos: any, output: string[]): void {
+    if (node.kind !== 'container') return;
+
+    // Resolve radius parameter
+    const radiusMap: Record<string, number> = {
+      none: 0,
+      sm: 4,
+      md: 8,
+      lg: 12,
+    };
+    const radius = radiusMap[String(node.params.radius) || 'md'] || 8;
+
+    // Resolve background color
+    let fillColor = this.theme.cardBg;
+    if (node.style.background) {
+      fillColor = this.colorResolver.resolveColor(node.style.background, this.theme.cardBg);
+    }
+
+    // Check if border is disabled (default true)
+    const borderParam = String(node.params.border || 'true');
+    const showBorder = borderParam !== 'false';
+    const strokeWidth = showBorder ? '1' : '0';
+
+    // Render card border as a rectangle with padding, gap support
+    const svg = `<g>
+    <rect x="${pos.x}" y="${pos.y}" 
+          width="${pos.width}" height="${pos.height}" 
+          rx="${radius}" 
+          fill="${fillColor}" 
+          stroke="${this.theme.border}" 
+          stroke-width="${strokeWidth}"/>
     </g>`;
     output.push(svg);
   }
@@ -1128,6 +1170,183 @@ export class SVGRenderer {
   </g>`;
   }
 
+  private renderStatCard(node: IRComponentNode, pos: any): string {
+    const title = String(node.props.title || 'Metric');
+    const value = String(node.props.value || '0');
+    const caption = String(node.props.caption || '');
+
+    const padding = this.resolveSpacing(node.style.padding) || 16;
+    const innerX = pos.x + padding;
+    const innerY = pos.y + padding;
+    const innerWidth = pos.width - padding * 2;
+    const innerHeight = pos.height - padding * 2;
+
+    // StatCard layout: top-to-bottom flow with natural spacing
+    const valueSize = 32;
+    const titleSize = 14;
+    const captionSize = 12;
+    const lineHeight = 18;
+    const topGap = 8;      // Space from top
+    const valueGap = 12;   // Space before value
+    const captionGap = 12; // Space before caption
+
+    // Top-to-bottom flow
+    const titleY = innerY + topGap + titleSize;
+    const valueY = titleY + valueGap + valueSize;
+    const captionY = valueY + captionGap + captionSize;
+
+    let svg = `<g>
+    <!-- StatCard Background -->
+    <rect x="${pos.x}" y="${pos.y}" 
+          width="${pos.width}" height="${pos.height}" 
+          rx="8" 
+          fill="${this.theme.cardBg}" 
+          stroke="${this.theme.border}" 
+          stroke-width="1"/>
+    
+    <!-- Title -->
+    <text x="${innerX}" y="${titleY}" 
+          font-family="system-ui, -apple-system, sans-serif" 
+          font-size="${titleSize}" 
+          font-weight="500" 
+          fill="${this.theme.textMuted}">${this.escapeXml(title)}</text>
+    
+    <!-- Value (Large) -->
+    <text x="${innerX}" y="${valueY}" 
+          font-family="system-ui, -apple-system, sans-serif" 
+          font-size="${valueSize}" 
+          font-weight="700" 
+          fill="${this.theme.primary}">${this.escapeXml(value)}</text>`;
+
+    if (caption) {
+      svg += `
+    <!-- Caption -->
+    <text x="${innerX}" y="${captionY}" 
+          font-family="system-ui, -apple-system, sans-serif" 
+          font-size="${captionSize}" 
+          fill="${this.theme.textMuted}">${this.escapeXml(caption)}</text>`;
+    }
+
+    svg += `
+  </g>`;
+    return svg;
+  }
+
+  private renderImage(node: IRComponentNode, pos: any): string {
+    const placeholder = String(node.props.placeholder || 'landscape');
+
+    // Determine aspect ratio based on placeholder type
+    const aspectRatios: Record<string, number> = {
+      landscape: 16 / 9,
+      portrait: 2 / 3,
+      square: 1,
+      icon: 1,
+      avatar: 1,
+    };
+
+    const ratio = aspectRatios[placeholder] || 16 / 9;
+    
+    // Calculate max size without stretching (constrain to smallest dimension)
+    const maxSize = Math.min(pos.width, pos.height) * 0.8; // 80% of available space
+    let iconWidth = maxSize;
+    let iconHeight = maxSize / ratio;
+    
+    // If height is still too large, constrain by height instead
+    if (iconHeight > pos.height * 0.8) {
+      iconHeight = pos.height * 0.8;
+      iconWidth = iconHeight * ratio;
+    }
+    
+    // Center the icon in the available space
+    const offsetX = pos.x + (pos.width - iconWidth) / 2;
+    const offsetY = pos.y + (pos.height - iconHeight) / 2;
+
+    // SVG placeholder sketches
+    let svgContent = '';
+
+    // Background
+    let svg = `<g>
+    <!-- Image Background -->
+    <rect x="${pos.x}" y="${pos.y}" width="${pos.width}" height="${pos.height}" fill="#E8E8E8"/>`;
+
+    // Camera icon for landscape, portrait, square
+    if (['landscape', 'portrait', 'square'].includes(placeholder)) {
+      // Modern digital camera design based on contemporary camera icon
+      const cameraCx = offsetX + iconWidth / 2;
+      const cameraCy = offsetY + iconHeight / 2;
+      
+      // Scale factor from original viewBox (24x24) to current icon size
+      const scale = Math.min(iconWidth, iconHeight) / 24;
+      const scaledX = cameraCx - (24 / 2) * scale;
+      const scaledY = cameraCy - (24 / 2) * scale;
+      
+      // Camera body dimensions (from original viewBox)
+      // Rectangle from 2,5 to 22,21 approximately
+      const bodyLeft = scaledX + 2 * scale;
+      const bodyTop = scaledY + 5 * scale;
+      const bodyWidth = 20 * scale;
+      const bodyHeight = 16 * scale;
+      const bodyRadius = 2 * scale;
+      
+      // Lens circle center (at 12,12.5 in original) with radius ~4
+      const lensCx = cameraCx;
+      const lensCy = cameraCy + 0.5 * scale;
+      const lensRadius = 4 * scale;
+
+      svg += `
+    <!-- Camera Icon - Modern Digital Design -->
+    <!-- Camera body (rounded rectangle with fill) -->
+    <g>
+      <!-- Body with fill -->
+      <path d="M ${bodyLeft + bodyRadius} ${bodyTop} 
+               L ${bodyLeft + bodyWidth - bodyRadius} ${bodyTop}
+               Q ${bodyLeft + bodyWidth} ${bodyTop} ${bodyLeft + bodyWidth} ${bodyTop + bodyRadius}
+               L ${bodyLeft + bodyWidth} ${bodyTop + bodyHeight - bodyRadius}
+               Q ${bodyLeft + bodyWidth} ${bodyTop + bodyHeight} ${bodyLeft + bodyWidth - bodyRadius} ${bodyTop + bodyHeight}
+               L ${bodyLeft + bodyRadius} ${bodyTop + bodyHeight}
+               Q ${bodyLeft} ${bodyTop + bodyHeight} ${bodyLeft} ${bodyTop + bodyHeight - bodyRadius}
+               L ${bodyLeft} ${bodyTop + bodyRadius}
+               Q ${bodyLeft} ${bodyTop} ${bodyLeft + bodyRadius} ${bodyTop}"
+            fill="#666" stroke="#666" stroke-width="${1.5 * scale}" stroke-linecap="round" stroke-linejoin="round"/>
+    </g>
+    <!-- Main lens circle (prominent) -->
+    <circle cx="${lensCx}" cy="${lensCy}" r="${lensRadius}" 
+            fill="none" stroke="#333" stroke-width="${2 * scale}" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- Lens inner circle (glass effect) -->
+    <circle cx="${lensCx}" cy="${lensCy}" r="${lensRadius * 0.7}" 
+            fill="#C0C0C0" stroke="#999" stroke-width="${0.8 * scale}"/>
+    <!-- Lens highlight (reflection) -->
+    <circle cx="${lensCx - lensRadius * 0.25}" cy="${lensCy - lensRadius * 0.25}" 
+            r="${lensRadius * 0.25}" 
+            fill="#E0E0E0" opacity="0.6"/>`;
+    } 
+    // Person silhouette for avatar and icon
+    else if (['avatar', 'icon'].includes(placeholder)) {
+      const personWidth = iconWidth * 0.5;
+      const personHeight = iconHeight * 0.7;
+      const personCx = offsetX + iconWidth / 2;
+      const personCy = offsetY + iconHeight / 2 - iconHeight * 0.1;
+
+      svg += `
+    <!-- Person Silhouette -->
+    <!-- Head -->
+    <circle cx="${personCx}" cy="${personCy - personHeight * 0.25}" 
+            r="${personWidth * 0.25}" fill="#666"/>
+    <!-- Body -->
+    <rect x="${personCx - personWidth * 0.3}" y="${personCy - personHeight * 0.05}" 
+          width="${personWidth * 0.6}" height="${personHeight * 0.5}" 
+          fill="#666" rx="3"/>`;
+    }
+
+    // Border
+    svg += `
+    <!-- Border -->
+    <rect x="${pos.x}" y="${pos.y}" width="${pos.width}" height="${pos.height}" 
+          fill="none" stroke="${this.theme.border}" stroke-width="1" rx="4"/>
+  </g>`;
+    return svg;
+  }
+
   private renderBreadcrumbs(node: IRComponentNode, pos: any): string {
     const itemsStr = String(node.props.items || 'Home');
     const items = itemsStr.split(',').map((s) => s.trim());
@@ -1206,6 +1425,21 @@ export class SVGRenderer {
 
     svg += '\n  </g>';
     return svg;
+  }
+
+  private resolveSpacing(spacing?: string): number {
+    const spacingMap: Record<string, number> = {
+      none: 0,
+      xs: 4,
+      sm: 8,
+      md: 16,
+      lg: 24,
+      xl: 32,
+    };
+
+    if (!spacing) return spacingMap[this.ir.project.tokens.spacing] || 16;
+    const value = spacingMap[spacing];
+    return value !== undefined ? value : spacingMap.md;
   }
 
   private escapeXml(text: string): string {

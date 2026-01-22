@@ -51,7 +51,7 @@ export type IRNode = IRContainerNode | IRComponentNode;
 export interface IRContainerNode {
   id: string;
   kind: 'container';
-  containerType: 'stack' | 'grid' | 'split' | 'panel';
+  containerType: 'stack' | 'grid' | 'split' | 'panel' | 'card';
   params: Record<string, string | number>;
   children: Array<{ ref: string }>;
   style: IRStyle;
@@ -104,7 +104,7 @@ const IRMetaSchema = z.object({
 const IRContainerNodeSchema = z.object({
   id: z.string(),
   kind: z.literal('container'),
-  containerType: z.enum(['stack', 'grid', 'split', 'panel']),
+  containerType: z.enum(['stack', 'grid', 'split', 'panel', 'card']),
   params: z.record(z.string(), z.union([z.string(), z.number()])),
   children: z.array(z.object({ ref: z.string() })),
   style: IRStyleSchema,
@@ -288,7 +288,7 @@ export class IRGenerator {
     const containerNode: IRContainerNode = {
       id: nodeId,
       kind: 'container',
-      containerType: layout.layoutType as 'stack' | 'grid' | 'split',
+      containerType: layout.layoutType as 'stack' | 'grid' | 'split' | 'panel' | 'card',
       params: this.cleanParams(layout.params),
       children: childRefs,
       style,

@@ -136,18 +136,22 @@ export class LayoutEngine {
       case 'panel':
         this.calculatePanel(node, innerX, innerY, innerWidth, innerHeight);
         break;
+      case 'card':
+        this.calculateCard(node, innerX, innerY, innerWidth, innerHeight);
+        break;
     }
 
-    // For vertical stacks, recalculate container height based on actual children positions
-    if (isVerticalStack) {
-      let containerMaxY = innerY;
+    // For vertical stacks and cards, recalculate container height based on actual children positions
+    if (isVerticalStack || node.containerType === 'card') {
+      let containerMaxY = y;
       node.children.forEach((childRef) => {
         const childPos = this.result[childRef.ref];
         if (childPos) {
           containerMaxY = Math.max(containerMaxY, childPos.y + childPos.height);
         }
       });
-      const calculatedHeight = containerMaxY - y + padding;
+      const cardPadding = node.containerType === 'card' ? this.resolveSpacing(node.style.padding) : padding;
+      const calculatedHeight = containerMaxY - y + cardPadding;
       this.result[nodeId].height = calculatedHeight;
     }
   }
@@ -174,9 +178,9 @@ export class LayoutEngine {
         else if (childNode?.kind === 'container') {
           childHeight = this.calculateContainerHeight(childNode, width);
         }
-        // If it's a component, use intrinsic height
+        // If it's a component, use intrinsic height (pass width for responsive components like Image)
         else if (childNode?.kind === 'component') {
-          childHeight = this.getIntrinsicComponentHeight(childNode);
+          childHeight = this.getIntrinsicComponentHeight(childNode, width);
         }
 
         this.calculateNode(childRef.ref, x, currentY, width, childHeight, 'stack');
@@ -185,6 +189,31 @@ export class LayoutEngine {
         // Add gap except after last child
         if (index < children.length - 1) {
           currentY += gap;
+        }
+      });
+
+      // Post-processing: adjust Y positions based on actual container heights
+      // Some containers (like card) may have their heights recalculated after children are positioned
+      let adjustedY = y;
+      children.forEach((childRef, index) => {
+        const childPos = this.result[childRef.ref];
+        if (childPos) {
+          const deltaY = adjustedY - childPos.y;
+          
+          // Update Y position to the adjusted position
+          childPos.y = adjustedY;
+          
+          // If this child is a container, recursively update all its descendants
+          if (deltaY !== 0) {
+            this.adjustNodeYPositions(childRef.ref, deltaY);
+          }
+          
+          adjustedY += childPos.height;
+          
+          // Add gap except after last child
+          if (index < children.length - 1) {
+            adjustedY += gap;
+          }
         }
       });
     } else {
@@ -440,6 +469,43 @@ export class LayoutEngine {
     this.calculateNode(childRef.ref, x, y, width, height, 'panel');
   }
 
+  private calculateCard(node: IRNode, x: number, y: number, width: number, height: number): void {
+    if (node.kind !== 'container' || node.children.length === 0) return;
+
+    // Card is a vertical stack container with its own padding
+    const cardPadding = this.resolveSpacing(node.style.padding);
+    const gap = this.resolveSpacing(node.style.gap);
+    const innerCardWidth = width - cardPadding * 2;
+    const children = node.children;
+    let currentY = y + cardPadding;
+
+    children.forEach((childRef, index) => {
+      const childNode = this.nodes[childRef.ref];
+      let childHeight = this.getComponentHeight();
+
+      // If explicit height in props
+      if (childNode?.kind === 'component' && childNode.props.height) {
+        childHeight = Number(childNode.props.height);
+      }
+      // If it's a container (layout), calculate height from its children
+      else if (childNode?.kind === 'container') {
+        childHeight = this.calculateContainerHeight(childNode, innerCardWidth);
+      }
+      // If it's a component, use intrinsic height (pass innerCardWidth for responsive components like Image)
+      else if (childNode?.kind === 'component') {
+        childHeight = this.getIntrinsicComponentHeight(childNode, innerCardWidth);
+      }
+
+      this.calculateNode(childRef.ref, x + cardPadding, currentY, innerCardWidth, childHeight, 'card');
+      currentY += childHeight;
+
+      // Add gap except after last child
+      if (index < children.length - 1) {
+        currentY += gap;
+      }
+    });
+  }
+
   private calculateComponent(
     node: IRNode,
     nodeId: string,
@@ -452,7 +518,7 @@ export class LayoutEngine {
 
     // Use explicit dimensions from props if available
     const componentWidth = Number(node.props.width) || width;
-    const componentHeight = Number(node.props.height) || this.getIntrinsicComponentHeight(node);
+    const componentHeight = Number(node.props.height) || this.getIntrinsicComponentHeight(node, componentWidth);
 
     this.result[nodeId] = {
       x,
@@ -472,8 +538,36 @@ export class LayoutEngine {
     return DENSITY_HEIGHTS[this.tokens.density] || DENSITY_HEIGHTS.normal;
   }
 
-  private getIntrinsicComponentHeight(node: IRNode): number {
+  private getIntrinsicComponentHeight(node: IRNode, availableWidth?: number): number {
     if (node.kind !== 'component') return this.getComponentHeight();
+
+    // Image: calculate height based on aspect ratio and available width
+    if (node.componentType === 'Image') {
+      const placeholder = String(node.props.placeholder || 'landscape');
+      const aspectRatios: Record<string, number> = {
+        landscape: 16 / 9,
+        portrait: 2 / 3,
+        square: 1,
+        icon: 1,
+        avatar: 1,
+      };
+      
+      const ratio = aspectRatios[placeholder] || 16 / 9;
+      
+      // If explicit height is set, use it
+      const explicitHeight = Number(node.props.height);
+      if (!isNaN(explicitHeight) && explicitHeight > 0) {
+        return explicitHeight;
+      }
+      
+      // If available width is provided, calculate responsive height
+      if (availableWidth && availableWidth > 0) {
+        return availableWidth / ratio;
+      }
+      
+      // Fallback: use default 200px
+      return 200;
+    }
 
     // Table: calculate based on rows if available
     if (node.componentType === 'Table') {
@@ -495,6 +589,7 @@ export class LayoutEngine {
     if (node.componentType === 'Textarea') return 100;
     if (node.componentType === 'Modal') return 300;
     if (node.componentType === 'Card') return 120;
+    if (node.componentType === 'StatCard') return 120;
     if (node.componentType === 'ChartPlaceholder') return 250;
     if (node.componentType === 'List') return 180;
 
@@ -516,6 +611,22 @@ export class LayoutEngine {
     if (count === 0) return 0;
     const totalGap = gap * (count - 1);
     return (totalWidth - totalGap) / count;
+  }
+  private adjustNodeYPositions(nodeId: string, deltaY: number): void {
+    const node = this.nodes[nodeId];
+    if (!node) return;
+
+    // If this is a container, adjust all its children's Y positions
+    if (node.kind === 'container' && node.children) {
+      node.children.forEach((childRef) => {
+        const childPos = this.result[childRef.ref];
+        if (childPos) {
+          childPos.y += deltaY;
+          // Recursively adjust descendants
+          this.adjustNodeYPositions(childRef.ref, deltaY);
+        }
+      });
+    }
   }
 }
 

@@ -5,13 +5,29 @@ import { Lexer, createToken, CstParser, TokenType } from 'chevrotain';
  *
  * Converts .wire files to AST using Chevrotain
  *
+ * Supported layout types: stack, grid, split, panel, card
+ * Component example: StatCard, Image, Button, Heading, Text, etc.
+ *
  * Example:
  * ```
  * project "Dashboard" {
  *   screen Main {
- *     layout stack(direction: vertical, gap: md) {
- *       component Heading text: "Hello"
- *       component Button text: "Click Me"
+ *     layout grid(cols: 3) {
+ *       component StatCard
+ *         title: "Revenue"
+ *         value: "45,230"
+ *         padding: lg
+ *         gap: md
+ *       
+ *       component StatCard
+ *         title: "Users"
+ *         value: "1,234"
+ *     }
+ *     
+ *     layout card(padding: lg, gap: md, radius: md) {
+ *       component Image placeholder: "landscape"
+ *       component Heading text: "Product Name"
+ *       component Button text: "Learn More"
  *     }
  *   }
  * }
