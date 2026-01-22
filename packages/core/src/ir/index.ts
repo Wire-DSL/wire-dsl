@@ -35,6 +35,7 @@ export interface IRTokens {
   radius: 'none' | 'sm' | 'md' | 'lg' | 'full';
   stroke: 'thin' | 'normal' | 'thick';
   font: 'sm' | 'base' | 'lg';
+  background?: string;
 }
 
 export interface IRScreen {
@@ -85,6 +86,7 @@ const IRTokensSchema = z.object({
   radius: z.enum(['none', 'sm', 'md', 'lg', 'full']),
   stroke: z.enum(['thin', 'normal', 'thick']),
   font: z.enum(['sm', 'base', 'lg']),
+  background: z.string().optional(),
 });
 
 const IRStyleSchema = z.object({
@@ -222,6 +224,9 @@ export class IRGenerator {
     if (astTokens.font) {
       this.tokens.font = astTokens.font as IRTokens['font'];
     }
+    if (astTokens.background) {
+      this.tokens.background = astTokens.background;
+    }
   }
 
   private convertScreen(screen: ASTScreen): IRScreen {
@@ -234,9 +239,11 @@ export class IRGenerator {
       root: { ref: rootNodeId },
     };
 
-    // Add background if specified
+    // Add background if specified on screen, otherwise use token default
     if (screen.params.background) {
       irScreen.background = String(screen.params.background);
+    } else if (this.tokens.background) {
+      irScreen.background = this.tokens.background;
     }
 
     return irScreen;

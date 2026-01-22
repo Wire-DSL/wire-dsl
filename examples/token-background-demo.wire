@@ -1,0 +1,41 @@
+project "Token Background Demo" {
+  tokens density: comfortable
+  tokens spacing: md
+  tokens background: lightGray
+
+  colors {
+    lightGray: #F3F4F6
+    lightBlue: #DBEAFE
+    lightGreen: #DCFCE7
+  }
+
+  screen Dashboard {
+    layout stack(direction: vertical, gap: lg, padding: xl) {
+      component Topbar title: "All screens have light gray background"
+      
+      layout panel(padding: lg) {
+        component Card title: "Default screen background from token"
+      }
+    }
+  }
+
+  screen Custom(background: lightBlue) {
+    layout stack(direction: vertical, gap: lg, padding: xl) {
+      component Topbar title: "This screen overrides token background"
+      
+      layout panel(padding: lg) {
+        component Card title: "Screen-specific light blue background"
+      }
+    }
+  }
+
+  screen Another {
+    layout stack(direction: vertical, gap: lg, padding: xl) {
+      component Topbar title: "Also uses light gray from token"
+      
+      layout panel(padding: lg) {
+        component Card title: "Uses default token background"
+      }
+    }
+  }
+}
