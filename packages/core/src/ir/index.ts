@@ -24,6 +24,7 @@ export interface IRProject {
   name: string;
   tokens: IRTokens;
   mocks: Record<string, unknown>;
+  colors: Record<string, string>;
   screens: IRScreen[];
   nodes: Record<string, IRNode>;
 }
@@ -69,6 +70,7 @@ export interface IRStyle {
   gap?: string;
   align?: 'start' | 'center' | 'end';
   justify?: 'start' | 'center' | 'end';
+  background?: string;
 }
 
 export interface IRMeta {
@@ -89,6 +91,7 @@ const IRStyleSchema = z.object({
   gap: z.string().optional(),
   align: z.enum(['start', 'center', 'end']).optional(),
   justify: z.enum(['start', 'center', 'end']).optional(),
+  background: z.string().optional(),
 });
 
 const IRMetaSchema = z.object({
@@ -128,6 +131,7 @@ const IRProjectSchema = z.object({
   name: z.string(),
   tokens: IRTokensSchema,
   mocks: z.record(z.string(), z.unknown()),
+  colors: z.record(z.string(), z.string()),
   screens: z.array(IRScreenSchema),
   nodes: z.record(z.string(), IRNodeSchema),
 });
@@ -186,6 +190,7 @@ export class IRGenerator {
       name: ast.name,
       tokens: this.tokens,
       mocks: ast.mocks || {},
+      colors: ast.colors || {},
       screens,
       nodes: this.nodes,
     };
@@ -259,6 +264,9 @@ export class IRGenerator {
     }
     if (layout.params.align) {
       style.align = layout.params.align as IRStyle['align'];
+    }
+    if (layout.params.background) {
+      style.background = String(layout.params.background);
     }
 
     const containerNode: IRContainerNode = {

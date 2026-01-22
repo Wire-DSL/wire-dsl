@@ -29,6 +29,7 @@ const Layout = createToken({ name: 'Layout', pattern: /layout/ });
 const Component = createToken({ name: 'Component', pattern: /component/ });
 const Tokens = createToken({ name: 'Tokens', pattern: /tokens/ });
 const Mocks = createToken({ name: 'Mocks', pattern: /mocks/ });
+const Colors = createToken({ name: 'Colors', pattern: /colors/ });
 const Cell = createToken({ name: 'Cell', pattern: /cell/ });
 
 // Punctuation
@@ -48,6 +49,11 @@ const StringLiteral = createToken({
 const NumberLiteral = createToken({
   name: 'NumberLiteral',
   pattern: /\d+(\.\d+)?/,
+});
+
+const HexColor = createToken({
+  name: 'HexColor',
+  pattern: /#[0-9A-Fa-f]{6}/,
 });
 
 const Identifier = createToken({
@@ -80,6 +86,7 @@ const allTokens = [
   Component,
   Tokens,
   Mocks,
+  Colors,
   Cell,
   // Punctuation
   LCurly,
@@ -91,6 +98,7 @@ const allTokens = [
   // Literals
   StringLiteral,
   NumberLiteral,
+  HexColor,
   Identifier,
 ];
 
@@ -115,6 +123,7 @@ class WireDSLParser extends CstParser {
       this.OR([
         { ALT: () => this.SUBRULE(this.tokensDecl) },
         { ALT: () => this.SUBRULE(this.mocksDecl) },
+        { ALT: () => this.SUBRULE(this.colorsDecl) },
         { ALT: () => this.SUBRULE(this.screen) },
       ]);
     });
@@ -144,6 +153,26 @@ class WireDSLParser extends CstParser {
     this.CONSUME(Identifier, { LABEL: 'mockKey' });
     this.CONSUME(Colon);
     this.CONSUME(StringLiteral, { LABEL: 'mockValue' });
+  });
+
+  // colors { primary: #3B82F6, ... }
+  private colorsDecl = this.RULE('colorsDecl', () => {
+    this.CONSUME(Colors);
+    this.CONSUME(LCurly);
+    this.MANY(() => {
+      this.SUBRULE(this.colorEntry);
+    });
+    this.CONSUME(RCurly);
+  });
+
+  // primary: #3B82F6 or primary: lightBlue
+  private colorEntry = this.RULE('colorEntry', () => {
+    this.CONSUME(Identifier, { LABEL: 'colorKey' });
+    this.CONSUME(Colon);
+    this.OR([
+      { ALT: () => this.CONSUME(HexColor, { LABEL: 'colorValue' }) },
+      { ALT: () => this.CONSUME2(Identifier, { LABEL: 'colorValue' }) },
+    ]);
   });
 
   // screen Main { ... }
@@ -231,6 +260,7 @@ export interface AST {
   name: string;
   tokens: Record<string, string>;
   mocks: Record<string, string>;
+  colors: Record<string, string>;
   screens: ASTScreen[];
 }
 
@@ -276,6 +306,7 @@ class WireDSLVisitor extends BaseCstVisitor {
     const projectName = ctx.projectName[0].image.slice(1, -1); // Remove quotes
     const tokens: Record<string, string> = {};
     const mocks: Record<string, string> = {};
+    const colors: Record<string, string> = {};
     const screens: ASTScreen[] = [];
 
     if (ctx.tokensDecl) {
@@ -290,6 +321,11 @@ class WireDSLVisitor extends BaseCstVisitor {
       Object.assign(mocks, mocksBlock);
     }
 
+    if (ctx.colorsDecl && ctx.colorsDecl.length > 0) {
+      const colorsBlock = this.visit(ctx.colorsDecl[0]);
+      Object.assign(colors, colorsBlock);
+    }
+
     if (ctx.screen) {
       ctx.screen.forEach((screen: any) => {
         screens.push(this.visit(screen));
@@ -301,6 +337,7 @@ class WireDSLVisitor extends BaseCstVisitor {
       name: projectName,
       tokens,
       mocks,
+      colors,
       screens,
     };
   }
@@ -326,6 +363,23 @@ class WireDSLVisitor extends BaseCstVisitor {
   mockEntry(ctx: any) {
     const key = ctx.mockKey[0].image;
     const value = ctx.mockValue[0].image.slice(1, -1); // Remove quotes
+    return { key, value };
+  }
+
+  colorsDecl(ctx: any) {
+    const colors: Record<string, string> = {};
+    if (ctx.colorEntry) {
+      ctx.colorEntry.forEach((entry: any) => {
+        const { key, value } = this.visit(entry);
+        colors[key] = value;
+      });
+    }
+    return colors;
+  }
+
+  colorEntry(ctx: any) {
+    const key = ctx.colorKey[0].image;
+    const value = ctx.colorValue[0].image; // Keep as-is (hex or identifier)
     return { key, value };
   }
 

@@ -1,0 +1,53 @@
+project "Panel with Colors" {
+  tokens density: comfortable
+  tokens spacing: md
+
+  colors {
+    primary: #3B82F6
+    success: #10B981
+	secondary: #10B981
+    danger: #EF4444
+    warning: #F59E0B
+    lightBlue: #DBEAFE
+  }
+
+  screen Dashboard {
+    layout stack(direction: vertical, gap: lg, padding: xl) {
+      component Topbar title: "Panels with Background Colors"
+      
+      layout panel(padding: lg, background: lightBlue) {
+        layout stack(direction: vertical, gap: md) {
+          component Heading text: "Panel with Light Blue Background"
+          component Card title: "Card inside colored panel"
+          component Input placeholder: "Input field"
+        }
+      }
+
+      layout panel(padding: lg, background: white) {
+        layout stack(direction: vertical, gap: md) {
+          component Heading text: "Panel with White Background"
+          component Card title: "Card inside white panel"
+        }
+      }
+
+      layout panel(padding: md, background: white) {
+        component Card title: "Simple Card in White Panel"
+      }
+
+      layout panel(padding: md, background: secondary) {
+        component Card title: "Simple Card in White Panel"
+      }
+
+      layout panel(padding: xl) {
+        layout grid(columns: 12, gap: md) {
+          cell span: 6 {
+            component Card title: "Left Column"
+          }
+          cell span: 6 {
+            component Card title: "Right Column"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,6 +1,7 @@
 import type { IRContract, IRNode, IRComponentNode } from '../ir/index';
 import type { LayoutResult } from '../layout/index';
 import { MockDataGenerator } from './mock-data';
+import { ColorResolver } from './colors';
 
 /**
  * SVG Renderer
@@ -65,6 +66,7 @@ export class SVGRenderer {
   private theme: typeof THEMES.light;
   private selectedScreenName?: string;
   private renderedNodeIds: Set<string> = new Set(); // Track nodes rendered in current pass
+  private colorResolver: ColorResolver;
 
   constructor(ir: IRContract, layout: LayoutResult, options?: SVGRenderOptions) {
     this.ir = ir;
@@ -78,10 +80,16 @@ export class SVGRenderer {
       screenName: options?.screenName,
     };
     this.theme = THEMES[this.options.theme];
+    this.colorResolver = new ColorResolver();
 
     // Initialize MockDataGenerator with custom mocks from project metadata
     if (ir.project.mocks && Object.keys(ir.project.mocks).length > 0) {
       MockDataGenerator.setCustomMocks(ir.project.mocks);
+    }
+
+    // Initialize ColorResolver with project colors
+    if (ir.project.colors && Object.keys(ir.project.colors).length > 0) {
+      this.colorResolver.setCustomColors(ir.project.colors);
     }
   }
 
@@ -169,7 +177,7 @@ export class SVGRenderer {
     if (node.kind === 'container') {
       // Special handling for panel: render border
       if (node.containerType === 'panel') {
-        this.renderPanelBorder(pos, output);
+        this.renderPanelBorder(node, pos, output);
       }
 
       // Render container (usually invisible, just layout)
@@ -441,13 +449,21 @@ export class SVGRenderer {
     return svg;
   }
 
-  private renderPanelBorder(pos: any, output: string[]): void {
-    // Render panel border as a rectangle with no fill, just stroke
+  private renderPanelBorder(node: IRNode, pos: any, output: string[]): void {
+    if (node.kind !== 'container') return;
+
+    // Resolve background color, defaulting to cardBg (white in light theme)
+    let fillColor = this.theme.cardBg;
+    if (node.style.background) {
+      fillColor = this.colorResolver.resolveColor(node.style.background, this.theme.cardBg);
+    }
+
+    // Render panel border as a rectangle with fill and stroke
     const svg = `<g>
     <rect x="${pos.x}" y="${pos.y}" 
           width="${pos.width}" height="${pos.height}" 
           rx="8" 
-          fill="none" 
+          fill="${fillColor}" 
           stroke="${this.theme.border}" 
           stroke-width="1"/>
     </g>`;
