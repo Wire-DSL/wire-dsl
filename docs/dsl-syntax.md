@@ -201,6 +201,62 @@ layout panel(padding: lg, background: lightGray) {
 
 ---
 
+#### Card
+
+Contenedor vertical flexible para agrupar contenido relacionado (imágenes, textos, botones).
+
+```
+layout card(padding: lg, gap: md, radius: md, border: true) {
+  component Image placeholder: "landscape"
+  component Heading text: "Product Title"
+  component Text content: "Product description"
+  component Button text: "Learn More"
+}
+```
+
+**Propiedades**:
+
+- `padding`: relleno interno (`xs`/`sm`/`md`/`lg`/`xl`; default: `md`)
+- `gap`: espaciado entre hijos (`xs`/`sm`/`md`/`lg`/`xl`; default: `md`)
+- `radius`: radio de esquinas (`xs`/`sm`/`md`/`lg`/`xl`; default: `md`)
+- `border`: mostrar borde (`true`/`false`; default: `true`)
+
+**Características especiales**:
+
+- Los hijos se apilan verticalmente de forma automático
+- La altura se recalcula dinámicamente basada en el contenido
+- Ideal para tarjetas de productos, perfiles de usuario, anuncios
+- Mantiene proporción de aspecto en imágenes responsive
+
+**Ejemplo - Tarjeta de producto**:
+
+```
+layout card(padding: md, gap: md, radius: lg, border: true) {
+  component Image placeholder: "square" height: 250
+  component Heading text: "Premium Item"
+  component Text content: "High-quality product with excellent reviews"
+  layout stack(direction: horizontal, gap: sm) {
+    component Button text: "View Details"
+    component Button text: "Add to Cart"
+  }
+}
+```
+
+**Ejemplo - Perfil de usuario**:
+
+```
+layout card(padding: lg, gap: md) {
+  component Image placeholder: "avatar" height: 120
+  component Heading text: "John Doe"
+  component Text content: "john@example.com"
+  component Divider
+  component Text content: "Location: San Francisco, CA"
+  component Button text: "Follow"
+}
+```
+
+---
+
 ### Component
 
 Elementos wireframe individuales.
