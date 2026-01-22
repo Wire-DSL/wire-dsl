@@ -142,8 +142,14 @@ export class SVGRenderer {
     // Build SVG with auto-calculated height
     const svgHeight = Math.max(this.options.height, actualHeight);
 
+    // Resolve screen background color
+    let backgroundColor = this.theme.bg;
+    if (screen.background) {
+      backgroundColor = this.colorResolver.resolveColor(screen.background, this.theme.bg);
+    }
+
     return `<svg width="${this.options.width}" height="${svgHeight}" viewBox="0 0 ${this.options.width} ${svgHeight}" xmlns="http://www.w3.org/2000/svg">
-  <rect width="100%" height="100%" fill="${this.theme.bg}"/>
+  <rect width="100%" height="100%" fill="${backgroundColor}"/>
   ${children.join('\n  ')}
 </svg>`;
   }

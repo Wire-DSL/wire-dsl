@@ -41,6 +41,7 @@ export interface IRScreen {
   id: string;
   name: string;
   viewport: { width: number; height: number };
+  background?: string;
   root: { ref: string };
 }
 
@@ -123,6 +124,7 @@ const IRScreenSchema = z.object({
   id: z.string(),
   name: z.string(),
   viewport: z.object({ width: z.number(), height: z.number() }),
+  background: z.string().optional(),
   root: z.object({ ref: z.string() }),
 });
 
@@ -225,12 +227,19 @@ export class IRGenerator {
   private convertScreen(screen: ASTScreen): IRScreen {
     const rootNodeId = this.convertLayout(screen.layout);
 
-    return {
+    const irScreen: IRScreen = {
       id: this.sanitizeId(screen.name),
       name: screen.name,
       viewport: { width: 1280, height: 720 },
       root: { ref: rootNodeId },
     };
+
+    // Add background if specified
+    if (screen.params.background) {
+      irScreen.background = String(screen.params.background);
+    }
+
+    return irScreen;
   }
 
   private convertLayout(layout: ASTLayout): string {

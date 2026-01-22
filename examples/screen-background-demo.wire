@@ -1,0 +1,37 @@
+project "Screen Background Demo" {
+  tokens density: comfortable
+  tokens spacing: md
+
+  colors {
+    lightGray: #F3F4F6
+    lightBlue: #DBEAFE
+    lightGreen: #DCFCE7
+  }
+
+  screen Dashboard(background: lightGray) {
+    layout stack(direction: vertical, gap: lg, padding: xl) {
+      component Topbar title: "Screen with Light Gray Background"
+      
+      layout panel(padding: lg) {
+        layout stack(direction: vertical, gap: md) {
+          component Heading text: "Panel with Default White"
+          component Card title: "Card inside white panel"
+        }
+      }
+
+      layout panel(padding: lg, background: lightBlue) {
+        component Card title: "Panel with Light Blue"
+      }
+    }
+  }
+
+  screen GreenScreen(background: lightGreen) {
+    layout stack(direction: vertical, gap: lg, padding: xl) {
+      component Topbar title: "Screen with Green Background"
+      
+      layout panel(padding: lg) {
+        component Card title: "Card in white panel on green screen"
+      }
+    }
+  }
+}

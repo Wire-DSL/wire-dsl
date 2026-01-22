@@ -175,10 +175,13 @@ class WireDSLParser extends CstParser {
     ]);
   });
 
-  // screen Main { ... }
+  // screen Main(background: white) { ... }
   private screen = this.RULE('screen', () => {
     this.CONSUME(Screen);
     this.CONSUME(Identifier, { LABEL: 'screenName' });
+    this.OPTION(() => {
+      this.SUBRULE(this.paramList);
+    });
     this.CONSUME(LCurly);
     this.SUBRULE(this.layout);
     this.CONSUME(RCurly);
@@ -267,6 +270,7 @@ export interface AST {
 export interface ASTScreen {
   type: 'screen';
   name: string;
+  params: Record<string, string | number>;
   layout: ASTLayout;
 }
 
@@ -384,10 +388,12 @@ class WireDSLVisitor extends BaseCstVisitor {
   }
 
   screen(ctx: any): ASTScreen {
+    const params = ctx.paramList ? this.visit(ctx.paramList[0]) : {};
     return {
       type: 'screen',
       name: ctx.screenName[0].image,
-      layout: this.visit(ctx.layout),
+      params,
+      layout: this.visit(ctx.layout[0]),
     };
   }
 
