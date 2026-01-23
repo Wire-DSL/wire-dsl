@@ -10,8 +10,9 @@ New to Wire-DSL? Start here:
 
 1. **[DSL Syntax Guide](DSL-SYNTAX-EN.md)** - Learn the basic syntax and structure
 2. **[Components Reference](COMPONENTS-REFERENCE.md)** - Explore all 23 available components
-3. **[Containers Reference](CONTAINERS-REFERENCE.md)** - Understand layout containers
-4. **[Theme Guide](THEME-GUIDE.md)** - Configure visual consistency
+3. **[Icons Guide](ICONS-GUIDE.md)** - Use Feather Icons in your wireframes
+4. **[Containers Reference](CONTAINERS-REFERENCE.md)** - Understand layout containers
+5. **[Theme Guide](THEME-GUIDE.md)** - Configure visual consistency
 
 ---
 
@@ -50,6 +51,19 @@ Each component includes:
 - Best practices
 
 **Best for**: Finding the right component and learning its usage
+
+---
+
+### [Icons Guide](ICONS-GUIDE.md)
+Comprehensive guide to using Feather Icons in Wire-DSL:
+- `Icon` component for displaying icons
+- `IconButton` component for interactive icon buttons
+- Complete list of 50+ available icons
+- Usage examples and best practices
+- Icon variants and customization
+- Styling and theming
+
+**Best for**: Integrating professional icons and creating icon-based UI
 
 ---
 
