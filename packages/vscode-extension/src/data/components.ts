@@ -148,12 +148,6 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     properties: ['title', 'height'],
     example: 'component Panel title: "User Info" height: 240',
   },
-  Card: {
-    name: 'Card',
-    description: 'Card container for content grouping',
-    properties: ['title'],
-    example: 'component Card title: "Stats"',
-  },
   Badge: {
     name: 'Badge',
     description: 'Small badge/tag element',

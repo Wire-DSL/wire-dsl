@@ -214,8 +214,6 @@ export class SVGRenderer {
         return this.renderButton(node, pos);
       case 'Input':
         return this.renderInput(node, pos);
-      case 'Card':
-        return this.renderCard(node, pos);
       case 'Topbar':
         return this.renderTopbar(node, pos);
       case 'Table':
@@ -336,29 +334,6 @@ export class SVGRenderer {
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="14" 
           fill="${this.renderTheme.textMuted}">${this.escapeXml(placeholder)}</text>
-  </g>`;
-  }
-
-  private renderCard(node: IRComponentNode, pos: any): string {
-    const title = String(node.props.title || 'Card');
-
-    return `<g>
-    <rect x="${pos.x}" y="${pos.y}" 
-          width="${pos.width}" height="${pos.height}" 
-          rx="8" 
-          fill="${this.renderTheme.cardBg}" 
-          stroke="${this.renderTheme.border}" 
-          stroke-width="1"/>
-    <text x="${pos.x + 16}" y="${pos.y + 28}" 
-          font-family="system-ui, -apple-system, sans-serif" 
-          font-size="14" 
-          font-weight="600" 
-          fill="${this.renderTheme.text}">${this.escapeXml(title)}</text>
-    <text x="${pos.x + 16}" y="${pos.y + 56}" 
-          font-family="system-ui, -apple-system, sans-serif" 
-          font-size="24" 
-          font-weight="700" 
-          fill="${this.renderTheme.text}">1,234</text>
   </g>`;
   }
 
