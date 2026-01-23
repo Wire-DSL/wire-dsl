@@ -1,6 +1,11 @@
 project "Simple Dashboard" {
-  tokens density: comfortable
-  tokens spacing: lg
+  theme {
+    density: "comfortable"
+    spacing: "lg"
+    radius: "md"
+    stroke: "normal"
+    font: "base"
+  }
 
   screen Dashboard {
     layout stack(direction: vertical, gap: lg, padding: xl) {
@@ -8,22 +13,34 @@ project "Simple Dashboard" {
       
       layout grid(columns: 12, gap: lg) {
         cell span: 3 {
-          component Card title: "Total Users"
+          layout card(padding: md, gap: md) {
+            component Heading text: "Total Users"
+            component StatCard title: "Count" value: "2,543"
+          }
         }
         cell span: 3 {
-          component Card title: "Active Sessions"
+          layout card(padding: md, gap: md) {
+            component Heading text: "Active Sessions"
+            component StatCard title: "Active" value: "856"
+          }
         }
         cell span: 3 {
-          component Card title: "Revenue"
+          layout card(padding: md, gap: md) {
+            component Heading text: "Revenue"
+            component StatCard title: "Total" value: "$45.2K"
+          }
         }
         cell span: 3 {
-          component Button text: "Revenue 2"
+          layout card(padding: md, gap: md) {
+            component Heading text: "Growth"
+            component StatCard title: "This month" value: "+12%"
+          }
         }
       }
 
       component ChartPlaceholder type: "bar" height: 300
 
-      component Table columns: "Date,Event,User" rowsMock: 5
+      component Table columns: "Date,Event,User" rows: 5
     }
   }
 }

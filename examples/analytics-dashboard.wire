@@ -1,57 +1,68 @@
 project "Analytics Dashboard" {
-  tokens density: normal
-  tokens spacing: md
+  theme {
+    density: "normal"
+    spacing: "md"
+    radius: "md"
+    stroke: "normal"
+    font: "base"
+  }
 
   screen Dashboard {
     layout stack(direction: vertical, gap: lg, padding: xl) {
-      component Topbar title: "Analytics" subtitle: "Realtime overview" actions: "Refresh"
+      component Topbar title: "Analytics" subtitle: "Realtime overview"
 
       layout split(sidebar: 260, gap: lg) {
-        // Sidebar filters
         layout stack(direction: vertical, gap: md, padding: md) {
-          component Heading text: "Filters"
-          component Select label: "Date Range" placeholder: "Last 7 days"
-          component Select label: "Channel" placeholder: "All channels"
-          component Select label: "Region" placeholder: "Global"
-          component Divider text: "Notify"
-          component Checkbox label: "Email alerts" checked: "true"
-          component Checkbox label: "Slack alerts" checked: "false"
+          component Heading title: "Filters"
+          component Select label: "Date Range" items: "Last 7 days,Last 30 days,Last 90 days"
+          component Select label: "Channel" items: "All channels,Social,Email,Direct"
+          component Select label: "Region" items: "Global,North America,Europe,Asia"
+          component Divider
+          component Checkbox label: "Email alerts"
+          component Checkbox label: "Slack alerts"
         }
 
-        // Main content
-        layout stack(direction: vertical, gap: lg) {
-          // KPI badges row
+        layout stack(direction: vertical, gap: lg, padding: lg) {
           layout grid(columns: 12, gap: md) {
-            cell span: 3 { component Badge text: "+12%" variant: "success" }
-            cell span: 3 { component Badge text: "-3%" variant: "error" }
-            cell span: 3 { component Badge text: "4.5k" variant: "primary" }
-            cell span: 3 { component Badge text: "1.2k" variant: "secondary" }
+            cell span: 3 {
+              component Badge text: "+12%" variant: primary
+            }
+            cell span: 3 {
+              component Badge text: "-3%" variant: secondary
+            }
+            cell span: 3 {
+              component Badge text: "4.5k" variant: primary
+            }
+            cell span: 3 {
+              component Badge text: "1.2k" variant: secondary
+            }
           }
 
-          // Tabs for sections
-          component Tabs items: "Overview,Traffic,Revenue,Engagement"
+          component Tabs items: "Overview,Traffic,Revenue,Engagement" activeIndex: 0
 
-          // Charts grid
           layout grid(columns: 12, gap: md) {
-            cell span: 6 { component ChartPlaceholder title: "Traffic" subtitle: "Visitors by source" }
-            cell span: 6 { component ChartPlaceholder title: "Conversion" subtitle: "Funnel" }
-            cell span: 12 { component ChartPlaceholder title: "Engagement" subtitle: "Session duration" }
+            cell span: 6 {
+              component ChartPlaceholder type: "bar" height: 250
+            }
+            cell span: 6 {
+              component ChartPlaceholder type: "line" height: 250
+            }
+            cell span: 12 {
+              component ChartPlaceholder type: "area" height: 250
+            }
           }
 
-          // Alerts
           layout stack(direction: vertical, gap: sm) {
-            component Alert text: "Traffic spike detected on mobile" variant: "warning"
-            component Alert text: "Sync delayed for EU region" variant: "error"
+            component Alert type: "warning" message: "Traffic spike detected on mobile devices"
+            component Alert type: "error" message: "Sync delayed for EU region"
           }
 
-          // Sessions table
-          component Table title: "Sessions" columns: "User,Country,Device,Time" rows: "10"
+          component Table columns: "User,Country,Device,Time" rows: 10
 
-          // Events list with divider and modal hint
           layout stack(direction: vertical, gap: md) {
-            component Divider text: "Latest events"
-            component List title: "Events" items: "Login,Purchase,Invite,Logout,Password Reset"
-            component Modal title: "Session details" description: "Modal preview placeholder"
+            component Divider
+            component Heading title: "Latest events"
+            component List items: "Login,Purchase,Invite,Logout,Password Reset"
           }
         }
       }

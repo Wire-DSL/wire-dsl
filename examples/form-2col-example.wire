@@ -1,10 +1,15 @@
 project "Form Example - Two Columns" {
-  tokens density: normal
-  tokens spacing: md
+  theme {
+    density: "normal"
+    spacing: "md"
+    radius: "md"
+    stroke: "normal"
+    font: "base"
+  }
 
   screen FormScreen {
     layout stack(direction: vertical, gap: md, padding: lg) {
-      component Heading text: "User Registration"
+      component Heading title: "User Registration"
       
       component Text content: "Please fill in all required fields below"
 
@@ -18,39 +23,39 @@ project "Form Example - Two Columns" {
         }
 
         cell span: 12 {
-          component Textarea label: "Bio" placeholder: "Tell us about yourself..."
+          component Textarea label: "Bio" placeholder: "Tell us about yourself..." rows: 4
         }
         
         cell span: 6 {
-          component Select label: "Country" placeholder: "Select a country"
+          component Select label: "Country" items: "USA,Canada,Mexico,UK,Spain"
         }
         
         cell span: 6 {
-          component Select label: "State" placeholder: "Select a state"
+          component Select label: "State" items: "California,Texas,New York,Florida"
         }
       }
 
       layout stack(direction: horizontal, gap: lg) {
-        layout stack(direction: vertical, gap: sm) {
-          component Heading text: "Preferences"
-          component Checkbox label: "Subscribe to newsletter" checked: "true"
-          component Checkbox label: "Enable notifications" checked: "false"
+        layout stack(direction: vertical, gap: sm, padding: md) {
+          component Heading title: "Preferences"
+          component Checkbox label: "Subscribe to newsletter"
+          component Checkbox label: "Enable notifications"
         }
         
-        layout stack(direction: vertical, gap: sm) {
-          component Heading text: "Account Type"
-          component Radio label: "Personal" checked: "true"
-          component Radio label: "Business" checked: "false"
+        layout stack(direction: vertical, gap: sm, padding: md) {
+          component Heading title: "Account Type"
+          component Radio label: "Personal"
+          component Radio label: "Business"
         }
       }
 
-      layout stack(direction: horizontal, gap: md) {
-        component Toggle label: "Terms & Conditions" enabled: "true"
+      layout stack(direction: vertical, gap: md) {
+        component Toggle label: "I agree to Terms & Conditions"
       }
 
       layout stack(direction: horizontal, gap: md) {
         component Button text: "Cancel"
-        component Button text: "Submit" variant: "primary"
+        component Button text: "Submit" variant: primary
       }
     }
   }

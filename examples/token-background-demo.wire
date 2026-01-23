@@ -1,40 +1,47 @@
 project "Token Background Demo" {
-  tokens density: comfortable
-  tokens spacing: md
-  tokens background: lightGray
-
-  colors {
-    lightGray: #F3F4F6
-    lightBlue: #DBEAFE
-    lightGreen: #DCFCE7
+  theme {
+    density: "comfortable"
+    spacing: "md"
+    radius: "md"
+    stroke: "normal"
+    font: "base"
   }
 
   screen Dashboard {
     layout stack(direction: vertical, gap: lg, padding: xl) {
-      component Topbar title: "All screens have light gray background"
+      component Topbar title: "Dashboard with Light Gray Background"
       
-      layout panel(padding: lg) {
-        component Card title: "Default screen background from token"
+      layout panel(padding: lg, background: "white") {
+        layout card(padding: md, gap: md) {
+          component Heading text: "Default screen background"
+          component Text content: "Content with default styling"
+        }
       }
     }
   }
 
-  screen Custom(background: lightBlue) {
+  screen Custom {
     layout stack(direction: vertical, gap: lg, padding: xl) {
-      component Topbar title: "This screen overrides token background"
+      component Topbar title: "Custom Screen"
       
-      layout panel(padding: lg) {
-        component Card title: "Screen-specific light blue background"
+      layout panel(padding: lg, background: "white") {
+        layout card(padding: md, gap: md) {
+          component Heading text: "Custom background"
+          component Text content: "Screen-specific styling"
+        }
       }
     }
   }
 
   screen Another {
     layout stack(direction: vertical, gap: lg, padding: xl) {
-      component Topbar title: "Also uses light gray from token"
+      component Topbar title: "Another Screen"
       
-      layout panel(padding: lg) {
-        component Card title: "Uses default token background"
+      layout panel(padding: lg, background: "white") {
+        layout card(padding: md, gap: md) {
+          component Heading text: "Uses default token background"
+          component Text content: "Consistent with other screens"
+        }
       }
     }
   }

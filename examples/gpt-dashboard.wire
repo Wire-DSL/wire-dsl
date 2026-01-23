@@ -1,41 +1,46 @@
 project "Auth Platform" {
-  tokens density: normal
-  tokens spacing: md
+  theme {
+    density: "normal"
+    spacing: "md"
+    radius: "md"
+    stroke: "normal"
+    font: "base"
+  }
 
   screen UsersList {
     layout split(sidebar: 260, gap: md) {
       layout stack(direction: vertical, gap: lg, padding: lg) {
         layout stack(direction: vertical, gap: sm, padding: md) {
-          component Heading text: "Auth Platform"
+          component Heading title: "Auth Platform"
           component Text content: "Admin console"
         }
-        component SidebarMenu items: "Listado de usuarios,Gestión de permisos,Definiciones"
+        component SidebarMenu items: "User List,Permissions,Settings" active: 0
       }
 
       layout stack(direction: vertical, gap: md, padding: lg) {
-        component Breadcrumbs items: "Home,Listado de usuarios" separator: ">"
+        component Breadcrumbs items: "Home,Users"
 
         layout stack(direction: vertical, gap: sm) {
-          component Heading text: "Listado de usuarios"
-          component Text content: "Lista usuarios para asignar permisos"
+          component Heading title: "User List"
+          component Text content: "Manage users and permissions"
         }
 
         layout grid(columns: 12, gap: md) {
           cell span: 3 {
-            component Input label: "Documento (CI)" placeholder: "0.000.000-0"
+            component Input label: "Document ID" placeholder: "0.000.000-0"
           }
           cell span: 5 {
-            component Input label: "Nombre" placeholder: "Ej: Juan Pérez"
+            component Input label: "Name" placeholder: "John Doe"
           }
           cell span: 3 {
-            component Input label: "RUT Empresa" placeholder: "21000000000"
+            component Input label: "Company ID" placeholder: "21000000000"
           }
-          cell span: 1 {
-            component Button text: "Filtrar" variant: primary
+          cell span: 1 align: end {
+            component Button text: "Filter" variant: primary
           }
         }
 
-        component Table columns: "Nombre,Correo electrónico,RUT,Permisos,Acciones" rows: 6 pagination: true pages: 4
+        component Table columns: "Name,Email,Company,Permissions,Actions" rows: 6
 
         component Text content: "Auth Platform v1.0.0"
       }

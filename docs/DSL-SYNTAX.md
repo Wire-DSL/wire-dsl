@@ -300,7 +300,7 @@ component Button text: "Click me" variant: primary
 
 | Component | Properties | Example |
 |-----------|-----------|---------|
-| `Heading` | `title` (string) | `component Heading title: "Page Title"` |
+| `Heading` | `text` (string) | `component Heading text: "Page Title"` |
 | `Text` | `content` (string) | `component Text content: "Body text"` |
 | `Paragraph` | `content` (string) | `component Paragraph content: "Long text"` |
 | `Label` | `text` (string) | `component Label text: "Field label"` |
@@ -312,9 +312,9 @@ component Button text: "Click me" variant: primary
 | `Input` | `label`, `placeholder` | `component Input label: "Email" placeholder: "your@email.com"` |
 | `Textarea` | `label`, `placeholder`, `rows` | `component Textarea label: "Message" rows: 4` |
 | `Select` | `label`, `items` | `component Select label: "Role" items: "Admin,User"` |
-| `Checkbox` | `label` | `component Checkbox label: "Agree"` |
-| `Radio` | `label` | `component Radio label: "Option"` |
-| `Toggle` | `label` | `component Toggle label: "Enable feature"` |
+| `Checkbox` | `label`, `checked` | `component Checkbox label: "Agree" checked: true` |
+| `Radio` | `label`, `checked` | `component Radio label: "Option" checked: false` |
+| `Toggle` | `label`, `enabled` | `component Toggle label: "Enable feature" enabled: false` |
 
 ### Button Components
 
@@ -357,8 +357,8 @@ component Button text: "Click me" variant: primary
 | `Badge` | `text`, `variant` | `component Badge text: "New" variant: primary` |
 | `Link` | `text` | `component Link text: "Click here"` |
 | `ChartPlaceholder` | `type`, `height` | `component ChartPlaceholder type: "bar" height: 200` |
-| `Alert` | `title`, `content` | `component Alert title: "Error" content: "Something went wrong"` |
-| `StatCard` | `label`, `value` | `component StatCard label: "Total Users" value: "1,234"` |
+| `Alert` | `type`, `message` | `component Alert type: "error" message: "Something went wrong"` |
+| `StatCard` | `title`, `value` | `component StatCard title: "Total Users" value: "1,234"` |
 | `Code` | `content` | `component Code content: "const x = 10;"` |
 | `Spinner` | - | `component Spinner` |
 | `Modal` | `title`, `content` | `component Modal title: "Confirm?" content: "Are you sure?"` |

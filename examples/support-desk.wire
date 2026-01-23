@@ -1,43 +1,47 @@
 project "Support Desk" {
-  tokens density: normal
-  tokens spacing: md
+  theme {
+    density: "normal"
+    spacing: "md"
+    radius: "md"
+    stroke: "normal"
+    font: "base"
+  }
 
   screen Tickets {
     layout stack(direction: vertical, gap: lg, padding: xl) {
-      component Topbar title: "Support Desk" subtitle: "Ticket overview" actions: "New ticket"
+      component Topbar title: "Support Desk" subtitle: "Ticket overview"
 
       layout split(sidebar: 260, gap: lg) {
-        // Sidebar filters
         layout stack(direction: vertical, gap: md, padding: md) {
           component Heading text: "Filters"
-          component Select label: "Status" placeholder: "Open, Pending, Closed"
-          component Select label: "Priority" placeholder: "Any"
-          component Select label: "Agent" placeholder: "All agents"
-          component Divider text: "SLA"
-          component Badge text: "SLA 92%" variant: "primary"
-          component Alert text: "3 tickets near breach" variant: "warning"
-          component Checkbox label: "Only escalated" checked: "false"
+          component Select label: "Status" items: "Open,Pending,Closed"
+          component Select label: "Priority" items: "Low,Medium,High"
+          component Select label: "Agent" items: "All agents,John,Jane,Bob"
+          component Divider
+          component Badge text: "SLA 92%" variant: primary
+          component Alert type: "warning" message: "3 tickets near breach"
+          component Checkbox label: "Only escalated"
         }
 
-        // Main content
-        layout stack(direction: vertical, gap: lg) {
-          component Tabs items: "Open,Pending,Closed"
+        layout stack(direction: vertical, gap: lg, padding: lg) {
+          component Tabs items: "Open,Pending,Closed" activeIndex: 0
 
-          component Alert text: "SLA risk: EU region" variant: "error"
+          component Alert type: "error" message: "SLA risk in EU region"
 
-          component Table title: "Tickets" columns: "ID,Subject,Requester,Priority,Updated" rows: "8"
+          component Table columns: "ID,Subject,Requester,Priority,Updated" rows: 8
 
           layout stack(direction: vertical, gap: md) {
-            component Divider text: "Ticket activity"
-            component List title: "Recent notes" items: "Assignment changed,Priority raised,Agent replied,Customer responded"
+            component Divider
+            component Heading title: "Ticket activity"
+            component List items: "Assignment changed,Priority raised,Agent replied,Customer responded"
           }
 
-          layout stack(direction: vertical, gap: sm) {
-            component Heading text: "Reply"
-            component Textarea label: "Response" placeholder: "Type an update for the customer..."
+          layout stack(direction: vertical, gap: sm, padding: md) {
+            component Heading title: "Reply"
+            component Textarea label: "Response" placeholder: "Type an update for the customer..." rows: 4
             layout stack(direction: horizontal, gap: md) {
               component Button text: "Save draft"
-              component Button text: "Send reply" variant: "primary"
+              component Button text: "Send reply" variant: primary
             }
           }
         }

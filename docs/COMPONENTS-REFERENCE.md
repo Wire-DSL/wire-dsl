@@ -11,12 +11,12 @@ Complete reference for all available components with detailed specifications, pr
 Large, bold text for page titles and section headers.
 
 **Properties**:
-- `title` (string): The heading text
+- `text` (string): The heading text
 
 **Example**:
 ```
-component Heading title: "Dashboard"
-component Heading title: "User Management"
+component Heading text: "Dashboard"
+component Heading text: "User Management"
 ```
 
 **Rendering**: Bold text at 24-28px font size
@@ -136,11 +136,13 @@ Boolean checkbox input.
 
 **Properties**:
 - `label` (string): Checkbox label
+- `checked` (boolean, optional): Whether checkbox is checked (default: false)
 
 **Example**:
 ```
-component Checkbox label: "I agree to terms"
+component Checkbox label: "I agree to terms" checked: true
 component Checkbox label: "Subscribe to newsletter"
+component Checkbox label: "Remember me" checked: false
 ```
 
 **Rendering**: Small square checkbox with label text
@@ -153,11 +155,13 @@ Single-select radio button (typically used in groups).
 
 **Properties**:
 - `label` (string): Radio button label
+- `checked` (boolean, optional): Whether radio is selected (default: false)
 
 **Example**:
 ```
-component Radio label: "Option A"
+component Radio label: "Option A" checked: true
 component Radio label: "Option B"
+component Radio label: "Personal" checked: false
 ```
 
 **Rendering**: Circular radio button with label text
@@ -170,11 +174,13 @@ Boolean toggle switch.
 
 **Properties**:
 - `label` (string): Toggle label
+- `enabled` (boolean, optional): Whether toggle is enabled (default: false)
 
 **Example**:
 ```
-component Toggle label: "Dark Mode"
+component Toggle label: "Dark Mode" enabled: true
 component Toggle label: "Enable notifications"
+component Toggle label: "Auto-save" enabled: false
 ```
 
 **Rendering**: Sliding toggle switch with label
@@ -233,14 +239,16 @@ Top navigation bar/header.
 
 **Properties**:
 - `title` (string): Main title
-- `subtitle` (string, optional): Secondary title
-- `user` (string, optional): User info or avatar placeholder
+- `subtitle` (string, optional): Secondary subtitle
+- `user` (string, optional): User name or identifier for badge
 - `actions` (string, optional): Action items (comma-separated)
 
 **Example**:
 ```
-component Topbar title: "Dashboard" subtitle: "Welcome back" user: "John Doe"
-component Topbar title: "Settings" actions: "Help,Logout"
+component Topbar title: "Dashboard"
+component Topbar title: "Dashboard" subtitle: "Welcome back"
+component Topbar title: "Settings" user: "john_doe"
+component Topbar title: "Admin" actions: "Help,Logout"
 ```
 
 **Rendering**: Horizontal bar at top of screen with logo/title and optional user menu
@@ -270,13 +278,14 @@ component SidebarMenu items: "Dashboard,Analytics,Reports,Admin" active: 1
 Navigation hierarchy showing current page location.
 
 **Properties**:
-- `items` (string, CSV): Breadcrumb labels
-- `separator` (string, optional): Separator character (default: "/")
+- `items` (string, CSV): Breadcrumb labels (required)
+- `separator` (string, optional): Separator character between items (default: "/")
 
 **Example**:
 ```
-component Breadcrumbs items: "Home,Users,User Detail"
+component Breadcrumbs items: "Home,Users,Detail"
 component Breadcrumbs items: "Dashboard,Products,Electronics,Laptops" separator: ">"
+component Breadcrumbs items: "Admin,Settings,Preferences" separator: " > "
 ```
 
 **Rendering**: Horizontal path showing navigation hierarchy
@@ -309,15 +318,13 @@ Data table with rows and columns.
 
 **Properties**:
 - `columns` (string, CSV): Column headers (required)
-- `rows` (number): Number of mock rows (default: 5)
-- `pagination` (boolean): Show pagination controls (default: false)
-- `pages` (number): Number of pages if pagination enabled
+- `rows` (number): Number of mock rows to display (default: 5)
 
 **Example**:
 ```
 component Table columns: "Name,Email,Status" rows: 8
-component Table columns: "ID,Name,Email,Role,Actions" rows: 10 pagination: true pages: 5
-component Table columns: "Date,Amount,Status" rows: 15
+component Table columns: "ID,Name,Email,Role" rows: 10
+component Table columns: "Date,Amount,Status,Notes" rows: 15
 ```
 
 **Rendering**: Grid table with header row and mock data rows
@@ -330,11 +337,14 @@ Simple list of items.
 
 **Properties**:
 - `items` (string, CSV): List item labels
+- `title` (string, optional): List title/header
+- `itemsMock` (number, optional): Number of mock items to generate
 
 **Example**:
 ```
 component List items: "JavaScript,TypeScript,Python,Java"
 component List items: "Feature 1,Feature 2,Feature 3,Feature 4"
+component List title: "Recent Activity" items: "Login,Purchase,Invite,Export"
 ```
 
 **Rendering**: Vertical list with bullet points or numbers
@@ -457,15 +467,15 @@ component Link text: "Learn more"
 Alert/notification message box.
 
 **Properties**:
-- `title` (string): Alert title
-- `content` (string): Alert message
-- `variant` (string): Type - `info` | `success` | `warning` | `error` (default: `info`)
+- `type` (string): Alert type - `info` | `success` | `warning` | `error` (required)
+- `message` (string): Alert message content
 
 **Example**:
 ```
-component Alert title: "Success" content: "Changes saved successfully" variant: success
-component Alert title: "Error" content: "Something went wrong" variant: error
-component Alert title: "Info" content: "New updates available" variant: info
+component Alert type: "success" message: "Changes saved successfully"
+component Alert type: "error" message: "Something went wrong"
+component Alert type: "warning" message: "This action cannot be undone"
+component Alert type: "info" message: "New updates available"
 ```
 
 **Rendering**: Colored box with icon, title, and message
@@ -479,14 +489,14 @@ component Alert title: "Info" content: "New updates available" variant: info
 Statistics card displaying metric and value.
 
 **Properties**:
-- `label` (string): Metric label
-- `value` (string): Metric value
+- `title` (string): Metric label/title
+- `value` (string): Metric value to display
 
 **Example**:
 ```
-component StatCard label: "Total Users" value: "1,234"
-component StatCard label: "Revenue" value: "$45,678"
-component StatCard label: "Growth" value: "+12.5%"
+component StatCard title: "Total Users" value: "1,234"
+component StatCard title: "Revenue" value: "$45,678"
+component StatCard title: "Growth" value: "+12.5%"
 ```
 
 **Rendering**: Card with large value and small label below
@@ -498,11 +508,13 @@ component StatCard label: "Growth" value: "+12.5%"
 Code block display.
 
 **Properties**:
-- `content` (string): Code content
+- `code` (string): Code content to display
 
 **Example**:
 ```
-component Code content: "const x = 10; console.log(x);"
+component Code code: "const x = 10; console.log(x);"
+component Code code: "function sum(a, b) { return a + b; }"
+component Code code: "SELECT * FROM users WHERE active = true;"
 ```
 
 **Rendering**: Monospace text in gray background box
@@ -593,20 +605,20 @@ layout stack(direction: vertical, gap: md, padding: lg) {
 
 ```
 layout stack(direction: vertical, gap: lg, padding: lg) {
-  component Heading title: "Dashboard"
+  component Heading text: "Dashboard"
   
   layout grid(columns: 12, gap: md) {
     cell span: 3 {
-      component StatCard label: "Total Users" value: "1,234"
+      component StatCard title: "Total Users" value: "1,234"
     }
     cell span: 3 {
-      component StatCard label: "Active Sessions" value: "567"
+      component StatCard title: "Active Sessions" value: "567"
     }
     cell span: 3 {
-      component StatCard label: "Revenue" value: "$89,012"
+      component StatCard title: "Revenue" value: "$89,012"
     }
     cell span: 3 {
-      component StatCard label: "Growth Rate" value: "+12.5%"
+      component StatCard title: "Growth Rate" value: "+12.5%"
     }
   }
   

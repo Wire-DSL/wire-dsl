@@ -1,15 +1,16 @@
 project "Admin Dashboard Simple" {
-  tokens density: normal
-  tokens spacing: md
-
-  mocks {
-    status: "Active,Inactive,Pending"
+  theme {
+    density: "normal"
+    spacing: "md"
+    radius: "md"
+    stroke: "normal"
+    font: "base"
   }
 
   screen Dashboard {
     layout stack(direction: vertical, gap: lg, padding: lg) {
       component Topbar title: "Dashboard" subtitle: "Main view"
-      component Badge label: "Count" value: "42"
+      component StatCard title: "Count" value: "42"
     }
   }
 

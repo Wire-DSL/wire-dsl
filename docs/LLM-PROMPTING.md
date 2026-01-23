@@ -104,7 +104,7 @@ theme {
 ### Text Components Details
 | Component | Required Props | Optional Props | Example |
 |---|---|---|---|
-| `Heading` | `title` | - | `component Heading title: "Page Title"` |
+| `Heading` | `text` | - | `component Heading text: "Page Title"` |
 | `Text` | `content` | - | `component Text content: "Body text"` |
 | `Paragraph` | `content` | - | `component Paragraph content: "Long multi-line text"` |
 | `Label` | `text` | - | `component Label text: "Field label"` |
@@ -115,9 +115,9 @@ theme {
 | `Input` | `label`, `placeholder` | `component Input label: "Email" placeholder: "your@email.com"` |
 | `Textarea` | `label`, `placeholder`, `rows` | `component Textarea label: "Message" rows: 4 placeholder: "Your message..."` |
 | `Select` | `label`, `items` | `component Select label: "Role" items: "Admin,User,Guest"` |
-| `Checkbox` | `label` | `component Checkbox label: "I agree to terms"` |
-| `Radio` | `label` | `component Radio label: "Option A"` |
-| `Toggle` | `label` | `component Toggle label: "Enable notifications"` |
+| `Checkbox` | `label`, `checked` | `component Checkbox label: "I agree to terms" checked: false` |
+| `Radio` | `label`, `checked` | `component Radio label: "Option A" checked: true` |
+| `Toggle` | `label`, `enabled` | `component Toggle label: "Enable notifications" enabled: false` |
 
 ### Media Components Details
 | Component | Key Properties | Valid Placeholders | Example |
@@ -138,8 +138,8 @@ theme {
 | Component | Key Properties | Example |
 |---|---|---|
 | `Table` | `columns`, `rows` | `component Table columns: "Name,Email,Status" rows: 8` |
-| `StatCard` | `label`, `value` | `component StatCard label: "Total Users" value: "1,234"` |
-| `List` | `items` | `component List items: "Item 1,Item 2,Item 3"` |
+| `StatCard` | `title`, `value` | `component StatCard title: "Total Users" value: "1,234"` |
+| `List` | `items`, `title` | `component List items: "Item 1,Item 2,Item 3"` |
 
 ---
 

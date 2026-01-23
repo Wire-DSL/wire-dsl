@@ -7,16 +7,6 @@ project "Theme Test" {
     font: "base"
   }
 
-  colors {
-    primary: #3B82F6
-    secondary: #10B981
-  }
-
-  mocks {
-    status: "Active,Inactive,Pending"
-    roles: "Admin,User,Guest"
-  }
-
   screen Dashboard {
     layout stack(direction: vertical, gap: md, padding: lg) {
       component Heading text: "Welcome to Theme Test"
