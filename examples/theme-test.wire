@@ -1,0 +1,38 @@
+project "Theme Test" {
+  theme {
+    density: "compact"
+    spacing: "lg"
+    radius: "md"
+    stroke: "normal"
+    font: "base"
+  }
+
+  colors {
+    primary: #3B82F6
+    secondary: #10B981
+  }
+
+  mocks {
+    status: "Active,Inactive,Pending"
+    roles: "Admin,User,Guest"
+  }
+
+  screen Dashboard {
+    layout stack(direction: vertical, gap: md, padding: lg) {
+      component Heading text: "Welcome to Theme Test"
+      component Text content: "This project uses the new theme block syntax"
+      
+      layout grid(columns: 12, gap: md) {
+        cell span: 4 {
+          component Button text: "Action 1" variant: primary
+        }
+        cell span: 4 {
+          component Button text: "Action 2" variant: secondary
+        }
+        cell span: 4 {
+          component Button text: "Action 3"
+        }
+      }
+    }
+  }
+}

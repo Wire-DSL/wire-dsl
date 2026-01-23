@@ -63,7 +63,7 @@ export class SVGRenderer {
   private ir: IRContract;
   private layout: LayoutResult;
   private options: Required<Omit<SVGRenderOptions, 'screenName'>> & { screenName?: string };
-  private theme: typeof THEMES.light;
+  private renderTheme: typeof THEMES.light;
   private selectedScreenName?: string;
   private renderedNodeIds: Set<string> = new Set(); // Track nodes rendered in current pass
   private colorResolver: ColorResolver;
@@ -79,7 +79,7 @@ export class SVGRenderer {
       includeLabels: options?.includeLabels ?? true,
       screenName: options?.screenName,
     };
-    this.theme = THEMES[this.options.theme];
+    this.renderTheme = THEMES[this.options.theme];
     this.colorResolver = new ColorResolver();
 
     // Initialize MockDataGenerator with custom mocks from project metadata
@@ -143,9 +143,9 @@ export class SVGRenderer {
     const svgHeight = Math.max(this.options.height, actualHeight);
 
     // Resolve screen background color
-    let backgroundColor = this.theme.bg;
+    let backgroundColor = this.renderTheme.bg;
     if (screen.background) {
-      backgroundColor = this.colorResolver.resolveColor(screen.background, this.theme.bg);
+      backgroundColor = this.colorResolver.resolveColor(screen.background, this.renderTheme.bg);
     }
 
     return `<svg width="${this.options.width}" height="${svgHeight}" viewBox="0 0 ${this.options.width} ${svgHeight}" xmlns="http://www.w3.org/2000/svg">
@@ -283,7 +283,7 @@ export class SVGRenderer {
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="${fontSize}" 
           font-weight="600" 
-          fill="${this.theme.text}">${this.escapeXml(text)}</text>
+          fill="${this.renderTheme.text}">${this.escapeXml(text)}</text>
   </g>`;
   }
 
@@ -291,9 +291,9 @@ export class SVGRenderer {
     const text = String(node.props.text || 'Button');
     const variant = String(node.props.variant || 'default');
 
-    const bgColor = variant === 'primary' ? this.theme.primary : this.theme.cardBg;
-    const textColor = variant === 'primary' ? '#FFFFFF' : this.theme.text;
-    const borderColor = variant === 'primary' ? this.theme.primary : this.theme.border;
+    const bgColor = variant === 'primary' ? this.renderTheme.primary : this.renderTheme.cardBg;
+    const textColor = variant === 'primary' ? '#FFFFFF' : this.renderTheme.text;
+    const borderColor = variant === 'primary' ? this.renderTheme.primary : this.renderTheme.border;
 
     const buttonWidth = Math.max(pos.width, 60); // Minimum 60px width
 
@@ -323,19 +323,19 @@ export class SVGRenderer {
         ? `<text x="${pos.x + 8}" y="${pos.y - 6}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="12" 
-          fill="${this.theme.text}">${this.escapeXml(label)}</text>`
+          fill="${this.renderTheme.text}">${this.escapeXml(label)}</text>`
         : ''
     }
     <rect x="${pos.x}" y="${pos.y}" 
           width="${pos.width}" height="${pos.height}" 
           rx="6" 
-          fill="${this.theme.cardBg}" 
-          stroke="${this.theme.border}" 
+          fill="${this.renderTheme.cardBg}" 
+          stroke="${this.renderTheme.border}" 
           stroke-width="1"/>
     <text x="${pos.x + 12}" y="${pos.y + pos.height / 2 + 5}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="14" 
-          fill="${this.theme.textMuted}">${this.escapeXml(placeholder)}</text>
+          fill="${this.renderTheme.textMuted}">${this.escapeXml(placeholder)}</text>
   </g>`;
   }
 
@@ -346,19 +346,19 @@ export class SVGRenderer {
     <rect x="${pos.x}" y="${pos.y}" 
           width="${pos.width}" height="${pos.height}" 
           rx="8" 
-          fill="${this.theme.cardBg}" 
-          stroke="${this.theme.border}" 
+          fill="${this.renderTheme.cardBg}" 
+          stroke="${this.renderTheme.border}" 
           stroke-width="1"/>
     <text x="${pos.x + 16}" y="${pos.y + 28}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="14" 
           font-weight="600" 
-          fill="${this.theme.text}">${this.escapeXml(title)}</text>
+          fill="${this.renderTheme.text}">${this.escapeXml(title)}</text>
     <text x="${pos.x + 16}" y="${pos.y + 56}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="24" 
           font-weight="700" 
-          fill="${this.theme.text}">1,234</text>
+          fill="${this.renderTheme.text}">1,234</text>
   </g>`;
   }
 
@@ -387,8 +387,8 @@ export class SVGRenderer {
     let svg = `<g>
     <rect x="${pos.x}" y="${pos.y}" 
           width="${pos.width}" height="${pos.height}" 
-          fill="${this.theme.cardBg}" 
-          stroke="${this.theme.border}" 
+          fill="${this.renderTheme.cardBg}" 
+          stroke="${this.renderTheme.border}" 
           stroke-width="1"/>
     
     <!-- Title -->
@@ -396,7 +396,7 @@ export class SVGRenderer {
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="18" 
           font-weight="600" 
-          fill="${this.theme.text}">${this.escapeXml(title)}</text>`;
+          fill="${this.renderTheme.text}">${this.escapeXml(title)}</text>`;
 
     // Subtitle
     if (subtitle) {
@@ -404,7 +404,7 @@ export class SVGRenderer {
     <text x="${pos.x + 16}" y="${subtitleY}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="13" 
-          fill="${this.theme.textMuted}">${this.escapeXml(subtitle)}</text>`;
+          fill="${this.renderTheme.textMuted}">${this.escapeXml(subtitle)}</text>`;
     }
 
     // User badge (top-right, above actions)
@@ -419,13 +419,13 @@ export class SVGRenderer {
     <rect x="${badgeX}" y="${badgeY}" 
           width="${badgePaddingX * 2 + user.length * 7.5}" height="${badgeHeight}" 
           rx="4" 
-          fill="${this.theme.cardBg}" 
-          stroke="${this.theme.border}" 
+          fill="${this.renderTheme.cardBg}" 
+          stroke="${this.renderTheme.border}" 
           stroke-width="1"/>
     <text x="${badgeX + badgePaddingX + user.length * 3.75}" y="${badgeY + badgeHeight / 2 + 4}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="12" 
-          fill="${this.theme.text}" 
+          fill="${this.renderTheme.text}" 
           text-anchor="middle">${this.escapeXml(user)}</text>`;
     }
 
@@ -447,7 +447,7 @@ export class SVGRenderer {
     <rect x="${bx}" y="${buttonY}" 
           width="${buttonWidth}" height="${buttonHeight}" 
           rx="6" 
-          fill="${this.theme.primary}" 
+          fill="${this.renderTheme.primary}" 
           stroke="none"/>
     <text x="${bx + buttonWidth / 2}" y="${buttonY + buttonHeight / 2 + 4}" 
           font-family="system-ui, -apple-system, sans-serif" 
@@ -466,9 +466,9 @@ export class SVGRenderer {
     if (node.kind !== 'container') return;
 
     // Resolve background color, defaulting to cardBg (white in light theme)
-    let fillColor = this.theme.cardBg;
+    let fillColor = this.renderTheme.cardBg;
     if (node.style.background) {
-      fillColor = this.colorResolver.resolveColor(node.style.background, this.theme.cardBg);
+      fillColor = this.colorResolver.resolveColor(node.style.background, this.renderTheme.cardBg);
     }
 
     // Render panel border as a rectangle with fill and stroke
@@ -477,7 +477,7 @@ export class SVGRenderer {
           width="${pos.width}" height="${pos.height}" 
           rx="8" 
           fill="${fillColor}" 
-          stroke="${this.theme.border}" 
+          stroke="${this.renderTheme.border}" 
           stroke-width="1"/>
     </g>`;
     output.push(svg);
@@ -496,9 +496,9 @@ export class SVGRenderer {
     const radius = radiusMap[String(node.params.radius) || 'md'] || 8;
 
     // Resolve background color
-    let fillColor = this.theme.cardBg;
+    let fillColor = this.renderTheme.cardBg;
     if (node.style.background) {
-      fillColor = this.colorResolver.resolveColor(node.style.background, this.theme.cardBg);
+      fillColor = this.colorResolver.resolveColor(node.style.background, this.renderTheme.cardBg);
     }
 
     // Check if border is disabled (default true)
@@ -512,7 +512,7 @@ export class SVGRenderer {
           width="${pos.width}" height="${pos.height}" 
           rx="${radius}" 
           fill="${fillColor}" 
-          stroke="${this.theme.border}" 
+          stroke="${this.renderTheme.border}" 
           stroke-width="${strokeWidth}"/>
     </g>`;
     output.push(svg);
@@ -556,8 +556,8 @@ export class SVGRenderer {
     <rect x="${pos.x}" y="${pos.y}" 
           width="${pos.width}" height="${pos.height}" 
           rx="8" 
-          fill="${this.theme.cardBg}" 
-          stroke="${this.theme.border}" 
+          fill="${this.renderTheme.cardBg}" 
+          stroke="${this.renderTheme.border}" 
           stroke-width="1"/>`;
 
     // Title
@@ -567,14 +567,14 @@ export class SVGRenderer {
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="13" 
           font-weight="600" 
-          fill="${this.theme.text}">${this.escapeXml(title)}</text>`;
+          fill="${this.renderTheme.text}">${this.escapeXml(title)}</text>`;
     }
 
     // Header row
     const headerY = pos.y + (title ? 32 : 0);
     svg += `
     <line x1="${pos.x}" y1="${headerY + headerHeight}" x2="${pos.x + pos.width}" y2="${headerY + headerHeight}" 
-          stroke="${this.theme.border}" stroke-width="1"/>`;
+          stroke="${this.renderTheme.border}" stroke-width="1"/>`;
 
     columns.forEach((col, i) => {
       svg += `
@@ -582,7 +582,7 @@ export class SVGRenderer {
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="11" 
           font-weight="600" 
-          fill="${this.theme.textMuted}">${this.escapeXml(col)}</text>`;
+          fill="${this.renderTheme.textMuted}">${this.escapeXml(col)}</text>`;
     });
 
     // Data rows (render all, don't restrict by height)
@@ -592,7 +592,7 @@ export class SVGRenderer {
       // Row separator
       svg += `
     <line x1="${pos.x}" y1="${rowY + rowHeight}" x2="${pos.x + pos.width}" y2="${rowY + rowHeight}" 
-          stroke="${this.theme.border}" stroke-width="0.5"/>`;
+          stroke="${this.renderTheme.border}" stroke-width="0.5"/>`;
 
       // Row data
       columns.forEach((col, colIdx) => {
@@ -601,7 +601,7 @@ export class SVGRenderer {
     <text x="${pos.x + colIdx * colWidth + 12}" y="${rowY + 22}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="12" 
-          fill="${this.theme.text}">${this.escapeXml(cellValue)}</text>`;
+          fill="${this.renderTheme.text}">${this.escapeXml(cellValue)}</text>`;
       });
     });
 
@@ -629,28 +629,28 @@ export class SVGRenderer {
     <rect x="${startX}" y="${paginationY}" 
           width="${buttonWidth}" height="${buttonHeight}" 
           rx="4" 
-          fill="${this.theme.cardBg}" 
-          stroke="${this.theme.border}" 
+          fill="${this.renderTheme.cardBg}" 
+          stroke="${this.renderTheme.border}" 
           stroke-width="1"/>
     <text x="${startX + buttonWidth / 2}" y="${paginationY + buttonHeight / 2 + 4}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="14" 
-          fill="${this.theme.text}" 
+          fill="${this.renderTheme.text}" 
           text-anchor="middle">&lt;</text>`;
 
       // Page number buttons
       for (let i = 1; i <= pageCount; i++) {
         const btnX = startX + (buttonWidth + gap) * i;
         const isActive = i === 1; // First page is active by default
-        const bgColor = isActive ? this.theme.primary : this.theme.cardBg;
-        const textColor = isActive ? '#FFFFFF' : this.theme.text;
+        const bgColor = isActive ? this.renderTheme.primary : this.renderTheme.cardBg;
+        const textColor = isActive ? '#FFFFFF' : this.renderTheme.text;
 
         svg += `
     <rect x="${btnX}" y="${paginationY}" 
           width="${buttonWidth}" height="${buttonHeight}" 
           rx="4" 
           fill="${bgColor}" 
-          stroke="${this.theme.border}" 
+          stroke="${this.renderTheme.border}" 
           stroke-width="1"/>
     <text x="${btnX + buttonWidth / 2}" y="${paginationY + buttonHeight / 2 + 4}" 
           font-family="system-ui, -apple-system, sans-serif" 
@@ -665,13 +665,13 @@ export class SVGRenderer {
     <rect x="${nextX}" y="${paginationY}" 
           width="${buttonWidth}" height="${buttonHeight}" 
           rx="4" 
-          fill="${this.theme.cardBg}" 
-          stroke="${this.theme.border}" 
+          fill="${this.renderTheme.cardBg}" 
+          stroke="${this.renderTheme.border}" 
           stroke-width="1"/>
     <text x="${nextX + buttonWidth / 2}" y="${paginationY + buttonHeight / 2 + 4}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="14" 
-          fill="${this.theme.text}" 
+          fill="${this.renderTheme.text}" 
           text-anchor="middle">&gt;</text>`;
     }
 
@@ -686,13 +686,13 @@ export class SVGRenderer {
     <rect x="${pos.x}" y="${pos.y}" 
           width="${pos.width}" height="${pos.height}" 
           rx="8" 
-          fill="${this.theme.cardBg}" 
-          stroke="${this.theme.border}" 
+          fill="${this.renderTheme.cardBg}" 
+          stroke="${this.renderTheme.border}" 
           stroke-width="1"/>
     <text x="${pos.x + pos.width / 2}" y="${pos.y + pos.height / 2}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="14" 
-          fill="${this.theme.textMuted}" 
+          fill="${this.renderTheme.textMuted}" 
           text-anchor="middle">[${this.escapeXml(type.toUpperCase())} CHART]</text>
   </g>`;
   }
@@ -709,7 +709,7 @@ export class SVGRenderer {
     <text x="${pos.x}" y="${pos.y + 16}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="${fontSize}" 
-          fill="${this.theme.text}">${this.escapeXml(text)}</text>
+          fill="${this.renderTheme.text}">${this.escapeXml(text)}</text>
   </g>`;
   }
 
@@ -720,7 +720,7 @@ export class SVGRenderer {
     <text x="${pos.x}" y="${pos.y + 12}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="12" 
-          fill="${this.theme.textMuted}">${this.escapeXml(text)}</text>
+          fill="${this.renderTheme.textMuted}">${this.escapeXml(text)}</text>
   </g>`;
   }
 
@@ -731,13 +731,13 @@ export class SVGRenderer {
     <rect x="${pos.x}" y="${pos.y}" 
           width="${pos.width}" height="${pos.height}" 
           rx="4" 
-          fill="${this.theme.bg}" 
-          stroke="${this.theme.border}" 
+          fill="${this.renderTheme.bg}" 
+          stroke="${this.renderTheme.border}" 
           stroke-width="1"/>
     <text x="${pos.x + 8}" y="${pos.y + 18}" 
           font-family="monospace" 
           font-size="11" 
-          fill="${this.theme.text}">${this.escapeXml(code.substring(0, 30))}</text>
+          fill="${this.renderTheme.text}">${this.escapeXml(code.substring(0, 30))}</text>
   </g>`;
   }
 
@@ -755,19 +755,19 @@ export class SVGRenderer {
         ? `<text x="${pos.x}" y="${pos.y - 6}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="12" 
-          fill="${this.theme.text}">${this.escapeXml(label)}</text>`
+          fill="${this.renderTheme.text}">${this.escapeXml(label)}</text>`
         : ''
     }
     <rect x="${pos.x}" y="${pos.y}" 
           width="${pos.width}" height="${pos.height}" 
           rx="6" 
-          fill="${this.theme.cardBg}" 
-          stroke="${this.theme.border}" 
+          fill="${this.renderTheme.cardBg}" 
+          stroke="${this.renderTheme.border}" 
           stroke-width="1"/>
     <text x="${pos.x + 12}" y="${pos.y + 20}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="13" 
-          fill="${this.theme.textMuted}">${this.escapeXml(placeholder)}</text>
+          fill="${this.renderTheme.textMuted}">${this.escapeXml(placeholder)}</text>
   </g>`;
   }
 
@@ -781,23 +781,23 @@ export class SVGRenderer {
         ? `<text x="${pos.x}" y="${pos.y - 6}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="12" 
-          fill="${this.theme.text}">${this.escapeXml(label)}</text>`
+          fill="${this.renderTheme.text}">${this.escapeXml(label)}</text>`
         : ''
     }
     <rect x="${pos.x}" y="${pos.y}" 
           width="${pos.width}" height="${pos.height}" 
           rx="6" 
-          fill="${this.theme.cardBg}" 
-          stroke="${this.theme.border}" 
+          fill="${this.renderTheme.cardBg}" 
+          stroke="${this.renderTheme.border}" 
           stroke-width="1"/>
     <text x="${pos.x + 12}" y="${pos.y + pos.height / 2 + 5}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="14" 
-          fill="${this.theme.textMuted}">${this.escapeXml(placeholder)}</text>
+          fill="${this.renderTheme.textMuted}">${this.escapeXml(placeholder)}</text>
     <text x="${pos.x + pos.width - 20}" y="${pos.y + pos.height / 2 + 5}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="16" 
-          fill="${this.theme.textMuted}">▼</text>
+          fill="${this.renderTheme.textMuted}">▼</text>
   </g>`;
   }
 
@@ -812,8 +812,8 @@ export class SVGRenderer {
     <rect x="${pos.x}" y="${checkboxY}" 
           width="${checkboxSize}" height="${checkboxSize}" 
           rx="4" 
-          fill="${checked ? this.theme.primary : this.theme.cardBg}" 
-          stroke="${this.theme.border}" 
+          fill="${checked ? this.renderTheme.primary : this.renderTheme.cardBg}" 
+          stroke="${this.renderTheme.border}" 
           stroke-width="1"/>
     ${
       checked
@@ -827,7 +827,7 @@ export class SVGRenderer {
     <text x="${pos.x + checkboxSize + 12}" y="${pos.y + pos.height / 2 + 5}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="14" 
-          fill="${this.theme.text}">${this.escapeXml(label)}</text>
+          fill="${this.renderTheme.text}">${this.escapeXml(label)}</text>
   </g>`;
   }
 
@@ -841,20 +841,20 @@ export class SVGRenderer {
     return `<g>
     <circle cx="${pos.x + radioSize / 2}" cy="${radioY + radioSize / 2}" 
             r="${radioSize / 2}" 
-            fill="${this.theme.cardBg}" 
-            stroke="${this.theme.border}" 
+            fill="${this.renderTheme.cardBg}" 
+            stroke="${this.renderTheme.border}" 
             stroke-width="1"/>
     ${
       checked
         ? `<circle cx="${pos.x + radioSize / 2}" cy="${radioY + radioSize / 2}" 
             r="${radioSize / 3.5}" 
-            fill="${this.theme.primary}"/>`
+            fill="${this.renderTheme.primary}"/>`
         : ''
     }
     <text x="${pos.x + radioSize + 12}" y="${pos.y + pos.height / 2 + 5}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="14" 
-          fill="${this.theme.text}">${this.escapeXml(label)}</text>
+          fill="${this.renderTheme.text}">${this.escapeXml(label)}</text>
   </g>`;
   }
 
@@ -870,7 +870,7 @@ export class SVGRenderer {
     <rect x="${pos.x}" y="${toggleY}" 
           width="${toggleWidth}" height="${toggleHeight}" 
           rx="10" 
-          fill="${enabled ? this.theme.primary : this.theme.border}" 
+          fill="${enabled ? this.renderTheme.primary : this.renderTheme.border}" 
           stroke="none"/>
     <circle cx="${pos.x + (enabled ? toggleWidth - 10 : 10)}" cy="${toggleY + toggleHeight / 2}" 
             r="8" 
@@ -878,7 +878,7 @@ export class SVGRenderer {
     <text x="${pos.x + toggleWidth + 12}" y="${pos.y + pos.height / 2 + 5}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="14" 
-          fill="${this.theme.text}">${this.escapeXml(label)}</text>
+          fill="${this.renderTheme.text}">${this.escapeXml(label)}</text>
   </g>`;
   }
 
@@ -907,17 +907,17 @@ export class SVGRenderer {
     let svg = `<g>
     <rect x="${pos.x}" y="${pos.y}" 
           width="${pos.width}" height="${pos.height}" 
-          fill="${this.theme.cardBg}" 
-          stroke="${this.theme.border}" 
+          fill="${this.renderTheme.cardBg}" 
+          stroke="${this.renderTheme.border}" 
           stroke-width="1"/>
     <!-- Title -->
     <text x="${pos.x + padding}" y="${pos.y + padding + 8}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="14" 
           font-weight="600" 
-          fill="${this.theme.text}">${this.escapeXml(title)}</text>
+          fill="${this.renderTheme.text}">${this.escapeXml(title)}</text>
     <line x1="${pos.x}" y1="${pos.y + titleHeight}" x2="${pos.x + pos.width}" y2="${pos.y + titleHeight}" 
-          stroke="${this.theme.border}" stroke-width="1"/>`;
+          stroke="${this.renderTheme.border}" stroke-width="1"/>`;
 
     // Render items (without height restriction, allow overflow)
     items.forEach((item, i) => {
@@ -928,12 +928,12 @@ export class SVGRenderer {
     <rect x="${pos.x + 8}" y="${itemY}" 
           width="${pos.width - 16}" height="36" 
           rx="4" 
-          fill="${isActive ? this.theme.primary : 'transparent'}" 
+          fill="${isActive ? this.renderTheme.primary : 'transparent'}" 
           stroke="none"/>
     <text x="${pos.x + 16}" y="${itemY + 22}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="13" 
-          fill="${isActive ? 'white' : this.theme.textMuted}">${this.escapeXml(item)}</text>`;
+          fill="${isActive ? 'white' : this.renderTheme.textMuted}">${this.escapeXml(item)}</text>`;
     });
 
     svg += '\n  </g>';
@@ -956,14 +956,14 @@ export class SVGRenderer {
       svg += `
     <rect x="${tabX}" y="${pos.y}" 
           width="${tabWidth}" height="44" 
-          fill="${isActive ? this.theme.primary : 'transparent'}" 
-          stroke="${isActive ? 'none' : this.theme.border}" 
+          fill="${isActive ? this.renderTheme.primary : 'transparent'}" 
+          stroke="${isActive ? 'none' : this.renderTheme.border}" 
           stroke-width="1"/>
     <text x="${tabX + tabWidth / 2}" y="${pos.y + 28}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="13" 
           font-weight="${isActive ? '600' : '500'}" 
-          fill="${isActive ? 'white' : this.theme.text}" 
+          fill="${isActive ? 'white' : this.renderTheme.text}" 
           text-anchor="middle">${this.escapeXml(tab)}</text>`;
     });
 
@@ -971,8 +971,8 @@ export class SVGRenderer {
     <!-- Tab content area -->
     <rect x="${pos.x}" y="${pos.y + 44}" 
           width="${pos.width}" height="${pos.height - 44}" 
-          fill="${this.theme.cardBg}" 
-          stroke="${this.theme.border}" 
+          fill="${this.renderTheme.cardBg}" 
+          stroke="${this.renderTheme.border}" 
           stroke-width="1"/>
   </g>`;
     return svg;
@@ -982,7 +982,7 @@ export class SVGRenderer {
     return `<g>
     <line x1="${pos.x}" y1="${pos.y + pos.height / 2}" 
           x2="${pos.x + pos.width}" y2="${pos.y + pos.height / 2}" 
-          stroke="${this.theme.border}" 
+          stroke="${this.renderTheme.border}" 
           stroke-width="1"/>
   </g>`;
   }
@@ -1026,8 +1026,8 @@ export class SVGRenderer {
     const text = String(node.props.text || 'Badge');
     const variant = String(node.props.variant || 'default');
 
-    const bgColor = variant === 'primary' ? this.theme.primary : this.theme.border;
-    const textColor = variant === 'primary' ? 'white' : this.theme.text;
+    const bgColor = variant === 'primary' ? this.renderTheme.primary : this.renderTheme.border;
+    const textColor = variant === 'primary' ? 'white' : this.renderTheme.text;
 
     return `<g>
     <rect x="${pos.x}" y="${pos.y}" 
@@ -1065,33 +1065,33 @@ export class SVGRenderer {
       <rect x="${modalX}" y="${modalY}" 
         width="${pos.width}" height="${pos.height}" 
           rx="8" 
-          fill="${this.theme.cardBg}" 
-        stroke="${this.theme.border}" 
+          fill="${this.renderTheme.cardBg}" 
+        stroke="${this.renderTheme.border}" 
           stroke-width="1"/>
     
     <!-- Header -->
       <line x1="${modalX}" y1="${modalY + headerHeight}" 
         x2="${modalX + pos.width}" y2="${modalY + headerHeight}" 
-          stroke="${this.theme.border}" 
+          stroke="${this.renderTheme.border}" 
           stroke-width="1"/>
     
       <text x="${modalX + padding}" y="${modalY + padding + 16}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="16" 
           font-weight="600" 
-          fill="${this.theme.text}">${this.escapeXml(title)}</text>
+          fill="${this.renderTheme.text}">${this.escapeXml(title)}</text>
     
     <!-- Close button -->
       <text x="${modalX + pos.width - 16}" y="${modalY + padding + 12}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="18" 
-          fill="${this.theme.textMuted}">✕</text>
+          fill="${this.renderTheme.textMuted}">✕</text>
     
     <!-- Content placeholder -->
       <text x="${modalX + pos.width / 2}" y="${modalY + headerHeight + (pos.height - headerHeight) / 2}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="13" 
-          fill="${this.theme.textMuted}" 
+          fill="${this.renderTheme.textMuted}" 
           text-anchor="middle">Modal content</text>
   </g>`;
   }
@@ -1117,8 +1117,8 @@ export class SVGRenderer {
     <rect x="${pos.x}" y="${pos.y}" 
           width="${pos.width}" height="${pos.height}" 
           rx="8" 
-          fill="${this.theme.cardBg}" 
-          stroke="${this.theme.border}" 
+          fill="${this.renderTheme.cardBg}" 
+          stroke="${this.renderTheme.border}" 
           stroke-width="1"/>`;
 
     // Title
@@ -1128,9 +1128,9 @@ export class SVGRenderer {
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="13" 
           font-weight="600" 
-          fill="${this.theme.text}">${this.escapeXml(title)}</text>
+          fill="${this.renderTheme.text}">${this.escapeXml(title)}</text>
     <line x1="${pos.x}" y1="${pos.y + titleHeight}" x2="${pos.x + pos.width}" y2="${pos.y + titleHeight}" 
-          stroke="${this.theme.border}" stroke-width="1"/>`;
+          stroke="${this.renderTheme.border}" stroke-width="1"/>`;
     }
 
     // Items
@@ -1140,12 +1140,12 @@ export class SVGRenderer {
         svg += `
     <line x1="${pos.x}" y1="${itemY + itemHeight}" 
           x2="${pos.x + pos.width}" y2="${itemY + itemHeight}" 
-          stroke="${this.theme.border}" 
+          stroke="${this.renderTheme.border}" 
           stroke-width="0.5"/>
     <text x="${pos.x + padding}" y="${itemY + 24}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="13" 
-          fill="${this.theme.text}">${this.escapeXml(item)}</text>`;
+          fill="${this.renderTheme.text}">${this.escapeXml(item)}</text>`;
       }
     });
 
@@ -1158,14 +1158,14 @@ export class SVGRenderer {
     <rect x="${pos.x}" y="${pos.y}" 
           width="${pos.width}" height="${pos.height}" 
           rx="4" 
-          fill="${this.theme.cardBg}" 
-          stroke="${this.theme.border}" 
+          fill="${this.renderTheme.cardBg}" 
+          stroke="${this.renderTheme.border}" 
           stroke-width="1" 
           stroke-dasharray="4 4"/>
     <text x="${pos.x + pos.width / 2}" y="${pos.y + pos.height / 2}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="12" 
-          fill="${this.theme.textMuted}" 
+          fill="${this.renderTheme.textMuted}" 
           text-anchor="middle">${node.componentType}</text>
   </g>`;
   }
@@ -1200,8 +1200,8 @@ export class SVGRenderer {
     <rect x="${pos.x}" y="${pos.y}" 
           width="${pos.width}" height="${pos.height}" 
           rx="8" 
-          fill="${this.theme.cardBg}" 
-          stroke="${this.theme.border}" 
+          fill="${this.renderTheme.cardBg}" 
+          stroke="${this.renderTheme.border}" 
           stroke-width="1"/>
     
     <!-- Title -->
@@ -1209,14 +1209,14 @@ export class SVGRenderer {
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="${titleSize}" 
           font-weight="500" 
-          fill="${this.theme.textMuted}">${this.escapeXml(title)}</text>
+          fill="${this.renderTheme.textMuted}">${this.escapeXml(title)}</text>
     
     <!-- Value (Large) -->
     <text x="${innerX}" y="${valueY}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="${valueSize}" 
           font-weight="700" 
-          fill="${this.theme.primary}">${this.escapeXml(value)}</text>`;
+          fill="${this.renderTheme.primary}">${this.escapeXml(value)}</text>`;
 
     if (caption) {
       svg += `
@@ -1224,7 +1224,7 @@ export class SVGRenderer {
     <text x="${innerX}" y="${captionY}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="${captionSize}" 
-          fill="${this.theme.textMuted}">${this.escapeXml(caption)}</text>`;
+          fill="${this.renderTheme.textMuted}">${this.escapeXml(caption)}</text>`;
     }
 
     svg += `
@@ -1342,7 +1342,7 @@ export class SVGRenderer {
     svg += `
     <!-- Border -->
     <rect x="${pos.x}" y="${pos.y}" width="${pos.width}" height="${pos.height}" 
-          fill="none" stroke="${this.theme.border}" stroke-width="1" rx="4"/>
+          fill="none" stroke="${this.renderTheme.border}" stroke-width="1" rx="4"/>
   </g>`;
     return svg;
   }
@@ -1360,7 +1360,7 @@ export class SVGRenderer {
 
     items.forEach((item, index) => {
       const isLast = index === items.length - 1;
-      const textColor = isLast ? this.theme.text : this.theme.textMuted;
+      const textColor = isLast ? this.renderTheme.text : this.renderTheme.textMuted;
       const fontWeight = isLast ? '500' : '400';
 
       svg += `
@@ -1380,7 +1380,7 @@ export class SVGRenderer {
     <text x="${currentX + 4}" y="${pos.y + pos.height / 2 + 4}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="${fontSize}" 
-          fill="${this.theme.textMuted}">${this.escapeXml(separator)}</text>`;
+          fill="${this.renderTheme.textMuted}">${this.escapeXml(separator)}</text>`;
         currentX += separatorWidth;
       }
     });
@@ -1401,8 +1401,8 @@ export class SVGRenderer {
     items.forEach((item, index) => {
       const itemY = pos.y + index * itemHeight;
       const isActive = index === activeIndex;
-      const bgColor = isActive ? this.theme.primaryLight : 'transparent';
-      const textColor = isActive ? this.theme.primary : this.theme.text;
+      const bgColor = isActive ? this.renderTheme.primaryLight : 'transparent';
+      const textColor = isActive ? this.renderTheme.primary : this.renderTheme.text;
       const fontWeight = isActive ? '500' : '400';
 
       // Item background (only if active)
@@ -1437,7 +1437,7 @@ export class SVGRenderer {
       xl: 32,
     };
 
-    if (!spacing) return spacingMap[this.ir.project.tokens.spacing] || 16;
+    if (!spacing) return spacingMap[this.ir.project.theme.spacing] || 16;
     const value = spacingMap[spacing];
     return value !== undefined ? value : spacingMap.md;
   }

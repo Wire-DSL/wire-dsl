@@ -43,7 +43,7 @@ const Project = createToken({ name: 'Project', pattern: /project/ });
 const Screen = createToken({ name: 'Screen', pattern: /screen/ });
 const Layout = createToken({ name: 'Layout', pattern: /layout/ });
 const Component = createToken({ name: 'Component', pattern: /component/ });
-const Tokens = createToken({ name: 'Tokens', pattern: /tokens/ });
+const Theme = createToken({ name: 'Theme', pattern: /theme/ });
 const Mocks = createToken({ name: 'Mocks', pattern: /mocks/ });
 const Colors = createToken({ name: 'Colors', pattern: /colors/ });
 const Cell = createToken({ name: 'Cell', pattern: /cell/ });
@@ -100,7 +100,7 @@ const allTokens = [
   Screen,
   Layout,
   Component,
-  Tokens,
+  Theme,
   Mocks,
   Colors,
   Cell,
@@ -137,7 +137,7 @@ class WireDSLParser extends CstParser {
     this.CONSUME(LCurly);
     this.MANY(() => {
       this.OR([
-        { ALT: () => this.SUBRULE(this.tokensDecl) },
+        { ALT: () => this.SUBRULE(this.themeDecl) },
         { ALT: () => this.SUBRULE(this.mocksDecl) },
         { ALT: () => this.SUBRULE(this.colorsDecl) },
         { ALT: () => this.SUBRULE(this.screen) },
@@ -146,12 +146,21 @@ class WireDSLParser extends CstParser {
     this.CONSUME(RCurly);
   });
 
-  // tokens density: normal
-  private tokensDecl = this.RULE('tokensDecl', () => {
-    this.CONSUME(Tokens);
-    this.CONSUME(Identifier, { LABEL: 'tokenKey' });
+  // theme { density: "normal" }
+  private themeDecl = this.RULE('themeDecl', () => {
+    this.CONSUME(Theme);
+    this.CONSUME(LCurly);
+    this.MANY(() => {
+      this.SUBRULE(this.themeProperty);
+    });
+    this.CONSUME(RCurly);
+  });
+
+  // density: "normal"
+  private themeProperty = this.RULE('themeProperty', () => {
+    this.CONSUME(Identifier, { LABEL: 'themeKey' });
     this.CONSUME(Colon);
-    this.CONSUME2(Identifier, { LABEL: 'tokenValue' });
+    this.CONSUME(StringLiteral, { LABEL: 'themeValue' });
   });
 
   // mocks { status: "A,B,C" ... }
@@ -277,7 +286,7 @@ class WireDSLParser extends CstParser {
 export interface AST {
   type: 'project';
   name: string;
-  tokens: Record<string, string>;
+  theme: Record<string, string>;
   mocks: Record<string, string>;
   colors: Record<string, string>;
   screens: ASTScreen[];
@@ -324,16 +333,14 @@ class WireDSLVisitor extends BaseCstVisitor {
 
   project(ctx: any): AST {
     const projectName = ctx.projectName[0].image.slice(1, -1); // Remove quotes
-    const tokens: Record<string, string> = {};
+    const theme: Record<string, string> = {};
     const mocks: Record<string, string> = {};
     const colors: Record<string, string> = {};
     const screens: ASTScreen[] = [];
 
-    if (ctx.tokensDecl) {
-      ctx.tokensDecl.forEach((tokenDecl: any) => {
-        const result = this.visit(tokenDecl);
-        tokens[result.key] = result.value;
-      });
+    if (ctx.themeDecl && ctx.themeDecl.length > 0) {
+      const themeBlock = this.visit(ctx.themeDecl[0]);
+      Object.assign(theme, themeBlock);
     }
 
     if (ctx.mocksDecl && ctx.mocksDecl.length > 0) {
@@ -355,18 +362,28 @@ class WireDSLVisitor extends BaseCstVisitor {
     return {
       type: 'project',
       name: projectName,
-      tokens,
+      theme,
       mocks,
       colors,
       screens,
     };
   }
 
-  tokensDecl(ctx: any) {
-    return {
-      key: ctx.tokenKey[0].image,
-      value: ctx.tokenValue[0].image,
-    };
+  themeDecl(ctx: any) {
+    const theme: Record<string, string> = {};
+    if (ctx.themeProperty) {
+      ctx.themeProperty.forEach((prop: any) => {
+        const { key, value } = this.visit(prop);
+        theme[key] = value;
+      });
+    }
+    return theme;
+  }
+
+  themeProperty(ctx: any) {
+    const key = ctx.themeKey[0].image;
+    const value = ctx.themeValue[0].image.slice(1, -1); // Remove quotes
+    return { key, value };
   }
 
   mocksDecl(ctx: any) {

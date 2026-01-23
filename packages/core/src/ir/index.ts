@@ -22,14 +22,14 @@ export interface IRContract {
 export interface IRProject {
   id: string;
   name: string;
-  tokens: IRTokens;
+  theme: IRTheme;
   mocks: Record<string, unknown>;
   colors: Record<string, string>;
   screens: IRScreen[];
   nodes: Record<string, IRNode>;
 }
 
-export interface IRTokens {
+export interface IRTheme {
   density: 'compact' | 'normal' | 'comfortable';
   spacing: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   radius: 'none' | 'sm' | 'md' | 'lg' | 'full';
@@ -80,7 +80,7 @@ export interface IRMeta {
 }
 
 // Zod validation schemas
-const IRTokensSchema = z.object({
+const IRThemeSchema = z.object({
   density: z.enum(['compact', 'normal', 'comfortable']),
   spacing: z.enum(['xs', 'sm', 'md', 'lg', 'xl']),
   radius: z.enum(['none', 'sm', 'md', 'lg', 'full']),
@@ -133,7 +133,7 @@ const IRScreenSchema = z.object({
 const IRProjectSchema = z.object({
   id: z.string(),
   name: z.string(),
-  tokens: IRTokensSchema,
+  theme: IRThemeSchema,
   mocks: z.record(z.string(), z.unknown()),
   colors: z.record(z.string(), z.string()),
   screens: z.array(IRScreenSchema),
@@ -171,7 +171,7 @@ class IDGenerator {
 export class IRGenerator {
   private idGen = new IDGenerator();
   private nodes: Record<string, IRNode> = {};
-  private tokens: IRTokens = {
+  private theme: IRTheme = {
     density: 'normal',
     spacing: 'md',
     radius: 'md',
@@ -183,8 +183,8 @@ export class IRGenerator {
     this.idGen.reset();
     this.nodes = {};
 
-    // Apply tokens from AST
-    this.applyTokens(ast.tokens);
+    // Apply theme from AST
+    this.applyTheme(ast.theme);
 
     // Convert screens
     const screens: IRScreen[] = ast.screens.map((screen) => this.convertScreen(screen));
@@ -192,7 +192,7 @@ export class IRGenerator {
     const project: IRProject = {
       id: this.sanitizeId(ast.name),
       name: ast.name,
-      tokens: this.tokens,
+      theme: this.theme,
       mocks: ast.mocks || {},
       colors: ast.colors || {},
       screens,
@@ -208,24 +208,24 @@ export class IRGenerator {
     return IRContractSchema.parse(ir);
   }
 
-  private applyTokens(astTokens: Record<string, string>): void {
-    if (astTokens.density) {
-      this.tokens.density = astTokens.density as IRTokens['density'];
+  private applyTheme(astTheme: Record<string, string>): void {
+    if (astTheme.density) {
+      this.theme.density = astTheme.density as IRTheme['density'];
     }
-    if (astTokens.spacing) {
-      this.tokens.spacing = astTokens.spacing as IRTokens['spacing'];
+    if (astTheme.spacing) {
+      this.theme.spacing = astTheme.spacing as IRTheme['spacing'];
     }
-    if (astTokens.radius) {
-      this.tokens.radius = astTokens.radius as IRTokens['radius'];
+    if (astTheme.radius) {
+      this.theme.radius = astTheme.radius as IRTheme['radius'];
     }
-    if (astTokens.stroke) {
-      this.tokens.stroke = astTokens.stroke as IRTokens['stroke'];
+    if (astTheme.stroke) {
+      this.theme.stroke = astTheme.stroke as IRTheme['stroke'];
     }
-    if (astTokens.font) {
-      this.tokens.font = astTokens.font as IRTokens['font'];
+    if (astTheme.font) {
+      this.theme.font = astTheme.font as IRTheme['font'];
     }
-    if (astTokens.background) {
-      this.tokens.background = astTokens.background;
+    if (astTheme.background) {
+      this.theme.background = astTheme.background;
     }
   }
 
@@ -239,11 +239,11 @@ export class IRGenerator {
       root: { ref: rootNodeId },
     };
 
-    // Add background if specified on screen, otherwise use token default
+    // Add background if specified on screen, otherwise use theme default
     if (screen.params.background) {
       irScreen.background = String(screen.params.background);
-    } else if (this.tokens.background) {
-      irScreen.background = this.tokens.background;
+    } else if (this.theme.background) {
+      irScreen.background = this.theme.background;
     }
 
     return irScreen;
