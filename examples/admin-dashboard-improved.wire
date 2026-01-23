@@ -1,0 +1,252 @@
+project "Admin Dashboard - Improved" {
+  theme {
+    density: "comfortable"
+    spacing: "md"
+    radius: "md"
+  }
+
+  screen AdminDashboard {
+    layout split(sidebar: 240, direction: horizontal) {
+      // Sidebar Navigation with Icons
+      layout stack(direction: vertical, gap: 0) {
+        layout card(padding: 16, gap: 8) {
+          layout stack(direction: horizontal, gap: 8) {
+            component Icon type: "home" size: "sm"
+            component Heading text: "Admin"
+          }
+        }
+
+        // SidebarMenu with icons - new feature!
+        component SidebarMenu items: "Dashboard,Users,Reports,Settings" icons: "home,user,bar-chart-2,settings" active: 0
+      }
+
+      // Main Content
+      layout stack(direction: vertical, gap: 20, padding: 24) {
+        // Top Bar
+        layout stack(direction: horizontal, gap: 16) {
+          layout stack(direction: vertical, gap: 4) {
+            component Heading text: "Dashboard"
+            component Text content: "Welcome back, Admin"
+          }
+          layout stack(direction: horizontal, gap: 12) {
+            component IconButton icon: "bell" variant: "default" size: "sm"
+            component IconButton icon: "user" variant: "default" size: "sm"
+          }
+        }
+
+        // Stats Cards Grid
+        layout grid(columns: 12, gap: 16) {
+          // Total Users Card
+          cell span: 3 {
+            layout card(padding: 16, gap: 8) {
+              layout stack(direction: horizontal, gap: 12) {
+                layout stack(direction: vertical, gap: 8) {
+                  component Label text: "Total Users"
+                  component Heading text: "2,543"
+                  component Text content: "+12% from last month"
+                }
+                component Icon type: "user" size: "lg"
+              }
+            }
+          }
+
+          // Active Sessions Card
+          cell span: 3 {
+            layout card(padding: 16, gap: 8) {
+              layout stack(direction: horizontal, gap: 12) {
+                layout stack(direction: vertical, gap: 8) {
+                  component Label text: "Active Sessions"
+                  component Heading text: "856"
+                  component Text content: "+5% from last hour"
+                }
+                component Icon type: "wifi" size: "lg"
+              }
+            }
+          }
+
+          // Revenue Card
+          cell span: 3 {
+            layout card(padding: 16, gap: 8) {
+              layout stack(direction: horizontal, gap: 12) {
+                layout stack(direction: vertical, gap: 8) {
+                  component Label text: "Revenue"
+                  component Heading text: "$45.2K"
+                  component Text content: "+8% from last week"
+                }
+                component Icon type: "arrow-up" size: "lg"
+              }
+            }
+          }
+
+          // Tasks Card
+          cell span: 3 {
+            layout card(padding: 16, gap: 8) {
+              layout stack(direction: horizontal, gap: 12) {
+                layout stack(direction: vertical, gap: 8) {
+                  component Label text: "Pending Tasks"
+                  component Heading text: "24"
+                  component Text content: "3 due today"
+                }
+                component Icon type: "check" size: "lg"
+              }
+            }
+          }
+        }
+
+        // Quick Actions Section
+        layout stack(direction: vertical, gap: 12) {
+          component Heading text: "Quick Actions"
+
+          layout stack(direction: horizontal, gap: 12) {
+            layout stack(direction: vertical, gap: 8) {
+              component IconButton icon: "plus" variant: "primary" size: "md"
+              component Label text: "Add User"
+            }
+
+            layout stack(direction: vertical, gap: 8) {
+              component IconButton icon: "upload" variant: "primary" size: "md"
+              component Label text: "Import Data"
+            }
+
+            layout stack(direction: vertical, gap: 8) {
+              component IconButton icon: "download" variant: "default" size: "md"
+              component Label text: "Export"
+            }
+
+            layout stack(direction: vertical, gap: 8) {
+              component IconButton icon: "mail" variant: "default" size: "md"
+              component Label text: "Send Report"
+            }
+
+            layout stack(direction: vertical, gap: 8) {
+              component IconButton icon: "trash-2" variant: "danger" size: "md"
+              component Label text: "Clear Cache"
+            }
+          }
+        }
+      }
+    }
+  }
+
+  screen UserManagement {
+    layout split(sidebar: 240, direction: horizontal) {
+      // Sidebar (with icons via SidebarMenu)
+      layout stack(direction: vertical, gap: 0) {
+        layout card(padding: 16, gap: 8) {
+          layout stack(direction: horizontal, gap: 8) {
+            component Icon type: "home" size: "sm"
+            component Heading text: "Admin"
+          }
+        }
+
+        component SidebarMenu items: "Dashboard,Users,Reports,Settings" icons: "home,user,bar-chart-2,settings" active: 1
+      }
+
+      // Main Content
+      layout stack(direction: vertical, gap: 20, padding: 24) {
+        // Header with search and actions
+        layout stack(direction: horizontal, gap: 16) {
+          layout stack(direction: vertical, gap: 4) {
+            component Heading text: "User Management"
+            component Text content: "Manage system users and permissions"
+          }
+
+          layout stack(direction: horizontal, gap: 8) {
+            component Input placeholder: "Search users..." label: ""
+            component IconButton icon: "search" variant: "default" size: "sm"
+            component IconButton icon: "plus" variant: "primary" size: "sm"
+          }
+        }
+
+        // Filters
+        layout stack(direction: horizontal, gap: 12) {
+          layout stack(direction: horizontal, gap: 4) {
+            component Icon type: "filter" size: "sm"
+            component Label text: "Filter:"
+          }
+          component Textarea content: "All Roles"
+          component Textarea content: "Active Only"
+          component Textarea content: "Last 30 Days"
+        }
+
+        // Users Table
+        layout card(padding: 0) {
+          layout stack(direction: vertical, gap: 0) {
+            // Table Header
+            layout stack(direction: horizontal, gap: 16, padding: 16) {
+              component Label text: "Name"
+              component Label text: "Email"
+              component Label text: "Role"
+              component Label text: "Status"
+              component Label text: "Actions"
+            }
+
+            // User Row 1
+            layout stack(direction: horizontal, gap: 16, padding: 12) {
+              layout stack(direction: horizontal, gap: 8) {
+                component Icon type: "user" size: "sm"
+                component Text content: "Alice Johnson"
+              }
+              component Text content: "alice@example.com"
+              component Text content: "Admin"
+              layout stack(direction: horizontal, gap: 4) {
+                component Icon type: "check" size: "sm"
+                component Text content: "Active"
+              }
+              layout stack(direction: horizontal, gap: 4) {
+                component IconButton icon: "edit-2" variant: "default" size: "sm"
+                component IconButton icon: "eye" variant: "default" size: "sm"
+                component IconButton icon: "trash-2" variant: "danger" size: "sm"
+              }
+            }
+
+            // User Row 2
+            layout stack(direction: horizontal, gap: 16, padding: 12) {
+              layout stack(direction: horizontal, gap: 8) {
+                component Icon type: "user" size: "sm"
+                component Text content: "Bob Martinez"
+              }
+              component Text content: "bob@example.com"
+              component Text content: "Editor"
+              layout stack(direction: horizontal, gap: 4) {
+                component Icon type: "check" size: "sm"
+                component Text content: "Active"
+              }
+              layout stack(direction: horizontal, gap: 4) {
+                component IconButton icon: "edit-2" variant: "default" size: "sm"
+                component IconButton icon: "eye" variant: "default" size: "sm"
+                component IconButton icon: "trash-2" variant: "danger" size: "sm"
+              }
+            }
+
+            // User Row 3
+            layout stack(direction: horizontal, gap: 16, padding: 12) {
+              layout stack(direction: horizontal, gap: 8) {
+                component Icon type: "user" size: "sm"
+                component Text content: "Carol White"
+              }
+              component Text content: "carol@example.com"
+              component Text content: "Viewer"
+              layout stack(direction: horizontal, gap: 4) {
+                component Icon type: "alert-circle" size: "sm"
+                component Text content: "Inactive"
+              }
+              layout stack(direction: horizontal, gap: 4) {
+                component IconButton icon: "edit-2" variant: "default" size: "sm"
+                component IconButton icon: "eye" variant: "default" size: "sm"
+                component IconButton icon: "trash-2" variant: "danger" size: "sm"
+              }
+            }
+          }
+        }
+
+        // Pagination
+        layout stack(direction: horizontal, gap: 8) {
+          component IconButton icon: "chevron-left" variant: "default" size: "sm"
+          component Text content: "Page 1 of 5"
+          component IconButton icon: "chevron-right" variant: "default" size: "sm"
+        }
+      }
+    }
+  }
+}

@@ -2,6 +2,7 @@ import type { IRContract, IRNode, IRComponentNode } from '../ir/index';
 import type { LayoutResult } from '../layout/index';
 import { MockDataGenerator } from './mock-data';
 import { ColorResolver } from './colors';
+import { getIcon } from './icons/iconLibrary';
 
 /**
  * SVG Renderer
@@ -267,6 +268,12 @@ export class SVGRenderer {
       case 'Image':
         return this.renderImage(node, pos);
 
+      // Icon components
+      case 'Icon':
+        return this.renderIcon(node, pos);
+      case 'IconButton':
+        return this.renderIconButton(node, pos);
+
       default:
         return this.renderGenericComponent(node, pos);
     }
@@ -288,12 +295,22 @@ export class SVGRenderer {
   private renderButton(node: IRComponentNode, pos: any): string {
     const text = String(node.props.text || 'Button');
     const variant = String(node.props.variant || 'default');
+    const size = String(node.props.size || 'md');
 
-    const bgColor = variant === 'primary' ? this.renderTheme.primary : this.renderTheme.cardBg;
-    const textColor = variant === 'primary' ? '#FFFFFF' : this.renderTheme.text;
-    const borderColor = variant === 'primary' ? this.renderTheme.primary : this.renderTheme.border;
+    // Color configuration with reduced opacity/grayed tones
+    const bgColor = variant === 'primary' 
+      ? 'rgba(59, 130, 246, 0.85)'
+      : 'rgba(226, 232, 240, 0.9)';
+    const textColor = variant === 'primary' ? '#FFFFFF' : 'rgba(30, 41, 59, 0.85)';
+    const borderColor = variant === 'primary' 
+      ? 'rgba(59, 130, 246, 0.7)' 
+      : 'rgba(100, 116, 139, 0.4)';
 
-    const buttonWidth = Math.max(pos.width, 60); // Minimum 60px width
+    // Font size based on size prop
+    const fontSizeMap = { 'sm': 12, 'md': 14, 'lg': 16 };
+    const fontSize = fontSizeMap[size as keyof typeof fontSizeMap] || 14;
+
+    const buttonWidth = Math.max(pos.width, 60);
 
     return `<g>
     <rect x="${pos.x}" y="${pos.y}" 
@@ -304,7 +321,7 @@ export class SVGRenderer {
           stroke-width="1"/>
     <text x="${pos.x + buttonWidth / 2}" y="${pos.y + pos.height / 2 + 5}" 
           font-family="system-ui, -apple-system, sans-serif" 
-          font-size="14" 
+          font-size="${fontSize}" 
           font-weight="500" 
           fill="${textColor}" 
           text-anchor="middle">${this.escapeXml(text)}</text>
@@ -1366,18 +1383,21 @@ export class SVGRenderer {
 
   private renderSidebarMenu(node: IRComponentNode, pos: any): string {
     const itemsStr = String(node.props.items || 'Item 1,Item 2,Item 3');
+    const iconsStr = String(node.props.icons || '');
     const items = itemsStr.split(',').map((s) => s.trim());
+    const icons = iconsStr ? iconsStr.split(',').map((s) => s.trim()) : [];
+    
     const itemHeight = 40;
     const fontSize = 14;
-    const activeIndex = Number(node.props.active || 0); // First item active by default
+    const activeIndex = Number(node.props.active || 0);
 
     let svg = '<g>';
 
     items.forEach((item, index) => {
       const itemY = pos.y + index * itemHeight;
       const isActive = index === activeIndex;
-      const bgColor = isActive ? this.renderTheme.primaryLight : 'transparent';
-      const textColor = isActive ? this.renderTheme.primary : this.renderTheme.text;
+      const bgColor = isActive ? 'rgba(59, 130, 246, 0.15)' : 'transparent';
+      const textColor = isActive ? 'rgba(59, 130, 246, 0.9)' : 'rgba(30, 41, 59, 0.75)';
       const fontWeight = isActive ? '500' : '400';
 
       // Item background (only if active)
@@ -1389,9 +1409,26 @@ export class SVGRenderer {
           fill="${bgColor}"/>`;
       }
 
+      // Icon if provided
+      let currentX = pos.x + 12;
+      if (icons[index]) {
+        const iconSvg = getIcon(icons[index]);
+        if (iconSvg) {
+          const iconSize = 16;
+          const iconY = itemY + (itemHeight - iconSize) / 2;
+          svg += `
+    <g transform="translate(${currentX}, ${iconY})">
+      <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="rgba(30, 41, 59, 0.6)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        ${this.extractSvgContent(iconSvg)}
+      </svg>
+    </g>`;
+          currentX += iconSize + 8;
+        }
+      }
+
       // Item text
       svg += `
-    <text x="${pos.x + 12}" y="${itemY + itemHeight / 2 + 5}" 
+    <text x="${currentX}" y="${itemY + itemHeight / 2 + 5}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="${fontSize}" 
           font-weight="${fontWeight}" 
@@ -1400,6 +1437,105 @@ export class SVGRenderer {
 
     svg += '\n  </g>';
     return svg;
+  }
+
+  private renderIcon(node: IRComponentNode, pos: any): string {
+    const iconType = String(node.props.type || 'help-circle');
+    const size = String(node.props.size || 'md');
+    const iconSvg = getIcon(iconType);
+
+    if (!iconSvg) {
+      // Fallback: render a placeholder with question mark
+      return `<g>
+    <!-- Icon not found: ${iconType} -->
+    <circle cx="${pos.x + pos.width / 2}" cy="${pos.y + pos.height / 2}" r="${Math.min(pos.width, pos.height) / 2 - 2}" fill="none" stroke="rgba(100, 116, 139, 0.4)" stroke-width="1"/>
+    <text x="${pos.x + pos.width / 2}" y="${pos.y + pos.height / 2 + 4}" font-family="system-ui, -apple-system, sans-serif" font-size="12" fill="rgba(100, 116, 139, 0.6)" text-anchor="middle">?</text>
+  </g>`;
+    }
+
+    // Size: sm=14px, md=18px, lg=24px
+    const sizeMap = { 'sm': 14, 'md': 18, 'lg': 24 };
+    const iconSize = sizeMap[size as keyof typeof sizeMap] || 18;
+    const iconColor = 'rgba(30, 41, 59, 0.75)';
+    const offsetX = pos.x + (pos.width - iconSize) / 2;
+    const offsetY = pos.y + (pos.height - iconSize) / 2;
+
+    // Wrap SVG with viewBox and sizing
+    const wrappedSvg = `<g transform="translate(${offsetX}, ${offsetY})">
+    <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      ${this.extractSvgContent(iconSvg)}
+    </svg>
+  </g>`;
+
+    return wrappedSvg;
+  }
+
+  private renderIconButton(node: IRComponentNode, pos: any): string {
+    const iconName = String(node.props.icon || 'help-circle');
+    const variant = String(node.props.variant || 'default');
+    const size = String(node.props.size || 'md');
+    const disabled = String(node.props.disabled || 'false') === 'true';
+
+    const bgColorMap = {
+      'primary': 'rgba(59, 130, 246, 0.85)',
+      'danger': 'rgba(239, 68, 68, 0.85)',
+      'default': 'rgba(226, 232, 240, 0.9)'
+    };
+    const bgColor = bgColorMap[variant as keyof typeof bgColorMap] || bgColorMap['default'];
+
+    const iconColorMap = {
+      'primary': '#FFFFFF',
+      'danger': '#FFFFFF',
+      'default': 'rgba(30, 41, 59, 0.75)'
+    };
+    const iconColor = iconColorMap[variant as keyof typeof iconColorMap] || iconColorMap['default'];
+
+    const borderColorMap = {
+      'primary': 'rgba(59, 130, 246, 0.7)',
+      'danger': 'rgba(239, 68, 68, 0.7)',
+      'default': 'rgba(100, 116, 139, 0.4)'
+    };
+    const borderColor = borderColorMap[variant as keyof typeof borderColorMap] || borderColorMap['default'];
+
+    const opacity = disabled ? '0.5' : '1';
+    const iconSvg = getIcon(iconName);
+
+    // Button size: sm=28px, md=32px, lg=40px
+    const sizeMap = { 'sm': 28, 'md': 32, 'lg': 40 };
+    const buttonSize = sizeMap[size as keyof typeof sizeMap] || 32;
+    const radius = 6;
+
+    let svg = `<g opacity="${opacity}">
+    <!-- IconButton background -->
+    <rect x="${pos.x}" y="${pos.y}" width="${buttonSize}" height="${buttonSize}" rx="${radius}" fill="${bgColor}" stroke="${borderColor}" stroke-width="1"/>`;
+
+    // Icon inside button
+    if (iconSvg) {
+      const iconSize = buttonSize * 0.6;
+      const offsetX = pos.x + (buttonSize - iconSize) / 2;
+      const offsetY = pos.y + (buttonSize - iconSize) / 2;
+
+      svg += `
+    <!-- Icon -->
+    <g transform="translate(${offsetX}, ${offsetY})">
+      <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        ${this.extractSvgContent(iconSvg)}
+      </svg>
+    </g>`;
+    }
+
+    svg += '\n  </g>';
+    return svg;
+  }
+
+  /**
+   * Extract SVG path/element content from a full SVG string
+   * Removes the outer <svg> tag but keeps the content
+   */
+  private extractSvgContent(svgString: string): string {
+    // Match content between <svg> and </svg> tags
+    const match = svgString.match(/<svg[^>]*>([\s\S]*?)<\/svg>/);
+    return match ? match[1] : svgString;
   }
 
   private resolveSpacing(spacing?: string): number {

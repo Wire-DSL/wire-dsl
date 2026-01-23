@@ -1,0 +1,43 @@
+project "Icon Components Demo" {
+  screen BasicIcons {
+    layout stack(direction: vertical, gap: 20, padding: 20) {
+      component Heading text: "Icon Component Test"
+      component Text content: "Testing Icon and IconButton rendering with Feather Icons"
+
+      component Heading text: "Icon Examples"
+      layout stack(direction: horizontal, gap: 12) {
+        component Icon type: "home"
+        component Icon type: "search"
+        component Icon type: "settings"
+        component Icon type: "user"
+        component Icon type: "mail"
+      }
+
+      component Heading text: "Navigation Icons"
+      layout stack(direction: horizontal, gap: 12) {
+        component Icon type: "arrow-left"
+        component Icon type: "arrow-right"
+        component Icon type: "chevron-up"
+        component Icon type: "chevron-down"
+      }
+
+      component Heading text: "Action Icons"
+      layout stack(direction: horizontal, gap: 12) {
+        component Icon type: "plus"
+        component Icon type: "minus"
+        component Icon type: "edit-2"
+        component Icon type: "trash-2"
+      }
+
+      component Heading text: "Icon Button Examples"
+      layout stack(direction: horizontal, gap: 12) {
+        component IconButton icon: "home" variant: "default"
+        component IconButton icon: "search" variant: "default"
+        component IconButton icon: "check" variant: "primary"
+        component IconButton icon: "download" variant: "primary"
+        component IconButton icon: "trash-2" variant: "danger"
+        component IconButton icon: "x" variant: "danger"
+      }
+    }
+  }
+}
