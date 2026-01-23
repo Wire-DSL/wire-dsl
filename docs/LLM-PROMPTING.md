@@ -49,6 +49,13 @@ project "ProjectName" {
 - Valid layouts: `stack`, `grid`, `split`, `panel`, `card`
 - Layouts can be nested inside other layouts
 
+**Layout Purposes**:
+- `stack` - Linear vertical or horizontal stacking of elements
+- `grid` - Multi-column responsive layout (12-column system)
+- `split` - Two-panel layout with sidebar + main content
+- `panel` - Container with automatic border, padding, and background
+- `card` - Vertical container ideal for product/profile cards with rounded corners
+
 ### 4. Property Syntax
 - Property format: `propertyName: value`
 - String values use double quotes: `"string value"`
@@ -89,6 +96,50 @@ theme {
 | md | 16px |
 | lg | 24px |
 | xl | 32px |
+
+---
+
+## Component Properties Reference
+
+### Text Components Details
+| Component | Required Props | Optional Props | Example |
+|---|---|---|---|
+| `Heading` | `title` | - | `component Heading title: "Page Title"` |
+| `Text` | `content` | - | `component Text content: "Body text"` |
+| `Paragraph` | `content` | - | `component Paragraph content: "Long multi-line text"` |
+| `Label` | `text` | - | `component Label text: "Field label"` |
+
+### Input Components Details
+| Component | Key Properties | Example |
+|---|---|---|
+| `Input` | `label`, `placeholder` | `component Input label: "Email" placeholder: "your@email.com"` |
+| `Textarea` | `label`, `placeholder`, `rows` | `component Textarea label: "Message" rows: 4 placeholder: "Your message..."` |
+| `Select` | `label`, `items` | `component Select label: "Role" items: "Admin,User,Guest"` |
+| `Checkbox` | `label` | `component Checkbox label: "I agree to terms"` |
+| `Radio` | `label` | `component Radio label: "Option A"` |
+| `Toggle` | `label` | `component Toggle label: "Enable notifications"` |
+
+### Media Components Details
+| Component | Key Properties | Valid Placeholders | Example |
+|---|---|---|---|
+| `Image` | `placeholder`, `height` | `"landscape"`, `"square"`, `"portrait"` | `component Image placeholder: "square" height: 250` |
+| `Avatar` | `placeholder` | `"avatar"` | `component Avatar placeholder: "avatar"` |
+| `Icon` | `name` | Common icon names (search, settings, menu, etc.) | `component Icon name: "search"` |
+
+### Navigation Components Details
+| Component | Key Properties | Example |
+|---|---|---|
+| `SidebarMenu` | `items`, `active` | `component SidebarMenu items: "Home,Users,Settings" active: 0` |
+| `Tabs` | `items`, `activeIndex` | `component Tabs items: "Profile,Settings,Activity" activeIndex: 0` |
+| `Breadcrumbs` | `items` | `component Breadcrumbs items: "Home,Users,Detail"` |
+| `Topbar` | `title`, `subtitle` | `component Topbar title: "Dashboard" subtitle: "Analytics"` |
+
+### Data Components Details
+| Component | Key Properties | Example |
+|---|---|---|
+| `Table` | `columns`, `rows` | `component Table columns: "Name,Email,Status" rows: 8` |
+| `StatCard` | `label`, `value` | `component StatCard label: "Total Users" value: "1,234"` |
+| `List` | `items` | `component List items: "Item 1,Item 2,Item 3"` |
 
 ---
 
@@ -170,12 +221,33 @@ layout grid(
   columns: 12                   // Number of columns (1-12)
   gap: "md"                     // Space between cells
 )
+
+// Grid cells support:
+cell span: 8 align: "end" { ... }  // span: 1-12, align: start|center|end
+```
+
+### Panel Properties
+```wire
+layout panel(
+  padding: "md"                 // xs | sm | md | lg | xl
+  background: "white"          // Background color
+)
+```
+
+### Card Properties
+```wire
+layout card(
+  padding: "md"                 // xs | sm | md | lg | xl (default: md)
+  gap: "md"                     // xs | sm | md | lg | xl (default: md)
+  radius: "md"                  // xs | sm | md | lg (default: md)
+  border: true                  // true | false (default: true)
+)
 ```
 
 ### Split Properties
 ```wire
 layout split(
-  sidebar: 240                  // Sidebar width in pixels
+  sidebar: 240                  // Sidebar width in pixels (typical: 240-320)
   gap: "md"                     // Space between panels
 )
 ```
@@ -290,46 +362,169 @@ project "Admin Dashboard" {
 
 ---
 
-## Common Patterns
+## Advanced Layout Nesting Examples
 
-### Form Pattern
+### Nested Stack within Card (Horizontal Buttons)
+```wire
+layout card(padding: lg, gap: md, radius: lg, border: true) {
+  component Image placeholder: "square" height: 250
+  component Heading title: "Product Title"
+  component Text content: "Product description"
+  layout stack(direction: horizontal, gap: md) {
+    component Button text: "View Details" variant: primary
+    component Button text: "Add to Cart" variant: secondary
+  }
+}
+```
+
+### Grid within Stack (Dashboard Cards)
 ```wire
 layout stack(direction: vertical, gap: md, padding: lg) {
-  component Heading title: "Contact Form"
-  component Input label: "Name" placeholder: "Full name"
-  component Input label: "Email" placeholder: "email@example.com"
-  component Textarea label: "Message" placeholder: "Your message..."
-  layout stack(direction: horizontal, gap: md) {
-    component Button text: "Submit" variant: primary
-    component Button text: "Cancel" variant: secondary
+  component Heading title: "Dashboard Overview"
+  
+  layout grid(columns: 12, gap: md) {
+    cell span: 4 {
+      layout card(padding: md, gap: md) {
+        component Heading title: "Users"
+        component StatCard label: "Total" value: "1,234"
+      }
+    }
+    cell span: 4 {
+      layout card(padding: md, gap: md) {
+        component Heading title: "Revenue"
+        component StatCard label: "Monthly" value: "$45.2K"
+      }
+    }
+    cell span: 4 {
+      layout card(padding: md, gap: md) {
+        component Heading title: "Growth"
+        component StatCard label: "YoY" value: "12%"
+      }
+    }
   }
 }
 ```
 
-### Card Grid Pattern
-```wire
-layout grid(columns: 12, gap: md) {
-  cell span: 6 {
-    layout card(padding: md, gap: md) {
-      // Card content
-    }
-  }
-  cell span: 6 {
-    layout card(padding: md, gap: md) {
-      // Card content
-    }
-  }
-}
-```
-
-### Sidebar Layout Pattern
+### Panel within Grid (Sidebar Control Panel)
 ```wire
 layout split(sidebar: 260, gap: md) {
   layout stack(direction: vertical, gap: md, padding: md) {
-    // Sidebar content
+    component Heading title: "Menu"
+    component SidebarMenu items: "Dashboard,Users,Settings"
   }
+  
+  layout grid(columns: 12, gap: md, padding: lg) {
+    cell span: 8 {
+      component Heading title: "Main Content"
+      component Table columns: "Name,Email,Status" rows: 5
+    }
+    
+    cell span: 4 {
+      layout panel(padding: md, background: "white") {
+        layout stack(direction: vertical, gap: md) {
+          component Heading title: "Filters"
+          component Input label: "Search" placeholder: "Filter..."
+          component Select label: "Status" items: "Active,Inactive"
+          component Button text: "Apply" variant: primary
+        }
+      }
+    }
+  }
+}
+```
+
+### Card within Split Layout (Profile)
+```wire
+layout split(sidebar: 280, gap: md) {
   layout stack(direction: vertical, gap: md, padding: lg) {
-    // Main content
+    component Heading title: "Profile"
+    component SidebarMenu items: "General,Security,Privacy" active: 0
+  }
+  
+  layout stack(direction: vertical, gap: lg, padding: lg) {
+    layout card(padding: lg, gap: md, radius: lg, border: true) {
+      component Avatar placeholder: "avatar"
+      component Heading title: "John Doe"
+      component Text content: "john@example.com"
+      component Divider
+      component Text content: "Senior Software Engineer"
+      layout stack(direction: horizontal, gap: md) {
+        component Button text: "Edit Profile" variant: primary
+        component Button text: "Change Password" variant: secondary
+      }
+    }
+  }
+}
+```
+
+---
+
+## Common Patterns
+
+### Form Pattern (within Panel)
+```wire
+layout panel(padding: lg, background: "white") {
+  layout stack(direction: vertical, gap: md) {
+    component Heading title: "Contact Form"
+    component Input label: "Name" placeholder: "Full name"
+    component Input label: "Email" placeholder: "email@example.com"
+    component Textarea label: "Message" rows: 4 placeholder: "Your message..."
+    component Checkbox label: "Subscribe to newsletter"
+    layout stack(direction: horizontal, gap: md) {
+      component Button text: "Submit" variant: primary
+      component Button text: "Cancel" variant: secondary
+    }
+  }
+}
+```
+
+### Card Grid Pattern (Product Showcase)
+```wire
+layout grid(columns: 12, gap: md, padding: lg) {
+  cell span: 6 {
+    layout card(padding: md, gap: md, radius: lg, border: true) {
+      component Image placeholder: "square" height: 200
+      component Heading title: "Premium Item"
+      component Text content: "High-quality product"
+      component StatCard label: "Price" value: "$99.99"
+      component Button text: "Add to Cart" variant: primary
+    }
+  }
+  cell span: 6 {
+    layout card(padding: md, gap: md, radius: lg, border: true) {
+      component Image placeholder: "square" height: 200
+      component Heading title: "Standard Item"
+      component Text content: "Good value option"
+      component StatCard label: "Price" value: "$49.99"
+      component Button text: "Add to Cart" variant: primary
+    }
+  }
+}
+```
+
+### Sidebar Layout Pattern (Admin Interface)
+```wire
+layout split(sidebar: 280, gap: md) {
+  layout stack(direction: vertical, gap: md, padding: md) {
+    component Topbar title: "Admin Panel"
+    component SidebarMenu items: "Dashboard,Users,Reports,Settings" active: 0
+    component Divider
+    component Text content: "Settings"
+    component Link text: "Profile"
+    component Link text: "Logout"
+  }
+  
+  layout stack(direction: vertical, gap: md, padding: lg) {
+    component Heading title: "Dashboard"
+    component Breadcrumbs items: "Home,Dashboard"
+    layout grid(columns: 12, gap: md) {
+      cell span: 12 {
+        layout card(padding: lg, gap: md) {
+          component Heading title: "Recent Activity"
+          component Table columns: "User,Action,Timestamp" rows: 5
+        }
+      }
+    }
   }
 }
 ```
@@ -350,6 +545,14 @@ Before generating output, verify:
 - [ ] No syntax errors (braces, quotes, colons)
 - [ ] Component names match exactly (case-sensitive)
 - [ ] All string values are quoted
+- [ ] All layouts have explicit `padding` when needed
+- [ ] Image placeholders use valid values: "landscape", "square", "portrait"
+- [ ] Avatar placeholders use "avatar"
+- [ ] Grid cells have `span` values between 1-12
+- [ ] Sidebar width is between 200-400 pixels
+- [ ] Card/Panel radius values are: "none", "sm", "md", "lg"
+- [ ] Button variants are: "primary", "secondary", "ghost"
+- [ ] Nested layouts are properly closed with braces
 
 ---
 
@@ -360,11 +563,21 @@ Before generating output, verify:
 - Prefer common patterns (dashboard, form, card grid)
 - When in doubt, choose `normal` density and `md` spacing
 - Use `stack` layout for linear content, `grid` for multi-column
+- Default card/panel padding to `md`, radius to `md`
 
 ### If Component Property Is Unclear:
-- Use most common variant or primary
+- Use most common variant: `primary` for buttons, `md` for spacing
 - For numeric properties, use default spacing/padding
 - For text, use descriptive placeholders
+- For image placeholders, use `"square"` as safe default
+- For lists/arrays, use comma-separated values in quotes
+
+### If Layout Properties Are Missing:
+- Always include explicit `padding` for readability
+- Default `gap` to `md` if spacing not specified
+- Default `columns` to `12` for grids
+- Default `direction` to `vertical` for stacks
+- Default `sidebar` to `260` pixels for split layouts
 
 ---
 
@@ -378,11 +591,30 @@ wire render <file.wire> --svg  # Renders without errors
 
 ---
 
+## Important Notes
+
+### Complementary Documentation
+This guide is designed to work alongside the **DSL-SYNTAX.md** document. For detailed component specifications, layout properties, and comprehensive examples, refer to the syntax guide.
+
+### Padding Critical Behavior
+⚠️ **Important**: Layouts without explicit `padding` render with **0px internal padding**. Always specify `padding: xs`, `padding: sm`, `padding: md`, `padding: lg`, or `padding: xl` when spacing is needed inside containers.
+
+### Array/List Format
+When components require multiple items (like `items`, `columns`), use comma-separated strings:
+```wire
+component SidebarMenu items: "Home,Users,Settings"      // ✅ Correct
+component Table columns: "Name,Email,Status"            // ✅ Correct
+component Tabs items: "Profile,Settings,Activity"       // ✅ Correct
+```
+
+---
+
 ## Version
 
-**LLM Prompt Guide v1.0**  
+**LLM Prompt Guide v2.0**  
 **Compatible with**: Wire-DSL v1.0+  
-**Last Updated**: January 2026
+**Last Updated**: January 2026  
+**Status**: Enhanced with advanced nesting examples and detailed property specifications
 
 ---
 
