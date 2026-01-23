@@ -7,6 +7,7 @@ export interface ComponentMetadata {
   name: string;
   description: string;
   properties: string[];
+  propertyValues?: Record<string, string[]>;
   example: string;
 }
 
@@ -23,75 +24,63 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
   Heading: {
     name: 'Heading',
     description: 'Large heading/title text',
-    properties: ['text', 'level', 'color', 'align'],
-    example: 'component Heading text: "Title" level: 1',
+    properties: ['text'],
+    example: 'component Heading text: "Users"',
   },
   Text: {
     name: 'Text',
     description: 'Regular paragraph text',
-    properties: ['content', 'color', 'align', 'fontSize'],
-    example: 'component Text content: "Lorem ipsum..."',
-  },
-  Paragraph: {
-    name: 'Paragraph',
-    description: 'Long-form text content',
-    properties: ['content', 'color', 'align'],
-    example: 'component Paragraph content: "Long text..."',
+    properties: ['content'],
+    example: 'component Text content: "Lorem ipsum dolor sit amet..."',
   },
   Label: {
     name: 'Label',
     description: 'Small label text',
-    properties: ['text', 'color', 'required'],
+    properties: ['text'],
     example: 'component Label text: "Field label"',
+  },
+  Code: {
+    name: 'Code',
+    description: 'Code or monospace text',
+    properties: ['content'],
+    example: 'component Code content: "const x = 42;"',
   },
 
   // Input Components
   Input: {
     name: 'Input',
     description: 'Text input field',
-    properties: ['label', 'placeholder', 'type', 'disabled', 'required', 'defaultValue'],
+    properties: ['label', 'placeholder'],
     example: 'component Input label: "Username" placeholder: "Enter name..."',
   },
   Textarea: {
     name: 'Textarea',
     description: 'Multi-line text input',
-    properties: ['label', 'placeholder', 'rows', 'disabled', 'required'],
-    example: 'component Textarea label: "Description" rows: 4',
+    properties: ['label', 'placeholder', 'rows'],
+    example: 'component Textarea label: "Description" rows: 6',
   },
   Select: {
     name: 'Select',
     description: 'Dropdown selection list',
-    properties: ['label', 'options', 'disabled', 'required', 'defaultValue'],
-    example: 'component Select label: "Role" options: ["Admin", "User"]',
+    properties: ['label', 'options', 'placeholder'],
+    example: 'component Select label: "Role" options: ["Admin", "User", "Guest"]',
   },
   Checkbox: {
     name: 'Checkbox',
     description: 'Single checkbox input',
-    properties: ['label', 'disabled', 'checked', 'required'],
+    properties: ['label'],
     example: 'component Checkbox label: "Remember me"',
-  },
-  CheckboxGroup: {
-    name: 'CheckboxGroup',
-    description: 'Multiple checkbox options',
-    properties: ['label', 'options', 'disabled', 'required'],
-    example: 'component CheckboxGroup label: "Select items" options: ["Option 1", "Option 2"]',
   },
   Radio: {
     name: 'Radio',
     description: 'Single radio button',
-    properties: ['label', 'disabled', 'checked'],
+    properties: ['label'],
     example: 'component Radio label: "Option"',
-  },
-  RadioGroup: {
-    name: 'RadioGroup',
-    description: 'Multiple radio options',
-    properties: ['label', 'options', 'disabled', 'required'],
-    example: 'component RadioGroup label: "Choose one" options: ["A", "B", "C"]',
   },
   Toggle: {
     name: 'Toggle',
     description: 'Toggle switch input',
-    properties: ['label', 'disabled', 'checked'],
+    properties: ['label'],
     example: 'component Toggle label: "Enable feature"',
   },
 
@@ -99,13 +88,16 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
   Button: {
     name: 'Button',
     description: 'Clickable button element',
-    properties: ['text', 'variant', 'disabled', 'onClick', 'size'],
+    properties: ['text', 'variant'],
+    propertyValues: {
+      variant: ['primary', 'secondary', 'ghost'],
+    },
     example: 'component Button text: "Save" variant: primary',
   },
   IconButton: {
     name: 'IconButton',
     description: 'Icon-only button',
-    properties: ['icon', 'variant', 'disabled', 'onClick', 'size'],
+    properties: ['icon'],
     example: 'component IconButton icon: "search"',
   },
 
@@ -113,39 +105,39 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
   SidebarMenu: {
     name: 'SidebarMenu',
     description: 'Vertical navigation menu',
-    properties: ['items', 'active', 'title', 'onItemClick'],
-    example: 'component SidebarMenu items: ["Users", "Settings", "Roles"]',
+    properties: ['items'],
+    example: 'component SidebarMenu items: ["Users", "Roles", "Settings"]',
   },
   Topbar: {
     name: 'Topbar',
     description: 'Top navigation bar',
-    properties: ['title', 'subtitle', 'user', 'onUserClick'],
-    example: 'component Topbar title: "Dashboard" subtitle: "Overview"',
+    properties: ['title'],
+    example: 'component Topbar title: "Dashboard"',
   },
   Breadcrumbs: {
     name: 'Breadcrumbs',
     description: 'Breadcrumb navigation trail',
-    properties: ['items', 'onItemClick'],
+    properties: ['items'],
     example: 'component Breadcrumbs items: ["Home", "Users", "Detail"]',
   },
   Tabs: {
     name: 'Tabs',
     description: 'Tabbed content switcher',
-    properties: ['items', 'active', 'onTabChange'],
-    example: 'component Tabs items: ["Overview", "Settings", "Logs"]',
+    properties: ['items', 'activeIndex'],
+    example: 'component Tabs items: ["Profile", "Settings", "Logs"]',
   },
 
   // Data Components
   Table: {
     name: 'Table',
     description: 'Data table with rows and columns',
-    properties: ['columns', 'rows', 'mock', 'title', 'onRowClick', 'striped', 'hoverable'],
-    example: 'component Table columns: ["Name", "Email", "Status"] rows: 10',
+    properties: ['columns', 'rowsMock', 'rowHeight'],
+    example: 'component Table columns: ["Name", "Email", "Status", "Role"] rowsMock: 8',
   },
   List: {
     name: 'List',
     description: 'Vertical list of items',
-    properties: ['items', 'title', 'onItemClick', 'ordered'],
+    properties: ['items'],
     example: 'component List items: ["Item 1", "Item 2", "Item 3"]',
   },
 
@@ -153,72 +145,66 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
   Panel: {
     name: 'Panel',
     description: 'Container with border and padding',
-    properties: ['title', 'height', 'padding', 'background', 'collapsible'],
+    properties: ['title', 'height'],
     example: 'component Panel title: "User Info" height: 240',
   },
   Card: {
     name: 'Card',
     description: 'Card container for content grouping',
-    properties: ['padding', 'gap', 'radius', 'border', 'background'],
-    example: 'layout card(padding: md, gap: md, radius: md)',
+    properties: ['title'],
+    example: 'component Card title: "Stats"',
   },
   Badge: {
     name: 'Badge',
     description: 'Small badge/tag element',
-    properties: ['text', 'variant', 'color', 'size'],
+    properties: ['text', 'variant'],
+    propertyValues: {
+      variant: ['primary', 'secondary', 'success', 'warning', 'error', 'info'],
+    },
     example: 'component Badge text: "New" variant: primary',
   },
   Alert: {
     name: 'Alert',
     description: 'Alert message box',
-    properties: ['text', 'variant', 'dismissible', 'icon'],
+    properties: ['text', 'variant'],
+    propertyValues: {
+      variant: ['primary', 'secondary', 'success', 'warning', 'error', 'info'],
+    },
     example: 'component Alert text: "Warning message" variant: warning',
   },
+
 
   // Visual Components
   Divider: {
     name: 'Divider',
     description: 'Horizontal divider line',
-    properties: ['color', 'thickness'],
+    properties: [],
     example: 'component Divider',
   },
   Image: {
     name: 'Image',
     description: 'Image placeholder or actual image',
-    properties: ['src', 'alt', 'height', 'placeholder', 'fit', 'radius'],
+    properties: ['src', 'alt', 'height', 'placeholder'],
+    propertyValues: {
+      placeholder: ['square', 'landscape', 'avatar', 'icon'],
+    },
     example: 'component Image placeholder: "landscape" height: 300',
   },
-  Icon: {
-    name: 'Icon',
-    description: 'Icon graphic element',
-    properties: ['name', 'size', 'color'],
-    example: 'component Icon name: "home" size: 24',
-  },
+
   ChartPlaceholder: {
     name: 'ChartPlaceholder',
     description: 'Chart visualization placeholder',
-    properties: ['title', 'subtitle', 'type', 'height'],
-    example: 'component ChartPlaceholder title: "Sales" type: "bar" height: 300',
+    properties: ['type', 'height'],
+    propertyValues: {
+      type: ['bar', 'line', 'pie'],
+    },
+    example: 'component ChartPlaceholder type: "bar" height: 200',
   },
-
-  // Other Components
   Sidebar: {
     name: 'Sidebar',
     description: 'Sidebar navigation panel',
-    properties: ['title', 'items', 'active', 'onItemClick'],
+    properties: ['title', 'items'],
     example: 'component Sidebar title: "Navigation" items: ["Dashboard", "Users"]',
-  },
-  Spinner: {
-    name: 'Spinner',
-    description: 'Loading spinner animation',
-    properties: ['size', 'color'],
-    example: 'component Spinner size: "md"',
-  },
-  Avatar: {
-    name: 'Avatar',
-    description: 'User avatar image',
-    properties: ['src', 'alt', 'size', 'initials'],
-    example: 'component Avatar src: "https://..." size: "lg"',
   },
 };
 
@@ -260,10 +246,9 @@ export const LAYOUTS: Record<string, LayoutMetadata> = {
   },
 };
 
-// Property values for specific properties
+// Property values for specific properties (layout-related)
 export const PROPERTY_VALUES: Record<string, string[]> = {
   direction: ['vertical', 'horizontal'],
-  variant: ['primary', 'secondary', 'success', 'warning', 'error', 'info'],
   gap: ['xs', 'sm', 'md', 'lg', 'xl'],
   padding: ['xs', 'sm', 'md', 'lg', 'xl'],
   align: ['start', 'center', 'end'],
@@ -271,8 +256,6 @@ export const PROPERTY_VALUES: Record<string, string[]> = {
   radius: ['xs', 'sm', 'md', 'lg', 'xl'],
   density: ['compact', 'normal', 'comfortable'],
   spacing: ['xs', 'sm', 'md', 'lg', 'xl'],
-  type: ['email', 'password', 'text', 'number', 'date'],
-  placeholder: ['square', 'landscape', 'avatar', 'icon'],
 };
 
 // Keywords
