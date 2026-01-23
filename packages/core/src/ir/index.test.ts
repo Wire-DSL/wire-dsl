@@ -23,7 +23,7 @@ describe('IR Generator', () => {
     expect(ir.project.screens).toHaveLength(1);
   });
 
-  it('should apply default tokens', () => {
+  it('should apply default theme', () => {
     const input = `
       project "Defaults" {
         screen Main {
@@ -37,7 +37,7 @@ describe('IR Generator', () => {
     const ast = parseWireDSL(input);
     const ir = generateIR(ast);
 
-    expect(ir.project.tokens).toEqual({
+    expect(ir.project.theme).toEqual({
       density: 'normal',
       spacing: 'md',
       radius: 'md',
@@ -46,11 +46,13 @@ describe('IR Generator', () => {
     });
   });
 
-  it('should apply custom tokens', () => {
+  it('should apply custom theme', () => {
     const input = `
       project "Custom" {
-        tokens density: comfortable
-        tokens spacing: lg
+        theme {
+          density: "comfortable"
+          spacing: "lg"
+        }
 
         screen Main {
           layout stack {
@@ -63,9 +65,9 @@ describe('IR Generator', () => {
     const ast = parseWireDSL(input);
     const ir = generateIR(ast);
 
-    expect(ir.project.tokens.density).toBe('comfortable');
-    expect(ir.project.tokens.spacing).toBe('lg');
-    expect(ir.project.tokens.radius).toBe('md'); // default
+    expect(ir.project.theme.density).toBe('comfortable');
+    expect(ir.project.theme.spacing).toBe('lg');
+    expect(ir.project.theme.radius).toBe('md'); // default
   });
 
   it('should generate unique node IDs', () => {
@@ -302,8 +304,10 @@ describe('IR Generator', () => {
   it('should handle complete example', () => {
     const input = `
       project "Complete Dashboard" {
-        tokens density: comfortable
-        tokens spacing: lg
+        theme {
+          density: "comfortable"
+          spacing: "lg"
+        }
 
         screen Dashboard {
           layout stack(direction: vertical, gap: lg, padding: xl) {
@@ -311,13 +315,19 @@ describe('IR Generator', () => {
             
             layout grid(columns: 12, gap: lg) {
               cell span: 4 {
-                component Card title: "Users"
+                layout card(padding: md, gap: md) {
+                  component Heading text: "Users"
+                }
               }
               cell span: 4 {
-                component Card title: "Sessions"
+                layout card(padding: md, gap: md) {
+                  component Heading text: "Sessions"
+                }
               }
               cell span: 4 {
-                component Card title: "Revenue"
+                layout card(padding: md, gap: md) {
+                  component Heading text: "Revenue"
+                }
               }
             }
 
@@ -331,7 +341,7 @@ describe('IR Generator', () => {
     const ir = generateIR(ast);
 
     expect(ir.project.name).toBe('Complete Dashboard');
-    expect(ir.project.tokens.density).toBe('comfortable');
+    expect(ir.project.theme.density).toBe('comfortable');
     expect(ir.project.screens).toHaveLength(1);
     expect(Object.keys(ir.project.nodes).length).toBeGreaterThan(5);
 
@@ -579,6 +589,227 @@ describe('IR Generator', () => {
 
     // Should not throw, built-in components are allowed
     expect(ir.project.screens).toHaveLength(1);
+  });
+
+  it('should expand StatCard with default styling', () => {
+    const input = `
+      project "Dashboard" {
+        theme {
+          density: "comfortable"
+        }
+        
+        screen Main {
+          layout grid(columns: 3) {
+            cell span: 1 {
+              component StatCard title: "Total Users" value: "2,543" color: "#3B82F6"
+            }
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+
+    const statCard = Object.entries(ir.project.nodes)
+      .find(([_, n]) => n.kind === 'component' && n.componentType === 'StatCard');
+
+    expect(statCard).toBeDefined();
+    if (statCard) {
+      const [id, node] = statCard;
+      expect(node.props.title).toBe('Total Users');
+      expect(node.props.value).toBe('2,543');
+      expect(node.props.color).toBe('#3B82F6');
+    }
+  });
+
+  it('should expand form components with properties', () => {
+    const input = `
+      project "Forms" {
+        screen FormScreen {
+          layout stack(direction: vertical, gap: md) {
+            component Input label: "Email" placeholder: "user@example.com" required: true
+            component Textarea label: "Bio" rows: 4 placeholder: "Tell us..."
+            component Select label: "Country" items: "USA,Canada,Mexico"
+            component Checkbox label: "I agree" checked: true
+            component Toggle label: "Notifications" enabled: false
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+
+    const components = Object.entries(ir.project.nodes)
+      .filter(([_, n]) => n.kind === 'component')
+      .map(([id, node]) => ({ id, type: node.componentType }));
+
+    expect(components.length).toBeGreaterThanOrEqual(5);
+    expect(components.some(c => c.type === 'Input')).toBe(true);
+    expect(components.some(c => c.type === 'Textarea')).toBe(true);
+    expect(components.some(c => c.type === 'Select')).toBe(true);
+    expect(components.some(c => c.type === 'Checkbox')).toBe(true);
+    expect(components.some(c => c.type === 'Toggle')).toBe(true);
+  });
+
+  it('should handle SidebarMenu with active state', () => {
+    const input = `
+      project "Admin" {
+        screen Dashboard {
+          layout split(sidebar: 240, gap: lg) {
+            layout stack(direction: vertical, gap: md) {
+              component SidebarMenu items: "Users,Roles,Settings" active: 1
+            }
+            layout stack(direction: vertical) {
+              component Heading text: "Content"
+            }
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+
+    const sidebarMenu = Object.entries(ir.project.nodes)
+      .find(([_, n]) => n.kind === 'component' && n.componentType === 'SidebarMenu');
+
+    expect(sidebarMenu).toBeDefined();
+    if (sidebarMenu) {
+      const [id, node] = sidebarMenu;
+      expect(node.props.items).toBe('Users,Roles,Settings');
+      expect(node.props.active).toBe(1);
+    }
+  });
+
+  it('should parse and apply mocks data', () => {
+    const input = `
+      project "MocksProject" {
+        mocks {
+          userStatus: "Active,Inactive,Suspended"
+          roles: "Admin,Editor,Viewer"
+        }
+        
+        screen Main {
+          layout stack {
+            component Heading text: "Settings"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+
+    expect(ir.project.mocks).toEqual({
+      userStatus: 'Active,Inactive,Suspended',
+      roles: 'Admin,Editor,Viewer',
+    });
+  });
+
+  it('should parse and apply colors palette', () => {
+    const input = `
+      project "Branded" {
+        colors {
+          primary: #3B82F6
+          secondary: #8B5CF6
+          success: #10B981
+          danger: #EF4444
+          warning: #F59E0B
+        }
+        
+        screen Main {
+          layout stack {
+            component Button text: "Primary" variant: primary
+            component Button text: "Danger" variant: danger
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+
+    expect(ir.project.colors).toEqual({
+      primary: '#3B82F6',
+      secondary: '#8B5CF6',
+      success: '#10B981',
+      danger: '#EF4444',
+      warning: '#F59E0B',
+    });
+  });
+
+  it('should expand Divider and Breadcrumbs components', () => {
+    const input = `
+      project "Navigation" {
+        screen UserDetail {
+          layout stack(direction: vertical, gap: md) {
+            component Breadcrumbs items: "Users,Details"
+            component Divider
+            component Heading text: "User Profile"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+
+    const breadcrumbs = Object.entries(ir.project.nodes)
+      .find(([_, n]) => n.kind === 'component' && n.componentType === 'Breadcrumbs');
+    
+    const divider = Object.entries(ir.project.nodes)
+      .find(([_, n]) => n.kind === 'component' && n.componentType === 'Divider');
+
+    expect(breadcrumbs).toBeDefined();
+    expect(divider).toBeDefined();
+  });
+
+  it('should expand Image component with dimensions', () => {
+    const input = `
+      project "Gallery" {
+        screen ProductCard {
+          layout card(padding: md, gap: md) {
+            component Image placeholder: "landscape" height: 300
+            component Heading text: "Product"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+
+    const image = Object.entries(ir.project.nodes)
+      .find(([_, n]) => n.kind === 'component' && n.componentType === 'Image');
+
+    expect(image).toBeDefined();
+    if (image) {
+      const [id, node] = image;
+      expect(node.props.placeholder).toBe('landscape');
+      expect(node.props.height).toBe(300);
+    }
+  });
+
+  it('should expand card layout with properties', () => {
+    const input = `
+      project "Cards" {
+        screen Settings {
+          layout stack(direction: vertical, gap: lg, padding: xl) {
+            component Heading text: "Account"
+            component Button text: "Save"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+
+    // Verify screens and nodes were created
+    expect(ir.project.screens).toHaveLength(1);
+    expect(Object.keys(ir.project.nodes).length).toBeGreaterThan(0);
   });
 });
 

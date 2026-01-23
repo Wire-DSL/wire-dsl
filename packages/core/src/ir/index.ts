@@ -460,7 +460,9 @@ export class IRGenerator {
     // Check if it's a known built-in component
     const builtInComponents = new Set([
       'Button', 'Input', 'Heading', 'Text', 'Label', 'Image', 
-      'Card', 'StatCard', 'Topbar', 'Table', 'Chart', 'ChartPlaceholder'
+      'Card', 'StatCard', 'Topbar', 'Table', 'Chart', 'ChartPlaceholder',
+      'Textarea', 'Select', 'Checkbox', 'Toggle', 'Divider', 'Breadcrumbs',
+      'SidebarMenu', 'Radio', 'Icon', 'IconButton', 'Alert', 'Badge', 'Modal', 'List', 'Sidebar', 'Tabs', 'Code', 'Paragraph'
     ]);
 
     if (!builtInComponents.has(component.componentType)) {

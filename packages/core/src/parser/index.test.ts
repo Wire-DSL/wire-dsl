@@ -21,11 +21,13 @@ describe('WireDSL Parser', () => {
     expect(ast.screens[0].name).toBe('Main');
   });
 
-  it('should parse tokens declarations', () => {
+  it('should parse theme declarations', () => {
     const input = `
       project "Dashboard" {
-        tokens density: comfortable
-        tokens spacing: lg
+        theme {
+          density: "comfortable"
+          spacing: "lg"
+        }
 
         screen Main {
           layout stack {
@@ -37,7 +39,7 @@ describe('WireDSL Parser', () => {
 
     const ast = parseWireDSL(input);
 
-    expect(ast.tokens).toEqual({
+    expect(ast.theme).toEqual({
       density: 'comfortable',
       spacing: 'lg',
     });
@@ -196,8 +198,10 @@ describe('WireDSL Parser', () => {
   it('should parse complete example', () => {
     const input = `
       project "Simple Dashboard" {
-        tokens density: comfortable
-        tokens spacing: lg
+        theme {
+          density: "comfortable"
+          spacing: "lg"
+        }
 
         screen Dashboard {
           layout stack(direction: vertical, gap: lg, padding: xl) {
@@ -205,13 +209,19 @@ describe('WireDSL Parser', () => {
             
             layout grid(columns: 12, gap: lg) {
               cell span: 4 {
-                component Card title: "Total Users"
+                layout card(padding: md, gap: md) {
+                  component Heading text: "Total Users"
+                }
               }
               cell span: 4 {
-                component Card title: "Active Sessions"
+                layout card(padding: md, gap: md) {
+                  component Heading text: "Active Sessions"
+                }
               }
               cell span: 4 {
-                component Card title: "Revenue"
+                layout card(padding: md, gap: md) {
+                  component Heading text: "Revenue"
+                }
               }
             }
 
@@ -228,7 +238,7 @@ describe('WireDSL Parser', () => {
     const ast = parseWireDSL(input);
 
     expect(ast.name).toBe('Simple Dashboard');
-    expect(ast.tokens).toEqual({
+    expect(ast.theme).toEqual({
       density: 'comfortable',
       spacing: 'lg',
     });
@@ -352,6 +362,267 @@ describe('WireDSL Parser', () => {
     // Should not throw
     const ast = parseWireDSL(input);
     expect(ast.definedComponents).toHaveLength(3);
+  });
+
+  it('should parse StatCard component', () => {
+    const input = `
+      project "StatCards" {
+        screen Dashboard {
+          layout grid(columns: 3) {
+            cell span: 1 {
+              component StatCard title: "Total Users" value: "2,543"
+            }
+            cell span: 1 {
+              component StatCard title: "Revenue" value: "$45.2K"
+            }
+            cell span: 1 {
+              component StatCard title: "Active" value: "856" color: "#3B82F6"
+            }
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const grid = ast.screens[0].layout;
+    const cell1 = grid.children[0];
+    
+    expect(cell1.type).toBe('cell');
+    if (cell1.type === 'cell') {
+      const statCard = cell1.children[0];
+      expect(statCard.type).toBe('component');
+      expect(statCard.componentType).toBe('StatCard');
+      expect(statCard.props.title).toBe('Total Users');
+      expect(statCard.props.value).toBe('2,543');
+    }
+  });
+
+  it('should parse Textarea component with rows', () => {
+    const input = `
+      project "Forms" {
+        screen FormScreen {
+          layout stack(direction: vertical, gap: md) {
+            component Textarea label: "Bio" placeholder: "Tell us about yourself..." rows: 4
+            component Textarea label: "Comments" rows: 6
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const stack = ast.screens[0].layout;
+    const textarea = stack.children[0];
+
+    expect(textarea.type).toBe('component');
+    expect(textarea.componentType).toBe('Textarea');
+    expect(textarea.props.label).toBe('Bio');
+    expect(textarea.props.rows).toBe(4);
+    expect(textarea.props.placeholder).toBe('Tell us about yourself...');
+  });
+
+  it('should parse Select component with items', () => {
+    const input = `
+      project "Selects" {
+        screen FormScreen {
+          layout stack(direction: vertical, gap: md) {
+            component Select label: "Country" items: "USA,Canada,Mexico,UK,Spain"
+            component Select label: "Status" items: "Active,Inactive,Pending" default: Active
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const stack = ast.screens[0].layout;
+    const select1 = stack.children[0];
+    const select2 = stack.children[1];
+
+    expect(select1.type).toBe('component');
+    expect(select1.componentType).toBe('Select');
+    expect(select1.props.items).toBe('USA,Canada,Mexico,UK,Spain');
+    expect(select2.props.default).toBe('Active');
+  });
+
+  it('should parse SidebarMenu with active state', () => {
+    const input = `
+      project "MenuApp" {
+        screen Dashboard {
+          layout split(sidebar: 240, gap: lg) {
+            layout stack(direction: vertical, gap: md) {
+              component SidebarMenu items: "Users,Roles,Permissions,Audit,Settings" active: 0
+            }
+            layout stack(direction: vertical) {
+              component Heading text: "Content"
+            }
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const split = ast.screens[0].layout;
+    
+    expect(split.layoutType).toBe('split');
+    expect(split.params.sidebar).toBe(240);
+    
+    const sidebarStack = split.children[0];
+    if (sidebarStack.type === 'layout') {
+      const menu = sidebarStack.children[0];
+      expect(menu.type).toBe('component');
+      expect(menu.componentType).toBe('SidebarMenu');
+      expect(menu.props.items).toBe('Users,Roles,Permissions,Audit,Settings');
+      expect(menu.props.active).toBe(0);
+    }
+  });
+
+  it('should parse mocks block', () => {
+    const input = `
+      project "MocksProject" {
+        mocks {
+          status: "Active,Inactive,Pending"
+          role: "Admin,User,Guest"
+          countries: "USA,Canada,Mexico"
+        }
+        
+        screen Main {
+          layout stack {
+            component Select label: "Status" items: "Active,Inactive,Pending"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+
+    expect(ast.mocks).toEqual({
+      status: 'Active,Inactive,Pending',
+      role: 'Admin,User,Guest',
+      countries: 'USA,Canada,Mexico',
+    });
+  });
+
+  it('should parse colors block', () => {
+    const input = `
+      project "ColorsProject" {
+        colors {
+          primary: #3B82F6
+          secondary: #8B5CF6
+          success: #10B981
+          danger: #EF4444
+        }
+        
+        screen Main {
+          layout stack {
+            component Button text: "Primary" variant: primary
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+
+    expect(ast.colors).toEqual({
+      primary: '#3B82F6',
+      secondary: '#8B5CF6',
+      success: '#10B981',
+      danger: '#EF4444',
+    });
+  });
+
+  it('should parse Checkbox and Toggle components', () => {
+    const input = `
+      project "InputControls" {
+        screen Settings {
+          layout stack(direction: vertical, gap: md) {
+            component Checkbox label: "Subscribe to newsletter"
+            component Checkbox label: "Enable notifications" checked: true
+            component Toggle label: "Two-factor authentication"
+            component Toggle label: "Dark mode" enabled: true
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const stack = ast.screens[0].layout;
+
+    expect(stack.children).toHaveLength(4);
+    expect(stack.children[0].componentType).toBe('Checkbox');
+    expect(stack.children[1].props.checked).toBe('true');
+    expect(stack.children[2].componentType).toBe('Toggle');
+    expect(stack.children[3].props.enabled).toBe('true');
+  });
+
+  it('should parse Divider and Breadcrumbs components', () => {
+    const input = `
+      project "Navigation" {
+        screen UserDetail {
+          layout stack(direction: vertical, gap: md) {
+            component Breadcrumbs items: "Users,User Details"
+            component Divider
+            component Heading text: "User Information"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const stack = ast.screens[0].layout;
+
+    expect(stack.children).toHaveLength(3);
+    expect(stack.children[0].componentType).toBe('Breadcrumbs');
+    expect(stack.children[0].props.items).toBe('Users,User Details');
+    expect(stack.children[1].componentType).toBe('Divider');
+  });
+
+  it('should parse Image component with placeholder', () => {
+    const input = `
+      project "Gallery" {
+        screen ProductCard {
+          layout card(padding: md, gap: md) {
+            component Image placeholder: "square" height: 200
+            component Heading text: "Product Name"
+            component Button text: "View Details"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const card = ast.screens[0].layout;
+    const image = card.children[0];
+
+    expect(image.type).toBe('component');
+    expect(image.componentType).toBe('Image');
+    expect(image.props.placeholder).toBe('square');
+    expect(image.props.height).toBe(200);
+  });
+
+  it('should parse panel layout', () => {
+    const input = `
+      project "Panels" {
+        screen Settings {
+          layout stack(direction: vertical, gap: lg) {
+            component Heading text: "Account Settings"
+            
+            layout panel(padding: lg, border: true) {
+              layout stack(direction: vertical, gap: md) {
+                component Input label: "Email" placeholder: "user@example.com"
+                component Button text: "Save"
+              }
+            }
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const stack = ast.screens[0].layout;
+    const panel = stack.children[1];
+
+    expect(panel.type).toBe('layout');
+    expect(panel.layoutType).toBe('panel');
+    expect(panel.params.border).toBe('true');
   });
 });
 
