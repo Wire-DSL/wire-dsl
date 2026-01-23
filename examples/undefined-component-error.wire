@@ -1,0 +1,23 @@
+project "Undefined Component Test" {
+  theme {
+    density: "normal"
+    spacing: "md"
+    radius: "md"
+    stroke: "normal"
+    font: "base"
+  }
+
+  screen Main {
+    layout stack(direction: vertical, gap: lg, padding: xl) {
+      component Heading text: "Form"
+
+      // These components don't exist and are not built-in
+      component CustomInput placeholder: "Email"
+      component CustomButton text: "Submit"
+      component SpecialCard title: "Special"
+
+      // This one is built-in, so it's ok
+      component Button text: "Cancel"
+    }
+  }
+}

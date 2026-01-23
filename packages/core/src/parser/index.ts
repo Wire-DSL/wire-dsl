@@ -43,6 +43,11 @@ const Project = createToken({ name: 'Project', pattern: /project/ });
 const Screen = createToken({ name: 'Screen', pattern: /screen/ });
 const Layout = createToken({ name: 'Layout', pattern: /layout/ });
 const Component = createToken({ name: 'Component', pattern: /component/ });
+const ComponentKeyword = createToken({
+  name: 'ComponentKeyword',
+  pattern: /Component\b/,
+});
+const Define = createToken({ name: 'Define', pattern: /define/ });
 const Theme = createToken({ name: 'Theme', pattern: /theme/ });
 const Mocks = createToken({ name: 'Mocks', pattern: /mocks/ });
 const Colors = createToken({ name: 'Colors', pattern: /colors/ });
@@ -99,7 +104,9 @@ const allTokens = [
   Project,
   Screen,
   Layout,
+  ComponentKeyword,
   Component,
+  Define,
   Theme,
   Mocks,
   Colors,
@@ -137,6 +144,7 @@ class WireDSLParser extends CstParser {
     this.CONSUME(LCurly);
     this.MANY(() => {
       this.OR([
+        { ALT: () => this.SUBRULE(this.definedComponent) },
         { ALT: () => this.SUBRULE(this.themeDecl) },
         { ALT: () => this.SUBRULE(this.mocksDecl) },
         { ALT: () => this.SUBRULE(this.colorsDecl) },
@@ -198,6 +206,19 @@ class WireDSLParser extends CstParser {
       { ALT: () => this.CONSUME(HexColor, { LABEL: 'colorValue' }) },
       { ALT: () => this.CONSUME2(Identifier, { LABEL: 'colorValue' }) },
     ]);
+  });
+
+  // define Component "ButtonGroup" { layout stack { ... } }
+  private definedComponent = this.RULE('definedComponent', () => {
+    this.CONSUME(Define);
+    this.CONSUME(ComponentKeyword, { LABEL: 'componentKeyword' });
+    this.CONSUME(StringLiteral, { LABEL: 'componentName' });
+    this.CONSUME(LCurly);
+    this.OR([
+      { ALT: () => this.SUBRULE(this.layout) },
+      { ALT: () => this.SUBRULE(this.component) },
+    ]);
+    this.CONSUME(RCurly);
   });
 
   // screen Main(background: white) { ... }
@@ -289,7 +310,14 @@ export interface AST {
   theme: Record<string, string>;
   mocks: Record<string, string>;
   colors: Record<string, string>;
+  definedComponents: ASTDefinedComponent[];
   screens: ASTScreen[];
+}
+
+export interface ASTDefinedComponent {
+  type: 'definedComponent';
+  name: string;
+  body: ASTLayout | ASTComponent;
 }
 
 export interface ASTScreen {
@@ -336,6 +364,7 @@ class WireDSLVisitor extends BaseCstVisitor {
     const theme: Record<string, string> = {};
     const mocks: Record<string, string> = {};
     const colors: Record<string, string> = {};
+    const definedComponents: ASTDefinedComponent[] = [];
     const screens: ASTScreen[] = [];
 
     if (ctx.themeDecl && ctx.themeDecl.length > 0) {
@@ -353,6 +382,12 @@ class WireDSLVisitor extends BaseCstVisitor {
       Object.assign(colors, colorsBlock);
     }
 
+    if (ctx.definedComponent) {
+      ctx.definedComponent.forEach((comp: any) => {
+        definedComponents.push(this.visit(comp));
+      });
+    }
+
     if (ctx.screen) {
       ctx.screen.forEach((screen: any) => {
         screens.push(this.visit(screen));
@@ -365,6 +400,7 @@ class WireDSLVisitor extends BaseCstVisitor {
       theme,
       mocks,
       colors,
+      definedComponents,
       screens,
     };
   }
@@ -418,6 +454,26 @@ class WireDSLVisitor extends BaseCstVisitor {
     const key = ctx.colorKey[0].image;
     const value = ctx.colorValue[0].image; // Keep as-is (hex or identifier)
     return { key, value };
+  }
+
+  definedComponent(ctx: any): ASTDefinedComponent {
+    const name = ctx.componentName[0].image.slice(1, -1); // Remove quotes
+
+    // Body can be either a layout or a component
+    let body: ASTLayout | ASTComponent;
+    if (ctx.layout && ctx.layout.length > 0) {
+      body = this.visit(ctx.layout[0]);
+    } else if (ctx.component && ctx.component.length > 0) {
+      body = this.visit(ctx.component[0]);
+    } else {
+      throw new Error(`Defined component "${name}" must contain either a layout or component`);
+    }
+
+    return {
+      type: 'definedComponent',
+      name,
+      body,
+    };
   }
 
   screen(ctx: any): ASTScreen {
@@ -603,7 +659,112 @@ export function parseWireDSL(input: string): AST {
 
   // Convert CST to AST
   const ast = visitor.visit(cst);
+  
+  // Validate no circular references in component definitions
+  validateComponentDefinitionCycles(ast);
+  
   return ast;
+}
+
+/**
+ * Validates that component definitions don't have circular references
+ * Uses depth-first search to detect cycles in the component dependency graph
+ */
+function validateComponentDefinitionCycles(ast: AST): void {
+  if (!ast.definedComponents || ast.definedComponents.length === 0) {
+    return;
+  }
+
+  const components = new Map<string, ASTDefinedComponent>();
+  ast.definedComponents.forEach(comp => {
+    components.set(comp.name, comp);
+  });
+
+  const visited = new Set<string>();
+  const recursionStack = new Set<string>();
+
+  function getComponentDependencies(node: ASTLayout | ASTComponent): Set<string> {
+    const deps = new Set<string>();
+
+    if (node.type === 'layout') {
+      const layout = node as ASTLayout;
+      if (layout.children) {
+        layout.children.forEach(child => {
+          if (child.type === 'component') {
+            const component = child as ASTComponent;
+            deps.add(component.componentType);
+          } else if (child.type === 'layout') {
+            const nested = getComponentDependencies(child);
+            nested.forEach(d => deps.add(d));
+          } else if (child.type === 'cell') {
+            const cell = child as ASTCell;
+            if (cell.children) {
+              cell.children.forEach(cellChild => {
+                if (cellChild.type === 'component') {
+                  deps.add((cellChild as ASTComponent).componentType);
+                } else if (cellChild.type === 'layout') {
+                  const nested = getComponentDependencies(cellChild);
+                  nested.forEach(d => deps.add(d));
+                }
+              });
+            }
+          }
+        });
+      }
+    }
+
+    return deps;
+  }
+
+  function hasCycle(componentName: string, path: string[] = []): string[] | null {
+    if (recursionStack.has(componentName)) {
+      // Found a cycle
+      const cycleStart = path.indexOf(componentName);
+      const cycle = path.slice(cycleStart).concat(componentName);
+      return cycle;
+    }
+
+    if (visited.has(componentName)) {
+      return null; // Already validated, no cycle from this path
+    }
+
+    const component = components.get(componentName);
+    if (!component) {
+      return null; // Not a defined component, skip
+    }
+
+    recursionStack.add(componentName);
+    const currentPath = [...path, componentName];
+
+    const dependencies = getComponentDependencies(component.body);
+
+    for (const dep of dependencies) {
+      const definedDep = components.has(dep);
+      if (definedDep) {
+        const cycle = hasCycle(dep, currentPath);
+        if (cycle) {
+          return cycle;
+        }
+      }
+    }
+
+    recursionStack.delete(componentName);
+    visited.add(componentName);
+    return null;
+  }
+
+  // Check each component for cycles
+  for (const [componentName] of components) {
+    visited.clear();
+    recursionStack.clear();
+    const cycle = hasCycle(componentName);
+    if (cycle) {
+      throw new Error(
+        `Circular component definition detected: ${cycle.join(' → ')}\n` +
+        `Components cannot reference each other in a cycle.`
+      );
+    }
+  }
 }
 
 // Backward compatibility exports

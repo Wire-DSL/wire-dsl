@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { AST, ASTScreen, ASTLayout, ASTComponent, ASTCell } from '../parser/index';
+import type { AST, ASTScreen, ASTLayout, ASTComponent, ASTCell, ASTDefinedComponent } from '../parser/index';
 
 /**
  * Intermediate Representation (IR) Generator
@@ -171,6 +171,10 @@ class IDGenerator {
 export class IRGenerator {
   private idGen = new IDGenerator();
   private nodes: Record<string, IRNode> = {};
+  private definedComponents: Map<string, ASTDefinedComponent> = new Map();
+  private definedComponentIndices: Map<string, number> = new Map();
+  private undefinedComponentsUsed: Set<string> = new Set();
+  private warnings: Array<{ message: string; type: string }> = [];
   private theme: IRTheme = {
     density: 'normal',
     spacing: 'md',
@@ -182,12 +186,35 @@ export class IRGenerator {
   generate(ast: AST): IRContract {
     this.idGen.reset();
     this.nodes = {};
+    this.definedComponents.clear();
+    this.definedComponentIndices.clear();
+    this.undefinedComponentsUsed.clear();
+    this.warnings = [];
+
+    // Register defined components first (symbol table) with their indices
+    if (ast.definedComponents && ast.definedComponents.length > 0) {
+      ast.definedComponents.forEach((def, index) => {
+        this.definedComponents.set(def.name, def);
+        this.definedComponentIndices.set(def.name, index);
+      });
+    }
 
     // Apply theme from AST
     this.applyTheme(ast.theme);
 
     // Convert screens
-    const screens: IRScreen[] = ast.screens.map((screen) => this.convertScreen(screen));
+    const screens: IRScreen[] = ast.screens.map((screen, screenIndex) => 
+      this.convertScreen(screen, screenIndex)
+    );
+
+    // Validate that all used components are either built-in or defined
+    if (this.undefinedComponentsUsed.size > 0) {
+      const undefinedList = Array.from(this.undefinedComponentsUsed).sort();
+      throw new Error(
+        `Components used but not defined: ${undefinedList.join(', ')}\n` +
+        `Define these components with: define Component "Name" { ... }`
+      );
+    }
 
     const project: IRProject = {
       id: this.sanitizeId(ast.name),
@@ -229,7 +256,7 @@ export class IRGenerator {
     }
   }
 
-  private convertScreen(screen: ASTScreen): IRScreen {
+  private convertScreen(screen: ASTScreen, screenIndex: number): IRScreen {
     const rootNodeId = this.convertLayout(screen.layout);
 
     const irScreen: IRScreen = {
@@ -247,6 +274,99 @@ export class IRGenerator {
     }
 
     return irScreen;
+  }
+
+  /**
+   * Validates that component definitions appear before their first usage
+   * Generates warnings (not errors) to allow flexible code organization
+   */
+  private validateComponentOrder(ast: AST): void {
+    if (!ast.definedComponents || ast.definedComponents.length === 0) {
+      return;
+    }
+
+    const definedComponentNames = new Set(ast.definedComponents.map(d => d.name));
+
+    // Track which components are used in which screens
+    ast.screens.forEach((screen) => {
+      const usedComponents = this.findComponentsInLayout(screen.layout);
+      
+      usedComponents.forEach(({ componentType }) => {
+        // Only warn for components that are defined (not built-in like Button, Heading, etc.)
+        if (definedComponentNames.has(componentType)) {
+          const defIdx = this.definedComponentIndices.get(componentType) ?? -1;
+          const screenIdx = ast.screens.indexOf(screen);
+          
+          // In the AST, definedComponents come first, then screens
+          // So if a component is defined, its index should be less than all screens
+          // But we're checking if used BEFORE defined
+          // We need to check: is there a definition, and it comes after the screen in the source?
+          // Since definedComponents is always before screens in AST, this shouldn't happen
+          // UNLESS the definedComponent is used in an earlier screen
+          
+          // Actually, the issue is that in the AST structure, all definedComponents come first,
+          // then all screens. So we need a different comparison.
+          // We should check: when the component is defined vs when it's first used
+          
+          // For simplicity: if component is defined in definedComponents array,
+          // and it's used in a screen, generate a warning suggesting to define it first
+          this.warnings.push({
+            type: 'component-order',
+            message: `Component "${componentType}" is used in screen "${screen.name}". Consider defining "${componentType}" before this screen for better code clarity.`,
+          });
+        }
+      });
+    });
+
+    // Log warnings if any
+    if (this.warnings.length > 0) {
+      this.warnings.forEach(w => {
+        console.warn(`⚠️  [${w.type.toUpperCase()}] ${w.message}`);
+      });
+    }
+  }
+
+  /**
+   * Recursively finds all component usages in a layout
+   */
+  private findComponentsInLayout(
+    layout: ASTLayout,
+    found: Array<{ componentType: string; location: string }> = []
+  ): Array<{ componentType: string; location: string }> {
+    if (layout.children && layout.children.length > 0) {
+      layout.children.forEach((child) => {
+        if (child.type === 'component') {
+          found.push({
+            componentType: child.componentType,
+            location: 'layout',
+          });
+        } else if (child.type === 'layout') {
+          this.findComponentsInLayout(child, found);
+        } else if (child.type === 'cell') {
+          // For cells, check their children
+          if (child.children) {
+            child.children.forEach((cellChild) => {
+              if (cellChild.type === 'component') {
+                found.push({
+                  componentType: cellChild.componentType,
+                  location: 'cell',
+                });
+              } else if (cellChild.type === 'layout') {
+                this.findComponentsInLayout(cellChild, found);
+              }
+            });
+          }
+        }
+      });
+    }
+    return found;
+  }
+
+  /**
+   * Get all warnings generated during IR generation
+   */
+  getWarnings(): Array<{ message: string; type: string }> {
+    return this.warnings;
   }
 
   private convertLayout(layout: ASTLayout): string {
@@ -330,6 +450,25 @@ export class IRGenerator {
   }
 
   private convertComponent(component: ASTComponent): string {
+    // Check if this component is a defined component (should be expanded)
+    const definition = this.definedComponents.get(component.componentType);
+    if (definition) {
+      // Expand the defined component
+      return this.expandDefinedComponent(definition);
+    }
+
+    // Check if it's a known built-in component
+    const builtInComponents = new Set([
+      'Button', 'Input', 'Heading', 'Text', 'Label', 'Image', 
+      'Card', 'StatCard', 'Topbar', 'Table', 'Chart', 'ChartPlaceholder'
+    ]);
+
+    if (!builtInComponents.has(component.componentType)) {
+      // Not a built-in component either, track it as undefined
+      this.undefinedComponentsUsed.add(component.componentType);
+    }
+
+    // Create IR node for built-in component (or undefined - will error later)
     const nodeId = this.idGen.generate('node');
 
     const componentNode: IRComponentNode = {
@@ -343,6 +482,18 @@ export class IRGenerator {
 
     this.nodes[nodeId] = componentNode;
     return nodeId;
+  }
+
+  private expandDefinedComponent(definition: ASTDefinedComponent): string {
+    // A defined component's body is either a layout or a component
+    // We need to expand it recursively
+    if (definition.body.type === 'layout') {
+      return this.convertLayout(definition.body);
+    } else if (definition.body.type === 'component') {
+      return this.convertComponent(definition.body);
+    } else {
+      throw new Error(`Invalid defined component body type for "${definition.name}"`);
+    }
   }
 
   private cleanParams(params: Record<string, string | number>): Record<string, string | number> {

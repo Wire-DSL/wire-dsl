@@ -238,4 +238,120 @@ describe('WireDSL Parser', () => {
     expect(mainLayout.layoutType).toBe('stack');
     expect(mainLayout.children.length).toBeGreaterThan(0);
   });
+
+  it('should detect simple circular component references', () => {
+    const input = `
+      project "Circular" {
+        define Component "A" {
+          layout stack {
+            component B
+          }
+        }
+
+        define Component "B" {
+          layout stack {
+            component A
+          }
+        }
+
+        screen Main {
+          layout stack {
+            component A
+          }
+        }
+      }
+    `;
+
+    expect(() => parseWireDSL(input)).toThrow(/Circular component definition/);
+    expect(() => parseWireDSL(input)).toThrow(/A → B → A/);
+  });
+
+  it('should detect complex circular component references', () => {
+    const input = `
+      project "ComplexCycle" {
+        define Component "A" {
+          layout stack {
+            component B
+          }
+        }
+
+        define Component "B" {
+          layout stack {
+            component C
+          }
+        }
+
+        define Component "C" {
+          layout stack {
+            component A
+          }
+        }
+
+        screen Main {
+          layout stack {
+            component A
+          }
+        }
+      }
+    `;
+
+    expect(() => parseWireDSL(input)).toThrow(/Circular component definition/);
+    expect(() => parseWireDSL(input)).toThrow(/A → B → C → A/);
+  });
+
+  it('should allow self-reference detection', () => {
+    const input = `
+      project "SelfRef" {
+        define Component "A" {
+          layout stack {
+            component A
+          }
+        }
+
+        screen Main {
+          layout stack {
+            component A
+          }
+        }
+      }
+    `;
+
+    expect(() => parseWireDSL(input)).toThrow(/Circular component definition/);
+    expect(() => parseWireDSL(input)).toThrow(/A → A/);
+  });
+
+  it('should allow multiple non-circular components', () => {
+    const input = `
+      project "NoCycle" {
+        define Component "Button" {
+          component Button text: "Click"
+        }
+
+        define Component "ButtonGroup" {
+          layout stack(direction: horizontal) {
+            component Button
+            component Button
+          }
+        }
+
+        define Component "FormWithButtons" {
+          layout stack {
+            component Input
+            component ButtonGroup
+          }
+        }
+
+        screen Main {
+          layout stack {
+            component FormWithButtons
+          }
+        }
+      }
+    `;
+
+    // Should not throw
+    const ast = parseWireDSL(input);
+    expect(ast.definedComponents).toHaveLength(3);
+  });
 });
+

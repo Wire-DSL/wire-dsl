@@ -1,6 +1,6 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { parseWireDSL } from '../parser/index';
-import { generateIR } from './index';
+import { generateIR, IRGenerator } from './index';
 
 describe('IR Generator', () => {
   it('should generate basic IR from AST', () => {
@@ -340,4 +340,246 @@ describe('IR Generator', () => {
     const rootNode = ir.project.nodes[screen.root.ref];
     expect(rootNode.kind).toBe('container');
   });
+
+  it('should expand defined components at IR generation', () => {
+    const input = `
+      project "ComponentComposition" {
+        define Component "ButtonGroup" {
+          layout stack(direction: horizontal) {
+            component Button text: "OK"
+            component Button text: "Cancel"
+          }
+        }
+
+        screen Main {
+          layout stack {
+            component ButtonGroup
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    expect(ast.definedComponents).toHaveLength(1);
+    expect(ast.definedComponents[0].name).toBe('ButtonGroup');
+
+    const ir = generateIR(ast);
+
+    // Verify: No 'ButtonGroup' component type in IR (it should be expanded)
+    const allNodes = Object.values(ir.project.nodes);
+    const buttonGroupNodes = allNodes.filter(
+      (n: any) => n.componentType === 'ButtonGroup'
+    );
+    expect(buttonGroupNodes).toHaveLength(0);
+
+    // Verify: Two Button components exist (expansion result)
+    const buttonNodes = allNodes.filter(
+      (n: any) => n.kind === 'component' && n.componentType === 'Button'
+    );
+    expect(buttonNodes.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('should handle nested defined components', () => {
+    const input = `
+      project "NestedComponents" {
+        define Component "FormField" {
+          layout stack(direction: vertical) {
+            component Label text: "Field"
+            component Input
+          }
+        }
+
+        define Component "FormGroup" {
+          layout stack {
+            component FormField
+            component FormField
+          }
+        }
+
+        screen Main {
+          layout stack {
+            component FormGroup
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    expect(ast.definedComponents).toHaveLength(2);
+
+    const ir = generateIR(ast);
+
+    // Verify: No FormGroup or FormField in IR (all expanded)
+    const allNodes = Object.values(ir.project.nodes);
+    const customComponentNodes = allNodes.filter(
+      (n: any) =>
+        n.componentType === 'FormGroup' || n.componentType === 'FormField'
+    );
+    expect(customComponentNodes).toHaveLength(0);
+
+    // Verify: Input and Label components exist (leaf nodes)
+    const inputNodes = allNodes.filter(
+      (n: any) => n.kind === 'component' && n.componentType === 'Input'
+    );
+    const labelNodes = allNodes.filter(
+      (n: any) => n.kind === 'component' && n.componentType === 'Label'
+    );
+    expect(inputNodes.length).toBeGreaterThanOrEqual(2); // At least 2 from nested expansion
+    expect(labelNodes.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('should handle defined component with single component body', () => {
+    const input = `
+      project "SingleComponentBody" {
+        define Component "PrimaryButton" {
+          component Button text: "Submit" variant: primary
+        }
+
+        screen Main {
+          layout stack {
+            component PrimaryButton
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+
+    // Verify: No PrimaryButton in IR
+    const allNodes = Object.values(ir.project.nodes);
+    const customNodes = allNodes.filter(
+      (n: any) => n.componentType === 'PrimaryButton'
+    );
+    expect(customNodes).toHaveLength(0);
+
+    // Verify: Button component exists with properties
+    const buttonNodes = allNodes.filter(
+      (n: any) => n.kind === 'component' && n.componentType === 'Button'
+    );
+    expect(buttonNodes.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it('should allow hoisting: component used before definition', () => {
+    const input = `
+      project "Hoisting" {
+        screen Main {
+          layout stack {
+            component ButtonGroup
+          }
+        }
+
+        define Component "ButtonGroup" {
+          layout stack(direction: horizontal) {
+            component Button text: "OK"
+            component Button text: "Cancel"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+
+    // Should not throw, hoisting is allowed
+    expect(ir.project.screens).toHaveLength(1);
+    
+    // Verify ButtonGroup was expanded
+    const allNodes = Object.values(ir.project.nodes);
+    const buttonGroupNodes = allNodes.filter(
+      (n: any) => n.componentType === 'ButtonGroup'
+    );
+    expect(buttonGroupNodes).toHaveLength(0); // All expanded
+  });
+
+  it('should expand component defined before use', () => {
+    const input = `
+      project "GoodOrder" {
+        define Component "ButtonGroup" {
+          layout stack(direction: horizontal) {
+            component Button text: "OK"
+            component Button text: "Cancel"
+          }
+        }
+
+        screen Main {
+          layout stack {
+            component ButtonGroup
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+
+    // Should work fine
+    expect(ir.project.screens).toHaveLength(1);
+    
+    // Verify ButtonGroup was expanded
+    const allNodes = Object.values(ir.project.nodes);
+    const buttonGroupNodes = allNodes.filter(
+      (n: any) => n.componentType === 'ButtonGroup'
+    );
+    expect(buttonGroupNodes).toHaveLength(0); // All expanded
+  });
+
+  it('should throw error for undefined component', () => {
+    const input = `
+      project "UndefinedComponent" {
+        screen Main {
+          layout stack {
+            component UndefinedButton
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    expect(() => generateIR(ast)).toThrow(/Components used but not defined/);
+    expect(() => generateIR(ast)).toThrow(/UndefinedButton/);
+  });
+
+  it('should throw error for multiple undefined components', () => {
+    const input = `
+      project "MultiUndefined" {
+        screen Main {
+          layout stack {
+            component CustomButton
+            component CustomInput
+            component CustomCard
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    expect(() => generateIR(ast)).toThrow(/Components used but not defined/);
+    expect(() => generateIR(ast)).toThrow(/CustomButton/);
+    expect(() => generateIR(ast)).toThrow(/CustomInput/);
+    expect(() => generateIR(ast)).toThrow(/CustomCard/);
+  });
+
+  it('should allow built-in components without definition', () => {
+    const input = `
+      project "BuiltIn" {
+        screen Main {
+          layout stack {
+            component Button text: "Click"
+            component Input placeholder: "Enter"
+            component Heading text: "Title"
+            component Text content: "Body"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+
+    // Should not throw, built-in components are allowed
+    expect(ir.project.screens).toHaveLength(1);
+  });
 });
+
+
