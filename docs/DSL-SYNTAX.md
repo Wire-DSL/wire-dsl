@@ -276,6 +276,95 @@ layout card(padding: lg, gap: md) {
 
 ---
 
+---
+
+## Defined Components
+
+Define reusable custom components to avoid repetition and improve maintainability.
+
+### Syntax
+
+```
+define Component "ComponentName" {
+  // Content: layout or component reference
+}
+```
+
+### Basic Example
+
+```
+define Component "ButtonGroup" {
+  layout stack(direction: horizontal, gap: md) {
+    component Button text: "OK" variant: primary
+    component Button text: "Cancel" variant: secondary
+  }
+}
+
+project "Form App" {
+  theme { ... }
+
+  screen LoginScreen {
+    layout stack(direction: vertical, gap: lg, padding: xl) {
+      component Heading text: "Login"
+      component Input label: "Email" placeholder: "user@example.com"
+      component Input label: "Password" placeholder: "••••••••"
+      
+      component ButtonGroup
+    }
+  }
+}
+```
+
+### Usage Rules
+
+1. **Definitions come first** - Typically place `define Component` before screens
+2. **Can reference other components** - Both built-in and custom
+3. **Can nest layouts** - Define complex patterns once, reuse everywhere
+4. **No parameters** - Components are templates, not functions
+
+### Common Patterns
+
+#### Form Field Pattern
+```
+define Component "FormField" {
+  layout stack(direction: vertical, gap: sm) {
+    component Label text: "Field Label"
+    component Input placeholder: "Enter value..."
+  }
+}
+```
+
+#### Card Pattern
+```
+define Component "ProductCard" {
+  layout card(padding: md, gap: md, radius: md) {
+    component Image placeholder: "square" height: 200
+    component Heading text: "Product Name"
+    component Text content: "Product description"
+    component Button text: "View Details" variant: primary
+  }
+}
+```
+
+#### Stat Container
+```
+define Component "MetricBox" {
+  layout panel(padding: lg) {
+    component Heading text: "Metric Name"
+    component StatCard title: "Value" value: "1,234"
+  }
+}
+```
+
+### Notes
+
+- Defined components are expanded at compile-time (no runtime overhead)
+- Component definitions are resolved before IR generation
+- Circular references in components are detected and reported as errors
+- Components used but not defined will generate an error listing all undefined references
+
+---
+
 ## Components
 
 Individual wireframe elements.
