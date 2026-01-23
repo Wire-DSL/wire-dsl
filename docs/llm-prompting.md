@@ -84,13 +84,13 @@ layout grid(columns: 12, gap: sm) {
 - **Input**: `label?` (string), `placeholder?` (string). Ej: `component Input label: "Email" placeholder: "user@example.com"`
 - **Textarea**: `label?` (string), `placeholder?` (string), `rows?` (number, default 4). Ej: `component Textarea label: "Bio" rows: 4`
 - **Select**: `label?` (string), `options?` (array/CSV), `placeholder?` (string). Ej: `component Select label: "Role" options: "Admin,User"`
-- **Button**: `text` (string, req), `variant?` (primary|secondary|ghost, default secondary), `onClick?` (goto("Screen")). Ej: `component Button text: "Save" variant: primary`
+- **Button**: `text` (string, req), `variant?` (primary|secondary|ghost, default secondary). Ej: `component Button text: "Save" variant: primary`
 - **IconButton**: `icon` (string, req). Ej: `component IconButton icon: "search"`
 - **SidebarMenu**: `items` (array/CSV, req), `active?` (number, índice del item activo, default 0). Ej: `component SidebarMenu items: "Home,Users,Settings" active: 1`
 - **Topbar**: `title?` (string). Ej: `component Topbar title: "Dashboard"`
 - **Breadcrumbs**: `items` (array/CSV, req), `separator?` (string, default "/"). Ej: `component Breadcrumbs items: "Home,Users,Detail" separator: ">"`
 - **Tabs**: `items` (array/CSV, req), `activeIndex?` (number, default 0). Ej: `component Tabs items: "Profile,Settings" activeIndex: 1`
-- **Table**: `columns` (array/CSV, req), `rows?` (number, default 5), `pagination?` (true|false, default false), `pages?` (number, default 5), `paginationAlign?` (left|center|right, default right), `rowHeight?` (number, default 40), `onRowClick?` (goto("Screen")). Ej: `component Table columns: "Name,Email,Status" rows: 6 pagination: true pages: 4`
+- **Table**: `columns` (array/CSV, req), `rows?` (number, default 5), `pagination?` (true|false, default false), `pages?` (number, default 5), `paginationAlign?` (left|center|right, default right), `rowHeight?` (number, default 40). Ej: `component Table columns: "Name,Email,Status" rows: 6 pagination: true pages: 4`
 - **List**: `items` (array/CSV, req). Ej: `component List items: "Item 1,Item 2,Item 3"`
 - **Panel**: `title?` (string), `height?` (number px). Ej: `component Panel title: "User Info" height: 240`
 - **Card**: `title?` (string). Ej: `component Card title: "Stats"`

@@ -268,7 +268,7 @@ component <Tipo> <propiedades>
 **Sintaxis de propiedades**:
 
 ```
-component Button text: "Click me" variant: primary onClick: goto("NextScreen")
+component Button text: "Click me" variant: primary
 ```
 
 ---
@@ -312,7 +312,6 @@ component Tabs items: ["Profile", "Settings", "Logs"]
 component Table
   columns: ["Name", "Email", "Status"]
   rowsMock: 8
-  onRowClick: goto("UserDetail")
 
 component List items: ["Item 1", "Item 2", "Item 3"]
 ```
@@ -378,32 +377,6 @@ project "MyApp" {
 - `base`: fuente estándar
 - `title`: fuente para títulos
 - `mono`: monoespaciada
-
----
-
-## Eventos e Interacciones
-
-### Navegación
-
-```
-component Button
-  text: "View details"
-  onClick: goto("UserDetail")
-
-component Table
-  columns: ["Name", "Email"]
-  onRowClick: goto("UserDetail")
-```
-
-### Tipos de eventos
-
-- `onClick`: click en un elemento
-- `onRowClick`: click en fila de tabla
-- (Futuro: `onSubmit`, `onChange`, etc.)
-
-### Acciones
-
-- `goto("ScreenId")`: navega a otra pantalla
 
 ---
 

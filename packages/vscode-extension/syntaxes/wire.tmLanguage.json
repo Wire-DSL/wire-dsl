@@ -75,7 +75,7 @@
       "patterns": [
         {
           "name": "variable.other.property.wire",
-          "match": "\\b(title|subtitle|text|content|label|placeholder|items|active|variant|user|icon|rows|columns|span|sidebar|direction|gap|padding|background|color|align|radius|border|mock|density|spacing|stroke|font|onItemClick|onRowClick|onClick|disabled|required|readonly|type|value|src|alt|height|itemsMock|density|dismissible)\\b"
+          "match": "\\b(title|subtitle|text|content|label|placeholder|items|active|variant|user|icon|rows|columns|span|sidebar|direction|gap|padding|background|color|align|radius|border|mock|density|spacing|stroke|font|disabled|required|readonly|type|value|src|alt|height|itemsMock|dismissible)\\b"
         }
       ]
     },

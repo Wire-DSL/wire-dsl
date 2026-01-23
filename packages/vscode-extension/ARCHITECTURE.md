@@ -174,7 +174,7 @@ class WireCompletionProvider implements vscode.CompletionItemProvider {
 export const COMPONENTS = {
   Button: {
     description: 'Interactive button element',
-    properties: ['id', 'label', 'onClick', 'disabled', 'variant', 'size'],
+    properties: ['id', 'label', 'disabled', 'variant', 'size'],
     example: 'Button { label: "Click me" }'
   },
   // ... 40+ components
@@ -203,7 +203,7 @@ export const DOCUMENTATION = {
     description: 'A clickable button component',
     properties: {
       label: 'Text displayed on the button',
-      onClick: 'Handler function for clicks'
+
     },
     examples: [
       'Button { label: "Submit" }',
