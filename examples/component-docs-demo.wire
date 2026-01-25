@@ -1,0 +1,81 @@
+project "Component Demo" {
+  theme {
+    density: "normal"
+    spacing: "md"
+    radius: "md"
+    stroke: "normal"
+    font: "base"
+  }
+
+  /**
+   * Reusable button group for form actions
+   * 
+   * Displays two buttons side by side with proper spacing.
+   * Commonly used for Submit/Cancel patterns.
+   */
+  define Component "ButtonGroup" {
+    layout stack(direction: horizontal, gap: md) {
+      component Button text: "OK" variant: primary
+      component Button text: "Cancel" variant: secondary
+    }
+  }
+
+  /**
+   * Reusable form field component
+   * 
+   * Combines label and input for consistent styling.
+   * Automatically handles spacing and alignment.
+   */
+  define Component "FormField" {
+    layout stack(direction: vertical, gap: sm) {
+      component Label text: "Field"
+      component Input placeholder: "Enter value..."
+    }
+  }
+
+  /**
+   * Product card with image and details
+   * 
+   * Shows product image, name, description, and action button.
+   * Perfect for product catalogs and marketplaces.
+   */
+  define Component "ProductCard" {
+    layout card(padding: md, gap: md, radius: md) {
+      component Image placeholder: "square" height: 200
+      component Heading text: "Product Name"
+      component Text content: "Product description text"
+      component Button text: "View Details" variant: primary
+    }
+  }
+
+  screen LoginScreen {
+    layout stack(direction: vertical, gap: lg, padding: xl) {
+      component Heading text: "Sign In"
+      
+      component FormField
+      component FormField
+      
+      /* Hover over ButtonGroup to see the documentation */
+      component ButtonGroup
+    }
+  }
+
+  screen ProductListScreen {
+    layout stack(gap: md, padding: lg) {
+      component Heading text: "Featured Products"
+      
+      layout grid(columns: 12, gap: md) {
+        cell span: 4 {
+          /* Using defined component with documentation */
+          component ProductCard
+        }
+        cell span: 4 {
+          component ProductCard
+        }
+        cell span: 4 {
+          component ProductCard
+        }
+      }
+    }
+  }
+}

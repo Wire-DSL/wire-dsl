@@ -278,7 +278,38 @@ layout card(padding: lg, gap: md) {
 
 ---
 
-## Defined Components
+## Comments
+
+Wire DSL supports two types of comments:
+
+### Line Comments
+
+```wire
+// This is a line comment
+project "My App" {
+  // Comments can appear anywhere
+  theme { ... }
+}
+```
+
+### Block Comments
+
+```wire
+/* Multi-line block comment
+   can span multiple lines
+   and are useful for longer explanations */
+project "My App" { ... }
+
+/**
+ * Documentation-style block comments
+ * are perfect for documenting components
+ */
+define Component "MyComponent" { ... }
+```
+
+Both comment types are ignored by the compiler and removed from the IR output.
+
+---
 
 Define reusable custom components to avoid repetition and improve maintainability.
 
@@ -287,6 +318,45 @@ Define reusable custom components to avoid repetition and improve maintainabilit
 ```
 define Component "ComponentName" {
   // Content: layout or component reference
+}
+```
+
+### Documentation
+
+You can add documentation to custom components using `/* */` block comments (placed before the definition):
+
+```wire
+/**
+ * Displays a group of action buttons
+ * Useful for form submissions and dialogs
+ */
+define Component "ButtonGroup" {
+  layout stack(direction: horizontal, gap: md) {
+    component Button text: "OK" variant: primary
+    component Button text: "Cancel" variant: secondary
+  }
+}
+```
+
+The documentation will appear:
+- When hovering over the component name in the IDE
+- In IntelliSense tooltips
+- When using Go-to-References to find usages
+
+Multi-line documentation is fully supported with proper formatting:
+
+```wire
+/**
+ * Reusable form field component
+ * 
+ * Combines label and input for consistent styling.
+ * Automatically handles spacing and alignment.
+ */
+define Component "FormField" {
+  layout stack(direction: vertical, gap: sm) {
+    component Label text: "Field Label"
+    component Input placeholder: "Enter value..."
+  }
 }
 ```
 
@@ -324,8 +394,12 @@ project "Form App" {
 
 ### Common Patterns
 
-#### Form Field Pattern
-```
+#### Form Field Pattern with Documentation
+```wire
+/**
+ * Reusable form field with label and input
+ * Ensures consistent styling across forms
+ */
 define Component "FormField" {
   layout stack(direction: vertical, gap: sm) {
     component Label text: "Field Label"
@@ -335,7 +409,11 @@ define Component "FormField" {
 ```
 
 #### Card Pattern
-```
+```wire
+/**
+ * Product display card
+ * Shows image, title, description, and action button
+ */
 define Component "ProductCard" {
   layout card(padding: md, gap: md, radius: md) {
     component Image placeholder: "square" height: 200
@@ -347,7 +425,11 @@ define Component "ProductCard" {
 ```
 
 #### Stat Container
-```
+```wire
+/**
+ * Metric display box with title and value
+ * Used in dashboard screens
+ */
 define Component "MetricBox" {
   layout panel(padding: lg) {
     component Heading text: "Metric Name"
@@ -362,6 +444,8 @@ define Component "MetricBox" {
 - Component definitions are resolved before IR generation
 - Circular references in components are detected and reported as errors
 - Components used but not defined will generate an error listing all undefined references
+- Documentation via `/* */` block comments appears in IDE hover tooltips and helps maintain component clarity
+- Both line comments (`//`) and block comments (`/* */`) are supported throughout Wire DSL
 
 ---
 

@@ -89,17 +89,25 @@ const WhiteSpace = createToken({
   group: Lexer.SKIPPED,
 });
 
-// Comment (ignored)
-const Comment = createToken({
-  name: 'Comment',
+// Line Comment (ignored)
+const LineComment = createToken({
+  name: 'LineComment',
   pattern: /\/\/[^\n]*/,
+  group: Lexer.SKIPPED,
+});
+
+// Block Comment (ignored) - supports /* ... */
+const BlockComment = createToken({
+  name: 'BlockComment',
+  pattern: /\/\*[\s\S]*?\*\//,
   group: Lexer.SKIPPED,
 });
 
 // Token order matters! Keywords before Identifier
 const allTokens = [
   WhiteSpace,
-  Comment,
+  BlockComment, // Must come before LineComment to avoid conflicts
+  LineComment,
   // Keywords (must come before Identifier)
   Project,
   Screen,

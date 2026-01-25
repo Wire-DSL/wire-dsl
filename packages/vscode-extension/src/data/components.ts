@@ -1,6 +1,16 @@
 /**
  * Wire DSL Component Metadata
  * Used for autocompletion and hover documentation
+ * 
+ * SYNC SOURCES:
+ * 1. Built-in components: Check packages/core/src/renderer/index.ts renderComponent() method
+ *    for latest component implementations. Update this file when new components are added.
+ * 2. User-defined components: Syntax is `define Component "Name" { ... }`
+ *    These are parsed and resolved before IR generation.
+ *    Full IDE support (hover, go-to-definition) implemented in Phase 3.
+ * 
+ * Total components: 32 built-in + unlimited user-defined
+ * Last synced: January 25, 2026
  */
 
 export interface ComponentMetadata {
@@ -96,9 +106,13 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
   },
   IconButton: {
     name: 'IconButton',
-    description: 'Icon-only button',
-    properties: ['icon'],
-    example: 'component IconButton icon: "search"',
+    description: 'Icon-only button element',
+    properties: ['icon', 'variant', 'size'],
+    propertyValues: {
+      variant: ['primary', 'secondary', 'ghost'],
+      size: ['xs', 'sm', 'md', 'lg', 'xl'],
+    },
+    example: 'component IconButton icon: "plus" variant: "primary" size: "md"',
   },
 
   // Navigation Components
@@ -142,12 +156,6 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
   },
 
   // Container Components
-  Panel: {
-    name: 'Panel',
-    description: 'Container with border and padding',
-    properties: ['title', 'height'],
-    example: 'component Panel title: "User Info" height: 240',
-  },
   Badge: {
     name: 'Badge',
     description: 'Small badge/tag element',
@@ -169,6 +177,15 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
 
 
   // Visual Components
+  Icon: {
+    name: 'Icon',
+    description: 'Icon element (visual symbol)',
+    properties: ['type', 'size'],
+    propertyValues: {
+      size: ['xs', 'sm', 'md', 'lg', 'xl'],
+    },
+    example: 'component Icon type: "home" size: "md"',
+  },
   Divider: {
     name: 'Divider',
     description: 'Horizontal divider line',
@@ -199,6 +216,26 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     description: 'Sidebar navigation panel',
     properties: ['title', 'items'],
     example: 'component Sidebar title: "Navigation" items: ["Dashboard", "Users"]',
+  },
+
+  // Feedback Components
+  Modal: {
+    name: 'Modal',
+    description: 'Modal dialog window',
+    properties: ['title', 'content'],
+    example: 'component Modal title: "Confirm?" content: "Are you sure?"',
+  },
+  StatCard: {
+    name: 'StatCard',
+    description: 'Statistic card showing metric value',
+    properties: ['title', 'value'],
+    example: 'component StatCard title: "Total Users" value: "1,234"',
+  },
+  Spinner: {
+    name: 'Spinner',
+    description: 'Loading spinner/indicator',
+    properties: [],
+    example: 'component Spinner',
   },
 };
 
@@ -254,10 +291,10 @@ export const PROPERTY_VALUES: Record<string, string[]> = {
 
 // Keywords
 export const KEYWORDS = {
-  topLevel: ['project', 'tokens', 'colors', 'mocks'],
+  topLevel: ['project', 'theme', 'colors', 'mocks', 'define'],
   screen: ['screen'],
   layout: ['layout'],
   component: ['component'],
   cell: ['cell'],
-  special: ['span', 'sidebar', 'columns', 'gap', 'padding', 'direction'],
+  special: ['span', 'sidebar', 'columns', 'gap', 'padding', 'direction', 'Component'],
 };
