@@ -70,7 +70,7 @@ export interface IRComponentNode {
 export interface IRStyle {
   padding?: string;
   gap?: string;
-  align?: 'start' | 'center' | 'end';
+  align?: 'left' | 'center' | 'right' | 'justify';
   justify?: 'start' | 'center' | 'end';
   background?: string;
 }
@@ -92,7 +92,7 @@ const IRThemeSchema = z.object({
 const IRStyleSchema = z.object({
   padding: z.string().optional(),
   gap: z.string().optional(),
-  align: z.enum(['start', 'center', 'end']).optional(),
+  align: z.enum(['left', 'center', 'right', 'justify']).optional(),
   justify: z.enum(['start', 'center', 'end']).optional(),
   background: z.string().optional(),
 });

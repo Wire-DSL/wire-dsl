@@ -217,32 +217,83 @@ export class LayoutEngine {
         }
       });
     } else {
-      // horizontal - calculate height from tallest child
-      let currentX = x;
-      const childWidth = this.calculateChildWidth(children.length, width, gap);
+      // horizontal - apply align property
+      const align = node.style.align || 'justify';
+      
+      if (align === 'justify') {
+        // Default behavior: equal width distribution (100% width)
+        let currentX = x;
+        const childWidth = this.calculateChildWidth(children.length, width, gap);
 
-      // Calculate max height of children
-      let stackHeight = 0;
-      children.forEach((childRef) => {
-        const childNode = this.nodes[childRef.ref];
-        let childHeight = this.getComponentHeight();
+        // Calculate max height of children
+        let stackHeight = 0;
+        children.forEach((childRef) => {
+          const childNode = this.nodes[childRef.ref];
+          let childHeight = this.getComponentHeight();
 
-        if (childNode?.kind === 'component' && childNode.props.height) {
-          childHeight = Number(childNode.props.height);
-        } else if (childNode?.kind === 'container') {
-          childHeight = this.calculateContainerHeight(childNode, childWidth);
-        } else if (childNode?.kind === 'component') {
-          childHeight = this.getIntrinsicComponentHeight(childNode);
+          if (childNode?.kind === 'component' && childNode.props.height) {
+            childHeight = Number(childNode.props.height);
+          } else if (childNode?.kind === 'container') {
+            childHeight = this.calculateContainerHeight(childNode, childWidth);
+          } else if (childNode?.kind === 'component') {
+            childHeight = this.getIntrinsicComponentHeight(childNode);
+          }
+
+          stackHeight = Math.max(stackHeight, childHeight);
+        });
+
+        // Position children with calculated height
+        children.forEach((childRef) => {
+          this.calculateNode(childRef.ref, currentX, y, childWidth, stackHeight, 'stack');
+          currentX += childWidth + gap;
+        });
+      } else {
+        // Custom alignment: left, center, right with natural widths
+        // Calculate natural widths for all children
+        const childWidths: number[] = [];
+        let stackHeight = 0;
+
+        children.forEach((childRef) => {
+          const childNode = this.nodes[childRef.ref];
+          let childWidth = this.getIntrinsicComponentWidth(childNode);
+          let childHeight = this.getComponentHeight();
+
+          if (childNode?.kind === 'component' && childNode.props.height) {
+            childHeight = Number(childNode.props.height);
+          } else if (childNode?.kind === 'component' && childNode.props.width) {
+            childWidth = Number(childNode.props.width);
+          } else if (childNode?.kind === 'container') {
+            childHeight = this.calculateContainerHeight(childNode, childWidth);
+          } else if (childNode?.kind === 'component') {
+            childHeight = this.getIntrinsicComponentHeight(childNode);
+          }
+
+          childWidths.push(childWidth);
+          stackHeight = Math.max(stackHeight, childHeight);
+        });
+
+        // Calculate total content width needed
+        const totalChildWidth = childWidths.reduce((sum, w) => sum + w, 0);
+        const totalGapWidth = gap * Math.max(0, children.length - 1);
+        const totalContentWidth = totalChildWidth + totalGapWidth;
+
+        // Calculate starting X based on alignment
+        let startX = x;
+        if (align === 'center') {
+          startX = x + (width - totalContentWidth) / 2;
+        } else if (align === 'right') {
+          startX = x + width - totalContentWidth;
         }
+        // 'left' uses startX = x (no adjustment)
 
-        stackHeight = Math.max(stackHeight, childHeight);
-      });
-
-      // Position children with calculated height
-      children.forEach((childRef) => {
-        this.calculateNode(childRef.ref, currentX, y, childWidth, stackHeight, 'stack');
-        currentX += childWidth + gap;
-      });
+        // Position children with natural widths
+        let currentX = startX;
+        children.forEach((childRef, index) => {
+          const childWidth = childWidths[index];
+          this.calculateNode(childRef.ref, currentX, y, childWidth, stackHeight, 'stack');
+          currentX += childWidth + gap;
+        });
+      }
     }
   }
 
@@ -599,6 +650,110 @@ export class LayoutEngine {
 
     // Default height
     return this.getComponentHeight();
+  }
+
+  private getIntrinsicComponentWidth(node: IRNode | undefined): number {
+    if (!node || node.kind !== 'component') {
+      // Default width for containers or undefined nodes
+      return 120;
+    }
+
+    // Icon: small fixed width
+    if (node.componentType === 'Icon') {
+      const size = String(node.props.size || 'md');
+      const sizes: Record<string, number> = {
+        sm: 16,
+        md: 24,
+        lg: 32,
+        xl: 40,
+      };
+      return sizes[size] || 24;
+    }
+
+    // IconButton: size + padding
+    if (node.componentType === 'IconButton') {
+      return 40;
+    }
+
+    // Checkbox, Radio: fixed width
+    if (node.componentType === 'Checkbox' || node.componentType === 'Radio') {
+      return 24;
+    }
+
+    // Button: text width + padding (estimate)
+    if (node.componentType === 'Button') {
+      const text = String(node.props.text || '');
+      return Math.max(80, text.length * 8 + 32); // ~8px per char + 32px padding
+    }
+
+    // Label, Text: content-based width (estimate)
+    if (node.componentType === 'Label' || node.componentType === 'Text') {
+      const text = String(node.props.content || node.props.text || '');
+      return Math.max(60, text.length * 8 + 16);
+    }
+
+    // Heading: content-based width
+    if (node.componentType === 'Heading') {
+      const text = String(node.props.text || '');
+      return Math.max(80, text.length * 12 + 16);
+    }
+
+    // Input, Select, Textarea: standard widths
+    if (node.componentType === 'Input' || node.componentType === 'Select') {
+      return 200;
+    }
+
+    if (node.componentType === 'Textarea') {
+      return 200;
+    }
+
+    // Image: responsive, use aspect ratio
+    if (node.componentType === 'Image') {
+      const placeholder = String(node.props.placeholder || 'landscape');
+      const widths: Record<string, number> = {
+        landscape: 300,
+        portrait: 200,
+        square: 200,
+        icon: 64,
+        avatar: 64,
+      };
+      return widths[placeholder] || 300;
+    }
+
+    // Table: wide by default
+    if (node.componentType === 'Table') {
+      return 400;
+    }
+
+    // StatCard, Card: fixed width
+    if (node.componentType === 'StatCard' || node.componentType === 'Card') {
+      return 280;
+    }
+
+    // Avatar, SidebarMenu: fixed widths
+    if (node.componentType === 'Avatar') {
+      const size = String(node.props.size || 'md');
+      const sizes: Record<string, number> = {
+        sm: 32,
+        md: 40,
+        lg: 56,
+        xl: 72,
+      };
+      return sizes[size] || 40;
+    }
+
+    if (node.componentType === 'SidebarMenu') {
+      return 260;
+    }
+
+    // Badge, Chip: small fixed width
+    if (node.componentType === 'Badge' || node.componentType === 'Chip') {
+      const text = String(node.props.text || '');
+      return Math.max(50, text.length * 7 + 16);
+    }
+
+    // Default width: 120px
+    return 120;
   }
 
   private calculateChildHeight(count: number, totalHeight: number, gap: number): number {
