@@ -119,7 +119,7 @@ Containers for organizing components hierarchically.
 
 ### Stack Layout
 
-Stacks elements vertically or horizontally with configurable spacing.
+Stacks elements vertically or horizontally with configurable spacing and alignment.
 
 ```
 layout stack(direction: vertical, gap: md, padding: lg) {
@@ -133,7 +133,38 @@ layout stack(direction: vertical, gap: md, padding: lg) {
 - `direction`: `vertical` (default) | `horizontal`
 - `gap`: spacing between children (`xs`=4px, `sm`=8px, `md`=16px, `lg`=24px, `xl`=32px)
 - `padding`: internal padding (`xs`/`sm`/`md`/`lg`/`xl`; default: none)
-- `align`: alignment (`start`/`center`/`end`)
+- `align`: horizontal alignment for `direction: horizontal` only
+  - `justify` (default): Equal width, fills 100%
+  - `left`: Natural width, grouped left
+  - `center`: Natural width, centered
+  - `right`: Natural width, grouped right
+
+**Examples**:
+
+Horizontal stack with equal width (default):
+```
+layout stack(direction: horizontal, gap: md) {
+  component Button text: "Save"
+  component Button text: "Cancel"
+  component Button text: "Delete"
+}
+```
+
+Horizontal stack with right-aligned buttons:
+```
+layout stack(direction: horizontal, gap: md, align: "right") {
+  component Button text: "Back"
+  component Button text: "Next" variant: primary
+}
+```
+
+Horizontal stack with centered content:
+```
+layout stack(direction: horizontal, gap: md, align: "center") {
+  component Button text: "Agree"
+  component Button text: "Disagree"
+}
+```
 
 **⚠️ Important**: Layouts without explicit padding default to **0px** (no inheritance from project theme).
 

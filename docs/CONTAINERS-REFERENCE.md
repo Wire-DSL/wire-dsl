@@ -43,7 +43,7 @@ layout stack(direction: vertical, gap: md, padding: lg) {
 | `direction` | string | `vertical`, `horizontal` | `vertical` | Stack direction |
 | `gap` | string | `xs`, `sm`, `md`, `lg`, `xl` | `md` | Spacing between children |
 | `padding` | string | `xs`, `sm`, `md`, `lg`, `xl` | none | Internal padding |
-| `align` | string | `start`, `center`, `end` | `start` | Child alignment |
+| `align` | string | `justify`, `left`, `center`, `right` | `justify` | Horizontal alignment (horizontal stacks only) |
 
 ### Spacing Values
 
@@ -65,7 +65,7 @@ layout stack(direction: vertical, gap: md) {
 }
 ```
 
-**Horizontal Stack**:
+**Horizontal Stack with Equal Width (Default)**:
 ```
 layout stack(direction: horizontal, gap: md, padding: md) {
   component Button text: "Save" variant: primary
@@ -73,21 +73,89 @@ layout stack(direction: horizontal, gap: md, padding: md) {
   component Button text: "Delete" variant: ghost
 }
 ```
+All buttons divide the width equally, filling 100% of the container.
 
-**Centered Stack**:
+**Horizontal Stack - Left Aligned**:
 ```
-layout stack(direction: vertical, gap: lg, align: center, padding: xl) {
+layout stack(direction: horizontal, gap: md, align: "left") {
+  component Button text: "Save" variant: primary
+  component Button text: "Cancel"
+  component Button text: "Reset"
+}
+```
+Buttons group on the left with their natural width, useful for left-aligned action bars.
+
+**Horizontal Stack - Center Aligned**:
+```
+layout stack(direction: horizontal, gap: md, align: "center") {
+  component Button text: "Agree" variant: primary
+  component Button text: "Disagree"
+}
+```
+Buttons group in the center with their natural width, ideal for dialogs or confirmations.
+
+**Horizontal Stack - Right Aligned**:
+```
+layout stack(direction: horizontal, gap: md, align: "right") {
+  component Button text: "Back"
+  component Button text: "Next" variant: primary
+}
+```
+Buttons group on the right with their natural width, typical pattern for form navigation or dialog actions.
+
+**Icon Alignment Examples**:
+```
+layout stack(direction: horizontal, gap: 8, align: "left") {
+  component Icon type: "home"
+  component Icon type: "search"
+  component Icon type: "settings"
+}
+
+layout stack(direction: horizontal, gap: 8, align: "center") {
+  component Icon type: "heart"
+  component Icon type: "star"
+}
+
+layout stack(direction: horizontal, gap: 8, align: "right") {
+  component Icon type: "download"
+  component Icon type: "share"
+}
+```
+
+**Vertical Stack with Centered Content**:
+```
+layout stack(direction: vertical, gap: lg, padding: xl) {
   component Heading title: "Welcome"
   component Text content: "Get started with our platform"
   component Button text: "Sign Up" variant: primary
 }
 ```
 
+### Horizontal Stack Alignment
+
+The `align` property controls how children are distributed horizontally in `direction: horizontal` stacks:
+
+| Value | Behavior | Use Case |
+|-------|----------|----------|
+| `justify` (default) | Equal width, fills 100% | Standard layouts, button groups |
+| `left` | Natural widths, grouped left | Left-aligned action bars |
+| `center` | Natural widths, centered | Dialogs, centered confirmations |
+| `right` | Natural widths, grouped right | Form navigation, right-aligned actions |
+
+**Key Behaviors**:
+- **`justify`**: All children get equal width. The traditional "100% width distribution" behavior.
+- **`left`, `center`, `right`**: Children use their natural intrinsic width (based on content, component type, etc.). The remaining space is used for alignment.
+- **Gap**: Always applied between children in all alignment modes.
+
 ### Important Notes
 
 ⚠️ **Padding Inheritance**: Stacks without explicit padding have **0px padding by default** (no inheritance from project theme)
 
+⚠️ **Align in Horizontal Stacks Only**: The `align` property only affects `direction: horizontal` stacks. For vertical stacks, use nested centered containers if needed.
+
 ⚠️ **Nesting**: Avoid excessive nesting of the same layout type; use Grid for multi-column layouts instead
+
+⚠️ **Natural Width Calculation**: For `left`, `center`, and `right` alignment, component widths are calculated based on component type and content (e.g., Button text length, Icon size, etc.). Explicit `width` properties in components override these calculations.
 
 ---
 
