@@ -453,5 +453,80 @@ pnpm build
 
 ---
 
-**Last Updated**: January 20, 2026  
-**Quick Ref Version**: 1.0
+## 🎨 Wire Render Command
+
+The `wire render` command converts WireDSL `.wire` files to SVG, PNG, or PDF formats.
+
+### Basic Usage
+
+```bash
+# Render to stdout (SVG)
+wire render input.wire
+
+# Render to file
+wire render input.wire --svg output.svg
+wire render input.wire --pdf output.pdf
+wire render input.wire --png output.png
+
+# Render specific screen
+wire render input.wire --screen "Dashboard"
+
+# Watch mode (re-render on file change)
+wire render input.wire --watch
+```
+
+### Options
+
+| Option | Description | Example |
+|--------|-------------|---------|
+| `--svg` | Save as SVG file | `--svg output.svg` |
+| `--pdf` | Save all screens as multipage PDF | `--pdf output.pdf` |
+| `--png` | Save as PNG file(s) | `--png output.png` |
+| `--out` | Auto-detect format from extension | `--out output.pdf` |
+| `--screen` | Render specific screen by name | `--screen "Home"` |
+| `--theme` | Apply theme (light/dark) | `--theme dark` |
+| `--width` | Override viewport width (px) | `--width 1920` |
+| `--height` | Override viewport height (px) | `--height 1080` |
+| `--watch` | Watch for file changes | `--watch` |
+
+### Export Formats
+
+**SVG** (default output)
+- Scalable vector format
+- Best for web, edit-friendly
+- Single file for one screen, directory for multiple
+
+**PNG** (raster image)
+- Fixed resolution image
+- Fast to share, lightweight
+- Single file for one screen, multiple files for multi-screen
+
+**PDF** (document format)
+- All screens on separate pages
+- Print-friendly
+- Always multipage (one file)
+
+### Multiscreen Handling
+
+```bash
+# Single screen → single file
+wire render app.wire --png output.png
+# Creates: output.png
+
+# Multiple screens → multiple files
+wire render app.wire --png output/
+# Creates: output/app-screen1.png, output/app-screen2.png, ...
+
+# Export to PDF (always single multipage file)
+wire render app.wire --pdf output.pdf
+# Creates: output.pdf (with each screen as a page)
+```
+
+### Architectural Note
+
+As of January 27, 2026, the export functions (SVG, PNG, PDF) have been centralized in the `@wire-dsl/core` package. This enables reuse by other systems (web editor, studio, AI backend) without duplicating export logic. The CLI continues to provide the same interface, maintaining 100% backward compatibility.
+
+---
+
+**Last Updated**: January 27, 2026  
+**Quick Ref Version**: 1.1

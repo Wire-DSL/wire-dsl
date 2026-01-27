@@ -67,10 +67,14 @@ export async function exportMultipagePDF(
   svgs: Array<{ svg: string; width: number; height: number; name: string }>,
   outputPath: string
 ): Promise<void> {
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     // Ensure output directory exists
     const outputDir = path.dirname(outputPath);
-    mkdir(outputDir, { recursive: true }).catch(() => {});
+    try {
+      await mkdir(outputDir, { recursive: true });
+    } catch (error) {
+      // Ignore error if directory already exists
+    }
 
     // Extract actual dimensions from each SVG
     const pagesWithActualDimensions = svgs.map((page) => {

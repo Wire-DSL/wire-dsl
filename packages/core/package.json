@@ -41,7 +41,10 @@
   },
   "dependencies": {
     "chevrotain": "11.1.0",
-    "zod": "4.3.5"
+    "zod": "4.3.5",
+    "pdfkit": "0.17.2",
+    "sharp": "0.34.5",
+    "svg-to-pdfkit": "0.1.8"
   },
   "devDependencies": {
     "@types/node": "25.0.9",

@@ -1,10 +1,31 @@
 import { readFile, mkdir, stat } from 'fs/promises';
 import path from 'path';
-import chalk from 'chalk';
-import ora from 'ora';
 import chokidar from 'chokidar';
-import { LayoutEngine, SVGRenderer, generateIR, parseWireDSL } from '@wire-dsl/core';
-import { exportSVG, exportPNG, exportMultipagePDF } from './exporters';
+import { LayoutEngine, SVGRenderer, generateIR, parseWireDSL, exportSVG, exportPNG, exportMultipagePDF } from '@wire-dsl/core';
+
+// Dynamic imports for ESM modules to handle CJS compatibility
+let modules: { chalk?: any; ora?: any } = {};
+
+async function loadDependencies() {
+  if (!modules.chalk) {
+    const chalkModule = await import('chalk');
+    modules.chalk = chalkModule.default;
+  }
+  if (!modules.ora) {
+    try {
+      const oraModule = await import('ora');
+      modules.ora = oraModule.default;
+    } catch {
+      // Fallback: no-op spinner
+      modules.ora = (msg: string) => ({
+        start: function() { return this; },
+        succeed: function() { return this; },
+        fail: function() { return this; }
+      });
+    }
+  }
+  return modules as { chalk: any; ora: any };
+}
 
 type RenderOptions = {
   out?: string;
@@ -76,6 +97,7 @@ function resolveOutputFormat(options: RenderOptions): {
 export const renderCommand = async (input: string, options: RenderOptions = {}): Promise<void> => {
   const resolvedInputPath = path.resolve(process.cwd(), input);
   const { format, outputPath } = resolveOutputFormat(options);
+  const { chalk, ora } = await loadDependencies();
 
   const renderOnce = async () => {
     const spinner = ora(`Rendering ${input}`).start();
@@ -161,29 +183,49 @@ export const renderCommand = async (input: string, options: RenderOptions = {}):
         );
       } else if (format === 'png') {
         // PNG: requires directory for multiple screens
-        let outputDir = outputPath;
         const isDir = await isDirectory(outputPath);
 
-        if (!isDir && multiScreen) {
+        let filePaths: string[] = [];
+        
+        if (multiScreen && !isDir) {
+          // Multiple screens without directory: use directory of provided path
           spinner.warn('PNG export with multiple screens requires a directory');
-          outputDir = path.dirname(outputPath);
+          const outputDir = path.dirname(outputPath);
+          await mkdir(outputDir, { recursive: true }).catch(() => {});
+
+          for (const screen of renderedScreens) {
+            const sanitizedName = sanitizeScreenName(screen.name);
+            const fileName = `${basename}-${sanitizedName}.png`;
+            const filePath = path.join(outputDir, fileName);
+            await exportPNG(screen.svg, filePath, screen.width, screen.height);
+            filePaths.push(filePath);
+          }
+        } else if (multiScreen || isDir) {
+          // Multiple screens with directory, or single screen into directory
+          const outputDir = isDir ? outputPath : path.dirname(outputPath);
+          await mkdir(outputDir, { recursive: true }).catch(() => {});
+
+          for (const screen of renderedScreens) {
+            const sanitizedName = sanitizeScreenName(screen.name);
+            const fileName = multiScreen
+              ? `${basename}-${sanitizedName}.png`
+              : path.basename(outputPath).endsWith('.png')
+                ? path.basename(outputPath)
+                : `${basename}.png`;
+            const filePath = path.join(outputDir, fileName);
+            await exportPNG(screen.svg, filePath, screen.width, screen.height);
+            filePaths.push(filePath);
+          }
+        } else {
+          // Single screen to file
+          const outputDir = path.dirname(outputPath);
+          await mkdir(outputDir, { recursive: true }).catch(() => {});
+          const screen = renderedScreens[0];
+          await exportPNG(screen.svg, outputPath, screen.width, screen.height);
+          filePaths.push(outputPath);
         }
-
-        await mkdir(outputDir, { recursive: true }).catch(() => {});
-
-        for (const screen of renderedScreens) {
-          const sanitizedName = sanitizeScreenName(screen.name);
-          const fileName = multiScreen
-            ? `${basename}-${sanitizedName}.png`
-            : path.basename(outputPath).endsWith('.png')
-              ? path.basename(outputPath)
-              : `${basename}.png`;
-
-          const filePath = isDir || multiScreen ? path.join(outputDir, fileName) : outputPath;
-
-          await exportPNG(screen.svg, filePath, screen.width, screen.height);
-          renderedFiles.push(filePath);
-        }
+        
+        const renderedFiles = filePaths;
 
         if (renderedFiles.length === 1) {
           spinner.succeed(`PNG written to ${chalk.cyan(renderedFiles[0])}`);

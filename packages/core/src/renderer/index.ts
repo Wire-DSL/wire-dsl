@@ -1599,3 +1599,9 @@ export function buildSVG(component: SVGComponent): string {
   }
   return createSVGElement(component.tag, component.attrs, children);
 }
+
+// ============================================================================
+// EXPORTERS
+// ============================================================================
+
+export { exportPNG, exportMultipagePDF, exportSVG } from './exporters';
