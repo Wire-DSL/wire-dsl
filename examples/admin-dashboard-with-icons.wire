@@ -40,16 +40,22 @@ project "Admin Dashboard with Icons" {
 
       // Main Content
       layout stack(direction: vertical, gap: 20, padding: 24) {
-        // Top Bar
+        // Header Bar
         layout stack(direction: horizontal, gap: 16) {
           layout stack(direction: vertical, gap: 4) {
             component Heading text: "Dashboard"
             component Text content: "Welcome back, Admin"
           }
           layout stack(direction: horizontal, gap: 12) {
-              component IconButton icon: "bell" variant: "default" size: "sm"
-              component IconButton icon: "user" variant: "default" size: "sm"
-          cell span: 3 {
+            component IconButton icon: "bell" variant: "default" size: "sm"
+            component IconButton icon: "user" variant: "default" size: "sm"
+          }
+        }
+
+        // Stats Cards Grid
+        layout grid(columns: 4, gap: 16) {
+          // Total Users Card
+          cell span: 1 {
             layout card(padding: 16, gap: 8) {
               layout stack(direction: horizontal, gap: 12) {
                 layout stack(direction: vertical, gap: 8) {
@@ -63,7 +69,7 @@ project "Admin Dashboard with Icons" {
           }
 
           // Active Sessions Card
-          cell span: 3 {
+          cell span: 1 {
             layout card(padding: 16, gap: 8) {
               layout stack(direction: horizontal, gap: 12) {
                 layout stack(direction: vertical, gap: 8) {
@@ -77,7 +83,7 @@ project "Admin Dashboard with Icons" {
           }
 
           // Revenue Card
-          cell span: 3 {
+          cell span: 1 {
             layout card(padding: 16, gap: 8) {
               layout stack(direction: horizontal, gap: 12) {
                 layout stack(direction: vertical, gap: 8) {
@@ -91,7 +97,7 @@ project "Admin Dashboard with Icons" {
           }
 
           // Tasks Card
-          cell span: 3 {
+          cell span: 1 {
             layout card(padding: 16, gap: 8) {
               layout stack(direction: horizontal, gap: 12) {
                 layout stack(direction: vertical, gap: 8) {

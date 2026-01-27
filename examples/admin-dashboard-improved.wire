@@ -17,7 +17,7 @@ project "Admin Dashboard - Improved" {
         }
 
         // SidebarMenu with icons - new feature!
-        component SidebarMenu items: "Dashboard,Users,Reports,Settings" icons: "home,user,bar-chart-2,settings" active: 0
+        component SidebarMenu items: "Dashboard,Users,Reports,Settings" icons: "home,user,filter,settings" active: 0
       }
 
       // Main Content
