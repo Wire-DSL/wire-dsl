@@ -33,7 +33,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Build
-        run: pnpm build
+        run: pnpm build --filter "@wire-dsl/core" --filter "@wire-dsl/cli"
 
       - name: Type check
         run: pnpm type-check
