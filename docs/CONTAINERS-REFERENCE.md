@@ -30,7 +30,7 @@ Arrange elements vertically or horizontally with uniform spacing. The most commo
 
 ```
 layout stack(direction: vertical, gap: md, padding: lg) {
-  component Heading title: "Title"
+  component Heading text: "Title"
   component Text content: "Content"
   component Button text: "Action"
 }
@@ -58,7 +58,7 @@ layout stack(direction: vertical, gap: md, padding: lg) {
 **Vertical Stack (Default)**:
 ```
 layout stack(direction: vertical, gap: md) {
-  component Heading title: "Form"
+  component Heading text: "Form"
   component Input label: "Name"
   component Input label: "Email"
   component Button text: "Submit" variant: primary
@@ -125,7 +125,7 @@ layout stack(direction: horizontal, gap: 8, align: "right") {
 **Vertical Stack with Centered Content**:
 ```
 layout stack(direction: vertical, gap: lg, padding: xl) {
-  component Heading title: "Welcome"
+  component Heading text: "Welcome"
   component Text content: "Get started with our platform"
   component Button text: "Sign Up" variant: primary
 }
@@ -222,7 +222,7 @@ layout grid(columns: 12, gap: md) {
   }
   cell span: 9 {
     layout stack(gap: md) {
-      component Heading title: "Main Content"
+      component Heading text: "Main Content"
       component Text content: "Dashboard content goes here"
     }
   }
@@ -299,7 +299,7 @@ layout split(sidebar: 260, gap: md) {
   }
 
   layout stack(padding: lg) {
-    component Heading title: "Dashboard"
+    component Heading text: "Dashboard"
     layout grid(columns: 12, gap: md) {
       cell span: 6 {
         component StatCard label: "Total Users" value: "1,234"
@@ -316,7 +316,7 @@ layout split(sidebar: 260, gap: md) {
 ```
 layout split(sidebar: 280, gap: lg) {
   layout stack(gap: md, padding: md) {
-    component Heading title: "CMS"
+    component Heading text: "CMS"
     component SidebarMenu items: "Pages,Posts,Media,Settings" active: 1
   }
 
@@ -358,7 +358,7 @@ Or with nested stack:
 ```
 layout panel(padding: lg) {
   layout stack(gap: md) {
-    component Heading title: "Panel Title"
+    component Heading text: "Panel Title"
     component Text content: "Panel content"
   }
 }
@@ -384,7 +384,7 @@ layout panel(padding: md) {
 ```
 layout panel(padding: lg) {
   layout stack(gap: md) {
-    component Heading title: "User Information"
+    component Heading text: "User Information"
     component Text content: "Name: John Doe"
     component Text content: "Email: john@example.com"
     component Text content: "Role: Administrator"
@@ -396,7 +396,7 @@ layout panel(padding: lg) {
 ```
 layout panel(padding: lg) {
   layout stack(gap: md) {
-    component Heading title: "Contact Details"
+    component Heading text: "Contact Details"
     component Input label: "Email"
     component Input label: "Phone"
     component Input label: "Address"
@@ -427,7 +427,7 @@ Create self-contained content cards. Ideal for product displays, user profiles, 
 ```
 layout card(padding: lg, gap: md, radius: md, border: true) {
   component Image placeholder: "square" height: 250
-  component Heading title: "Card Title"
+  component Heading text: "Card Title"
   component Text content: "Card description"
   component Button text: "Action"
 }
@@ -455,7 +455,7 @@ layout card(padding: lg, gap: md, radius: md, border: true) {
 ```
 layout card(padding: md, gap: md, radius: lg, border: true) {
   component Image placeholder: "square" height: 200
-  component Heading title: "Premium Laptop"
+  component Heading text: "Premium Laptop"
   component Text content: "High-performance with latest specs"
   component Badge text: "In Stock" variant: success
   layout stack(direction: horizontal, gap: sm) {
@@ -469,7 +469,7 @@ layout card(padding: md, gap: md, radius: lg, border: true) {
 ```
 layout card(padding: lg, gap: md, radius: md) {
   component Avatar placeholder: "avatar"
-  component Heading title: "John Doe"
+  component Heading text: "John Doe"
   component Text content: "Senior Software Engineer"
   component Text content: "john@example.com"
   component Divider
@@ -484,7 +484,7 @@ layout card(padding: lg, gap: md, radius: md) {
 ```
 layout card(padding: md, gap: md, radius: md, border: true) {
   component Image placeholder: "landscape" height: 180
-  component Heading title: "Getting Started with Wire-DSL"
+  component Heading text: "Getting Started with Wire-DSL"
   component Text content: "Learn how to create interactive wireframes with Wire-DSL in 5 minutes"
   component Badge text: "Tutorial"
   component Link text: "Read More"
@@ -495,7 +495,7 @@ layout card(padding: md, gap: md, radius: md, border: true) {
 ```
 layout card(padding: lg, gap: lg, radius: lg, border: false) {
   component Icon name: "star"
-  component Heading title: "Premium Features"
+  component Heading text: "Premium Features"
   component Text content: "Access all premium features with unlimited usage"
   component List items: "Unlimited projects,Team collaboration,Advanced exports,Priority support"
   component Button text: "Upgrade Now" variant: primary
@@ -519,7 +519,7 @@ layout card(padding: lg, gap: lg, radius: lg, border: false) {
 **Full-Width Section**:
 ```
 layout stack(direction: vertical, gap: lg, padding: lg) {
-  component Heading title: "Section"
+  component Heading text: "Section"
   // Content here
 }
 ```
@@ -555,7 +555,7 @@ layout grid(columns: 12, gap: md, padding: lg) {
 ```
 layout panel(padding: lg) {
   layout stack(gap: md) {
-    component Heading title: "Form"
+    component Heading text: "Form"
     component Input label: "Name"
     component Input label: "Email"
     layout stack(direction: horizontal, gap: md) {
