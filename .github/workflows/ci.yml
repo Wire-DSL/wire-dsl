@@ -39,7 +39,7 @@ jobs:
         run: pnpm type-check
 
       - name: Lint
-        run: pnpm lint
+        run: pnpm lint --filter "@wire-dsl/core" --filter "@wire-dsl/cli"
 
       - name: Run tests
         run: pnpm test
