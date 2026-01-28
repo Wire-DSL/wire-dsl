@@ -54,3 +54,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Enable auto-merge for version packages PR
+        if: steps.changesets.outputs.pullRequestNumber
+        run: |
+          gh pr merge ${{ steps.changesets.outputs.pullRequestNumber }} \
+            --auto \
+            --squash \
+            --delete-branch
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
