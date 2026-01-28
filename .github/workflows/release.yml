@@ -36,6 +36,12 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
+      - name: Configure npm with token
+        run: |
+          npm set //registry.npmjs.org/:_authToken=$NPM_TOKEN
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
       - name: Create Release Pull Request or Publish
         id: changesets
         uses: changesets/action@v1
