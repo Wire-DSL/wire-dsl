@@ -34,16 +34,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Setup npm authentication with OIDC
-        run: |
-          cat > ~/.npmrc << EOF
-          @wire-dsl:registry=https://registry.npmjs.org/
-          registry=https://registry.npmjs.org/
-          //registry.npmjs.org/:_authToken=\${NODE_AUTH_TOKEN}
-          EOF
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
       - name: Create Release Pull Request or Publish
         id: changesets
         uses: changesets/action@v1
