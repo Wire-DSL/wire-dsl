@@ -1,5 +1,11 @@
 # @wire-dsl/core
 
+## 0.1.2
+
+### Patch Changes
+
+- [#5](https://github.com/Wire-DSL/wire-dsl/pull/5) [`a64e3cf`](https://github.com/Wire-DSL/wire-dsl/commit/a64e3cf03dbcfdac692e9b7bfc21b6fe26323150) Thanks [@roxguel](https://github.com/roxguel)! - add package-specific READMEs
+
 ## 0.1.1
 
 ### Patch Changes

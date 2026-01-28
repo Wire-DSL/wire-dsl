@@ -1,5 +1,14 @@
 # @wire-dsl/web
 
+## 0.0.4
+
+### Patch Changes
+
+- [#5](https://github.com/Wire-DSL/wire-dsl/pull/5) [`a64e3cf`](https://github.com/Wire-DSL/wire-dsl/commit/a64e3cf03dbcfdac692e9b7bfc21b6fe26323150) Thanks [@roxguel](https://github.com/roxguel)! - add package-specific READMEs
+
+- Updated dependencies [[`a64e3cf`](https://github.com/Wire-DSL/wire-dsl/commit/a64e3cf03dbcfdac692e9b7bfc21b6fe26323150)]:
+  - @wire-dsl/core@0.1.2
+
 ## 0.0.3
 
 ### Patch Changes
