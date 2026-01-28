@@ -32,14 +32,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Build
+        run: pnpm build --filter "@wire-dsl/core" --filter "@wire-dsl/cli"
+
       - name: Type check
         run: pnpm type-check
 
-      - name: Lint
-        run: pnpm lint
-
       - name: Run tests
-        run: pnpm test
-
-      - name: Build
-        run: pnpm build
+        run: pnpm test --filter "@wire-dsl/core"

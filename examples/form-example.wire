@@ -1,27 +1,51 @@
-project "Contact Form" {
-  tokens density: normal
+project "Form Example" {
+  theme {
+    density: "normal"
+    spacing: "md"
+    radius: "md"
+    stroke: "normal"
+    font: "base"
+  }
 
-  screen ContactForm {
-    layout stack(gap: md, padding: lg) {
-      component Heading text: "Contact Us"
+  screen FormScreen {
+    layout stack(direction: vertical, gap: md, padding: lg) {
+      component Heading text: "User Registration"
       
-      component Input label: "Full Name" placeholder: "John Doe"
-      component Input label: "Email" placeholder: "john@example.com"
-      component Select label: "Topic" options: ["Support", "Sales", "Feedback"]
-      component Textarea label: "Message" rows: 6
-      
-      layout stack(direction: horizontal, gap: sm) {
-        component Button text: "Cancel" variant: secondary
-        component Button text: "Submit" variant: primary onClick: goto("ThankYou")
+      component Text content: "Please fill in all required fields below"
+
+      layout stack(direction: vertical, gap: md, padding: md) {
+        component Input label: "Full Name" placeholder: "John Doe"
+        
+        component Input label: "Email" placeholder: "john@example.com"
+        
+        component Textarea label: "Bio" placeholder: "Tell us about yourself..." rows: 4
+        
+        component Select label: "Country" items: "USA,Canada,Mexico,UK,Spain"
+        
+        layout stack(direction: vertical, gap: sm, padding: md) {
+          component Heading text: "Preferences"
+          
+          component Checkbox label: "Subscribe to newsletter"
+          component Checkbox label: "Enable notifications"
+        }
+        
+        layout stack(direction: vertical, gap: sm, padding: md) {
+          component Heading text: "Account Type"
+          
+          component Radio label: "Personal"
+          component Radio label: "Business"
+        }
+        
+        layout stack(direction: vertical, gap: md) {
+          component Toggle label: "Terms & Conditions"
+        }
+      }
+
+      layout stack(direction: horizontal, gap: md) {
+        component Button text: "Cancel"
+        component Button text: "Submit" variant: primary
       }
     }
   }
-
-  screen ThankYou {
-    layout stack(gap: md, padding: xl) {
-      component Heading text: "Thank You!"
-      component Text content: "We'll get back to you soon."
-      component Button text: "Back to Home" onClick: goto("ContactForm")
-    }
-  }
 }
+

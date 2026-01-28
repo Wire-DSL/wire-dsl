@@ -1,4 +1,4 @@
-import type { IRContract, IRNode, IRTokens } from '../ir/index';
+import type { IRContract, IRNode, IRTheme } from '../ir/index';
 
 /**
  * Layout Engine
@@ -27,6 +27,7 @@ export interface LayoutResult {
 // ============================================================================
 
 const SPACING_VALUES: Record<string, number> = {
+  none: 0,
   xs: 4,
   sm: 8,
   md: 16,
@@ -46,24 +47,24 @@ const DENSITY_HEIGHTS: Record<string, number> = {
 
 export class LayoutEngine {
   private nodes: Record<string, IRNode>;
-  private tokens: IRTokens;
+  private theme: IRTheme;
   private result: LayoutResult = {};
   private viewport: { width: number; height: number };
   private ir: IRContract;
+  private parentContainerTypes: Map<string, string> = new Map(); // Track parent container types
 
   constructor(ir: IRContract) {
     this.ir = ir;
     this.nodes = ir.project.nodes;
-    this.tokens = ir.project.tokens;
+    this.theme = ir.project.theme;
     this.viewport = ir.project.screens[0]?.viewport || { width: 1280, height: 720 };
   }
 
   calculate(): LayoutResult {
     this.result = {};
 
-    // Calculate layout for each screen's root
-    if (this.ir.project.screens.length > 0) {
-      const screen = this.ir.project.screens[0];
+    // Calculate layout for all screens
+    for (const screen of this.ir.project.screens) {
       const rootId = screen.root.ref;
       if (rootId) {
         this.calculateNode(rootId, 0, 0, this.viewport.width, this.viewport.height);
@@ -73,9 +74,21 @@ export class LayoutEngine {
     return this.result;
   }
 
-  private calculateNode(nodeId: string, x: number, y: number, width: number, height: number): void {
+  private calculateNode(
+    nodeId: string,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    parentContainerType?: string
+  ): void {
     const node = this.nodes[nodeId];
     if (!node) return;
+
+    // Track parent container type for padding optimization
+    if (parentContainerType && node.kind === 'container') {
+      this.parentContainerTypes.set(nodeId, parentContainerType);
+    }
 
     if (node.kind === 'container') {
       this.calculateContainer(node, nodeId, x, y, width, height);
@@ -94,14 +107,19 @@ export class LayoutEngine {
   ): void {
     if (node.kind !== 'container') return;
 
-    // Apply padding
+    // Apply padding normally - children handle their own padding
     const padding = this.resolveSpacing(node.style.padding);
     const innerX = x + padding;
     const innerY = y + padding;
     const innerWidth = width - padding * 2;
-    const innerHeight = height - padding * 2;
 
-    // Store container position
+    // For vertical stacks, don't constrain height - let children determine it
+    // For horizontal stacks and grids, use available height
+    const direction = node.params.direction || 'vertical';
+    const isVerticalStack = node.containerType === 'stack' && direction === 'vertical';
+    const innerHeight = isVerticalStack ? height : height - padding * 2;
+
+    // Store container position with width and initial height (may be updated)
     this.result[nodeId] = { x, y, width, height };
 
     // Calculate children based on container type
@@ -115,6 +133,26 @@ export class LayoutEngine {
       case 'split':
         this.calculateSplit(node, innerX, innerY, innerWidth, innerHeight);
         break;
+      case 'panel':
+        this.calculatePanel(node, innerX, innerY, innerWidth, innerHeight);
+        break;
+      case 'card':
+        this.calculateCard(node, innerX, innerY, innerWidth, innerHeight);
+        break;
+    }
+
+    // For vertical stacks and cards, recalculate container height based on actual children positions
+    if (isVerticalStack || node.containerType === 'card') {
+      let containerMaxY = y;
+      node.children.forEach((childRef) => {
+        const childPos = this.result[childRef.ref];
+        if (childPos) {
+          containerMaxY = Math.max(containerMaxY, childPos.y + childPos.height);
+        }
+      });
+      const cardPadding = node.containerType === 'card' ? this.resolveSpacing(node.style.padding) : padding;
+      const calculatedHeight = containerMaxY - y + cardPadding;
+      this.result[nodeId].height = calculatedHeight;
     }
   }
 
@@ -132,12 +170,20 @@ export class LayoutEngine {
         const childNode = this.nodes[childRef.ref];
         let childHeight = this.getComponentHeight();
 
-        // Use actual component height or calculate share of remaining space
+        // If explicit height in props
         if (childNode?.kind === 'component' && childNode.props.height) {
           childHeight = Number(childNode.props.height);
         }
+        // If it's a container (layout), calculate height from its children
+        else if (childNode?.kind === 'container') {
+          childHeight = this.calculateContainerHeight(childNode, width);
+        }
+        // If it's a component, use intrinsic height (pass width for responsive components like Image)
+        else if (childNode?.kind === 'component') {
+          childHeight = this.getIntrinsicComponentHeight(childNode, width);
+        }
 
-        this.calculateNode(childRef.ref, x, currentY, width, childHeight);
+        this.calculateNode(childRef.ref, x, currentY, width, childHeight, 'stack');
         currentY += childHeight;
 
         // Add gap except after last child
@@ -145,16 +191,227 @@ export class LayoutEngine {
           currentY += gap;
         }
       });
-    } else {
-      // horizontal
-      let currentX = x;
-      const childWidth = this.calculateChildWidth(children.length, width, gap);
 
-      children.forEach((childRef) => {
-        this.calculateNode(childRef.ref, currentX, y, childWidth, height);
-        currentX += childWidth + gap;
+      // Post-processing: adjust Y positions based on actual container heights
+      // Some containers (like card) may have their heights recalculated after children are positioned
+      let adjustedY = y;
+      children.forEach((childRef, index) => {
+        const childPos = this.result[childRef.ref];
+        if (childPos) {
+          const deltaY = adjustedY - childPos.y;
+          
+          // Update Y position to the adjusted position
+          childPos.y = adjustedY;
+          
+          // If this child is a container, recursively update all its descendants
+          if (deltaY !== 0) {
+            this.adjustNodeYPositions(childRef.ref, deltaY);
+          }
+          
+          adjustedY += childPos.height;
+          
+          // Add gap except after last child
+          if (index < children.length - 1) {
+            adjustedY += gap;
+          }
+        }
       });
+    } else {
+      // horizontal - apply align property
+      const align = node.style.align || 'justify';
+      
+      if (align === 'justify') {
+        // Default behavior: equal width distribution (100% width)
+        let currentX = x;
+        const childWidth = this.calculateChildWidth(children.length, width, gap);
+
+        // Calculate max height of children
+        let stackHeight = 0;
+        children.forEach((childRef) => {
+          const childNode = this.nodes[childRef.ref];
+          let childHeight = this.getComponentHeight();
+
+          if (childNode?.kind === 'component' && childNode.props.height) {
+            childHeight = Number(childNode.props.height);
+          } else if (childNode?.kind === 'container') {
+            childHeight = this.calculateContainerHeight(childNode, childWidth);
+          } else if (childNode?.kind === 'component') {
+            childHeight = this.getIntrinsicComponentHeight(childNode);
+          }
+
+          stackHeight = Math.max(stackHeight, childHeight);
+        });
+
+        // Position children with calculated height
+        children.forEach((childRef) => {
+          this.calculateNode(childRef.ref, currentX, y, childWidth, stackHeight, 'stack');
+          currentX += childWidth + gap;
+        });
+      } else {
+        // Custom alignment: left, center, right with natural widths
+        // Calculate natural widths for all children
+        const childWidths: number[] = [];
+        let stackHeight = 0;
+
+        children.forEach((childRef) => {
+          const childNode = this.nodes[childRef.ref];
+          let childWidth = this.getIntrinsicComponentWidth(childNode);
+          let childHeight = this.getComponentHeight();
+
+          if (childNode?.kind === 'component' && childNode.props.height) {
+            childHeight = Number(childNode.props.height);
+          } else if (childNode?.kind === 'component' && childNode.props.width) {
+            childWidth = Number(childNode.props.width);
+          } else if (childNode?.kind === 'container') {
+            childHeight = this.calculateContainerHeight(childNode, childWidth);
+          } else if (childNode?.kind === 'component') {
+            childHeight = this.getIntrinsicComponentHeight(childNode);
+          }
+
+          childWidths.push(childWidth);
+          stackHeight = Math.max(stackHeight, childHeight);
+        });
+
+        // Calculate total content width needed
+        const totalChildWidth = childWidths.reduce((sum, w) => sum + w, 0);
+        const totalGapWidth = gap * Math.max(0, children.length - 1);
+        const totalContentWidth = totalChildWidth + totalGapWidth;
+
+        // Calculate starting X based on alignment
+        let startX = x;
+        if (align === 'center') {
+          startX = x + (width - totalContentWidth) / 2;
+        } else if (align === 'right') {
+          startX = x + width - totalContentWidth;
+        }
+        // 'left' uses startX = x (no adjustment)
+
+        // Position children with natural widths
+        let currentX = startX;
+        children.forEach((childRef, index) => {
+          const childWidth = childWidths[index];
+          this.calculateNode(childRef.ref, currentX, y, childWidth, stackHeight, 'stack');
+          currentX += childWidth + gap;
+        });
+      }
     }
+  }
+
+  private calculateContainerHeight(node: IRNode, availableWidth: number): number {
+    if (node.kind !== 'container') return this.getComponentHeight();
+
+    const gap = this.resolveSpacing(node.style.gap);
+    const padding = this.resolveSpacing(node.style.padding);
+    let totalHeight = padding * 2;
+
+    // For grids, calculate height based on row layout, not linear sum
+    if (node.containerType === 'grid') {
+      const columns = Number(node.params.columns) || 12;
+      const colWidth = availableWidth / columns;
+
+      // Calculate row heights
+      let currentRow = 0;
+      let currentCol = 0;
+      let currentRowMaxHeight = 0;
+      const rowHeights: number[] = [0];
+
+      node.children.forEach((childRef) => {
+        const child = this.nodes[childRef.ref];
+        let span = 1;
+        let childHeight = this.getComponentHeight();
+
+        if (child?.kind === 'container' && child.meta?.source === 'cell') {
+          span = Number(child.params.span) || 1;
+        }
+
+        if (child?.kind === 'component') {
+          if (child.props.height) {
+            childHeight = Number(child.props.height);
+          } else {
+            childHeight = this.getIntrinsicComponentHeight(child);
+          }
+        } else if (child?.kind === 'container') {
+          childHeight = this.calculateContainerHeight(child, colWidth * span);
+        }
+
+        // Check if cell fits in current row
+        if (currentCol + span > columns) {
+          rowHeights[currentRow] = currentRowMaxHeight;
+          currentRow++;
+          currentCol = 0;
+          currentRowMaxHeight = 0;
+        }
+
+        currentRowMaxHeight = Math.max(currentRowMaxHeight, childHeight);
+        currentCol += span;
+      });
+
+      // Add last row
+      rowHeights[currentRow] = currentRowMaxHeight;
+
+      // Sum row heights
+      for (let r = 0; r <= currentRow; r++) {
+        totalHeight += rowHeights[r];
+        if (r < currentRow) {
+          totalHeight += gap;
+        }
+      }
+
+      return totalHeight;
+    }
+
+    // For stacks and other containers
+    const direction = node.params.direction || 'vertical';
+
+    if (node.containerType === 'stack' && direction === 'horizontal') {
+      // Horizontal stacks take the tallest child only
+      let maxHeight = 0;
+
+      node.children.forEach((childRef) => {
+        const child = this.nodes[childRef.ref];
+        let childHeight = this.getComponentHeight();
+
+        if (child?.kind === 'component') {
+          if (child.props.height) {
+            childHeight = Number(child.props.height);
+          } else {
+            childHeight = this.getIntrinsicComponentHeight(child);
+          }
+        } else if (child?.kind === 'container') {
+          childHeight = this.calculateContainerHeight(child, availableWidth);
+        }
+
+        maxHeight = Math.max(maxHeight, childHeight);
+      });
+
+      totalHeight += maxHeight;
+      return totalHeight;
+    }
+
+    // Vertical stacks and other containers sum heights linearly
+    node.children.forEach((childRef, index) => {
+      const child = this.nodes[childRef.ref];
+      let childHeight = this.getComponentHeight();
+
+      if (child?.kind === 'component') {
+        if (child.props.height) {
+          childHeight = Number(child.props.height);
+        } else {
+          childHeight = this.getIntrinsicComponentHeight(child);
+        }
+      } else if (child?.kind === 'container') {
+        childHeight = this.calculateContainerHeight(child, availableWidth);
+      }
+
+      totalHeight += childHeight;
+
+      // Add gap except after last child
+      if (index < node.children.length - 1) {
+        totalHeight += gap;
+      }
+    });
+
+    return totalHeight;
   }
 
   private calculateGrid(node: IRNode, x: number, y: number, width: number, height: number): void {
@@ -164,30 +421,74 @@ export class LayoutEngine {
     const gap = this.resolveSpacing(node.style.gap);
     const colWidth = (width - gap * (columns - 1)) / columns;
 
+    // Multi-pass layout:
+    // Pass 1: Calculate heights of all cells
+    const cellHeights: Record<number, number> = {}; // cellIndex -> height
+    node.children.forEach((childRef, cellIndex) => {
+      const child = this.nodes[childRef.ref];
+      let cellHeight = this.getComponentHeight();
+
+      if (child?.kind === 'container') {
+        cellHeight = this.calculateContainerHeight(child, colWidth);
+      } else if (child?.kind === 'component') {
+        if (child.props.height) {
+          cellHeight = Number(child.props.height);
+        } else {
+          cellHeight = this.getIntrinsicComponentHeight(child);
+        }
+      }
+
+      cellHeights[cellIndex] = cellHeight;
+    });
+
+    // Pass 2: Layout cells and determine row heights
     let currentRow = 0;
     let currentCol = 0;
-    const rowHeight = this.getComponentHeight();
+    let currentRowMaxHeight = 0;
+    const rowHeights: number[] = [0];
+    const cellPositions: Array<{ row: number; col: number; span: number }> = [];
 
-    node.children.forEach((childRef) => {
+    node.children.forEach((childRef, cellIndex) => {
       const child = this.nodes[childRef.ref];
       let span = 1;
 
-      // Get span from cell params if it's a cell container
       if (child?.kind === 'container' && child.meta?.source === 'cell') {
         span = Number(child.params.span) || 1;
       }
 
-      const cellWidth = colWidth * span + gap * (span - 1);
-      const cellX = x + currentCol * (colWidth + gap);
-      const cellY = y + currentRow * (rowHeight + gap);
+      // Check if cell fits in current row
+      if (currentCol + span > columns) {
+        // Move to next row
+        rowHeights[currentRow] = currentRowMaxHeight;
+        currentRow++;
+        currentCol = 0;
+        currentRowMaxHeight = 0;
+      }
 
-      this.calculateNode(childRef.ref, cellX, cellY, cellWidth, rowHeight);
+      cellPositions.push({ row: currentRow, col: currentCol, span });
+      currentRowMaxHeight = Math.max(currentRowMaxHeight, cellHeights[cellIndex]);
 
       currentCol += span;
-      if (currentCol >= columns) {
-        currentCol = 0;
-        currentRow++;
+    });
+
+    // Add last row height
+    rowHeights[currentRow] = currentRowMaxHeight;
+
+    // Pass 3: Position all cells using calculated row heights
+    node.children.forEach((childRef, cellIndex) => {
+      const { row, col, span } = cellPositions[cellIndex];
+      const cellHeight = rowHeights[row];
+
+      // Calculate y position (sum of all previous row heights + gaps)
+      let cellY = y;
+      for (let r = 0; r < row; r++) {
+        cellY += rowHeights[r] + gap;
       }
+
+      const cellWidth = colWidth * span + gap * (span - 1);
+      const cellX = x + col * (colWidth + gap);
+
+      this.calculateNode(childRef.ref, cellX, cellY, cellWidth, cellHeight, 'grid');
     });
   }
 
@@ -199,16 +500,61 @@ export class LayoutEngine {
 
     if (node.children.length === 1) {
       // Only one child, give it full width
-      this.calculateNode(node.children[0].ref, x, y, width, height);
+      this.calculateNode(node.children[0].ref, x, y, width, height, 'split');
     } else if (node.children.length >= 2) {
-      // Left sidebar
-      this.calculateNode(node.children[0].ref, x, y, sidebarWidth, height);
+      // Left sidebar - will have its left padding, but right padding handled by gap
+      this.calculateNode(node.children[0].ref, x, y, sidebarWidth, height, 'split');
 
-      // Right content
+      // Right content - will have its right padding, but left padding handled by gap
       const contentX = x + sidebarWidth + gap;
       const contentWidth = width - sidebarWidth - gap;
-      this.calculateNode(node.children[1].ref, contentX, y, contentWidth, height);
+      this.calculateNode(node.children[1].ref, contentX, y, contentWidth, height, 'split');
     }
+  }
+
+  private calculatePanel(node: IRNode, x: number, y: number, width: number, height: number): void {
+    if (node.kind !== 'container' || node.children.length === 0) return;
+
+    // Panel has exactly one child
+    const childRef = node.children[0];
+    this.calculateNode(childRef.ref, x, y, width, height, 'panel');
+  }
+
+  private calculateCard(node: IRNode, x: number, y: number, width: number, height: number): void {
+    if (node.kind !== 'container' || node.children.length === 0) return;
+
+    // Card is a vertical stack container with its own padding
+    const cardPadding = this.resolveSpacing(node.style.padding);
+    const gap = this.resolveSpacing(node.style.gap);
+    const innerCardWidth = width - cardPadding * 2;
+    const children = node.children;
+    let currentY = y + cardPadding;
+
+    children.forEach((childRef, index) => {
+      const childNode = this.nodes[childRef.ref];
+      let childHeight = this.getComponentHeight();
+
+      // If explicit height in props
+      if (childNode?.kind === 'component' && childNode.props.height) {
+        childHeight = Number(childNode.props.height);
+      }
+      // If it's a container (layout), calculate height from its children
+      else if (childNode?.kind === 'container') {
+        childHeight = this.calculateContainerHeight(childNode, innerCardWidth);
+      }
+      // If it's a component, use intrinsic height (pass innerCardWidth for responsive components like Image)
+      else if (childNode?.kind === 'component') {
+        childHeight = this.getIntrinsicComponentHeight(childNode, innerCardWidth);
+      }
+
+      this.calculateNode(childRef.ref, x + cardPadding, currentY, innerCardWidth, childHeight, 'card');
+      currentY += childHeight;
+
+      // Add gap except after last child
+      if (index < children.length - 1) {
+        currentY += gap;
+      }
+    });
   }
 
   private calculateComponent(
@@ -223,7 +569,7 @@ export class LayoutEngine {
 
     // Use explicit dimensions from props if available
     const componentWidth = Number(node.props.width) || width;
-    const componentHeight = Number(node.props.height) || this.getComponentHeight();
+    const componentHeight = Number(node.props.height) || this.getIntrinsicComponentHeight(node, componentWidth);
 
     this.result[nodeId] = {
       x,
@@ -234,12 +580,180 @@ export class LayoutEngine {
   }
 
   private resolveSpacing(spacing?: string): number {
-    if (!spacing) return SPACING_VALUES[this.tokens.spacing];
-    return SPACING_VALUES[spacing] || SPACING_VALUES.md;
+    if (!spacing) return SPACING_VALUES[this.theme.spacing];
+    const value = SPACING_VALUES[spacing];
+    return value !== undefined ? value : SPACING_VALUES.md;
   }
 
   private getComponentHeight(): number {
-    return DENSITY_HEIGHTS[this.tokens.density] || DENSITY_HEIGHTS.normal;
+    return DENSITY_HEIGHTS[this.theme.density] || DENSITY_HEIGHTS.normal;
+  }
+
+  private getIntrinsicComponentHeight(node: IRNode, availableWidth?: number): number {
+    if (node.kind !== 'component') return this.getComponentHeight();
+
+    // Image: calculate height based on aspect ratio and available width
+    if (node.componentType === 'Image') {
+      const placeholder = String(node.props.placeholder || 'landscape');
+      const aspectRatios: Record<string, number> = {
+        landscape: 16 / 9,
+        portrait: 2 / 3,
+        square: 1,
+        icon: 1,
+        avatar: 1,
+      };
+      
+      const ratio = aspectRatios[placeholder] || 16 / 9;
+      
+      // If explicit height is set, use it
+      const explicitHeight = Number(node.props.height);
+      if (!isNaN(explicitHeight) && explicitHeight > 0) {
+        return explicitHeight;
+      }
+      
+      // If available width is provided, calculate responsive height
+      if (availableWidth && availableWidth > 0) {
+        return availableWidth / ratio;
+      }
+      
+      // Fallback: use default 200px
+      return 200;
+    }
+
+    // Table: calculate based on rows if available
+    if (node.componentType === 'Table') {
+      const explicitHeight = Number(node.props.height);
+      if (!isNaN(explicitHeight) && explicitHeight > 0) {
+        return explicitHeight;
+      }
+      const rowCount = Number(node.props.rows || 5);
+      const hasTitle = !!node.props.title;
+      const hasPagination = String(node.props.pagination) === 'true';
+      const headerHeight = 44;
+      const rowHeight = 36;
+      const titleHeight = hasTitle ? 32 : 0;
+      const paginationHeight = hasPagination ? 64 : 0; // 16px gap + 32px buttons + 16px bottom margin
+      return titleHeight + headerHeight + rowCount * rowHeight + paginationHeight;
+    }
+
+    // Taller components
+    if (node.componentType === 'Textarea') return 100;
+    if (node.componentType === 'Modal') return 300;
+    if (node.componentType === 'Card') return 120;
+    if (node.componentType === 'StatCard') return 120;
+    if (node.componentType === 'ChartPlaceholder') return 250;
+    if (node.componentType === 'List') return 180;
+
+    // Standard height components
+    if (node.componentType === 'Topbar') return 56;
+    if (node.componentType === 'Divider') return 1;
+
+    // Default height
+    return this.getComponentHeight();
+  }
+
+  private getIntrinsicComponentWidth(node: IRNode | undefined): number {
+    if (!node || node.kind !== 'component') {
+      // Default width for containers or undefined nodes
+      return 120;
+    }
+
+    // Icon: small fixed width
+    if (node.componentType === 'Icon') {
+      const size = String(node.props.size || 'md');
+      const sizes: Record<string, number> = {
+        sm: 16,
+        md: 24,
+        lg: 32,
+        xl: 40,
+      };
+      return sizes[size] || 24;
+    }
+
+    // IconButton: size + padding
+    if (node.componentType === 'IconButton') {
+      return 40;
+    }
+
+    // Checkbox, Radio: fixed width
+    if (node.componentType === 'Checkbox' || node.componentType === 'Radio') {
+      return 24;
+    }
+
+    // Button: text width + padding (estimate)
+    if (node.componentType === 'Button') {
+      const text = String(node.props.text || '');
+      return Math.max(80, text.length * 8 + 32); // ~8px per char + 32px padding
+    }
+
+    // Label, Text: content-based width (estimate)
+    if (node.componentType === 'Label' || node.componentType === 'Text') {
+      const text = String(node.props.content || node.props.text || '');
+      return Math.max(60, text.length * 8 + 16);
+    }
+
+    // Heading: content-based width
+    if (node.componentType === 'Heading') {
+      const text = String(node.props.text || '');
+      return Math.max(80, text.length * 12 + 16);
+    }
+
+    // Input, Select, Textarea: standard widths
+    if (node.componentType === 'Input' || node.componentType === 'Select') {
+      return 200;
+    }
+
+    if (node.componentType === 'Textarea') {
+      return 200;
+    }
+
+    // Image: responsive, use aspect ratio
+    if (node.componentType === 'Image') {
+      const placeholder = String(node.props.placeholder || 'landscape');
+      const widths: Record<string, number> = {
+        landscape: 300,
+        portrait: 200,
+        square: 200,
+        icon: 64,
+        avatar: 64,
+      };
+      return widths[placeholder] || 300;
+    }
+
+    // Table: wide by default
+    if (node.componentType === 'Table') {
+      return 400;
+    }
+
+    // StatCard, Card: fixed width
+    if (node.componentType === 'StatCard' || node.componentType === 'Card') {
+      return 280;
+    }
+
+    // Avatar, SidebarMenu: fixed widths
+    if (node.componentType === 'Avatar') {
+      const size = String(node.props.size || 'md');
+      const sizes: Record<string, number> = {
+        sm: 32,
+        md: 40,
+        lg: 56,
+        xl: 72,
+      };
+      return sizes[size] || 40;
+    }
+
+    if (node.componentType === 'SidebarMenu') {
+      return 260;
+    }
+
+    // Badge, Chip: small fixed width
+    if (node.componentType === 'Badge' || node.componentType === 'Chip') {
+      const text = String(node.props.text || '');
+      return Math.max(50, text.length * 7 + 16);
+    }
+
+    // Default width: 120px
+    return 120;
   }
 
   private calculateChildHeight(count: number, totalHeight: number, gap: number): number {
@@ -252,6 +766,22 @@ export class LayoutEngine {
     if (count === 0) return 0;
     const totalGap = gap * (count - 1);
     return (totalWidth - totalGap) / count;
+  }
+  private adjustNodeYPositions(nodeId: string, deltaY: number): void {
+    const node = this.nodes[nodeId];
+    if (!node) return;
+
+    // If this is a container, adjust all its children's Y positions
+    if (node.kind === 'container' && node.children) {
+      node.children.forEach((childRef) => {
+        const childPos = this.result[childRef.ref];
+        if (childPos) {
+          childPos.y += deltaY;
+          // Recursively adjust descendants
+          this.adjustNodeYPositions(childRef.ref, deltaY);
+        }
+      });
+    }
   }
 }
 

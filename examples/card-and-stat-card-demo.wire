@@ -1,0 +1,131 @@
+project "Card & StatCard Demo" {
+  theme {
+    spacing: "md"
+    density: "normal"
+    radius: "md"
+    stroke: "normal"
+    font: "base"
+  }
+
+  screen Dashboard {
+    layout stack(direction: vertical, gap: lg, padding: xl) {
+      component Heading text: "Dashboard"
+
+      layout grid(columns: 12, gap: md) {
+        cell span: 2 {
+          layout card(padding: md, gap: sm) {
+            component Heading text: "Revenue"
+            component StatCard title: "Last 30 days" value: "45,230"
+          }
+        }
+
+        cell span: 2 {
+          layout card(padding: md, gap: sm) {
+            component Heading text: "Active Users"
+            component StatCard title: "Total registered" value: "1,234"
+          }
+        }
+
+        cell span: 2 {
+          layout card(padding: md, gap: sm) {
+            component Heading text: "Conversion"
+            component StatCard title: "This month" value: "8.2%"
+          }
+        }
+
+        cell span: 2 {
+          layout card(padding: md, gap: sm) {
+            component Heading text: "Growth Rate"
+            component StatCard title: "Month over month" value: "23.5%"
+          }
+        }
+
+        cell span: 2 {
+          layout card(padding: md, gap: sm) {
+            component Heading text: "New Leads"
+            component StatCard title: "This week" value: "142"
+          }
+        }
+
+        cell span: 2 {
+          layout card(padding: md, gap: sm) {
+            component Heading title: "Avg Order"
+            component StatCard label: "Last quarter" value: "$1,825"
+          }
+        }
+      }
+
+      layout card(padding: lg, gap: md, radius: md, border: true) {
+        component Image placeholder: "landscape" height: 250
+        component Heading title: "Product Showcase"
+        component Text content: "Explore our latest features and improvements"
+        component Button text: "Learn More" variant: primary
+      }
+
+      layout card(padding: md, gap: sm) {
+        component Image placeholder: "portrait" height: 250
+        component Heading title: "Beautiful Villa"
+        component Text content: "3 bedrooms, 2 bathrooms, Downtown area"
+        layout stack(direction: horizontal, gap: md) {
+          component Button text: "Schedule"
+          component Button text: "Save"
+        }
+      }
+    }
+  }
+
+  screen Products {
+    layout stack(direction: vertical, gap: lg, padding: xl) {
+      component Heading title: "Featured Products"
+
+      layout grid(columns: 12, gap: md) {
+        cell span: 6 {
+          layout card(padding: md, gap: md, radius: lg, border: true) {
+            component Image placeholder: "square" height: 250
+            component Heading title: "Product One"
+            component Text content: "High-quality product with premium features"
+            layout stack(direction: horizontal, gap: sm) {
+              component Button text: "View Details"
+              component Button text: "Add to Cart" variant: primary
+            }
+          }
+        }
+
+        cell span: 6 {
+          layout card(padding: md, gap: md, radius: lg, border: true) {
+            component Image placeholder: "square" height: 250
+            component Heading title: "Product Two"
+            component Text content: "Best-selling item with excellent reviews"
+            layout stack(direction: horizontal, gap: sm) {
+              component Button text: "View Details"
+              component Button text: "Add to Cart" variant: primary
+            }
+          }
+        }
+      }
+    }
+  }
+
+  screen Profile {
+    layout stack(direction: vertical, gap: lg, padding: xl) {
+      component Heading title: "User Profile"
+
+      layout card(padding: xl, gap: lg, radius: md) {
+        layout stack(direction: horizontal, gap: lg) {
+          component Image placeholder: "avatar" height: 120
+          layout stack(direction: vertical, gap: sm) {
+            component Heading title: "John Smith"
+            component Text content: "john@example.com"
+            component Text content: "Joined 6 months ago"
+          }
+        }
+        component Divider
+        layout stack(direction: vertical, gap: md) {
+          component Text content: "Location: San Francisco, CA"
+          component Text content: "Interests: Design, Development, Photography"
+        }
+        component Button text: "Edit Profile" variant: primary
+      }
+    }
+  }
+}

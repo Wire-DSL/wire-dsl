@@ -1,0 +1,51 @@
+project "Support Desk" {
+  theme {
+    density: "normal"
+    spacing: "md"
+    radius: "md"
+    stroke: "normal"
+    font: "base"
+  }
+
+  screen Tickets {
+    layout stack(direction: vertical, gap: lg, padding: xl) {
+      component Topbar title: "Support Desk" subtitle: "Ticket overview"
+
+      layout split(sidebar: 260, gap: lg) {
+        layout stack(direction: vertical, gap: md, padding: md) {
+          component Heading text: "Filters"
+          component Select label: "Status" items: "Open,Pending,Closed"
+          component Select label: "Priority" items: "Low,Medium,High"
+          component Select label: "Agent" items: "All agents,John,Jane,Bob"
+          component Divider
+          component Badge text: "SLA 92%" variant: primary
+          component Alert type: "warning" message: "3 tickets near breach"
+          component Checkbox label: "Only escalated"
+        }
+
+        layout stack(direction: vertical, gap: lg, padding: lg) {
+          component Tabs items: "Open,Pending,Closed" activeIndex: 0
+
+          component Alert type: "error" message: "SLA risk in EU region"
+
+          component Table columns: "ID,Subject,Requester,Priority,Updated" rows: 8
+
+          layout stack(direction: vertical, gap: md) {
+            component Divider
+            component Heading title: "Ticket activity"
+            component List items: "Assignment changed,Priority raised,Agent replied,Customer responded"
+          }
+
+          layout stack(direction: vertical, gap: sm, padding: md) {
+            component Heading title: "Reply"
+            component Textarea label: "Response" placeholder: "Type an update for the customer..." rows: 4
+            layout stack(direction: horizontal, gap: md) {
+              component Button text: "Save draft"
+              component Button text: "Send reply" variant: primary
+            }
+          }
+        }
+      }
+    }
+  }
+}

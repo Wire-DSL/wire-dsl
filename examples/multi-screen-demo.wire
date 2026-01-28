@@ -1,0 +1,64 @@
+project "Multi-Screen Demo" {
+  theme {
+    density: "normal"
+    spacing: "md"
+    radius: "md"
+    stroke: "normal"
+    font: "base"
+  }
+
+  screen Dashboard {
+    layout stack(direction: vertical, gap: lg, padding: xl) {
+      component Topbar title: "Dashboard" subtitle: "Welcome back"
+      
+      layout grid(columns: 3, gap: lg) {
+        cell {
+          component StatCard title: "Users" value: "2,543"
+        }
+        cell {
+          component StatCard title: "Revenue" value: "$125K"
+        }
+        cell {
+          component StatCard title: "Sessions" value: "842"
+        }
+      }
+      
+      component Table columns: "ID,User,Status,Amount" rows: 5
+    }
+  }
+
+  screen Settings {
+    layout stack(direction: vertical, gap: lg, padding: xl) {
+      component Topbar title: "Settings"
+      
+      component Alert type: "info" message: "Manage your profile and preferences"
+      
+      component Textarea label: "Bio" placeholder: "Tell us about yourself" rows: 4
+      
+      component Checkbox label: "Enable notifications"
+      
+      layout stack(direction: horizontal, gap: md) {
+        component Button text: "Cancel"
+        component Button text: "Save Changes" variant: primary
+      }
+    }
+  }
+
+  screen Reports {
+    layout stack(direction: vertical, gap: lg, padding: xl) {
+      component Topbar title: "Reports" subtitle: "View analytics"
+      
+      layout grid(columns: 2, gap: lg) {
+        cell {
+          component StatCard title: "Total Sales" value: "$45,200"
+        }
+        cell {
+          component StatCard title: "Growth Rate" value: "+12.5%"
+        }
+      }
+      
+      component List items: "Alice Johnson,Bob Smith,Carol White,David Brown,Eva Martinez"
+    }
+  }
+}
+

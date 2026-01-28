@@ -1,0 +1,311 @@
+project "Icon Demo" {
+  theme {
+    spacing: "md"
+    density: "normal"
+    radius: "md"
+    stroke: "normal"
+    font: "base"
+  }
+
+  screen IconsShowcase {
+    layout stack(direction: vertical, gap: 16, padding: 16) {
+      component Heading text: "Icon Components"
+      component Text content: "Using Feather Icons in Wire-DSL"
+
+      // Basic Icons Row
+      layout panel(padding: md) {
+        layout stack(direction: vertical, gap: 12) {
+        component Heading text: "Basic Icons"
+        
+        layout stack(direction: horizontal, gap: 16) {
+          component Icon type: "home"
+          component Icon type: "search"
+          component Icon type: "settings"
+          component Icon type: "user"
+          component Icon type: "mail"
+        }
+      }
+    }
+
+    // Navigation Icons Row
+    layout panel(padding: md) {
+      layout stack(direction: vertical, gap: 12) {
+        component Heading text: "Navigation Icons"
+        
+        layout stack(direction: horizontal, gap: 16) {
+          component Icon type: "arrow-left"
+          component Icon type: "arrow-right"
+          component Icon type: "chevron-up"
+          component Icon type: "chevron-down"
+          component Icon type: "menu"
+        }
+      }
+    }
+
+    // Action Icons Row
+    layout panel(padding: md) {
+      layout stack(direction: vertical, gap: 12) {
+        component Heading text: "Action Icons"
+        
+        layout stack(direction: horizontal, gap: 16) {
+          component Icon type: "plus"
+          component Icon type: "minus"
+          component Icon type: "edit-2"
+          component Icon type: "trash-2"
+          component Icon type: "copy"
+        }
+      }
+    }
+
+    // Status Icons Row
+    layout panel(padding: md) {
+      layout stack(direction: vertical, gap: 12) {
+        component Heading text: "Status & Feedback Icons"
+        
+        layout stack(direction: horizontal, gap: 16) {
+          component Icon type: "check"
+          component Icon type: "x"
+          component Icon type: "alert-circle"
+          component Icon type: "info"
+          component Icon type: "bell"
+        }
+      }
+    }
+
+    // Utility Icons Row
+    layout panel(padding: md) {
+      layout stack(direction: vertical, gap: 12) {
+        component Heading text: "Utility Icons"
+        
+        layout stack(direction: horizontal, gap: 16) {
+          component Icon type: "download"
+          component Icon type: "upload"
+          component Icon type: "eye"
+          component Icon type: "eye-off"
+          component Icon type: "wifi"
+        }
+      }
+    }
+
+    // IconButton Examples
+    layout panel(padding: md) {
+      layout stack(direction: vertical, gap: 12) {
+        component Heading text: "Icon Buttons"
+        component Text content: "Clickable icon buttons with different variants"
+        
+        layout stack(direction: vertical, gap: 16) {
+          // Default variant buttons
+          layout stack(direction: horizontal, gap: 12) {
+            component IconButton icon: "home" variant: "default"
+            component IconButton icon: "search" variant: "default"
+            component IconButton icon: "settings" variant: "default"
+          }
+
+          // Primary variant buttons
+          layout stack(direction: horizontal, gap: 12) {
+            component IconButton icon: "check" variant: "primary"
+            component IconButton icon: "download" variant: "primary"
+            component IconButton icon: "share-2" variant: "primary"
+          }
+
+          // Danger variant buttons
+          layout stack(direction: horizontal, gap: 12) {
+            component IconButton icon: "trash-2" variant: "danger"
+            component IconButton icon: "x" variant: "danger"
+            component IconButton icon: "alert-circle" variant: "danger"
+          }
+
+          // Disabled buttons
+          layout stack(direction: horizontal, gap: 12) {
+            component IconButton icon: "lock" variant: "default" disabled: "true"
+            component IconButton icon: "eye-off" variant: "default" disabled: "true"
+            component IconButton icon: "settings" variant: "primary" disabled: "true"
+          }
+        }
+      }
+    }
+
+    // Icon sizing example
+    layout panel(padding: md) {
+      layout stack(direction: vertical, gap: 12) {
+        component Heading text: "Icons at Different Sizes"
+        component Text content: "Icons automatically scale to fit their container"
+        
+        layout stack(direction: horizontal, gap: 20) {
+          // Small icon
+          layout panel(padding: md) {
+            layout stack(direction: vertical) {
+              component Icon type: "heart" size: sm
+            }
+          }
+
+          // Medium icon
+          layout panel(padding: md) {
+            layout stack(direction: vertical) {
+              component Icon type: "heart" size: md
+            }
+          }
+
+          // Large icon
+          layout panel(padding: md) {
+            layout stack(direction: vertical) {
+              component Icon type: "heart" size: lg
+            }
+          }
+        }
+      }
+    }
+
+    // Icon colors example
+    layout panel(padding: md) {
+      layout stack(direction: vertical, gap: 12) {
+        component Heading text: "Icon Colors (from theme)"
+        component Text content: "Icons use the text color from the current theme"
+        
+        layout stack(direction: horizontal, gap: 16) {
+          component Icon type: "star"
+          component Icon type: "heart"
+          component Icon type: "wifi"
+          component Icon type: "clock"
+          component Icon type: "map-pin"
+        }
+      }
+    }
+    }
+  }
+
+  screen IconReference {
+    layout stack(direction: vertical, gap: 24, padding: 16) {
+      layout panel(padding: md) {
+        layout stack(direction: vertical, gap: 8) {
+          component Heading text: "Complete Icon Reference"
+          component Text content: "All 50+ available icons from Feather Icons"
+          component Text content: "Usage: component Icon type: \"icon-name\""
+        }
+      }
+
+      layout panel(padding: md) {
+        layout stack(direction: vertical, gap: 16) {
+          component Heading text: "UI Navigation"
+          layout stack(direction: horizontal, gap: 12) {
+            component Icon type: "home"
+            component Icon type: "menu"
+            component Icon type: "x"
+            component Icon type: "chevron-right"
+            component Icon type: "chevron-left"
+          }
+        }
+      }
+
+      layout panel(padding: md) {
+        layout stack(direction: vertical, gap: 16) {
+          component Heading text: "Search & Input"
+          layout stack(direction: horizontal, gap: 12) {
+            component Icon type: "search"
+            component Icon type: "filter"
+          }
+        }
+      }
+
+      layout panel(padding: md) {
+        layout stack(direction: vertical, gap: 16) {
+          component Heading text: "Edit & Actions"
+          layout stack(direction: horizontal, gap: 12) {
+            component Icon type: "edit"
+            component Icon type: "edit-2"
+            component Icon type: "trash"
+            component Icon type: "trash-2"
+            component Icon type: "copy"
+            component Icon type: "download"
+            component Icon type: "upload"
+            component Icon type: "plus"
+            component Icon type: "minus"
+            component Icon type: "check"
+          }
+        }
+      }
+
+      layout panel(padding: md) {
+        layout stack(direction: vertical, gap: 16) {
+          component Heading text: "Notifications & Status"
+          layout stack(direction: horizontal, gap: 12) {
+            component Icon type: "bell"
+            component Icon type: "alert-circle"
+            component Icon type: "alert-triangle"
+            component Icon type: "info"
+          }
+        }
+      }
+
+      layout panel(padding: md) {
+        layout stack(direction: vertical, gap: 16) {
+          component Heading text: "User & Account"
+          layout stack(direction: horizontal, gap: 12) {
+            component Icon type: "user"
+            component Icon type: "user-check"
+            component Icon type: "user-x"
+            component Icon type: "settings"
+            component Icon type: "log-out"
+            component Icon type: "log-in"
+          }
+        }
+      }
+
+      layout panel(padding: md) {
+        layout stack(direction: vertical, gap: 16) {
+          component Heading text: "Communication"
+          layout stack(direction: horizontal, gap: 12) {
+            component Icon type: "mail"
+            component Icon type: "phone"
+            component Icon type: "share"
+            component Icon type: "share-2"
+          }
+        }
+      }
+
+      layout panel(padding: md) {
+        layout stack(direction: vertical, gap: 16) {
+          component Heading text: "Data & Information"
+          layout stack(direction: horizontal, gap: 12) {
+            component Icon type: "calendar"
+            component Icon type: "clock"
+            component Icon type: "map-pin"
+            component Icon type: "wifi"
+            component Icon type: "wifi-off"
+          }
+        }
+      }
+
+      layout panel(padding: md) {
+        layout stack(direction: vertical, gap: 16) {
+          component Heading text: "Media & Visuals"
+          layout stack(direction: horizontal, gap: 12) {
+            component Icon type: "eye"
+            component Icon type: "eye-off"
+            component Icon type: "image"
+          }
+        }
+      }
+
+      layout panel(padding: md) {
+        layout stack(direction: vertical, gap: 16) {
+          component Heading text: "Feedback & Social"
+          layout stack(direction: horizontal, gap: 12) {
+            component Icon type: "heart"
+            component Icon type: "star"
+          }
+        }
+      }
+
+      layout panel(padding: md) {
+        layout stack(direction: vertical, gap: 16) {
+          component Heading text: "Loading & Misc"
+          layout stack(direction: horizontal, gap: 12) {
+            component Icon type: "loader"
+            component Icon type: "help-circle"
+          }
+        }
+      }
+    }
+  }
+}

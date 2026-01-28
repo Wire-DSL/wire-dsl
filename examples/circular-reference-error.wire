@@ -1,0 +1,35 @@
+project "Circular Reference Test" {
+  theme {
+    density: "normal"
+    spacing: "md"
+    radius: "md"
+    stroke: "normal"
+    font: "base"
+  }
+
+  // This will cause a circular reference error at parse time
+  // A → B → C → A creates a cycle
+  define Component "ComponentA" {
+    layout stack {
+      component ComponentB
+    }
+  }
+
+  define Component "ComponentB" {
+    layout stack {
+      component ComponentC
+    }
+  }
+
+  define Component "ComponentC" {
+    layout stack {
+      component ComponentA
+    }
+  }
+
+  screen Main {
+    layout stack {
+      component ComponentA
+    }
+  }
+}

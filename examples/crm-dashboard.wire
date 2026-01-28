@@ -1,0 +1,66 @@
+project "CRM Dashboard" {
+  theme {
+    density: "normal"
+    spacing: "md"
+    radius: "md"
+    stroke: "normal"
+    font: "base"
+  }
+
+  screen CRM {
+    layout stack(direction: vertical, gap: lg, padding: xl) {
+      component Topbar title: "CRM" subtitle: "Customer & deals management"
+
+      layout split(sidebar: 240, gap: lg) {
+        layout stack(direction: vertical, gap: md, padding: md) {
+          component Heading title: "Navigation"
+          component SidebarMenu items: "Dashboard,Contacts,Deals,Tasks,Reports,Settings" active: 0
+        }
+
+        layout stack(direction: vertical, gap: lg, padding: lg) {
+          component Tabs items: "Overview,Pipeline,Activity" activeIndex: 0
+
+          layout grid(columns: 12, gap: md) {
+            cell span: 3 {
+              component Badge text: "$120k MRR" variant: primary
+            }
+            cell span: 3 {
+              component Badge text: "42 Deals Won" variant: success
+            }
+            cell span: 3 {
+              component Badge text: "32% Win Rate" variant: secondary
+            }
+            cell span: 3 {
+              component Badge text: "85 New Leads" variant: primary
+            }
+          }
+
+          layout grid(columns: 12, gap: md) {
+            cell span: 6 {
+              component ChartPlaceholder type: "bar" height: 250
+            }
+            cell span: 6 {
+              component ChartPlaceholder type: "line" height: 250
+            }
+          }
+
+          layout stack(direction: vertical, gap: md) {
+            component Alert type: "warning" message: "2 SLAs at risk"
+            component List items: "New lead created,Deal moved to Proposal,Note added,Task completed,Email sent"
+          }
+
+          component Table columns: "ID,Account,Stage,Owner,Amount" rows: 10
+
+          layout stack(direction: vertical, gap: md, padding: md) {
+            component Heading title: "Notes"
+            component Textarea label: "Add note" placeholder: "Log a quick update..." rows: 3
+            layout stack(direction: horizontal, gap: md) {
+              component Button text: "Save"
+              component Button text: "Share" variant: primary
+            }
+          }
+        }
+      }
+    }
+  }
+}

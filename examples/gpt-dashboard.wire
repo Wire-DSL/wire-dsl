@@ -1,0 +1,49 @@
+project "Auth Platform" {
+  theme {
+    density: "normal"
+    spacing: "md"
+    radius: "md"
+    stroke: "normal"
+    font: "base"
+  }
+
+  screen UsersList {
+    layout split(sidebar: 260, gap: md) {
+      layout stack(direction: vertical, gap: lg, padding: lg) {
+        layout stack(direction: vertical, gap: sm, padding: md) {
+          component Heading title: "Auth Platform"
+          component Text content: "Admin console"
+        }
+        component SidebarMenu items: "User List,Permissions,Settings" active: 0
+      }
+
+      layout stack(direction: vertical, gap: md, padding: lg) {
+        component Breadcrumbs items: "Home,Users"
+
+        layout stack(direction: vertical, gap: sm) {
+          component Heading title: "User List"
+          component Text content: "Manage users and permissions"
+        }
+
+        layout grid(columns: 12, gap: md) {
+          cell span: 3 {
+            component Input label: "Document ID" placeholder: "0.000.000-0"
+          }
+          cell span: 5 {
+            component Input label: "Name" placeholder: "John Doe"
+          }
+          cell span: 3 {
+            component Input label: "Company ID" placeholder: "21000000000"
+          }
+          cell span: 1 align: end {
+            component Button text: "Filter" variant: primary
+          }
+        }
+
+        component Table columns: "Name,Email,Company,Permissions,Actions" rows: 6
+
+        component Text content: "Auth Platform v1.0.0"
+      }
+    }
+  }
+}

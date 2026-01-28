@@ -1,0 +1,45 @@
+project "Screen Background Demo" {
+  theme {
+    density: "comfortable"
+    spacing: "md"
+    radius: "md"
+    stroke: "normal"
+    font: "base"
+  }
+
+  screen Dashboard {
+    layout stack(direction: vertical, gap: lg, padding: xl) {
+      component Topbar title: "Screen with Light Gray Background"
+      
+      layout panel(padding: lg) {
+        layout stack(direction: vertical, gap: md) {
+          component Heading text: "Panel with Default White"
+          layout card(padding: md, gap: md) {
+            component Heading text: "Card inside white panel"
+            component Text content: "Card content"
+          }
+        }
+      }
+
+      layout panel(padding: lg, background: "white") {
+        layout card(padding: md, gap: md) {
+          component Heading text: "Panel with Light Blue"
+          component Text content: "Content here"
+        }
+      }
+    }
+  }
+
+  screen GreenScreen {
+    layout stack(direction: vertical, gap: lg, padding: xl) {
+      component Topbar title: "Screen with Green Background"
+      
+      layout panel(padding: lg) {
+        layout card(padding: md, gap: md) {
+          component Heading text: "Card in white panel on green screen"
+          component Text content: "Content goes here"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,89 @@
+project "Component Composition Demo" {
+  theme {
+    density: "normal"
+    spacing: "md"
+    radius: "md"
+    stroke: "normal"
+    font: "base"
+  }
+
+  // Define reusable components
+  define Component "ButtonGroup" {
+    layout stack(direction: horizontal, gap: md) {
+      component Button text: "OK" variant: primary
+      component Button text: "Cancel" variant: secondary
+    }
+  }
+
+  define Component "FormField" {
+    layout stack(direction: vertical, gap: sm) {
+      component Label text: "Field Label"
+      component Input placeholder: "Enter value..."
+    }
+  }
+
+  define Component "ProductCard" {
+    layout card(padding: md, gap: md, radius: md, border: true) {
+      component Image placeholder: "square" height: 200
+      component Heading text: "Product Name"
+      component Text content: "High-quality product with premium features"
+      component Button text: "View Details" variant: primary
+    }
+  }
+
+  define Component "StatCardBadge" {
+    component StatCard title: "Total Users" value: "2,543"
+  }
+
+  // Use the defined components
+  screen LoginForm {
+    layout stack(direction: vertical, gap: lg, padding: xl) {
+      component Topbar title: "Login"
+
+      layout panel(padding: lg) {
+        layout stack(direction: vertical, gap: lg) {
+          component Heading text: "Sign In"
+          component Text content: "Enter your credentials to continue"
+
+          // Use FormField twice (reusable pattern)
+          component FormField
+          component FormField
+
+          // Use ButtonGroup (reusable pattern)
+          component ButtonGroup
+        }
+      }
+    }
+  }
+
+  screen ProductCatalog {
+    layout stack(direction: vertical, gap: lg, padding: xl) {
+      component Topbar title: "Products" subtitle: "Browse our catalog"
+
+      layout grid(columns: 3, gap: md) {
+        // Reuse ProductCard multiple times
+        cell { component ProductCard }
+        cell { component ProductCard }
+        cell { component ProductCard }
+        cell { component ProductCard }
+        cell { component ProductCard }
+        cell { component ProductCard }
+      }
+    }
+  }
+
+  screen Dashboard {
+    layout stack(direction: vertical, gap: lg, padding: xl) {
+      component Topbar title: "Dashboard"
+
+      layout grid(columns: 12, gap: md) {
+        // Reuse StatCardBadge multiple times
+        cell span: 4 { component StatCardBadge }
+        cell span: 4 { component StatCardBadge }
+        cell span: 4 { component StatCardBadge }
+      }
+
+      component Table columns: "Name,Email,Status,Role" rows: 8
+    }
+  }
+}

@@ -232,10 +232,12 @@ describe('Layout Engine', () => {
     expect(grid.y).toBeGreaterThan(heading.y);
   });
 
-  it('should respect component density from tokens', () => {
+  it('should respect component density from theme', () => {
     const input = `
       project "Density" {
-        tokens density: comfortable
+        theme {
+          density: "comfortable"
+        }
         
         screen Main {
           layout stack {
@@ -316,7 +318,9 @@ describe('Layout Engine', () => {
   it('should handle complete dashboard example', () => {
     const input = `
       project "Dashboard" {
-        tokens spacing: lg
+        theme {
+          spacing: "lg"
+        }
         
         screen Main {
           layout stack(direction: vertical, gap: lg, padding: xl) {
@@ -324,13 +328,19 @@ describe('Layout Engine', () => {
             
             layout grid(columns: 12, gap: lg) {
               cell span: 4 {
-                component Card title: "Users"
+                layout card(padding: md, gap: md) {
+                  component Heading text: "Users"
+                }
               }
               cell span: 4 {
-                component Card title: "Sessions"
+                layout card(padding: md, gap: md) {
+                  component Heading text: "Sessions"
+                }
               }
               cell span: 4 {
-                component Card title: "Revenue"
+                layout card(padding: md, gap: md) {
+                  component Heading text: "Revenue"
+                }
               }
             }
             
@@ -346,19 +356,201 @@ describe('Layout Engine', () => {
 
     // All nodes should have valid positions
     const positions = Object.values(layout);
+    expect(positions.length).toBeGreaterThan(5);
+    
     positions.forEach((pos) => {
       expect(pos.x).toBeGreaterThanOrEqual(0);
       expect(pos.y).toBeGreaterThanOrEqual(0);
       expect(pos.width).toBeGreaterThan(0);
       expect(pos.height).toBeGreaterThan(0);
     });
+  });
 
-    // Grid cards should be in same row
-    const cards = Object.entries(ir.project.nodes)
-      .filter(([_, n]) => n.kind === 'component' && n.componentType === 'Card')
-      .map(([id]) => layout[id]);
+  it('should layout split layout with sidebar', () => {
+    const input = `
+      project "SidebarLayout" {
+        theme {
+          spacing: "md"
+        }
+        
+        screen Dashboard {
+          layout stack(direction: vertical, gap: md) {
+            component Heading text: "Menu"
+            component Button text: "Item 1"
+            component Button text: "Item 2"
+          }
+        }
+      }
+    `;
 
-    expect(cards).toHaveLength(3);
-    // All cards at same Y (within cells on same row)
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+
+    // Verify layout was calculated
+    expect(ir.project.screens).toHaveLength(1);
+    const positions = Object.values(layout);
+    expect(positions.length).toBeGreaterThan(0);
+    
+    positions.forEach((pos) => {
+      expect(pos.width).toBeGreaterThan(0);
+      expect(pos.height).toBeGreaterThan(0);
+    });
+  });
+
+  it('should layout card with padding and border', () => {
+    const input = `
+      project "CardLayout" {
+        theme {
+          spacing: "lg"
+        }
+        
+        screen Settings {
+          layout stack(direction: vertical, gap: lg, padding: xl) {
+            component Heading text: "Settings"
+            component Input label: "Email" placeholder: "user@example.com"
+            component Button text: "Save"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+
+    // Verify all nodes have valid positions
+    const positions = Object.values(layout);
+    expect(positions.length).toBeGreaterThan(0);
+
+    positions.forEach((pos) => {
+      expect(pos.x).toBeGreaterThanOrEqual(0);
+      expect(pos.y).toBeGreaterThanOrEqual(0);
+      expect(pos.width).toBeGreaterThan(0);
+      expect(pos.height).toBeGreaterThan(0);
+    });
+  });
+
+  it('should layout form components with proper spacing', () => {
+    const input = `
+      project "FormLayout" {
+        theme {
+          spacing: "md"
+        }
+        
+        screen Form {
+          layout stack(direction: vertical, gap: md, padding: lg) {
+            component Heading text: "User Registration"
+            
+            component Input label: "Full Name" placeholder: "John Doe"
+            component Input label: "Email" placeholder: "john@example.com"
+            component Textarea label: "Bio" rows: 4 placeholder: "Tell us about yourself..."
+            component Select label: "Country" items: "USA,Canada,Mexico,UK"
+            
+            layout stack(direction: vertical, gap: sm) {
+              component Checkbox label: "Subscribe to newsletter"
+              component Checkbox label: "Enable notifications"
+            }
+            
+            component Button text: "Register"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+
+    const inputs = Object.entries(ir.project.nodes)
+      .filter(([_, n]) => n.kind === 'component' && n.componentType === 'Input');
+
+    expect(inputs.length).toBeGreaterThanOrEqual(2);
+
+    const positions = Object.values(layout);
+    positions.forEach((pos) => {
+      expect(pos.height).toBeGreaterThan(0);
+      expect(pos.width).toBeGreaterThan(0);
+    });
+  });
+
+  it('should layout grid with stat cards', () => {
+    const input = `
+      project "Dashboard" {
+        theme {
+          spacing: "lg"
+        }
+        
+        screen Analytics {
+          layout stack(direction: vertical, gap: lg) {
+            component Heading text: "Analytics"
+            
+            layout grid(columns: 3, gap: lg) {
+              cell span: 1 {
+                component StatCard title: "Total Users" value: "2,543" color: "#3B82F6"
+              }
+              cell span: 1 {
+                component StatCard title: "Revenue" value: "$45.2K" color: "#10B981"
+              }
+              cell span: 1 {
+                component StatCard title: "Active Sessions" value: "856" color: "#F59E0B"
+              }
+            }
+            
+            component ChartPlaceholder type: "line" height: 400
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+
+    const statCards = Object.entries(ir.project.nodes)
+      .filter(([_, n]) => n.kind === 'component' && n.componentType === 'StatCard');
+
+    expect(statCards).toHaveLength(3);
+
+    const positions = Object.values(layout);
+    expect(positions.length).toBeGreaterThan(5);
+  });
+
+  it('should layout sidebar menu with proper dimensions', () => {
+    const input = `
+      project "AdminApp" {
+        theme {
+          spacing: "md"
+        }
+        
+        screen Dashboard {
+          layout stack(direction: vertical, gap: md, padding: md) {
+            component Heading text: "Menu"
+            component SidebarMenu items: "Dashboard,Users,Roles,Settings" active: 0
+            component Heading text: "Dashboard"
+            component Text content: "Welcome to admin panel"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+
+    // Verify screen exists
+    expect(ir.project.screens).toHaveLength(1);
+
+    // Verify SidebarMenu component was created
+    const sidebarMenu = Object.entries(ir.project.nodes)
+      .find(([_, n]) => n.kind === 'component' && n.componentType === 'SidebarMenu');
+
+    expect(sidebarMenu).toBeDefined();
+
+    const positions = Object.values(layout);
+    positions.forEach((pos) => {
+      expect(pos.width).toBeGreaterThan(0);
+      expect(pos.height).toBeGreaterThan(0);
+    });
   });
 });

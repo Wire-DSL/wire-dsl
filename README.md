@@ -39,7 +39,7 @@ import { parseWireDSL } from '@wire-dsl/core';
 
 ## 📖 First Time? Read This
 
-1. **[START_HERE.txt](./START_HERE.txt)** - 2-minute orientation (REQUIRED)
+1. **[SETUP_COMPLETE.txt](./SETUP_COMPLETE.txt)** - 2-minute orientation (REQUIRED)
 2. **[QUICKSTART.md](./QUICKSTART.md)** - Setup guide (5 minutes)
 3. **[MONOREPO.md](./MONOREPO.md)** - How the project is organized (10 minutes)
 
@@ -49,25 +49,35 @@ import { parseWireDSL } from '@wire-dsl/core';
 
 - **[QUICKSTART.md](./QUICKSTART.md)** - Get up and running
 - **[MONOREPO.md](./MONOREPO.md)** - Project structure
-- **[COMMANDS.md](./COMMANDS.md)** - Command reference
+- **[docs/DOCUMENTATION-INDEX.md](./docs/DOCUMENTATION-INDEX.md)** - Complete documentation index
 - **[.github/CONTRIBUTING.md](./.github/CONTRIBUTING.md)** - Contributing guide
 
-**Technical**
+**Technical & Design**
 
-- **[docs/technical-stack.md](./docs/technical-stack.md)** - All tech decisions
-- **[docs/ARCHITECTURE_DETAILED.md](./docs/ARCHITECTURE_DETAILED.md)** - System design
-- **[docs/overview.md](./docs/overview.md)** - Project vision
-- **[docs/dsl-syntax.md](./docs/dsl-syntax.md)** - Language syntax
+- **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)** - System design
+- **[docs/DSL-SYNTAX.md](./docs/DSL-SYNTAX.md)** - Language syntax guide
+- **[docs/THEME-GUIDE.md](./docs/THEME-GUIDE.md)** - Theme system documentation
+- **[docs/LLM-PROMPTING.md](./docs/LLM-PROMPTING.md)** - AI prompt guide for generating `.wire` files
+
+**Component & Container References**
+
+- **[docs/COMPONENTS-REFERENCE.md](./docs/COMPONENTS-REFERENCE.md)** - All 23 components
+- **[docs/CONTAINERS-REFERENCE.md](./docs/CONTAINERS-REFERENCE.md)** - Layout containers
+- **[docs/CLI-REFERENCE.md](./docs/CLI-REFERENCE.md)** - CLI commands
 
 **Specifications**
 
-- **[specs/ir-contract.md](./specs/ir-contract.md)** - Data format
-- **[specs/layout-engine.md](./specs/layout-engine.md)** - Layout algorithms
-- **[specs/components.md](./specs/components.md)** - Component library
+- **[specs/IR-CONTRACT-EN.md](./specs/IR-CONTRACT-EN.md)** - Intermediate representation format
+- **[specs/LAYOUT-ENGINE-EN.md](./specs/LAYOUT-ENGINE-EN.md)** - Layout algorithms
+- **[specs/VALIDATION-RULES-EN.md](./specs/VALIDATION-RULES-EN.md)** - Validation rules
+
+**Planning & Roadmap**
+
+- **[docs/ROADMAP.md](./docs/ROADMAP.md)** - Future features and milestones
 
 **Examples**
 
-- **[examples/](./examples/)** - Complete examples
+- **[examples/](./examples/)** - Complete working examples
 
 ---
 
@@ -82,14 +92,20 @@ WireDSL es una plataforma para crear wireframes declarativos donde:
 
 ### Ejemplo Rápido
 
-```
+```wire
 project "Dashboard" {
-  tokens density: normal
+  theme {
+    density: "normal"
+    spacing: "md"
+    radius: "md"
+    stroke: "normal"
+    font: "base"
+  }
 
   screen Home {
-    layout stack(gap: md, padding: lg) {
-      component Heading text: "Welcome"
-      component Button text: "Get Started" onClick: goto("Dashboard")
+    layout stack(direction: vertical, gap: md, padding: lg) {
+      component Heading title: "Welcome"
+      component Button text: "Get Started"
     }
   }
 }
@@ -109,12 +125,26 @@ project "Dashboard" {
 
 ### 1. Write Wireframe Code
 
-```
-wireframe "Login Form" {
-  container main {
-    input email { label: "Email" }
-    input password { label: "Password" }
-    button submit { text: "Sign In" }
+```wire
+project "Login Form" {
+  theme {
+    density: "normal"
+    spacing: "md"
+    radius: "md"
+    stroke: "normal"
+    font: "base"
+  }
+
+  screen LoginScreen {
+    layout panel(padding: lg, background: "white") {
+      layout stack(direction: vertical, gap: md) {
+        component Heading title: "Sign In"
+        component Input label: "Email" placeholder: "your@email.com"
+        component Input label: "Password" placeholder: "••••••••"
+        component Checkbox label: "Remember me"
+        component Button text: "Sign In" variant: primary
+      }
+    }
   }
 }
 ```
@@ -369,13 +399,20 @@ Inspired by:
 ✅ Monorepo setup complete
 ✅ CI/CD pipelines ready
 ✅ AI strategy defined
-🚧 Core engine (in progress)
-📅 Web editor
-📅 Visual editor
+✅ DSL parser (implemented)
+✅ IR generator (implemented)
+✅ Layout engine (implemented)
+✅ SVG renderer (implemented)
+✅ Web editor MVP (implemented)
+✅ CLI tool (implemented)
+✅ VS Code extension (implemented)
+🚧 AI backend integration (in progress)
+📅 Visual editor (WYSIWYG)
+📅 Collaboration features
 ```
 
 ---
 
-**Last Updated**: January 20, 2026  
-**Status**: 🚀 Open Source, Production-Ready Monorepo
+**Last Updated**: January 23, 2026  
+**Status**: 🚀 Open Source, Production-Ready Monorepo  
 **Next**: `pnpm install && pnpm dev`

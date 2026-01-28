@@ -1,0 +1,67 @@
+project "Panel with Colors" {
+  theme {
+    density: "comfortable"
+    spacing: "md"
+    radius: "md"
+    stroke: "normal"
+    font: "base"
+  }
+
+  screen Dashboard {
+    layout stack(direction: vertical, gap: lg, padding: xl) {
+      component Topbar title: "Panels with Background Colors"
+      
+      layout panel(padding: lg, background: "white") {
+        layout stack(direction: vertical, gap: md) {
+          component Heading text: "Panel with Light Blue Background"
+          layout card(padding: md, gap: md) {
+            component Heading text: "Card inside colored panel"
+            component Text content: "Card content"
+          }
+          component Input placeholder: "Input field"
+        }
+      }
+
+      layout panel(padding: lg, background: "white") {
+        layout stack(direction: vertical, gap: md) {
+          component Heading text: "Panel with White Background"
+          layout card(padding: md, gap: md) {
+            component Heading text: "Card inside white panel"
+            component Text content: "Card content"
+          }
+        }
+      }
+
+      layout panel(padding: md, background: "white") {
+        layout card(padding: md, gap: md) {
+          component Heading text: "Simple Card in White Panel"
+          component Text content: "Content goes here"
+        }
+      }
+
+      layout panel(padding: md, background: "white") {
+        layout card(padding: md, gap: md) {
+          component Heading title: "Another Card"
+          component Text content: "More content"
+        }
+      }
+
+      layout panel(padding: xl) {
+        layout grid(columns: 12, gap: md) {
+          cell span: 6 {
+            layout card(padding: md, gap: md) {
+              component Heading title: "Left Column"
+              component Text content: "Left content"
+            }
+          }
+          cell span: 6 {
+            layout card(padding: md, gap: md) {
+              component Heading title: "Right Column"
+              component Text content: "Right content"
+            }
+          }
+        }
+      }
+    }
+  }
+}

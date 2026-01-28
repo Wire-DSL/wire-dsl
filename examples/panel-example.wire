@@ -1,0 +1,50 @@
+project "Panel Example" {
+  theme {
+    density: "comfortable"
+    spacing: "md"
+    radius: "md"
+    stroke: "normal"
+    font: "base"
+  }
+
+  screen Dashboard {
+    layout stack(direction: vertical, gap: lg, padding: xl) {
+      component Topbar title: "Panel Component Demo"
+      
+      layout panel(padding: lg) {
+        layout stack(direction: vertical, gap: md) {
+          component Heading text: "Panel with Stack"
+          layout card(padding: md, gap: md) {
+            component Heading text: "Card inside Panel"
+            component Text content: "This card is nested in a panel"
+          }
+          component Input placeholder: "Text inside panel"
+        }
+      }
+
+      layout panel(padding: md) {
+        layout card(padding: md, gap: md) {
+          component Heading text: "Simple Card in Panel"
+          component Text content: "Content goes here"
+        }
+      }
+
+      layout panel(padding: xl) {
+        layout grid(columns: 12, gap: md) {
+          cell span: 6 {
+            layout card(padding: md, gap: md) {
+              component Heading text: "Left Column"
+              component Text content: "Left side content"
+            }
+          }
+          cell span: 6 {
+            layout card(padding: md, gap: md) {
+              component Heading text: "Right Column"
+              component Text content: "Right side content"
+            }
+          }
+        }
+      }
+    }
+  }
+}

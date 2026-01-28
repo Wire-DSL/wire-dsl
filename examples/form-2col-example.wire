@@ -1,0 +1,62 @@
+project "Form Example - Two Columns" {
+  theme {
+    density: "normal"
+    spacing: "md"
+    radius: "md"
+    stroke: "normal"
+    font: "base"
+  }
+
+  screen FormScreen {
+    layout stack(direction: vertical, gap: md, padding: lg) {
+      component Heading title: "User Registration"
+      
+      component Text content: "Please fill in all required fields below"
+
+      layout grid(columns: 12, gap: md) {
+        cell span: 6 {
+          component Input label: "Full Name" placeholder: "John Doe"
+        }
+        
+        cell span: 6 {
+          component Input label: "Email" placeholder: "john@example.com"
+        }
+
+        cell span: 12 {
+          component Textarea label: "Bio" placeholder: "Tell us about yourself..." rows: 4
+        }
+        
+        cell span: 6 {
+          component Select label: "Country" items: "USA,Canada,Mexico,UK,Spain"
+        }
+        
+        cell span: 6 {
+          component Select label: "State" items: "California,Texas,New York,Florida"
+        }
+      }
+
+      layout stack(direction: horizontal, gap: lg) {
+        layout stack(direction: vertical, gap: sm, padding: md) {
+          component Heading title: "Preferences"
+          component Checkbox label: "Subscribe to newsletter"
+          component Checkbox label: "Enable notifications"
+        }
+        
+        layout stack(direction: vertical, gap: sm, padding: md) {
+          component Heading title: "Account Type"
+          component Radio label: "Personal"
+          component Radio label: "Business"
+        }
+      }
+
+      layout stack(direction: vertical, gap: md) {
+        component Toggle label: "I agree to Terms & Conditions"
+      }
+
+      layout stack(direction: horizontal, gap: md) {
+        component Button text: "Cancel"
+        component Button text: "Submit" variant: primary
+      }
+    }
+  }
+}

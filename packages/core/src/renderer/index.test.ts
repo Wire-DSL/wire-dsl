@@ -83,7 +83,7 @@ describe('SVG Renderer', () => {
     const svg = renderToSVG(ir, layout);
 
     expect(svg).toContain('Submit');
-    expect(svg).toContain('#3B82F6'); // Primary blue color
+    expect(svg).toContain('rgba(59, 130, 246'); // Primary blue color with opacity
   });
 
   it('should render input component', () => {
@@ -111,7 +111,9 @@ describe('SVG Renderer', () => {
       project "Card" {
         screen Main {
           layout stack {
-            component Card title: "Total Users"
+            layout card(padding: md, gap: md) {
+              component Heading text: "Total Users"
+            }
           }
         }
       }
@@ -123,7 +125,6 @@ describe('SVG Renderer', () => {
     const svg = renderToSVG(ir, layout);
 
     expect(svg).toContain('Total Users');
-    expect(svg).toContain('1,234'); // Mock number
   });
 
   it('should render topbar component', () => {
@@ -292,7 +293,9 @@ describe('SVG Renderer', () => {
   it('should render complete dashboard example', () => {
     const input = `
       project "Dashboard" {
-        tokens spacing: lg
+        theme {
+          spacing: "lg"
+        }
         
         screen Main {
           layout stack(direction: vertical, gap: lg, padding: xl) {
@@ -300,13 +303,19 @@ describe('SVG Renderer', () => {
             
             layout grid(columns: 12, gap: lg) {
               cell span: 4 {
-                component Card title: "Users"
+                layout card(padding: md, gap: md) {
+                  component Heading text: "Users"
+                }
               }
               cell span: 4 {
-                component Card title: "Sessions"
+                layout card(padding: md, gap: md) {
+                  component Heading text: "Sessions"
+                }
               }
               cell span: 4 {
-                component Card title: "Revenue"
+                layout card(padding: md, gap: md) {
+                  component Heading text: "Revenue"
+                }
               }
             }
             
@@ -351,5 +360,218 @@ describe('SVG Renderer', () => {
     expect(svg).toMatch(/^<svg/);
     expect(svg).toMatch(/<\/svg>$/);
     expect(svg).toContain('xmlns="http://www.w3.org/2000/svg"');
+  });
+
+  it('should render StatCard components', () => {
+    const input = `
+      project "Dashboard" {
+        screen Analytics {
+          layout grid(columns: 3, gap: lg) {
+            cell span: 1 {
+              component StatCard title: "Total Users" value: "2,543" color: "#3B82F6"
+            }
+            cell span: 1 {
+              component StatCard title: "Revenue" value: "$45.2K" color: "#10B981"
+            }
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    expect(svg).toContain('Total Users');
+    expect(svg).toContain('2,543');
+    expect(svg).toContain('Revenue');
+    expect(svg).toContain('$45.2K');
+  });
+
+  it('should render form components with labels', () => {
+    const input = `
+      project "Forms" {
+        screen FormScreen {
+          layout stack(direction: vertical, gap: md, padding: lg) {
+            component Input label: "Email" placeholder: "user@example.com"
+            component Textarea label: "Bio" rows: 4 placeholder: "Tell us..."
+            component Select label: "Country" items: "USA,Canada,Mexico"
+            component Checkbox label: "I agree to terms"
+            component Toggle label: "Notifications"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    expect(svg).toContain('Email');
+    expect(svg).toContain('Bio');
+    expect(svg).toContain('Country');
+    expect(svg).toContain('I agree to terms');
+    expect(svg).toContain('Notifications');
+  });
+
+  it('should render split layout with sidebar', () => {
+    const input = `
+      project "Admin" {
+        screen Dashboard {
+          layout split(sidebar: 240, gap: lg) {
+            layout stack(direction: vertical, gap: md) {
+              component Heading text: "Menu"
+              component SidebarMenu items: "Users,Settings"
+            }
+            
+            layout stack(direction: vertical) {
+              component Heading text: "Content"
+              component Text content: "Main area"
+            }
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    expect(svg).toContain('Menu');
+    expect(svg).toContain('Content');
+    expect(svg).toContain('Main area');
+  });
+
+  it('should render panel layout with border', () => {
+    const input = `
+      project "Panels" {
+        screen Settings {
+          layout stack(direction: vertical, gap: lg, padding: xl) {
+            component Heading text: "Account Settings"
+            
+            layout panel(padding: lg, border: true) {
+              layout stack(direction: vertical, gap: md) {
+                component Input label: "Email"
+                component Button text: "Save"
+              }
+            }
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    expect(svg).toContain('Account Settings');
+    expect(svg).toContain('Email');
+    expect(svg).toContain('Save');
+  });
+
+  it('should render Breadcrumbs and Divider', () => {
+    const input = `
+      project "Navigation" {
+        screen Details {
+          layout stack(direction: vertical, gap: md, padding: lg) {
+            component Breadcrumbs items: "Home,Users,User Details"
+            component Divider
+            component Heading text: "User Information"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    expect(svg).toContain('Home');
+    expect(svg).toContain('User Information');
+  });
+
+  it('should render Image component', () => {
+    const input = `
+      project "Gallery" {
+        screen Products {
+          layout grid(columns: 2, gap: lg) {
+            cell span: 1 {
+              layout card(padding: md, gap: md) {
+                component Image placeholder: "landscape" height: 200
+                component Heading text: "Product A"
+              }
+            }
+            cell span: 1 {
+              layout card(padding: md, gap: md) {
+                component Image placeholder: "square" height: 200
+                component Heading text: "Product B"
+              }
+            }
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    expect(svg).toContain('Product A');
+    expect(svg).toContain('Product B');
+  });
+
+  it('should render complete form example', () => {
+    const input = `
+      project "UserForm" {
+        theme {
+          spacing: "md"
+        }
+        
+        screen Register {
+          layout stack(direction: vertical, gap: md, padding: lg) {
+            component Heading text: "User Registration"
+            component Text content: "Please fill in all fields"
+            
+            component Input label: "Full Name" placeholder: "John Doe"
+            component Input label: "Email" placeholder: "john@example.com"
+            component Select label: "Department" items: "Sales,Engineering,Support,Marketing"
+            component Textarea label: "Bio" rows: 4 placeholder: "Tell us..."
+            
+            layout stack(direction: vertical, gap: sm) {
+              component Heading text: "Preferences"
+              component Checkbox label: "Subscribe to newsletter"
+              component Checkbox label: "Receive email updates"
+            }
+            
+            component Divider
+            
+            layout stack(direction: horizontal, gap: md) {
+              component Button text: "Submit" variant: primary
+              component Button text: "Cancel"
+            }
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    expect(svg).toContain('User Registration');
+    expect(svg).toContain('Full Name');
+    expect(svg).toContain('Department');
+    expect(svg).toContain('Bio');
+    expect(svg).toContain('Preferences');
+    expect(svg).toContain('Subscribe to newsletter');
+    expect(svg).toContain('Submit');
+    expect(svg).toContain('Cancel');
   });
 });
