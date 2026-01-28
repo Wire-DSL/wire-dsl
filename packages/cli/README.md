@@ -68,14 +68,12 @@ Write wireframes like this:
 ```wire
 screen "Dashboard" {
   layout grid(columns: 2, gap: 16) {
-    layout card "Revenue" {
-      text "Q4 Revenue"
-      heading "$2.5M"
+    layout card(padding: lg, gap: md, border: true) {
+      component StatCard title: "Q4 Revenue" value: "$2.5M"
     }
     
-    layout card "Users" {
-      text "Active Users"
-      heading "1.2K"
+    layout card(padding: lg, gap: md, border: true) {
+      component StatCard title: "Active Users" value: "1.2K"
     }
   }
 }
