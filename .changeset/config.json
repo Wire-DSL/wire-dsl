@@ -1,6 +1,6 @@
 {
   "$schema": "https://unpkg.com/@changesets/types@latest/changeset.json",
-  "changelog": [["@changesets/changelog-github", { "repo": "wire-dsl/wire-dsl" }]],
+  "changelog": ["@changesets/changelog-github", { "repo": "wire-dsl/wire-dsl" }],
   "commit": false,
   "fixed": [],
   "linked": [],
