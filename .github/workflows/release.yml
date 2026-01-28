@@ -14,7 +14,6 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-      metadata: read
 
     steps:
       - uses: actions/checkout@v4
@@ -39,5 +38,5 @@ jobs:
         with:
           publish: pnpm release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
