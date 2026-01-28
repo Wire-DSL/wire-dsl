@@ -29,8 +29,12 @@ jobs:
         with:
           node-version: 20.x
           cache: 'pnpm'
-          registry-url: 'https://registry.npmjs.org'
-          token: ''
+
+      - name: Configure npm for OIDC
+        run: |
+          npm config set registry https://registry.npmjs.org/
+          npm config set access public
+          echo "NPM configured for OIDC via Trusted Publishers"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
