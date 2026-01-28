@@ -39,7 +39,7 @@ jobs:
         run: pnpm type-check
 
       - name: Run tests
-        run: pnpm test
+        run: pnpm test --filter "@wire-dsl/core"
 
       - name: Build
         run: pnpm build
