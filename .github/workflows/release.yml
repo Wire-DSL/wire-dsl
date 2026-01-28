@@ -29,12 +29,14 @@ jobs:
         with:
           node-version: 20.x
           cache: 'pnpm'
+          registry-url: 'https://registry.npmjs.org'
 
       - name: Configure npm for OIDC
         run: |
-          npm config set registry https://registry.npmjs.org/
           npm config set access public
-          echo "NPM configured for OIDC via Trusted Publishers"
+          npm config set provenance true
+          # Enable OIDC token generation
+          echo "NPM configured with provenance=true for OIDC"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
