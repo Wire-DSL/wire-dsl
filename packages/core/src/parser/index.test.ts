@@ -645,8 +645,10 @@ describe('WireDSL Parser', () => {
     const panel = stack.children[1];
 
     expect(panel.type).toBe('layout');
-    expect(panel.layoutType).toBe('panel');
-    expect(panel.params.border).toBe('true');
+    if (panel.type === 'layout') {
+      expect(panel.layoutType).toBe('panel');
+      expect(panel.params.border).toBe('true');
+    }
   });
 });
 

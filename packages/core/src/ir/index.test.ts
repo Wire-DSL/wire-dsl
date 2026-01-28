@@ -645,7 +645,12 @@ describe('IR Generator', () => {
 
     const components = Object.entries(ir.project.nodes)
       .filter(([_, n]) => n.kind === 'component')
-      .map(([id, node]) => ({ id, type: node.componentType }));
+      .map(([id, node]) => {
+        if (node.kind === 'component') {
+          return { id, type: node.componentType };
+        }
+        return { id, type: 'unknown' };
+      });
 
     expect(components.length).toBeGreaterThanOrEqual(5);
     expect(components.some(c => c.type === 'Input')).toBe(true);
