@@ -617,9 +617,11 @@ describe('IR Generator', () => {
     expect(statCard).toBeDefined();
     if (statCard) {
       const [id, node] = statCard;
-      expect(node.props.title).toBe('Total Users');
-      expect(node.props.value).toBe('2,543');
-      expect(node.props.color).toBe('#3B82F6');
+      if (node.kind === 'component') {
+        expect(node.props.title).toBe('Total Users');
+        expect(node.props.value).toBe('2,543');
+        expect(node.props.color).toBe('#3B82F6');
+      }
     }
   });
 
@@ -678,8 +680,10 @@ describe('IR Generator', () => {
     expect(sidebarMenu).toBeDefined();
     if (sidebarMenu) {
       const [id, node] = sidebarMenu;
-      expect(node.props.items).toBe('Users,Roles,Settings');
-      expect(node.props.active).toBe(1);
+      if (node.kind === 'component') {
+        expect(node.props.items).toBe('Users,Roles,Settings');
+        expect(node.props.active).toBe(1);
+      }
     }
   });
 
@@ -787,8 +791,10 @@ describe('IR Generator', () => {
     expect(image).toBeDefined();
     if (image) {
       const [id, node] = image;
-      expect(node.props.placeholder).toBe('landscape');
-      expect(node.props.height).toBe(300);
+      if (node.kind === 'component') {
+        expect(node.props.placeholder).toBe('landscape');
+        expect(node.props.height).toBe(300);
+      }
     }
   });
 

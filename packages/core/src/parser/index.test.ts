@@ -391,9 +391,11 @@ describe('WireDSL Parser', () => {
     if (cell1.type === 'cell') {
       const statCard = cell1.children[0];
       expect(statCard.type).toBe('component');
-      expect(statCard.componentType).toBe('StatCard');
-      expect(statCard.props.title).toBe('Total Users');
-      expect(statCard.props.value).toBe('2,543');
+      if (statCard.type === 'component') {
+        expect(statCard.componentType).toBe('StatCard');
+        expect(statCard.props.title).toBe('Total Users');
+        expect(statCard.props.value).toBe('2,543');
+      }
     }
   });
 
@@ -414,10 +416,12 @@ describe('WireDSL Parser', () => {
     const textarea = stack.children[0];
 
     expect(textarea.type).toBe('component');
-    expect(textarea.componentType).toBe('Textarea');
-    expect(textarea.props.label).toBe('Bio');
-    expect(textarea.props.rows).toBe(4);
-    expect(textarea.props.placeholder).toBe('Tell us about yourself...');
+    if (textarea.type === 'component') {
+      expect(textarea.componentType).toBe('Textarea');
+      expect(textarea.props.label).toBe('Bio');
+      expect(textarea.props.rows).toBe(4);
+      expect(textarea.props.placeholder).toBe('Tell us about yourself...');
+    }
   });
 
   it('should parse Select component with items', () => {
@@ -438,9 +442,13 @@ describe('WireDSL Parser', () => {
     const select2 = stack.children[1];
 
     expect(select1.type).toBe('component');
-    expect(select1.componentType).toBe('Select');
-    expect(select1.props.items).toBe('USA,Canada,Mexico,UK,Spain');
-    expect(select2.props.default).toBe('Active');
+    if (select1.type === 'component') {
+      expect(select1.componentType).toBe('Select');
+      expect(select1.props.items).toBe('USA,Canada,Mexico,UK,Spain');
+    }
+    if (select2.type === 'component') {
+      expect(select2.props.default).toBe('Active');
+    }
   });
 
   it('should parse SidebarMenu with active state', () => {
@@ -469,9 +477,11 @@ describe('WireDSL Parser', () => {
     if (sidebarStack.type === 'layout') {
       const menu = sidebarStack.children[0];
       expect(menu.type).toBe('component');
-      expect(menu.componentType).toBe('SidebarMenu');
-      expect(menu.props.items).toBe('Users,Roles,Permissions,Audit,Settings');
-      expect(menu.props.active).toBe(0);
+      if (menu.type === 'component') {
+        expect(menu.componentType).toBe('SidebarMenu');
+        expect(menu.props.items).toBe('Users,Roles,Permissions,Audit,Settings');
+        expect(menu.props.active).toBe(0);
+      }
     }
   });
 
@@ -547,10 +557,18 @@ describe('WireDSL Parser', () => {
     const stack = ast.screens[0].layout;
 
     expect(stack.children).toHaveLength(4);
-    expect(stack.children[0].componentType).toBe('Checkbox');
-    expect(stack.children[1].props.checked).toBe('true');
-    expect(stack.children[2].componentType).toBe('Toggle');
-    expect(stack.children[3].props.enabled).toBe('true');
+    if (stack.children[0].type === 'component') {
+      expect(stack.children[0].componentType).toBe('Checkbox');
+    }
+    if (stack.children[1].type === 'component') {
+      expect(stack.children[1].props.checked).toBe('true');
+    }
+    if (stack.children[2].type === 'component') {
+      expect(stack.children[2].componentType).toBe('Toggle');
+    }
+    if (stack.children[3].type === 'component') {
+      expect(stack.children[3].props.enabled).toBe('true');
+    }
   });
 
   it('should parse Divider and Breadcrumbs components', () => {
@@ -570,9 +588,13 @@ describe('WireDSL Parser', () => {
     const stack = ast.screens[0].layout;
 
     expect(stack.children).toHaveLength(3);
-    expect(stack.children[0].componentType).toBe('Breadcrumbs');
-    expect(stack.children[0].props.items).toBe('Users,User Details');
-    expect(stack.children[1].componentType).toBe('Divider');
+    if (stack.children[0].type === 'component') {
+      expect(stack.children[0].componentType).toBe('Breadcrumbs');
+      expect(stack.children[0].props.items).toBe('Users,User Details');
+    }
+    if (stack.children[1].type === 'component') {
+      expect(stack.children[1].componentType).toBe('Divider');
+    }
   });
 
   it('should parse Image component with placeholder', () => {
@@ -593,9 +615,11 @@ describe('WireDSL Parser', () => {
     const image = card.children[0];
 
     expect(image.type).toBe('component');
-    expect(image.componentType).toBe('Image');
-    expect(image.props.placeholder).toBe('square');
-    expect(image.props.height).toBe(200);
+    if (image.type === 'component') {
+      expect(image.componentType).toBe('Image');
+      expect(image.props.placeholder).toBe('square');
+      expect(image.props.height).toBe(200);
+    }
   });
 
   it('should parse panel layout', () => {
