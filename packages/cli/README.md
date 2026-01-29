@@ -19,23 +19,44 @@ npx @wire-dsl/cli [command]
 ### Basic Commands
 
 ```bash
-# Compile a .wire file to interactive HTML
-wire compile input.wire --output output.html
-
-# Watch mode for development
-wire watch input.wire --output output.html
-
-# Generate component definitions
-wire generate input.wire --output components.json
+# Render a .wire file to PDF/SVG
+wire render input.wire --output output.pdf
 
 # Validate .wire file syntax
 wire validate input.wire
+
+# Initialize a new WireDSL project
+wire init my-project
 
 # Show version
 wire --version
 
 # Help
 wire --help
+```
+
+### Command Examples
+
+**Render to PDF:**
+```bash
+wire render dashboard.wire --output dashboard.pdf
+```
+
+**Render to SVG (stdout):**
+```bash
+wire render dashboard.wire
+```
+
+**Validate syntax:**
+```bash
+wire validate dashboard.wire
+```
+
+**Initialize new project:**
+```bash
+wire init
+# or with a name:
+wire init my-wireframes
 ```
 
 ## What is Wire-DSL?
@@ -46,15 +67,13 @@ Write wireframes like this:
 
 ```wire
 screen "Dashboard" {
-  grid(columns: 2, gap: 16) {
-    card "Revenue" {
-      text "Q4 Revenue"
-      heading "$2.5M"
+  layout grid(columns: 2, gap: 16) {
+    layout card(padding: lg, gap: md, border: true) {
+      component StatCard title: "Q4 Revenue" value: "$2.5M"
     }
     
-    card "Users" {
-      text "Active Users"
-      heading "1.2K"
+    layout card(padding: lg, gap: md, border: true) {
+      component StatCard title: "Active Users" value: "1.2K"
     }
   }
 }
