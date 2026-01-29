@@ -1,5 +1,14 @@
 # @wire-dsl/cli
 
+## 0.1.3
+
+### Patch Changes
+
+- [#8](https://github.com/Wire-DSL/wire-dsl/pull/8) [`5783506`](https://github.com/Wire-DSL/wire-dsl/commit/5783506cb8eb9bc3ce7e08596ff826c29092787a) Thanks [@roxguel](https://github.com/roxguel)! - Add packages readmes
+
+- Updated dependencies [[`5783506`](https://github.com/Wire-DSL/wire-dsl/commit/5783506cb8eb9bc3ce7e08596ff826c29092787a), [`6b4c7ae`](https://github.com/Wire-DSL/wire-dsl/commit/6b4c7ae34e702e374e589bb188a47c8ccd86358b)]:
+  - @wire-dsl/core@0.1.3
+
 ## 0.1.2
 
 ### Patch Changes
