@@ -3,7 +3,7 @@ import path from 'path';
 import sharp from 'sharp';
 import PDFDocument from 'pdfkit';
 import SVGtoPDF from 'svg-to-pdfkit';
-import { createWriteStream, existsSync, readFileSync } from 'fs';
+import { createWriteStream, existsSync } from 'fs';
 
 /**
  * Extract actual width and height from rendered SVG string
@@ -50,18 +50,20 @@ function preprocessSVGColors(svg: string): string {
  * DYNAMIC FONT RESOLUTION NOTE
  * ================================================================================
  * 
- * pdfkit historically depended on relative paths based on __dirname
- * to load AFM (Adobe Font Metrics) files for standard fonts.
- * This causes problems in bundled contexts where __dirname is unpredictable:
+ * pdfkit historically tried to load Helvetica.afm automatically during
+ * PDFDocument constructor, which caused problems in bundled contexts:
  * - VS Code Extensions (bundled with webpack)
  * - Packaged CLI (bundled with tsup)
  * - Electron apps
  * - Webpack/Vite/esbuild bundles
  * - Importing Core as npm library in other projects
  * 
- * SOLUTION: Explicitly register the path to Helvetica.afm before
- * svg-to-pdfkit tries to use it. We use require.resolve() which respects
- * Node.js module resolution configuration and bundlers.
+ * SOLUTION: Prevent pdfkit from loading any default font by passing
+ * `font: null` to the constructor. Then we explicitly register and load
+ * the font ourselves using require.resolve(), which respects Node.js
+ * module resolution and bundler configuration.
+ * 
+ * This approach is clean, elegant, and doesn't require monkeypatching.
  * 
  * REFERENCE: https://github.com/foliojs/pdfkit/issues/1616
  * ================================================================================
@@ -228,55 +230,38 @@ export async function exportMultipagePDF(
     // Create PDF document with first page size (actual dimensions)
     const firstPage = pagesWithActualDimensions[0];
 
-    // ========== Dynamic Font Initialization (BEFORE PDFDocument creation) ==========
-    // pdfkit tries to load Helvetica.afm during PDFDocument constructor
-    // We need to resolve the font path BEFORE creating the document and
-    // monkeypatch fs.readFileSync to redirect pdfkit to the correct path
-    // This is critical for bundled contexts where __dirname is unpredictable
+    // ========== Font Resolution (BEFORE PDFDocument creation) ==========
+    // Resolve font path BEFORE creating the document
+    // We'll pass `font: null` to prevent pdfkit from auto-loading Helvetica.afm
     const helveticaPath = resolveHelveticaFontPath(options?.customFontPath);
 
-    let doc: InstanceType<typeof PDFDocument>;
+    // Create PDF document WITHOUT any default font to prevent auto-loading
+    const doc = new PDFDocument({
+      size: [firstPage.actualWidth, firstPage.actualHeight],
+      margin: 0,
+      font: null, // ← Prevents pdfkit from auto-loading Helvetica.afm
+    });
 
+    // Now explicitly set the font after document creation
+    // This gives us full control over font resolution and loading
     if (helveticaPath) {
-      // Monkeypatch fs.readFileSync temporarily to redirect pdfkit
-      // to the correct font file location during PDFDocument constructor
-      const originalReadFileSync = readFileSync;
-      const fs = require('fs');
-
       try {
-        fs.readFileSync = function(filePath: string | number | Buffer, ...args: any[]): any {
-          // Check if pdfkit is trying to read Helvetica.afm
-          if (
-            typeof filePath === 'string' &&
-            filePath.includes('Helvetica.afm') &&
-            !existsSync(filePath)
-          ) {
-            // Redirect to the resolved path
-            return originalReadFileSync(helveticaPath, ...args);
-          }
-          // For all other files, use original readFileSync
-          return originalReadFileSync(filePath, ...args);
-        };
-
-        // Now create PDFDocument with the patched fs
-        doc = new PDFDocument({
-          size: [firstPage.actualWidth, firstPage.actualHeight],
-          margin: 0,
-        });
-      } finally {
-        // Always restore original fs.readFileSync
-        fs.readFileSync = originalReadFileSync;
+        doc.registerFont('Helvetica', helveticaPath);
+        doc.font('Helvetica');
+      } catch (error) {
+        console.warn(
+          '[pdfkit] Failed to register Helvetica font. Falling back to Courier.',
+          error instanceof Error ? error.message : String(error)
+        );
+        doc.font('Courier'); // Courier is a built-in font
       }
     } else {
-      // If we couldn't resolve the font, create document anyway
-      // pdfkit will try to use default fonts and may fail,
-      // but we'll let it fail with a clear error message
-      doc = new PDFDocument({
-        size: [firstPage.actualWidth, firstPage.actualHeight],
-        margin: 0,
-      });
+      console.debug(
+        '[pdfkit] Could not resolve Helvetica font path. Using Courier as fallback.'
+      );
+      doc.font('Courier'); // Courier is a built-in font that doesn't require AFM files
     }
-    // ===========================================================================
+    // ===================================================================
 
     const stream = createWriteStream(outputPath);
     doc.pipe(stream);

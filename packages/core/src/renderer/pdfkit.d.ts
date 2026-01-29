@@ -2,6 +2,7 @@ declare module 'pdfkit' {
   export interface PDFDocumentOptions {
     size?: [number, number];
     margin?: number;
+    font?: string | null;
   }
 
   export interface PDFDocument {
@@ -10,6 +11,7 @@ declare module 'pdfkit' {
     end(): void;
     on(event: string, callback: (...args: any[]) => void): void;
     registerFont(name: string, path: string): void;
+    font(src: string, family?: string | number, size?: number): void;
   }
 
   export default class PDFDocument {
@@ -19,6 +21,7 @@ declare module 'pdfkit' {
     end(): void;
     on(event: string, callback: (...args: any[]) => void): void;
     registerFont(name: string, path: string): void;
+    font(src: string, family?: string | number, size?: number): void;
   }
 }
 
