@@ -1,5 +1,11 @@
 # @wire-dsl/core
 
+## 0.1.4
+
+### Patch Changes
+
+- [#11](https://github.com/Wire-DSL/wire-dsl/pull/11) [`00550fc`](https://github.com/Wire-DSL/wire-dsl/commit/00550fc8d839e83a8fee474870a7ab1cfadb1087) Thanks [@roxguel](https://github.com/roxguel)! - fix(core): monkeypatch fs.readFileSync to resolve pdfkit font paths in bundled contexts
+
 ## 0.1.3
 
 ### Patch Changes
