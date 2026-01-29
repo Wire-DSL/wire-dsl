@@ -1,15 +1,16 @@
 # @wire-dsl/core
 
-## Unreleased
+## 0.1.2
 
-### Fixed
+### Patch Changes
 
-- **PDF Font Resolution**: Fix pdfkit font resolution in bundled contexts (VS Code Extension, CLI, etc.)
-  - Implement dynamic Helvetica.afm path resolution using `require.resolve()`
-  - Add support for custom font paths via `exportMultipagePDF(options)` parameter
-  - Graceful fallback to pdfkit defaults if resolution fails
-  - Adds 4 resolution strategies to handle different execution contexts
-  - Resolves font file path errors in: webpack bundles, Electron, esbuild, vite, and npm packages
+- [#5](https://github.com/Wire-DSL/wire-dsl/pull/5) [`a64e3cf`](https://github.com/Wire-DSL/wire-dsl/commit/a64e3cf03dbcfdac692e9b7bfc21b6fe26323150) Thanks [@roxguel](https://github.com/roxguel)! - add package-specific READMEs
+
+## 0.1.1
+
+### Patch Changes
+
+- [#3](https://github.com/Wire-DSL/wire-dsl/pull/3) [`d780619`](https://github.com/Wire-DSL/wire-dsl/commit/d78061999f8b38e45fe39a4ebd94096067906d9b) Thanks [@roxguel](https://github.com/roxguel)! - CI build and automerge
 
 ## 0.1.0
 
