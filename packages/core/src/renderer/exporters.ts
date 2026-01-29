@@ -3,7 +3,7 @@ import path from 'path';
 import sharp from 'sharp';
 import PDFDocument from 'pdfkit';
 import SVGtoPDF from 'svg-to-pdfkit';
-import { createWriteStream, existsSync } from 'fs';
+import { createWriteStream, existsSync, readFileSync } from 'fs';
 
 /**
  * Extract actual width and height from rendered SVG string
@@ -227,38 +227,59 @@ export async function exportMultipagePDF(
 
     // Create PDF document with first page size (actual dimensions)
     const firstPage = pagesWithActualDimensions[0];
-    const doc = new PDFDocument({
-      size: [firstPage.actualWidth, firstPage.actualHeight],
-      margin: 0,
-    });
+
+    // ========== Dynamic Font Initialization (BEFORE PDFDocument creation) ==========
+    // pdfkit tries to load Helvetica.afm during PDFDocument constructor
+    // We need to resolve the font path BEFORE creating the document and
+    // monkeypatch fs.readFileSync to redirect pdfkit to the correct path
+    // This is critical for bundled contexts where __dirname is unpredictable
+    const helveticaPath = resolveHelveticaFontPath(options?.customFontPath);
+
+    let doc: InstanceType<typeof PDFDocument>;
+
+    if (helveticaPath) {
+      // Monkeypatch fs.readFileSync temporarily to redirect pdfkit
+      // to the correct font file location during PDFDocument constructor
+      const originalReadFileSync = readFileSync;
+      const fs = require('fs');
+
+      try {
+        fs.readFileSync = function(filePath: string | number | Buffer, ...args: any[]): any {
+          // Check if pdfkit is trying to read Helvetica.afm
+          if (
+            typeof filePath === 'string' &&
+            filePath.includes('Helvetica.afm') &&
+            !existsSync(filePath)
+          ) {
+            // Redirect to the resolved path
+            return originalReadFileSync(helveticaPath, ...args);
+          }
+          // For all other files, use original readFileSync
+          return originalReadFileSync(filePath, ...args);
+        };
+
+        // Now create PDFDocument with the patched fs
+        doc = new PDFDocument({
+          size: [firstPage.actualWidth, firstPage.actualHeight],
+          margin: 0,
+        });
+      } finally {
+        // Always restore original fs.readFileSync
+        fs.readFileSync = originalReadFileSync;
+      }
+    } else {
+      // If we couldn't resolve the font, create document anyway
+      // pdfkit will try to use default fonts and may fail,
+      // but we'll let it fail with a clear error message
+      doc = new PDFDocument({
+        size: [firstPage.actualWidth, firstPage.actualHeight],
+        margin: 0,
+      });
+    }
+    // ===========================================================================
 
     const stream = createWriteStream(outputPath);
     doc.pipe(stream);
-
-    // ========== Dynamic Font Registration ==========
-    // Resolve and register Helvetica font dynamically
-    // This is critical for bundled contexts (VS Code Extension, bundled CLI, etc.)
-    // where __dirname may not point to the correct directory
-    const helveticaPath = resolveHelveticaFontPath(options?.customFontPath);
-    if (helveticaPath) {
-      try {
-        doc.registerFont('Helvetica', helveticaPath);
-      } catch (error) {
-        // If registration fails, log warning but continue
-        // pdfkit has embedded fonts as fallback
-        console.warn(
-          '[pdfkit] Failed to register custom Helvetica font. ' +
-            'Using pdfkit default fonts.',
-          error instanceof Error ? error.message : String(error)
-        );
-      }
-    } else {
-      console.debug(
-        '[pdfkit] Could not resolve Helvetica font path. ' +
-          'Using pdfkit default fonts.'
-      );
-    }
-    // =================================================
 
     // Add each SVG as a page with its actual dimensions
     pagesWithActualDimensions.forEach((page, index) => {
