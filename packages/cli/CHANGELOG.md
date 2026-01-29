@@ -1,5 +1,14 @@
 # @wire-dsl/cli
 
+## 0.1.4
+
+### Patch Changes
+
+- [#19](https://github.com/Wire-DSL/wire-dsl/pull/19) [`512116e`](https://github.com/Wire-DSL/wire-dsl/commit/512116e5408db62a7053171962550519988530c2) Thanks [@roxguel](https://github.com/roxguel)! - Rollback pdfkit changes
+
+- Updated dependencies [[`512116e`](https://github.com/Wire-DSL/wire-dsl/commit/512116e5408db62a7053171962550519988530c2)]:
+  - @wire-dsl/core@0.1.4
+
 ## 0.1.3
 
 ### Patch Changes
