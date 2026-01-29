@@ -1,6 +1,6 @@
 {
   "name": "@wire-dsl/web",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "WireDSL Web - Live editor with React and Monaco",
   "type": "module",
   "publishConfig": {
