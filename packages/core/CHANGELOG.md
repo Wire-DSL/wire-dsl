@@ -1,5 +1,22 @@
 # @wire-dsl/core
 
+## 0.1.5
+
+### Patch Changes
+
+- [#14](https://github.com/Wire-DSL/wire-dsl/pull/14) [`2a858f4`](https://github.com/Wire-DSL/wire-dsl/commit/2a858f4bd8200f85f9b8a8c2f76c46ed69b8cb1a) Thanks [@roxguel](https://github.com/roxguel)! - fix: elegantly resolve pdfkit fonts without monkeypatching
+
+  Replace fs.readFileSync monkeypatch with clean solution:
+  - Pass font: null to PDFDocument constructor to prevent auto-loading
+  - Explicitly register and load fonts after document creation
+  - Use require.resolve() for bundler-aware path resolution
+  - Add missing type definitions for font option and font() method
+  - Graceful fallback to Courier if Helvetica cannot be resolved
+
+  This approach eliminates hacks and improves code maintainability.
+
+- [#14](https://github.com/Wire-DSL/wire-dsl/pull/14) [`2a858f4`](https://github.com/Wire-DSL/wire-dsl/commit/2a858f4bd8200f85f9b8a8c2f76c46ed69b8cb1a) Thanks [@roxguel](https://github.com/roxguel)! - fix(core): add missing type definitions for pdfkit font option and method
+
 ## 0.1.4
 
 ### Patch Changes
