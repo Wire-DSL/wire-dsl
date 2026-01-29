@@ -3,7 +3,7 @@ import path from 'path';
 import sharp from 'sharp';
 import PDFDocument from 'pdfkit';
 import SVGtoPDF from 'svg-to-pdfkit';
-import { createWriteStream } from 'fs';
+import { createWriteStream, existsSync } from 'fs';
 
 /**
  * Extract actual width and height from rendered SVG string
@@ -46,6 +46,99 @@ function preprocessSVGColors(svg: string): string {
 }
 
 /**
+ * ================================================================================
+ * DYNAMIC FONT RESOLUTION NOTE
+ * ================================================================================
+ * 
+ * pdfkit historically depended on relative paths based on __dirname
+ * to load AFM (Adobe Font Metrics) files for standard fonts.
+ * This causes problems in bundled contexts where __dirname is unpredictable:
+ * - VS Code Extensions (bundled with webpack)
+ * - Packaged CLI (bundled with tsup)
+ * - Electron apps
+ * - Webpack/Vite/esbuild bundles
+ * - Importing Core as npm library in other projects
+ * 
+ * SOLUTION: Explicitly register the path to Helvetica.afm before
+ * svg-to-pdfkit tries to use it. We use require.resolve() which respects
+ * Node.js module resolution configuration and bundlers.
+ * 
+ * REFERENCE: https://github.com/foliojs/pdfkit/issues/1616
+ * ================================================================================
+ */
+
+/**
+ * Dynamically resolves the path to the Helvetica AFM file.
+ * Attempts multiple resolution strategies:
+ * 1. Use custom font path if provided
+ * 2. Use require.resolve() to find file in node_modules
+ * 3. Try path relative to process.cwd()
+ * 4. Try path relative to __dirname
+ * 5. If all fail, return null and let pdfkit use default
+ * 
+ * @param customFontPath - Optional custom path (if provided, used directly)
+ * @returns Path to Helvetica.afm file, or null if resolution fails
+ * @throws Does not throw exceptions - returns null silently if fails
+ */
+function resolveHelveticaFontPath(customFontPath?: string): string | null {
+  // Strategy 0: If custom path provided, validate and use
+  if (customFontPath) {
+    try {
+      if (existsSync(customFontPath)) {
+        return customFontPath;
+      } else {
+        console.warn(`[pdfkit] Custom font path "${customFontPath}" is not accessible`);
+      }
+    } catch (error) {
+      console.warn(
+        `[pdfkit] Error validating custom font path: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+  }
+
+  // Strategy 1: Use require.resolve() - best for bundled contexts
+  // This respects Node.js module resolution configuration and bundlers
+  try {
+    const resolvedPath = require.resolve('pdfkit/js/data/Helvetica.afm');
+    if (existsSync(resolvedPath)) {
+      return resolvedPath;
+    }
+  } catch (error) {
+    // require.resolve() failed - move to next strategy
+  }
+
+  // Strategy 2: Try path relative to node_modules in cwd
+  try {
+    const nodeModulesPath = path.resolve(
+      process.cwd(),
+      'node_modules/pdfkit/js/data/Helvetica.afm'
+    );
+    if (existsSync(nodeModulesPath)) {
+      return nodeModulesPath;
+    }
+  } catch (error) {
+    // Silent fallback
+  }
+
+  // Strategy 3: Try from __dirname of core module
+  try {
+    // __dirname is the directory of compiled file (dist/renderer/)
+    const dirnameBasedPath = path.resolve(
+      __dirname,
+      '../../node_modules/pdfkit/js/data/Helvetica.afm'
+    );
+    if (existsSync(dirnameBasedPath)) {
+      return dirnameBasedPath;
+    }
+  } catch (error) {
+    // Silent fallback
+  }
+
+  // Could not resolve font - return null for fallback
+  return null;
+}
+
+/**
  * Export SVG to PNG using sharp
  */
 export async function exportPNG(
@@ -60,12 +153,55 @@ export async function exportPNG(
 }
 
 /**
- * Export multiple SVGs as a single multipage PDF
- * Each SVG becomes a page in the PDF with its own dimensions
+ * Exporta múltiples pantallas SVG a un archivo PDF multipage con resolución dinámica de fuentes.
+ * 
+ * Esta función es robusta a diferentes contextos de ejecución (dev, bundled, VS Code Extension, etc.)
+ * porque resuelve dinámicamente la ruta de la fuente Helvetica.afm en lugar de depender de __dirname.
+ * 
+ * ### Resolución de Fuentes
+ * La función intenta resolver la fuente Helvetica en este orden:
+ * 1. Si `options.customFontPath` es proporcionado, validar y usarlo
+ * 2. Usar `require.resolve('pdfkit/js/data/Helvetica.afm')` (mejor para bundled code)
+ * 3. Intentar `${process.cwd()}/node_modules/pdfkit/js/data/Helvetica.afm`
+ * 4. Intentar `${__dirname}/../../node_modules/pdfkit/js/data/Helvetica.afm`
+ * 5. Si todas fallan, continuar con fuentes por defecto de pdfkit (graceful fallback)
+ * 
+ * ### Contextos Soportados
+ * ✅ Node.js puro (desarrollo local)
+ * ✅ CLI empaquetado (tsup ESM/CJS)
+ * ✅ VS Code Extension (bundled con webpack)
+ * ✅ Electron + bundlers
+ * ✅ Webpack/Vite/esbuild
+ * ✅ WebApps (si se usa con servidor Node backend)
+ * ✅ Cualquier proyecto que importe Core como librería npm
+ * 
+ * @param svgs - Array de objetos SVG con dimensiones { svg, width, height, name }
+ * @param outputPath - Ruta donde guardar el archivo PDF
+ * @param options - Configuración opcional
+ * @param options.customFontPath - Ruta personalizada a archivo .afm (overrides resolución automática)
+ * 
+ * @throws {Error} Si la ruta de salida no es accesible o fs.createWriteStream falla
+ * @throws {Error} Si algún SVG es inválido (SVGtoPDF internamente)
+ * 
+ * @example
+ * // Caso simple - resolución automática
+ * await exportMultipagePDF(
+ *   [{ svg: '<svg>...</svg>', width: 1920, height: 1080, name: 'screen1' }],
+ *   './output.pdf'
+ * );
+ * 
+ * @example
+ * // Caso con fuente personalizada
+ * await exportMultipagePDF(
+ *   [{ svg: '<svg>...</svg>', width: 1920, height: 1080, name: 'screen1' }],
+ *   './output.pdf',
+ *   { customFontPath: '/path/to/custom-font.afm' }
+ * );
  */
 export async function exportMultipagePDF(
   svgs: Array<{ svg: string; width: number; height: number; name: string }>,
-  outputPath: string
+  outputPath: string,
+  options?: { customFontPath?: string }
 ): Promise<void> {
   return new Promise(async (resolve, reject) => {
     // Ensure output directory exists
@@ -98,6 +234,31 @@ export async function exportMultipagePDF(
 
     const stream = createWriteStream(outputPath);
     doc.pipe(stream);
+
+    // ========== Dynamic Font Registration ==========
+    // Resolve and register Helvetica font dynamically
+    // This is critical for bundled contexts (VS Code Extension, bundled CLI, etc.)
+    // where __dirname may not point to the correct directory
+    const helveticaPath = resolveHelveticaFontPath(options?.customFontPath);
+    if (helveticaPath) {
+      try {
+        doc.registerFont('Helvetica', helveticaPath);
+      } catch (error) {
+        // If registration fails, log warning but continue
+        // pdfkit has embedded fonts as fallback
+        console.warn(
+          '[pdfkit] Failed to register custom Helvetica font. ' +
+            'Using pdfkit default fonts.',
+          error instanceof Error ? error.message : String(error)
+        );
+      }
+    } else {
+      console.debug(
+        '[pdfkit] Could not resolve Helvetica font path. ' +
+          'Using pdfkit default fonts.'
+      );
+    }
+    // =================================================
 
     // Add each SVG as a page with its actual dimensions
     pagesWithActualDimensions.forEach((page, index) => {

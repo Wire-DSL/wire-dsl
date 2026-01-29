@@ -9,6 +9,7 @@ declare module 'pdfkit' {
     addPage(options: any): void;
     end(): void;
     on(event: string, callback: (...args: any[]) => void): void;
+    registerFont(name: string, path: string): void;
   }
 
   export default class PDFDocument {
@@ -17,6 +18,7 @@ declare module 'pdfkit' {
     addPage(options: any): void;
     end(): void;
     on(event: string, callback: (...args: any[]) => void): void;
+    registerFont(name: string, path: string): void;
   }
 }
 
