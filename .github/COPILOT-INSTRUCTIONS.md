@@ -31,9 +31,22 @@ Contains all detailed information about:
 - Development workflows
 - Quality checklists
 - File organization
+- Markdown documentation policy (no excessive files)
 - Getting help & support
 
 **Time:** 15-20 minutes to read
+
+---
+
+## ✅ Documentation Policy
+
+**Important**: Do NOT create excessive .md files.
+- **Consolidate**: Merge documentation into existing files or single STRATEGY.md
+- **No Timestamps**: Except in roadmap (plans/) - dates make docs obsolete
+- **Quality > Quantity**: One comprehensive doc beats 8 scattered ones
+- **Example**: Instead of 8 separate files → Create one STRATEGY.md with sections
+
+See AI-INSTRUCTIONS-MAIN.md for full documentation policy.
 
 ---
 

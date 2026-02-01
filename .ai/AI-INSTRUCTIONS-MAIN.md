@@ -256,6 +256,19 @@ All `.wire` files must comply with:
 - Include @param, @returns, @throws for functions
 - Add examples for complex logic
 
+### Markdown File Creation Policy
+**DO NOT CREATE excessive .md files.** Follow these rules:
+
+1. **Consolidate over Create**: Use existing files or merge into single comprehensive file
+2. **One Strategy per Feature**: Not separate files for recommendation, visualization, decision, quickstart, etc.
+3. **No Timestamps or Status Markers**: Except in main roadmap (plans/) - dates make docs stale
+4. **Max Effort**: If documentation effort > feature effort = WRONG APPROACH
+5. **Quality Over Quantity**: One well-written STRATEGY.md > 8 scattered files
+
+Example: Instead of creating RECOMMENDATION.md + VISUAL-ANALYSIS.md + DECISION.md + PUBLISH-QUICKSTART.md:
+- Create ONE: STRATEGY.md (2 KB, 50 lines) with sections for: Problem, Solution, Timeline, Examples, Risks
+- Link from README.md or package docs
+
 ---
 
 ## Getting Help
