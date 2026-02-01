@@ -1,7 +1,7 @@
 {
-  "name": "@wire-dsl/cli",
+  "name": "@wire-dsl/engine",
   "version": "0.1.6",
-  "description": "WireDSL CLI - Command-line tool for wireframe generation and validation",
+  "description": "WireDSL engine - Parser, IR generator, layout engine, and SVG renderer (browser-safe, pure JS/TS)",
   "type": "module",
   "exports": {
     ".": {
@@ -13,26 +13,26 @@
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "bin": {
-    "wire": "./dist/cli.js"
-  },
   "files": [
     "dist"
   ],
   "scripts": {
     "dev": "tsup --watch",
-    "build": "tsup src/index.ts src/cli.ts --format cjs,esm --dts",
+    "build": "tsup src/index.ts --format cjs,esm --dts",
     "test": "vitest",
     "test:watch": "vitest --watch",
+    "test:ui": "vitest --ui",
     "type-check": "tsc --noEmit",
     "lint": "eslint src --ext .ts",
     "lint:fix": "eslint src --ext .ts --fix"
   },
   "keywords": [
     "wireframe",
-    "cli",
-    "command-line",
-    "dsl"
+    "dsl",
+    "declarative",
+    "design",
+    "prototype",
+    "svg"
   ],
   "author": "WireDSL Contributors",
   "license": "MIT",
@@ -40,12 +40,8 @@
     "access": "public"
   },
   "dependencies": {
-    "@wire-dsl/engine": "workspace:*",
-    "@wire-dsl/exporters": "workspace:*",
-    "chokidar": "5.0.0",
-    "chalk": "5.6.2",
-    "commander": "14.0.2",
-    "ora": "9.1.0"
+    "chevrotain": "11.1.0",
+    "zod": "4.3.5"
   },
   "devDependencies": {
     "@types/node": "25.0.9",
