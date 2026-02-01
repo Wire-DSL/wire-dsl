@@ -73,7 +73,7 @@ export function useLocalStorage<T>(
 }
 
 /**
- * Hook for parsing Wire DSL code using @wire-dsl/core
+ * Hook for parsing Wire DSL code using @wire-dsl/engine
  * Returns render state and results
  * Completely OSS-safe, no cloud logic
  */
@@ -95,8 +95,8 @@ export function useWireParser(code: string) {
     parseTimeoutRef.current = setTimeout(async () => {
       try {
         // Import dynamically to avoid circular dependencies
-        const wireCore = await import('@wire-dsl/core');
-        const { parseWire, renderToSVG, LayoutEngine } = wireCore as any;
+        const wireEngine = await import('@wire-dsl/engine');
+        const { parseWire, renderToSVG, LayoutEngine } = wireEngine as any;
 
         const ir = parseWire(code);
         const layout = new LayoutEngine().layout(ir);

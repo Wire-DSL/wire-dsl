@@ -58,7 +58,7 @@ export enum RenderState {
 
 /**
  * SVG render result from Wire DSL core
- * This wraps the IR from @wire-dsl/core in a UI-friendly format
+ * This wraps the IR from @wire-dsl/engine in a UI-friendly format
  */
 export interface SVGRenderResult {
   /** SVG string output */

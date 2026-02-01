@@ -35,6 +35,92 @@ importers:
 
   packages/cli:
     dependencies:
+      '@wire-dsl/engine':
+        specifier: workspace:*
+        version: link:../engine
+      '@wire-dsl/exporters':
+        specifier: workspace:*
+        version: link:../exporters
+      chalk:
+        specifier: 5.6.2
+        version: 5.6.2
+      chokidar:
+        specifier: 5.0.0
+        version: 5.0.0
+      commander:
+        specifier: 14.0.2
+        version: 14.0.2
+      ora:
+        specifier: 9.1.0
+        version: 9.1.0
+    devDependencies:
+      '@types/node':
+        specifier: 25.0.9
+        version: 25.0.9
+      '@typescript-eslint/eslint-plugin':
+        specifier: 8.53.1
+        version: 8.53.1(@typescript-eslint/parser@8.53.1)(eslint@9.39.2)(typescript@5.9.3)
+      '@typescript-eslint/parser':
+        specifier: 8.53.1
+        version: 8.53.1(eslint@9.39.2)(typescript@5.9.3)
+      eslint:
+        specifier: 9.39.2
+        version: 9.39.2
+      tsup:
+        specifier: 8.5.1
+        version: 8.5.1(typescript@5.9.3)
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: 4.0.17
+        version: 4.0.17(@types/node@25.0.9)
+
+  packages/editor-ui:
+    dependencies:
+      '@wire-dsl/engine':
+        specifier: workspace:*
+        version: link:../engine
+      lucide-react:
+        specifier: ^0.560.0
+        version: 0.560.0(react@19.2.3)
+      react:
+        specifier: ^18.0.0 || ^19.0.0
+        version: 19.2.3
+      react-dom:
+        specifier: ^18.0.0 || ^19.0.0
+        version: 19.2.3(react@19.2.3)
+      zustand:
+        specifier: ^5.0.0
+        version: 5.0.10(@types/react@19.2.9)(react@19.2.3)
+    devDependencies:
+      '@types/node':
+        specifier: ^25.0.9
+        version: 25.0.9
+      '@types/react':
+        specifier: ^19.2.9
+        version: 19.2.9
+      '@types/react-dom':
+        specifier: ^19.2.3
+        version: 19.2.3(@types/react@19.2.9)
+      '@typescript-eslint/eslint-plugin':
+        specifier: ^8.53.1
+        version: 8.53.1(@typescript-eslint/parser@8.53.1)(eslint@9.39.2)(typescript@5.9.3)
+      '@typescript-eslint/parser':
+        specifier: ^8.53.1
+        version: 8.53.1(eslint@9.39.2)(typescript@5.9.3)
+      esbuild:
+        specifier: ^0.20.0
+        version: 0.20.2
+      eslint:
+        specifier: ^9.39.2
+        version: 9.39.2
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
+  packages/engine:
+    dependencies:
       chevrotain:
         specifier: 11.1.0
         version: 11.1.0
@@ -101,49 +187,6 @@ importers:
         specifier: 4.0.17
         version: 4.0.17(@types/node@25.0.9)
 
-  packages/editor-ui:
-    dependencies:
-      '@wire-dsl/core':
-        specifier: workspace:*
-        version: link:../core
-      lucide-react:
-        specifier: ^0.560.0
-        version: 0.560.0(react@19.2.3)
-      react:
-        specifier: ^18.0.0 || ^19.0.0
-        version: 19.2.3
-      react-dom:
-        specifier: ^18.0.0 || ^19.0.0
-        version: 19.2.3(react@19.2.3)
-      zustand:
-        specifier: ^5.0.0
-        version: 5.0.10(@types/react@19.2.9)(react@19.2.3)
-    devDependencies:
-      '@types/node':
-        specifier: ^25.0.9
-        version: 25.0.9
-      '@types/react':
-        specifier: ^19.2.9
-        version: 19.2.9
-      '@types/react-dom':
-        specifier: ^19.2.3
-        version: 19.2.3(@types/react@19.2.9)
-      '@typescript-eslint/eslint-plugin':
-        specifier: ^8.53.1
-        version: 8.53.1(@typescript-eslint/parser@8.53.1)(eslint@9.39.2)(typescript@5.9.3)
-      '@typescript-eslint/parser':
-        specifier: ^8.53.1
-        version: 8.53.1(eslint@9.39.2)(typescript@5.9.3)
-      esbuild:
-        specifier: ^0.20.0
-        version: 0.20.2
-      eslint:
-        specifier: ^9.39.2
-        version: 9.39.2
-      typescript:
-        specifier: ^5.9.3
-        version: 5.9.3
-
   packages/language-support:
     devDependencies:
       '@types/node':
@@ -161,12 +204,12 @@ importers:
       '@radix-ui/react-slot':
         specifier: 1.2.4
         version: 1.2.4(@types/react@19.2.9)(react@19.2.3)
-      '@wire-dsl/engine':
-        specifier: workspace:*
-        version: link:../core
       '@wire-dsl/editor-ui':
         specifier: workspace:*
         version: link:../editor-ui
+      '@wire-dsl/engine':
+        specifier: workspace:*
+        version: link:../engine
       '@wire-dsl/language-support':
         specifier: workspace:*
         version: link:../language-support
@@ -5452,6 +5495,7 @@ packages:
     dependencies:
       pdfkit: 0.17.2
     dev: false
+    bundledDependencies: false
 
   /tailwindcss@4.1.18:
     resolution: {integrity: sha512-4+Z+0yiYyEtUVCScyfHCxOYP06L5Ne+JiHhY2IjR2KWMIWhJOYZKLSGZaP5HkZ8+bY0cxfzwDE5uOmzFXyIwxw==}
