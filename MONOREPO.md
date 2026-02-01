@@ -8,11 +8,10 @@ This is a monorepo containing all packages for the WireDSL project.
 
 ### Core Packages
 
-- **[@wire-dsl/core](./packages/core)** - Parser, IR generator, layout engine, and SVG renderer
+- **[@wire-dsl/engine](./packages/engine)** - Parser, IR generator, layout engine, and SVG renderer
+- **[@wire-dsl/exporters](./packages/exporters)** - Exporter to SVG, PDF and PNG
 - **[@wire-dsl/cli](./packages/cli)** - Command-line interface for WireDSL
 - **[@wire-dsl/web](./packages/web)** - Live web editor (React + Monaco)
-- **[@wire-dsl/studio](./packages/studio)** - Visual editor (WYSIWYG) - Roadmap
-- **[@wire-dsl/ai-backend](./packages/ai-backend)** - Cloudflare Workers AI service
 
 ## 🚀 Quick Start
 
@@ -45,18 +44,16 @@ pnpm format
 
 ```bash
 # Build specific package
-pnpm build:core
+pnpm build:engine
+pnpm build:exporters
 pnpm build:cli
 pnpm build:web
-pnpm build:studio
-pnpm build:ai
 
 # Test specific package
-pnpm test:core
+pnpm test:engine
+pnpm test:exporters
 pnpm test:cli
 pnpm test:web
-pnpm test:studio
-pnpm test:ai
 
 # Type check
 pnpm type-check
@@ -70,12 +67,24 @@ pnpm lint:fix
 ```
 wire-dsl/
 ├── packages/
-│   ├── core/              # @wire-dsl/core (Parser + IR + Layout + Renderer)
+│   ├── engine/              # @wire-dsl/engine (Parser + IR + Layout + SVG Renderer)
 │   │   ├── src/
-│   │   │   ├── parser/    # Chevrotain parser
+│   │   │   ├── parser/    # Chevrotain parser (pure JS)
 │   │   │   ├── ir/        # IR generator
 │   │   │   ├── layout/    # Layout engine
 │   │   │   ├── renderer/  # SVG renderer
+│   │   │   └── index.ts
+│   │   ├── tests/
+│   │   ├── package.json
+│   │   └── tsconfig.json
+│   │
+│   ├── exporters/         # @wire-dsl/exporters (SVG, PNG, PDF export)
+│   │   ├── src/
+│   │   │   ├── svg.ts     # SVG file export
+│   │   │   ├── png.ts     # PNG export via sharp
+│   │   │   ├── pdf.ts     # Multipage PDF via pdfkit
+│   │   │   ├── helpers.ts # Color & dimension utilities
+│   │   │   ├── types/     # Type declarations
 │   │   │   └── index.ts
 │   │   ├── tests/
 │   │   ├── package.json
@@ -147,7 +156,7 @@ wire-dsl/
 
 1. **Work on a single package** - Make changes in `packages/*/src`
 2. **Type safety** - TypeScript validates across packages automatically
-3. **Test locally** - `pnpm test:core` (only runs affected tests)
+3. **Test locally** - `pnpm test:engine` (only runs affected tests)
 4. **Build locally** - `pnpm build` (Turborepo caches unchanged packages)
 
 ### Cross-Package Dependencies
@@ -157,10 +166,16 @@ Use workspace protocol for local dependencies:
 ```json
 {
   "dependencies": {
-    "@wire-dsl/core": "workspace:*"
+    "@wire-dsl/engine": "workspace:*",
+    "@wire-dsl/exporters": "workspace:*"
   }
 }
 ```
+
+**Notes:**
+- Use `@wire-dsl/engine` for browser-compatible code (pure JS/TS)
+- Use `@wire-dsl/exporters` for Node.js file I/O operations
+- CLI uses both; Web/Studio uses only engine
 
 ### Version Management
 
@@ -221,14 +236,14 @@ pnpm test
 pnpm test -- --coverage
 
 # Watch mode (single package)
-cd packages/core
+cd packages/engine
 pnpm test:watch
 ```
 
 ## 📊 Monorepo Benefits
 
 - ✅ **Single source of truth** - One place to manage dependencies
-- ✅ **Atomic changes** - Update core + CLI in single PR
+- ✅ **Atomic changes** - Update engine, exporters, and CLI in single PR
 - ✅ **Shared configuration** - ESLint, Prettier, TypeScript
 - ✅ **Turborepo caching** - Fast builds (only changed packages)
 - ✅ **CI efficiency** - One pipeline for all packages
@@ -251,5 +266,5 @@ See [CONTRIBUTING.md](./.github/CONTRIBUTING.md) for guidelines.
 
 ---
 
-**Last Updated**: January 20, 2026
-**Status**: 🚀 Monorepo initialized - Ready for development
+**Last Updated**: February 1, 2026
+**Status**: ✅ Engine + Exporters separation complete - Ready for production

@@ -12,8 +12,6 @@ Your monorepo is now fully scaffolded and ready for development! Here's what was
 2. **@wire-dsl/exporters** - Exporters (SVG, PNG, PDF - Node.js)
 3. **@wire-dsl/cli** - Command-line tool
 4. **@wire-dsl/web** - Live web editor (React + Monaco)
-5. **@wire-dsl/ai-backend** - AI service (Hono + Cloudflare Workers)
-6. **@wire-dsl/studio** - Visual editor (Roadmap)
 
 ### 🔧 **Infrastructure Configured**
 
@@ -28,9 +26,7 @@ Your monorepo is now fully scaffolded and ready for development! Here's what was
 ### 📚 **Documentation**
 
 - [MONOREPO.md](./MONOREPO.md) - Full monorepo guide
-- [docs/technical-stack.md](./docs/technical-stack.md) - Technology decisions + AI strategy
 - [.github/CONTRIBUTING.md](./.github/CONTRIBUTING.md) - Contribution guidelines
-- [SETUP_SUMMARY.md](./SETUP_SUMMARY.md) - Detailed setup reference
 
 ---
 
@@ -73,10 +69,6 @@ pnpm test:watch
 cd packages/cli
 pnpm build
 node dist/cli.js render --help
-
-# Option 4: Work on AI backend
-cd packages/ai-backend
-pnpm dev
 ```
 
 ### Root Level Commands
@@ -118,16 +110,11 @@ wire-dsl/
 │   ├── cli/               # @wire-dsl/cli (CLI wrapper)
 │   │   └── commands/
 │   │
-│   ├── web/               # @wire-dsl/web (React app)
-│   │   ├── src/
-│   │   │   ├── components/
-│   │   │   └── App.tsx
-│   │   └── index.html
-│   │
-│   ├── ai-backend/        # @wire-dsl/ai-backend (Workers)
-│   │   └── src/index.ts
-│   │
-│   └── studio/            # @wire-dsl/studio (Roadmap)
+│   └── web/               # @wire-dsl/web (React app)
+│       ├── src/
+│       │   ├── components/
+│       │   └── App.tsx
+│       └── index.html
 │
 ├── docs/                  # Documentation
 ├── specs/                 # Specifications
@@ -209,21 +196,14 @@ import { exportSVG, exportPNG } from '@wire-dsl/exporters';
 - [ ] SVG rendering
 - [ ] Shareable links
 
-### Phase 4: AI Integration
-
-- [ ] Free tier (user's API key)
-- [ ] Pro tier (pooled API keys)
-- [ ] Rate limiting & usage tracking
-- [ ] LLM routing
-
-### Phase 5: Visual Editor
+### Phase 4: Visual Editor
 
 - [ ] Canvas component
 - [ ] Drag-and-drop
 - [ ] Property inspector
 - [ ] Code ↔ Visual sync
 
-### Phase 6: Collaboration
+### Phase 5: Collaboration
 
 - [ ] Real-time sync
 - [ ] Yjs backend
@@ -256,13 +236,6 @@ import { exportSVG, exportPNG } from '@wire-dsl/exporters';
 ✅ Best for drag-and-drop editors  
 ✅ Base for visual editor
 
-### Why AI Integration?
-
-✅ Unique differentiator vs Mermaid  
-✅ Free with user's API key  
-✅ Premium: $15/mes (99.7% margin)  
-✅ Conversational wireframes
-
 ---
 
 ## 🚢 Deployment
@@ -279,19 +252,6 @@ pnpm dev
 # - Framework: React
 # - Build command: pnpm build:web
 # - Output: packages/web/dist
-```
-
-### AI Backend (Cloudflare Workers)
-
-```bash
-# Test locally
-cd packages/ai-backend
-pnpm dev
-
-# Deploy
-wrangler deploy
-
-# Or: Configure GitHub Actions automation
 ```
 
 ### NPM Packages

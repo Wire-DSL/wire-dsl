@@ -1,6 +1,6 @@
 # 🎨 WireDSL
 
-> **Wireframes as Code.** Declarative wireframing with AI-powered generation.
+> **Wireframes as Code.** Declarative wireframing with AI-friendly syntax.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js](https://img.shields.io/badge/Node.js-20+-green)](https://nodejs.org/)
@@ -13,9 +13,9 @@ WireDSL is a **code-first wireframing tool** that lets you:
 
 - ✍️ **Write wireframes as declarative code** (like Mermaid, but for UI)
 - 🤖 **Generate from plain English** ("Create a login form..." → automatic wireframe)
-- 📦 **Export to SVG, PNG, React, Vue, Figma**
-- 🔓 **100% open-source** with premium cloud features
-- ⚡ **AI-powered** (free with your API key, $15/mes for ours)
+- 📦 **Export to SVG, PNG, PDF**
+- 🔓 **100% open-source** and free forever
+- ⚙️ **AI-friendly syntax** for LLM-powered generation
 
 ## 🚀 Quick Start
 
@@ -57,7 +57,7 @@ import { parseWireDSL, generateIR } from '@wire-dsl/engine';
 - **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)** - System design
 - **[docs/DSL-SYNTAX.md](./docs/DSL-SYNTAX.md)** - Language syntax guide
 - **[docs/THEME-GUIDE.md](./docs/THEME-GUIDE.md)** - Theme system documentation
-- **[docs/LLM-PROMPTING.md](./docs/LLM-PROMPTING.md)** - AI prompt guide for generating `.wire` files
+- **[docs/LLM-PROMPTING.md](./docs/LLM-PROMPTING.md)** - Guide for AI generation from natural language
 
 **Component & Container References**
 
@@ -119,8 +119,6 @@ project "Dashboard" {
 | [@wire-dsl/exporters](./packages/exporters)     | SVG, PNG, PDF export (Node.js) | 🚧 In Progress |
 | [@wire-dsl/cli](./packages/cli)                 | Command-line tool              | 🚧 In Progress |
 | [@wire-dsl/web](./packages/web)                 | Live web editor                | 🚧 In Progress |
-| [@wire-dsl/ai-backend](./packages/ai-backend)   | AI service                     | 🚧 In Progress |
-| [@wire-dsl/studio](./packages/studio)           | Visual editor (WYSIWYG)        | 📅 Roadmap     |
 
 ## 🎯 Example Workflow
 
@@ -160,7 +158,7 @@ project "Login Form" {
 
 ```
 User: "Create a login form with email, password, and remember me"
-→ AI generates .wire code
+→ LLM generates .wire code
 → Preview appears instantly
 → Edit if needed
 ```
@@ -168,37 +166,8 @@ User: "Create a login form with email, password, and remember me"
 ### 4. Export
 
 - SVG (scale to any size)
-- PNG (with transparent background)
-- React component (with TypeScript)
-- Figma (coming soon)
-
-## 🤖 AI Integration
-
-### Free (Bring Your Own Key)
-
-```javascript
-// Use your OpenAI/Anthropic API key
-const prompt = 'Create a dashboard with charts';
-const wireframe = await generateWithAI(prompt, {
-  provider: 'openai',
-  apiKey: process.env.OPENAI_KEY,
-});
-```
-
-### Pro Tier ($15/month)
-
-```javascript
-// No API key needed, we handle it
-const wireframe = await generateWithAI(prompt, {
-  subscription: 'pro', // Uses our pooled Claude Haiku
-});
-```
-
-**Why this pricing?**
-
-- Claude Haiku costs ~$0.004 per generation
-- Pro subscription: $15/month = 3,750 free generations
-- **99.7% gross margin** on first user!
+- PNG (with optional resizing)
+- PDF (multipage support)
 
 ## 🛠️ Tech Stack
 
@@ -210,15 +179,10 @@ const wireframe = await generateWithAI(prompt, {
 
 **Web Editor**
 
-- React 18
+- React
 - Vite
 - Monaco Editor
 - Tailwind CSS
-
-**Backend**
-
-- Hono (Cloudflare Workers)
-- Anthropic Claude API
 
 **DevOps**
 
@@ -230,7 +194,6 @@ const wireframe = await generateWithAI(prompt, {
 **Deployment**
 
 - Cloudflare Pages (web editor)
-- Cloudflare Workers (AI service)
 - NPM (CLI tool)
 
 ## 📊 Architecture
@@ -255,49 +218,20 @@ SVG Renderer
 SVG / PNG / PDF / React
 ```
 
-**With AI:**
-
-```
-User Prompt
-   ↓
-LLM (Claude/OpenAI)
-   ↓
-Generated .wire code
-   ↓ [enters pipeline above]
-```
-
 ## 🚢 Deployment
 
 - **Web Editor**: Automatic via Cloudflare Pages (git push → live)
-- **AI Backend**: Automatic via Cloudflare Workers (git push → live)
 - **CLI Tool**: Automatic via GitHub Actions + NPM (changesets → publish)
 
-## 💰 Business Model
+## � What's Included
 
-**Open Core + Cloud SaaS**
+**Free & Open Source**
 
-```
-FREE (Forever)
-├─ Engine library (@wire-dsl/engine)
-├─ Exporters library (@wire-dsl/exporters)
-├─ CLI tool (@wire-dsl/cli)
-├─ Web editor (basic)
-├─ Self-hosted visual editor
-└─ AI with your API key
-
-PRO ($15/month)
-├─ Cloud visual editor
-├─ AI generation (100/month with our key)
-├─ Collaboration (coming soon)
-├─ Private projects
-└─ Premium templates
-
-ENTERPRISE (Custom)
-├─ On-premise
-├─ SSO/SAML
-├─ Custom integrations
-└─ SLA support
-```
+- ✅ Engine library (@wire-dsl/engine) - Pure TypeScript parser + layout
+- ✅ Exporters library (@wire-dsl/exporters) - SVG, PNG, PDF output
+- ✅ CLI tool (@wire-dsl/cli) - Command-line rendering
+- ✅ Web editor - Live editing and preview with AI integration
+- ✅ Full source code on GitHub
 
 ## 🤝 Contributing
 
@@ -307,10 +241,10 @@ We welcome contributions! See [CONTRIBUTING.md](./.github/CONTRIBUTING.md).
 
 ```bash
 git checkout -b feature/your-feature
-cd packages/core
+cd packages/engine
 pnpm test:watch
 # Make changes
-git commit -m "feat(core): your feature"
+git commit -m "feat(engine): your feature"
 git push origin feature/your-feature
 # Create PR
 ```
@@ -340,17 +274,17 @@ MIT License - Free for personal and commercial use
 ### vs Mermaid
 
 - ✅ Made for UI/UX
-- ✅ Export to code
-- ✅ More components
-- ✅ AI generation
+- ✅ More components (23 types)
+- ✅ Multiple export formats
+- ✅ Layout engine
+- ✅ AI generation ready
 - ❌ Younger project
 
 ### vs Code Templates
 
 - ✅ Language-agnostic
 - ✅ Instant visual feedback
-- ✅ AI-powered
-- ✅ Collaborative (coming)
+- ✅ AI-powered generation
 - ✅ No framework lock-in
 
 ## 🙏 Acknowledgments
@@ -358,40 +292,27 @@ MIT License - Free for personal and commercial use
 Inspired by:
 
 - **Mermaid** - Diagrams as code
-- **Figma** - Collaborative design
+- **Figma** - Design systems
 - **React** - Component-based UIs
 - **DSL design patterns** - Language engineering
 
 ## 📈 Roadmap
 
-**Phase 1** (Current)
+**Phase 1** ✅ (Completed)
 
-- [ ] Parser implementation
-- [ ] IR generator
-- [ ] Layout engine
-- [ ] SVG renderer
-- [ ] Web editor MVP
+- ✅ Parser implementation
+- ✅ IR generator
+- ✅ Layout engine
+- ✅ SVG renderer
+- ✅ Web editor MVP
+- ✅ CLI tool
+- ✅ PNG/PDF export
 
-**Phase 2**
+**Phase 2** (Next)
 
-- [ ] Visual editor (WYSIWYG)
-- [ ] Real-time collaboration
-- [ ] Component library
+- [ ] Component library templates
 - [ ] Code generation (React/Vue)
-
-**Phase 3**
-
 - [ ] Figma import/export
-- [ ] VS Code extension
-- [ ] LSP support
-- [ ] Plugin system
-
-**Phase 4**
-
-- [ ] Design system integration
-- [ ] Accessibility audits
-- [ ] Performance profiling
-- [ ] Enterprise features
 
 ## 👥 Status
 
@@ -400,21 +321,24 @@ Inspired by:
 ✅ Tech stack decided
 ✅ Monorepo setup complete
 ✅ CI/CD pipelines ready
-✅ AI strategy defined
+✅ AI-friendly DSL designed
 ✅ DSL parser (implemented)
 ✅ IR generator (implemented)
 ✅ Layout engine (implemented)
 ✅ SVG renderer (implemented)
 ✅ Web editor MVP (implemented)
 ✅ CLI tool (implemented)
+✅ SVG/PNG/PDF exporters (implemented)
+✅ Engine + Exporters separation (completed)
 ✅ VS Code extension (implemented)
-🚧 AI backend integration (in progress)
-📅 Visual editor (WYSIWYG)
-📅 Collaboration features
+📅 LSP support
+📅 Code generation (React/Vue)
+📅 Figma import/export
 ```
 
 ---
 
-**Last Updated**: January 23, 2026  
-**Status**: 🚀 Open Source, Production-Ready Monorepo  
+**Last Updated**: February 1, 2026  
+**Status**: ✅ Production-Ready, Open Source  
+**Current Branch**: refactor/core-to-engine → Ready to merge  
 **Next**: `pnpm install && pnpm dev`
