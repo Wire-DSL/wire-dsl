@@ -2,9 +2,11 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 import './index.css';
+import { registerWireLanguage } from './monaco/wireLanguage';
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>
-);
+// Registrar lenguaje Wire en Monaco
+registerWireLanguage();
+
+// Render app
+const root = ReactDOM.createRoot(document.getElementById('root')!);
+root.render(<App />);

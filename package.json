@@ -14,6 +14,7 @@
   ],
   "scripts": {
     "dev": "turbo dev",
+    "dev:web": "turbo dev --filter=@wire-dsl/web",
     "build": "turbo build",
     "build:core": "turbo build --filter=@wire-dsl/core",
     "build:cli": "turbo build --filter=@wire-dsl/cli",
