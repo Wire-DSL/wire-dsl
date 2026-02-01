@@ -1,5 +1,7 @@
 export default {
     plugins: {
-        '@tailwindcss/postcss': {}
+        '@tailwindcss/postcss': {
+            optimize: false
+        }
     }
 };

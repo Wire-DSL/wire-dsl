@@ -1,0 +1,71 @@
+{
+  "name": "@wire-dsl/language-support",
+  "version": "1.0.0",
+  "description": "Wire DSL language definitions for Monaco, VS Code, and other editors. Keywords, components, properties, autocompletion, and grammar.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./completions": {
+      "import": "./dist/completions.js",
+      "types": "./dist/completions.d.ts"
+    },
+    "./grammar": {
+      "import": "./dist/grammar.js",
+      "types": "./dist/grammar.d.ts"
+    }
+  },
+  "files": [
+    "dist",
+    "wire.tmLanguage.json",
+    "README.md",
+    "LICENSE",
+    "INTEGRATION-GUIDE.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "type-check": "tsc --noEmit",
+    "dev": "tsc --watch",
+    "prepublishOnly": "npm run build && npm run type-check"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Wire-DSL/wire-dsl.git",
+    "directory": "packages/language-support"
+  },
+  "bugs": {
+    "url": "https://github.com/Wire-DSL/wire-dsl/issues"
+  },
+  "homepage": "https://github.com/Wire-DSL/wire-dsl/tree/main/packages/language-support",
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^25.0.9",
+    "typescript": "^5.9.3"
+  },
+  "keywords": [
+    "wire-dsl",
+    "language",
+    "syntax-highlighting",
+    "autocomplete",
+    "intellisense",
+    "monaco-editor",
+    "vscode-extension",
+    "lsp",
+    "code-intelligence",
+    "dsl",
+    "domain-specific-language"
+  ],
+  "author": "Wire-DSL Contributors",
+  "license": "MIT"
+}
