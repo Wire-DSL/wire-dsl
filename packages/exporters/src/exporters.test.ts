@@ -3,7 +3,7 @@ import { mkdir, writeFile } from 'fs/promises';
 import { readFile, stat } from 'fs/promises';
 import path from 'path';
 import { tmpdir } from 'os';
-import { exportPNG, exportMultipagePDF, exportSVG } from './exporters';
+import { exportPNG, exportMultipagePDF, exportSVG } from './index';
 
 // Test SVG template
 const testSVG = `<svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">

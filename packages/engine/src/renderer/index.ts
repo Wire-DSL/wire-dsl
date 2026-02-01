@@ -1601,7 +1601,6 @@ export function buildSVG(component: SVGComponent): string {
 }
 
 // ============================================================================
-// EXPORTERS
+// NOTE: File export functions have been moved to @wire-dsl/exporters
+// This keeps the engine pure JS/TS without Node.js I/O dependencies
 // ============================================================================
-
-export { exportPNG, exportMultipagePDF, exportSVG } from './exporters';
