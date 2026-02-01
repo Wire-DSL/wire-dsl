@@ -214,6 +214,72 @@ packages/exporters/        ← NEW PACKAGE
 
 ---
 
-**Last Updated**: 2026-02-01  
+## 📋 Execution Summary
+
+**Status**: ✅ COMPLETED on 2026-02-01
+
+### Phases Completed:
+- ✅ Phase 1: Renamed `packages/core` → `packages/engine`
+- ✅ Phase 2: Created `packages/exporters` with correct dependencies
+- ✅ Phase 3: Updated imports (CLI, web, docs, workflows)
+- ✅ Phase 4: Verification (build success, type-check pass, 0 errors)
+
+### Build Results:
+```
+Tasks:    4 successful, 4 total (engine, exporters, cli, web)
+Build time: 7.261s
+Type errors: 0
+All packages compiled ✅
+```
+
+### Git Commit:
+```
+refactor: split core into engine + exporters packages
+- 40 files changed
+- Renamed 24 files (core → engine)
+- Created 5 new files (exporters package)
+- Deleted 2 .js duplicates from web/src
+```
+
+---
+
+## ⚠️ Important: VSCode Extension Repository
+
+**The VSCode extension is in a SEPARATE REPOSITORY** and needs to be updated independently.
+
+When that repository is ready for refactor:
+
+1. **Update VSCode extension imports:**
+   ```typescript
+   // BEFORE:
+   import { parseWireDSL, SVGRenderer } from '@wire-dsl/core';
+   
+   // AFTER:
+   import { parseWireDSL, SVGRenderer } from '@wire-dsl/engine';
+   
+   // If using exporters (for file operations):
+   import { exportSVG, exportPNG, exportMultipagePDF } from '@wire-dsl/exporters';
+   ```
+
+2. **Update package.json:**
+   ```json
+   "dependencies": {
+     "@wire-dsl/engine": "^0.1.6",
+     "@wire-dsl/exporters": "^0.1.6"  // Only if exporting files
+   }
+   ```
+
+3. **Update GitHub Actions** (if VSCode ext has CI/CD):
+   - Replace `@wire-dsl/core` with `@wire-dsl/engine`
+   - Add `@wire-dsl/exporters` if used
+
+4. **Note:** This is NOT a breaking change for VSCode extension consumers
+   - APIs remain identical
+   - Only package names and locations change
+   - Smooth migration path available
+
+---
+
+**Last Updated**: 2026-02-01 18:25 UTC  
 **Prepared by**: GitHub Copilot  
-**Next Step**: Execute Phase 1 (package rename)
+**Next Step**: Merge this branch to main, then rebase feature/webapp-live-preview
