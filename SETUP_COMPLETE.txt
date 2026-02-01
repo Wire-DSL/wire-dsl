@@ -11,8 +11,9 @@
 📊 WHAT WAS CREATED
 ═══════════════════════════════════════════════════════════════════════════
 
-✅ 5 Production-Ready Packages
-   ├─ @wire-dsl/core       (Parser + Engine)
+✅ 6 Production-Ready Packages
+   ├─ @wire-dsl/engine     (Parser + Layout + Renderer)
+   ├─ @wire-dsl/exporters  (SVG/PNG/PDF file export)
    ├─ @wire-dsl/cli        (Command-line tool)
    ├─ @wire-dsl/web        (React editor)
    ├─ @wire-dsl/ai-backend (AI service)
@@ -73,12 +74,21 @@ PATH 3️⃣ : COMPLETE UNDERSTANDING (45 minutes)
 
 wire-dsl/
 ├── packages/
-│   ├── core/           (@wire-dsl/core - 95% of logic)
+│   ├── engine/         (@wire-dsl/engine - parser, IR, layout, renderer)
 │   │   ├── src/
 │   │   │   ├── parser/         ← Chevrotain parser
 │   │   │   ├── ir/             ← IR generator
 │   │   │   ├── layout/         ← Layout engine
 │   │   │   ├── renderer/       ← SVG renderer
+│   │   │   └── index.ts
+│   │   ├── tests/
+│   │   ├── package.json
+│   │
+│   ├── exporters/      (@wire-dsl/exporters - SVG/PNG/PDF export)
+│   │   ├── src/
+│   │   │   ├── svg.ts          ← SVG file export
+│   │   │   ├── png.ts          ← PNG export (sharp)
+│   │   │   ├── pdf.ts          ← PDF export (pdfkit)
 │   │   │   └── index.ts
 │   │   ├── tests/
 │   │   ├── package.json

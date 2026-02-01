@@ -8,11 +8,12 @@ Your monorepo is now fully scaffolded and ready for development! Here's what was
 
 ### 📦 **5 Production-Ready Packages**
 
-1. **@wire-dsl/core** - Core engine (parser, IR, layout, renderer)
-2. **@wire-dsl/cli** - Command-line tool
-3. **@wire-dsl/web** - Live web editor (React + Monaco)
-4. **@wire-dsl/ai-backend** - AI service (Hono + Cloudflare Workers)
-5. **@wire-dsl/studio** - Visual editor (Roadmap)
+1. **@wire-dsl/engine** - Engine (parser, IR, layout, renderer)
+2. **@wire-dsl/exporters** - Exporters (SVG, PNG, PDF - Node.js)
+3. **@wire-dsl/cli** - Command-line tool
+4. **@wire-dsl/web** - Live web editor (React + Monaco)
+5. **@wire-dsl/ai-backend** - AI service (Hono + Cloudflare Workers)
+6. **@wire-dsl/studio** - Visual editor (Roadmap)
 
 ### 🔧 **Infrastructure Configured**
 
@@ -98,12 +99,20 @@ pnpm clean            # Clean all dist folders
 ```
 wire-dsl/
 ├── packages/
-│   ├── core/              # @wire-dsl/core (95% of logic)
+│   ├── engine/            # @wire-dsl/engine (parser, IR, layout, renderer)
 │   │   ├── src/
 │   │   │   ├── parser/    # Chevrotain parser → AST
 │   │   │   ├── ir/        # AST → IR (JSON)
 │   │   │   ├── layout/    # IR → Positions
 │   │   │   └── renderer/  # Positions → SVG
+│   │   └── tests/
+│   │
+│   ├── exporters/         # @wire-dsl/exporters (SVG/PNG/PDF export)
+│   │   ├── src/
+│   │   │   ├── svg.ts     # SVG file export
+│   │   │   ├── png.ts     # PNG export (sharp)
+│   │   │   ├── pdf.ts     # PDF export (pdfkit)
+│   │   │   └── helpers.ts # Utilities
 │   │   └── tests/
 │   │
 │   ├── cli/               # @wire-dsl/cli (CLI wrapper)
@@ -164,12 +173,14 @@ git push origin feature/awesome-feature
 // In packages/cli/package.json
 {
   "dependencies": {
-    "@wire-dsl/core": "workspace:*"
+    "@wire-dsl/engine": "workspace:*",
+    "@wire-dsl/exporters": "workspace:*"
   }
 }
 
 // In packages/cli/src/cli.ts
-import { parseWireDSL } from '@wire-dsl/core';
+import { parseWireDSL, generateIR } from '@wire-dsl/engine';
+import { exportSVG, exportPNG } from '@wire-dsl/exporters';
 ```
 
 ---
@@ -351,7 +362,7 @@ tsc --noEmit
 ## 💡 Pro Tips
 
 1. **Use Turborepo caching** - It only rebuilds changed packages
-2. **Filter with --filter** - `pnpm build --filter=@wire-dsl/core`
+2. **Filter with --filter** - `pnpm build --filter=@wire-dsl/engine --filter=@wire-dsl/exporters`
 3. **Watch mode** - `pnpm test:watch` for development
 4. **Monorepo visualization** - `pnpm ls -r` shows dependency tree
 5. **Changesets** - Use `pnpm changeset` instead of manual versioning

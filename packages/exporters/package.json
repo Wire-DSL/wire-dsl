@@ -1,7 +1,7 @@
 {
-  "name": "@wire-dsl/core",
+  "name": "@wire-dsl/exporters",
   "version": "0.1.6",
-  "description": "Core WireDSL engine - Parser, IR generator, layout engine, and SVG renderer",
+  "description": "WireDSL exporters - SVG, PNG, and PDF file export functions (Node.js only)",
   "type": "module",
   "exports": {
     ".": {
@@ -29,10 +29,11 @@
   "keywords": [
     "wireframe",
     "dsl",
-    "declarative",
-    "design",
-    "prototype",
-    "svg"
+    "export",
+    "svg",
+    "png",
+    "pdf",
+    "svg-to-pdf"
   ],
   "author": "WireDSL Contributors",
   "license": "MIT",
@@ -40,8 +41,7 @@
     "access": "public"
   },
   "dependencies": {
-    "chevrotain": "11.1.0",
-    "zod": "4.3.5",
+    "@wire-dsl/engine": "workspace:*",
     "pdfkit": "0.17.2",
     "sharp": "0.34.5",
     "svg-to-pdfkit": "0.1.8"

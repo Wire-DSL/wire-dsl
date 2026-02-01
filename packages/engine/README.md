@@ -1,17 +1,17 @@
-# @wire-dsl/core
+# @wire-dsl/engine
 
-Core library for Wire-DSL. Provides the parser, IR generator, layout engine, and component definitions for transforming `.wire` files into interactive wireframes.
+Pure JavaScript/TypeScript engine for Wire-DSL. Provides the parser, IR generator, layout engine, and SVG renderer for transforming `.wire` files into interactive wireframes. **Browser-safe - no Node.js dependencies.**
 
 ## Installation
 
 ```bash
-npm install @wire-dsl/core
+npm install @wire-dsl/engine
 ```
 
 ## Quick Start
 
 ```typescript
-import { parseWire, generateIR, computeLayout } from '@wire-dsl/core';
+import { parseWire, generateIR, computeLayout, renderSVG } from '@wire-dsl/engine';
 
 // Parse .wire DSL file
 const ast = parseWire(`
@@ -36,7 +36,7 @@ console.log(layout);
 Transforms `.wire` DSL syntax into an Abstract Syntax Tree (AST) using Chevrotain.
 
 ```typescript
-import { parseWire } from '@wire-dsl/core';
+import { parseWire } from '@wire-dsl/engine';
 const ast = parseWire(wireCode);
 ```
 
@@ -44,7 +44,7 @@ const ast = parseWire(wireCode);
 Converts AST into a structured IR contract that describes components, properties, and relationships.
 
 ```typescript
-import { generateIR } from '@wire-dsl/core';
+import { generateIR } from '@wire-dsl/engine';
 const ir = generateIR(ast);
 ```
 
@@ -52,7 +52,7 @@ const ir = generateIR(ast);
 Computes positions and dimensions for all components based on container types and constraints.
 
 ```typescript
-import { computeLayout } from '@wire-dsl/core';
+import { computeLayout } from '@wire-dsl/engine';
 const layout = computeLayout(ir);
 ```
 
@@ -60,7 +60,7 @@ const layout = computeLayout(ir);
 Schema-based validation using Zod to ensure IR correctness.
 
 ```typescript
-import { validateIR } from '@wire-dsl/core';
+import { validateIR } from '@wire-dsl/engine';
 validateIR(ir); // Throws if invalid
 ```
 

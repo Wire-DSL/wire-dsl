@@ -1,4 +1,5 @@
-// Main export for @wire-dsl/core
+// Main export for @wire-dsl/engine
+// Pure JavaScript/TypeScript - browser-safe, no Node.js dependencies
 // Re-export all modules
 
 export * from './parser/index';

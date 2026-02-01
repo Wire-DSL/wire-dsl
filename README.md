@@ -33,8 +33,8 @@ npm install -g @wire-dsl/cli
 wire render myfile.wire -o output.svg
 
 # Use as library
-npm install @wire-dsl/core
-import { parseWireDSL } from '@wire-dsl/core';
+npm install @wire-dsl/engine
+import { parseWireDSL, generateIR } from '@wire-dsl/engine';
 ```
 
 ## 📖 First Time? Read This
@@ -113,13 +113,14 @@ project "Dashboard" {
 
 ## 📦 Packages
 
-| Package                                       | Purpose                      | Status         |
-| --------------------------------------------- | ---------------------------- | -------------- |
-| [@wire-dsl/core](./packages/core)             | Parser, IR, layout, renderer | 🚧 In Progress |
-| [@wire-dsl/cli](./packages/cli)               | Command-line tool            | 🚧 In Progress |
-| [@wire-dsl/web](./packages/web)               | Live web editor              | 🚧 In Progress |
-| [@wire-dsl/ai-backend](./packages/ai-backend) | AI service                   | 🚧 In Progress |
-| [@wire-dsl/studio](./packages/studio)         | Visual editor (WYSIWYG)      | 📅 Roadmap     |
+| Package                                         | Purpose                        | Status         |
+| ----------------------------------------------- | ------------------------------ | -------------- |
+| [@wire-dsl/engine](./packages/engine)           | Parser, IR, layout, renderer   | 🚧 In Progress |
+| [@wire-dsl/exporters](./packages/exporters)     | SVG, PNG, PDF export (Node.js) | 🚧 In Progress |
+| [@wire-dsl/cli](./packages/cli)                 | Command-line tool              | 🚧 In Progress |
+| [@wire-dsl/web](./packages/web)                 | Live web editor                | 🚧 In Progress |
+| [@wire-dsl/ai-backend](./packages/ai-backend)   | AI service                     | 🚧 In Progress |
+| [@wire-dsl/studio](./packages/studio)           | Visual editor (WYSIWYG)        | 📅 Roadmap     |
 
 ## 🎯 Example Workflow
 
@@ -277,7 +278,8 @@ Generated .wire code
 
 ```
 FREE (Forever)
-├─ Core library (@wire-dsl/core)
+├─ Engine library (@wire-dsl/engine)
+├─ Exporters library (@wire-dsl/exporters)
 ├─ CLI tool (@wire-dsl/cli)
 ├─ Web editor (basic)
 ├─ Self-hosted visual editor

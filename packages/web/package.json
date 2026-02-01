@@ -15,7 +15,7 @@
     "lint:fix": "eslint src --ext .ts,.tsx --fix"
   },
   "dependencies": {
-    "@wire-dsl/core": "workspace:*",
+    "@wire-dsl/engine": "workspace:*",
     "monaco-editor": "0.55.1",
     "react": "19.2.3",
     "react-dom": "19.2.3",

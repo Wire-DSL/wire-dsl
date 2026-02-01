@@ -1,7 +1,8 @@
 import { readFile, mkdir, stat } from 'fs/promises';
 import path from 'path';
 import chokidar from 'chokidar';
-import { LayoutEngine, SVGRenderer, generateIR, parseWireDSL, exportSVG, exportPNG, exportMultipagePDF } from '@wire-dsl/core';
+import { LayoutEngine, SVGRenderer, generateIR, parseWireDSL } from '@wire-dsl/engine';
+import { exportSVG, exportPNG, exportMultipagePDF } from '@wire-dsl/exporters';
 
 // Dynamic imports for ESM modules to handle CJS compatibility
 let modules: { chalk?: any; ora?: any } = {};
