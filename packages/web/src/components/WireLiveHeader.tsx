@@ -20,6 +20,7 @@ export const WireLiveHeader: React.FC<WireLiveHeaderProps> = ({
   onExampleSelect,
   examples = [
     'simple-dashboard',
+    'simple-multi-screen',
     'admin-dashboard',
     'form-example',
     'analytics-dashboard',

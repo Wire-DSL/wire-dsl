@@ -1,4 +1,11 @@
 import { useState, useEffect } from 'react';
+import {
+  parseWireDSL,
+  generateIR,
+  calculateLayout,
+  renderToSVG,
+} from '@wire-dsl/engine';
+import type { IRContract } from '@wire-dsl/engine';
 
 export interface WireRenderResult {
   svg: string;
@@ -7,6 +14,8 @@ export interface WireRenderResult {
   projectName: string;
   screenCount: number;
   componentCount: number;
+  screens: Array<{ name: string; id: string }>;
+  selectedScreenName: string;
 }
 
 export interface WireDiagnostic {
@@ -18,18 +27,17 @@ export interface WireDiagnostic {
 
 /**
  * Hook to parse Wire DSL code and render to SVG
- * 
- * NOTE: @wire-dsl/core uses Node.js dependencies (pdfkit, fs, etc)
- * and cannot run directly in the browser.
- * 
- * TODO: Implement one of:
- * 1. Web Worker wrapper around core
- * 2. Backend API endpoint for parsing/rendering
- * 3. Rust/WASM version of parser
- * 
- * For now: Basic validation + placeholder SVG rendering
+ *
+ * Uses @wire-dsl/engine for parsing, IR generation, layout calculation, and rendering.
+ * All operations run in the browser (engine is pure JS/TS with no Node.js dependencies).
+ *
+ * Pipeline:
+ * 1. Parse DSL code to AST using Chevrotain parser
+ * 2. Generate IR (Intermediate Representation) with validation
+ * 3. Calculate layout positions and dimensions
+ * 4. Render to SVG with all visual properties
  */
-export function useWireParser(code: string) {
+export function useWireParser(code: string, selectedScreenName?: string | null) {
   const [renderResult, setRenderResult] = useState<WireRenderResult | null>(null);
   const [diagnostics, setDiagnostics] = useState<WireDiagnostic[]>([]);
   const [renderState, setRenderState] = useState<'idle' | 'parsing' | 'rendering'>('idle');
@@ -41,114 +49,174 @@ export function useWireParser(code: string) {
       return;
     }
 
-    try {
-      setRenderState('parsing');
+    const processWireCode = async () => {
+      try {
+        setRenderState('parsing');
+        const errors: WireDiagnostic[] = [];
 
-      // Basic syntax validation
-      const errors: WireDiagnostic[] = [];
+        // 1. Parse DSL to AST
+        let ast;
+        try {
+          ast = parseWireDSL(code);
+        } catch (parseError) {
+          const message =
+            parseError instanceof Error
+              ? parseError.message
+              : 'Failed to parse Wire DSL';
+          errors.push({
+            line: 1,
+            column: 1,
+            message,
+            severity: 'error',
+          });
+          setDiagnostics(errors);
+          setRenderResult(null);
+          setRenderState('idle');
+          return;
+        }
 
-      // Check for required keywords
-      if (!code.includes('project')) {
-        errors.push({
-          line: 1,
-          column: 1,
-          message: 'Missing "project" declaration',
-          severity: 'error',
+        // 2. Generate IR
+        let ir: IRContract;
+        try {
+          ir = generateIR(ast);
+        } catch (irError) {
+          const message =
+            irError instanceof Error
+              ? irError.message
+              : 'Failed to generate IR';
+          errors.push({
+            line: 1,
+            column: 1,
+            message,
+            severity: 'error',
+          });
+          setDiagnostics(errors);
+          setRenderResult(null);
+          setRenderState('idle');
+          return;
+        }
+
+        // 3. Calculate layout
+        setRenderState('rendering');
+        let layout;
+        try {
+          layout = calculateLayout(ir);
+        } catch (layoutError) {
+          const message =
+            layoutError instanceof Error
+              ? layoutError.message
+              : 'Failed to calculate layout';
+          errors.push({
+            line: 1,
+            column: 1,
+            message,
+            severity: 'error',
+          });
+          setDiagnostics(errors);
+          setRenderResult(null);
+          setRenderState('idle');
+          return;
+        }
+
+        // 4. Render to SVG
+        let svgOutput: string;
+        const screenToRender = selectedScreenName
+          ? ir.project.screens.find((s) => s.name === selectedScreenName)
+          : null;
+        
+        const screenName = screenToRender?.name || ir.project.screens[0]?.name;
+        
+        try {
+          svgOutput = renderToSVG(ir, layout, { screenName });
+        } catch (renderError) {
+          const message =
+            renderError instanceof Error
+              ? renderError.message
+              : 'Failed to render SVG';
+          errors.push({
+            line: 1,
+            column: 1,
+            message,
+            severity: 'error',
+          });
+          setDiagnostics(errors);
+          setRenderResult(null);
+          setRenderState('idle');
+          return;
+        }
+
+        // Success: extract metadata and set result
+        const screenCount = ir.project.screens.length;
+        const componentCount = ir.project.screens.reduce(
+          (total: number, screen: any) => total + countComponents(screen),
+          0
+        );
+
+        // Get dimensions for the rendered screen
+        const renderedScreen = ir.project.screens.find((s) => s.name === screenName);
+        const width = renderedScreen?.viewport.width || 800;
+        const height = renderedScreen?.viewport.height || 600;
+
+        // Build screens list with name and id
+        const screens = ir.project.screens.map((screen) => ({
+          name: screen.name,
+          id: screen.id,
+        }));
+
+        setRenderResult({
+          svg: svgOutput,
+          width,
+          height,
+          projectName: ir.project.name,
+          screenCount,
+          componentCount,
+          screens,
+          selectedScreenName: screenName,
         });
-      }
 
-      if (!code.includes('screen')) {
-        errors.push({
-          line: code.split('\n').findIndex((l) => l.includes('project')) + 1,
-          column: 1,
-          message: 'Missing "screen" declaration',
-          severity: 'error',
-        });
-      }
-
-      // Check bracket matching
-      const open = code.match(/{/g)?.length || 0;
-      const close = code.match(/}/g)?.length || 0;
-      if (open !== close) {
-        errors.push({
-          line: code.split('\n').length,
-          column: code.split('\n')[code.split('\n').length - 1].length,
-          message: `Mismatched braces: ${open} open, ${close} close`,
-          severity: 'error',
-        });
-      }
-
-      if (errors.length > 0) {
-        setDiagnostics(errors);
+        setDiagnostics([]);
+      } catch (error) {
+        const message =
+          error instanceof Error ? error.message : 'Unknown error';
+        setDiagnostics([
+          {
+            line: 1,
+            column: 1,
+            message,
+            severity: 'error',
+          },
+        ]);
         setRenderResult(null);
+      } finally {
         setRenderState('idle');
-        return;
       }
+    };
 
-      // Generate placeholder SVG with metadata
-      setRenderState('rendering');
-
-      const lines = code.split('\n');
-      const projectMatch = code.match(/project\s+"([^"]+)"/);
-      const projectName = projectMatch?.[1] || 'Wireframe';
-
-      // Extract component count
-      const componentCount = (code.match(/component\s+\w+/gi) || []).length;
-
-      const placeholderSvg = `<svg width="800" height="600" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
-  <defs>
-    <style>
-      .bg { fill: #F8FAFC; }
-      .border { stroke: #E2E8F0; stroke-width: 1; }
-      .text { font-family: -apple-system, system-ui, sans-serif; font-size: 14px; fill: #475569; }
-      .title { font-size: 24px; font-weight: 600; fill: #1E293B; }
-      .meta { font-size: 12px; fill: #94A3B8; }
-    </style>
-  </defs>
-  <rect width="800" height="600" class="bg border"/>
-  <g>
-    <text x="40" y="60" class="title">${projectName}</text>
-    <text x="40" y="100" class="text">Lines: ${lines.length}</text>
-    <text x="40" y="125" class="text">Components: ${componentCount}</text>
-    <rect x="40" y="160" width="720" height="380" fill="#FFFFFF" stroke="#E2E8F0" stroke-width="1" rx="8"/>
-    <text x="400" y="360" class="meta" text-anchor="middle">
-      Preview rendering in progress...
-    </text>
-    <text x="400" y="385" class="meta" text-anchor="middle" style="font-size: 11px;">
-      Awaiting backend parser integration
-    </text>
-  </g>
-</svg>`;
-
-      setRenderResult({
-        svg: placeholderSvg,
-        width: 800,
-        height: 600,
-        projectName,
-        screenCount: 1,
-        componentCount,
-      });
-
-      setDiagnostics([]);
-      setRenderState('idle');
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown parsing error';
-      setDiagnostics([
-        {
-          line: 1,
-          column: 1,
-          message,
-          severity: 'error',
-        },
-      ]);
-      setRenderResult(null);
-      setRenderState('idle');
-    }
-  }, [code]);
+    processWireCode();
+  }, [code, selectedScreenName]);
 
   return {
     renderResult,
     diagnostics,
     renderState,
   };
+}
+
+/**
+ * Helper to count components in a screen
+ */
+function countComponents(screen: any): number {
+  if (!screen.layout) return 0;
+
+  let count = 0;
+  const countInNode = (node: any) => {
+    if (node.type === 'component') {
+      count++;
+    } else if (node.children) {
+      node.children.forEach(countInNode);
+    }
+  };
+
+  countInNode(screen.layout);
+  return count;
 }
