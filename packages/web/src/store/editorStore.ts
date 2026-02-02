@@ -22,6 +22,7 @@ interface EditorStore extends EditorState {
   openFile: (fileId: string) => void;
   updateFileContent: (fileId: string, content: string) => void;
   renameFile: (fileId: string, newName: string) => void;
+  markFileSaved: (fileId: string) => void;
   deleteFile: (fileId: string) => void;
   closeFile: (fileId: string) => void;
 
@@ -91,6 +92,17 @@ export const useEditorStore = create<EditorStore>()(
           const file = files.get(fileId);
           if (file) {
             files.set(fileId, { ...file, name: newName });
+          }
+          return { files };
+        });
+      },
+
+      markFileSaved: (fileId: string) => {
+        set((state) => {
+          const files = new Map(state.files);
+          const file = files.get(fileId);
+          if (file) {
+            files.set(fileId, { ...file, isDirty: false });
           }
           return { files };
         });

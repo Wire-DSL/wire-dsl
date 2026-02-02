@@ -4,25 +4,33 @@ import { WireLiveHeader } from './WireLiveHeader';
 import { useEditorStore } from '../store/editorStore';
 import { useWireParser } from '../hooks/useWireParser';
 import { useCanvasZoom } from '../hooks/useCanvasZoom';
+import { useFileSystemAccess } from '../hooks/useFileSystemAccess';
 
 export const WireLiveEditor: React.FC = () => {
-  const {
-    currentFileId,
-    previewMode,
-    selectedScreen,
-    createFile,
-    updateFileContent,
-    setPreviewMode,
-    setSelectedScreen,
-    getCurrentFile,
-  } = useEditorStore();
+  const { fileHandle, openFile, saveFile, saveFileAs } = useFileSystemAccess();
+  
+  // Subscribe to both files and currentFileId to ensure re-renders
+  const files = useEditorStore((state) => state.files);
+  const currentFileId = useEditorStore((state) => state.currentFileId);
+  const previewMode = useEditorStore((state) => state.previewMode);
+  const selectedScreen = useEditorStore((state) => state.selectedScreen);
+  const createFile = useEditorStore((state) => state.createFile);
+  const updateFileContent = useEditorStore((state) => state.updateFileContent);
+  const renameFile = useEditorStore((state) => state.renameFile);
+  const markFileSaved = useEditorStore((state) => state.markFileSaved);
+  const setPreviewMode = useEditorStore((state) => state.setPreviewMode);
+  const setSelectedScreen = useEditorStore((state) => state.setSelectedScreen);
+  const getCurrentFile = useEditorStore((state) => state.getCurrentFile);
 
-  const currentFile = getCurrentFile();
+  // Get current file - now guaranteed to be fresh
+  const currentFile = files.get(currentFileId);
   const [diagnosticsVisible, setDiagnosticsVisible] = useState(false);
+  const currentFileHandleRef = useRef<any>(null);
   const previewContainerRef = useRef<HTMLDivElement | null>(null);
   const svgContainerRef = useRef<HTMLDivElement | null>(null);
 
   // Parser hook - real integration with wire-dsl/engine
+  // Pass both currentFile.content directly to ensure reactivity
   const { renderState, renderResult, diagnostics } = useWireParser(
     currentFile?.content || '',
     selectedScreen
@@ -46,6 +54,11 @@ export const WireLiveEditor: React.FC = () => {
   useEffect(() => {
     setPreviewRef(previewContainerRef.current);
   }, [setPreviewRef]);
+
+  // Reset zoom when file changes
+  useEffect(() => {
+    resetZoom();
+  }, [currentFileId, resetZoom]);
 
   // Extract SVG dimensions and initialize zoom when SVG is rendered
   useEffect(() => {
@@ -99,9 +112,24 @@ export const WireLiveEditor: React.FC = () => {
   const handleNew = () => {
     const newFileName = `untitled-${Date.now()}.wire`;
     createFile(newFileName);
+    // Clear file handle for new files
+    currentFileHandleRef.current = null;
   };
 
-  const handleOpen = () => {
+  const handleOpen = async () => {
+    // Try FileSystemAccess API first, fallback to input element
+    if (typeof window !== 'undefined' && 'showOpenFilePicker' in window) {
+      const result = await openFile();
+      if (result) {
+        createFile(result.name, result.content);
+        // Save the file handle directly from the result for later use in save
+        currentFileHandleRef.current = result.handle;
+        return;
+      }
+    }
+
+    // Fallback to input element - clears file handle
+    currentFileHandleRef.current = null;
     const fileInput = document.createElement('input');
     fileInput.type = 'file';
     fileInput.accept = '.wire,.txt';
@@ -142,10 +170,145 @@ export const WireLiveEditor: React.FC = () => {
       const response = await fetch(`/examples/${exampleName}.wire`);
       const content = await response.text();
       createFile(`${exampleName}.wire`, content);
+      // Clear file handle for example files
+      currentFileHandleRef.current = null;
     } catch (error) {
       console.error('Error loading example:', error);
     }
   };
+
+  const handleSave = async () => {
+    if (!currentFile) return;
+
+    // 1. Si existe handle, guardar con él
+    if (currentFileHandleRef.current) {
+      try {
+        const success = await saveFile(currentFile.content);
+        if (success) {
+          markFileSaved(currentFileId);
+          return;
+        }
+      } catch (err) {
+        console.error('Error saving:', err);
+      }
+    }
+
+    // 2. Si no existe handle, intentar abrir picker
+    if (typeof window !== 'undefined' && 'showSaveFilePicker' in window) {
+      try {
+        const result = await saveFileAs(currentFile.content, currentFile.name);
+        
+        // Usuario canceló el diálogo - no hacer nada
+        if (result === false) {
+          return;
+        }
+        
+        // Guardado exitoso
+        if (result) {
+          renameFile(currentFileId, result.name);
+          markFileSaved(currentFileId);
+          currentFileHandleRef.current = result.handle;
+          return;
+        }
+        
+        // Error real (result === null) - continuar al fallback
+      } catch (err) {
+        console.error('Error in save as:', err);
+      }
+    }
+
+    // 3. Fallback: descarga
+    const element = document.createElement('a');
+    element.setAttribute(
+      'href',
+      'data:text/plain;charset=utf-8,' + encodeURIComponent(currentFile.content)
+    );
+    element.setAttribute('download', currentFile.name);
+    element.style.display = 'none';
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+    markFileSaved(currentFileId);
+  };
+
+  const handleSaveAs = async () => {
+    if (!currentFile) return;
+
+    // Try FileSystemAccess first
+    if (typeof window !== 'undefined' && 'showSaveFilePicker' in window) {
+      const result = await saveFileAs(currentFile.content, currentFile.name);
+      
+      // Usuario canceló el diálogo - no hacer nada
+      if (result === false) {
+        return;
+      }
+      
+      // Guardado exitoso
+      if (result) {
+        renameFile(currentFileId, result.name);
+        markFileSaved(currentFileId);
+        // Save the handle directly from result for subsequent saves
+        currentFileHandleRef.current = result.handle;
+        return;
+      }
+      
+      // Error real (result === null) - continuar al fallback
+    }
+
+    // Fallback to browser download
+    const element = document.createElement('a');
+    element.setAttribute(
+      'href',
+      'data:text/plain;charset=utf-8,' + encodeURIComponent(currentFile.content)
+    );
+    element.setAttribute('download', currentFile.name);
+    element.style.display = 'none';
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+
+    markFileSaved(currentFileId);
+  };
+
+  const handleRename = (newName: string) => {
+    renameFile(currentFileId, newName);
+  };
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Solo si Ctrl (o Cmd en Mac) está presionado
+      if (!e.ctrlKey && !e.metaKey) return;
+
+      switch (e.key.toLowerCase()) {
+        case 's':
+          e.preventDefault();
+          if (e.shiftKey) {
+            handleSaveAs();
+          } else {
+            handleSave();
+          }
+          break;
+        case 'n':
+          e.preventDefault();
+          handleNew();
+          break;
+        case 'o':
+          e.preventDefault();
+          handleOpen();
+          break;
+        case 'e':
+          e.preventDefault();
+          handleExport();
+          break;
+        default:
+          break;
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [handleSave, handleSaveAs, handleNew, handleOpen, handleExport]);
 
   if (!currentFile) {
     return (
@@ -162,6 +325,9 @@ export const WireLiveEditor: React.FC = () => {
           isDirty={false}
           onNew={handleNew}
           onOpen={handleOpen}
+          onSave={handleSave}
+          onSaveAs={handleSaveAs}
+          onRename={handleRename}
           onExport={handleExport}
           onExampleSelect={handleExampleSelect}
         />
@@ -189,6 +355,9 @@ export const WireLiveEditor: React.FC = () => {
         isDirty={currentFile.isDirty}
         onNew={handleNew}
         onOpen={handleOpen}
+        onSave={handleSave}
+        onSaveAs={handleSaveAs}
+        onRename={handleRename}
         onExport={handleExport}
         onExampleSelect={handleExampleSelect}
       />
@@ -332,7 +501,7 @@ export const WireLiveEditor: React.FC = () => {
                       {renderResult.screens.map((screen, index) => (
                         <button
                           key={screen.id}
-                          onClick={() => {
+                          onClick={(e) => {
                             setSelectedScreen(screen.name);
                             const menu = (e.currentTarget.parentElement as HTMLElement);
                             if (menu) menu.style.display = 'none';

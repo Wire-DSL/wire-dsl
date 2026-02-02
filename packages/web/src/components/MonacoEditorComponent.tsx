@@ -56,26 +56,30 @@ export const MonacoEditorComponent = React.forwardRef<
         editorRef.current = editor;
         isInitializedRef.current = true;
 
-        // Listener para cambios
-        const disposable = editor.onDidChangeModelContent(() => {
-          const newContent = editor.getValue();
-          onChange(newContent);
-        });
-
         // Actualizar ref para acceso desde el parent
         if (typeof ref === 'function') {
           ref(editor);
         } else if (ref) {
           ref.current = editor;
         }
-
-        return () => {
-          disposable.dispose();
-        };
       } catch (error) {
         console.error('Error creating Monaco editor:', error);
       }
     }, []);
+
+    // Setup listener - separado, se ejecuta cada vez que onChange cambia
+    useEffect(() => {
+      if (!editorRef.current) return;
+
+      const disposable = editorRef.current.onDidChangeModelContent(() => {
+        const newContent = editorRef.current!.getValue();
+        onChange(newContent);
+      });
+
+      return () => {
+        disposable.dispose();
+      };
+    }, [onChange]);
 
     // Actualizar contenido cuando el prop cambia externamente
     useEffect(() => {

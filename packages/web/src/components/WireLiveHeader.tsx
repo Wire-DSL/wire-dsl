@@ -1,11 +1,14 @@
 import React from 'react';
-import { ChevronDown, Download, FolderOpen, Plus } from 'lucide-react';
+import { ChevronDown, Download, FolderOpen, Plus, Save, FileDown } from 'lucide-react';
 
 export interface WireLiveHeaderProps {
   currentFileName: string;
   isDirty: boolean;
   onNew: () => void;
   onOpen: () => void;
+  onSave: () => void;
+  onSaveAs?: () => void;
+  onRename: (newName: string) => void;
   onExport: () => void;
   onExampleSelect?: (exampleName: string) => void;
   examples?: string[];
@@ -16,6 +19,9 @@ export const WireLiveHeader: React.FC<WireLiveHeaderProps> = ({
   isDirty,
   onNew,
   onOpen,
+  onSave,
+  onSaveAs,
+  onRename,
   onExport,
   onExampleSelect,
   examples = [
@@ -27,6 +33,52 @@ export const WireLiveHeader: React.FC<WireLiveHeaderProps> = ({
   ],
 }) => {
   const [examplesOpen, setExamplesOpen] = React.useState(false);
+  const [isRenamingFile, setIsRenamingFile] = React.useState(false);
+  const [editingFileName, setEditingFileName] = React.useState(currentFileName);
+  const inputRef = React.useRef<HTMLInputElement>(null);
+
+  // Remove .wire extension from filename for display
+  const fileNameWithoutExt = React.useMemo(() => {
+    return currentFileName.endsWith('.wire')
+      ? currentFileName.slice(0, -5)
+      : currentFileName;
+  }, [currentFileName]);
+
+  React.useEffect(() => {
+    setEditingFileName(fileNameWithoutExt);
+  }, [fileNameWithoutExt]);
+
+  React.useEffect(() => {
+    if (isRenamingFile && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select();
+    }
+  }, [isRenamingFile]);
+
+  const handleRenameSubmit = () => {
+    if (editingFileName.trim()) {
+      const newNameWithoutExt = editingFileName.trim();
+      const newNameWithExt = newNameWithoutExt.endsWith('.wire')
+        ? newNameWithoutExt
+        : `${newNameWithoutExt}.wire`;
+      
+      if (newNameWithExt !== currentFileName) {
+        onRename(newNameWithExt);
+      }
+    } else {
+      setEditingFileName(fileNameWithoutExt);
+    }
+    setIsRenamingFile(false);
+  };
+
+  const handleRenameKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleRenameSubmit();
+    } else if (e.key === 'Escape') {
+      setIsRenamingFile(false);
+      setEditingFileName(fileNameWithoutExt);
+    }
+  };
 
   return (
     <header style={{
@@ -78,11 +130,45 @@ export const WireLiveHeader: React.FC<WireLiveHeaderProps> = ({
         <div style={{ width: '1px', height: '32px', backgroundColor: '#e5e7eb' }} />
 
         {/* Archivo actual */}
-        <div style={{ fontSize: '14px', color: '#4b5563' }}>
-          <span style={{ fontWeight: '500', color: '#111827' }}>
-            {currentFileName}
-          </span>
-          {isDirty && <span style={{ color: '#f59e0b', marginLeft: '6px', fontSize: '10px' }}>● unsaved</span>}
+        <div style={{ fontSize: '14px', color: '#4b5563', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {isRenamingFile ? (
+            <input
+              ref={inputRef}
+              type="text"
+              value={editingFileName}
+              onChange={(e) => setEditingFileName(e.target.value)}
+              onBlur={handleRenameSubmit}
+              onKeyDown={handleRenameKeyDown}
+              style={{
+                fontSize: '14px',
+                fontWeight: '500',
+                color: '#111827',
+                padding: '4px 8px',
+                border: '2px solid #3b82f6',
+                borderRadius: '4px',
+                fontFamily: 'inherit',
+                outline: 'none',
+              }}
+            />
+          ) : (
+            <span
+              onClick={() => setIsRenamingFile(true)}
+              style={{
+                fontWeight: '500',
+                color: '#111827',
+                cursor: 'pointer',
+                padding: '4px 6px',
+                borderRadius: '4px',
+                transition: 'background-color 0.2s',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f3f4f6')}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+              title="Click to rename"
+            >
+              {currentFileName}
+            </span>
+          )}
+          {isDirty && <span style={{ color: '#f59e0b', fontSize: '10px' }}>● unsaved</span>}
         </div>
       </div>
 
@@ -143,6 +229,72 @@ export const WireLiveHeader: React.FC<WireLiveHeaderProps> = ({
           <FolderOpen size={16} />
           Open
         </button>
+
+        {/* Guardar */}
+        <button
+          onClick={onSave}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            paddingLeft: '12px',
+            paddingRight: '12px',
+            paddingTop: '8px',
+            paddingBottom: '8px',
+            fontSize: '14px',
+            fontWeight: '500',
+            color: isDirty ? '#3b82f6' : '#374151',
+            backgroundColor: isDirty ? '#eff6ff' : 'transparent',
+            border: isDirty ? '1px solid #93c5fd' : 'none',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            transition: 'all 0.2s'
+          }}
+          onMouseEnter={(e) => {
+            if (isDirty) {
+              e.currentTarget.style.backgroundColor = '#dbeafe';
+            } else {
+              e.currentTarget.style.backgroundColor = '#f3f4f6';
+            }
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.backgroundColor = isDirty ? '#eff6ff' : 'transparent';
+          }}
+          title="Guardar archivo (Ctrl+S)"
+        >
+          <Save size={16} />
+          Save
+        </button>
+
+        {/* Guardar Como */}
+        {onSaveAs && (
+          <button
+            onClick={onSaveAs}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              paddingLeft: '12px',
+              paddingRight: '12px',
+              paddingTop: '8px',
+              paddingBottom: '8px',
+              fontSize: '14px',
+              fontWeight: '500',
+              color: '#374151',
+              backgroundColor: 'transparent',
+              border: 'none',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              transition: 'background-color 0.2s'
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f3f4f6')}
+            onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+            title="Guardar como (Ctrl+Shift+S)"
+          >
+            <FileDown size={16} />
+            Save As
+          </button>
+        )}
 
         {/* Ejemplos */}
         <div style={{ position: 'relative' }}>
