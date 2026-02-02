@@ -3,6 +3,8 @@
  * Shared completion logic for Monaco, VS Code, and other editors
  */
 
+import { COMPONENTS, LAYOUTS, PROPERTY_VALUES } from './components';
+
 export interface CompletionContext {
   line: string;
   position: number;
@@ -18,6 +20,9 @@ export interface CompletionItem {
   insertText?: string;
   range?: { startColumn: number; endColumn: number };
 }
+
+// Alias for compatibility
+export type CompletionSuggestion = CompletionItem;
 
 // Completion suggestions by context
 export const KEYWORD_COMPLETIONS: CompletionItem[] = [
@@ -266,6 +271,56 @@ export function getCurrentWord(lineText: string, position: number): string {
   return match ? match[0] : '';
 }
 
+/**
+ * Get available properties for a component
+ * Filters out properties already declared in current line
+ */
+export function getComponentPropertiesForCompletion(
+  componentName: string,
+  alreadyDeclaredProps: string[] = []
+): CompletionSuggestion[] {
+  const componentMeta = COMPONENTS[componentName as keyof typeof COMPONENTS];
+  if (!componentMeta) {
+    return PROPERTY_COMPLETIONS;
+  }
+
+  const availableProps: CompletionSuggestion[] = Object.entries(componentMeta.properties || {})
+    .filter(([propName]) => !alreadyDeclaredProps.includes(propName))
+    .map(([propName, propType]) => ({
+      label: propName,
+      kind: 'Property',
+      documentation: `Type: ${propType}`,
+      insertText: `${propName}: `,
+      detail: `${componentName} property`,
+    }));
+
+  return [...availableProps, ...PROPERTY_COMPLETIONS];
+}
+
+/**
+ * Get property value suggestions for a given component property
+ */
+export function getPropertyValueSuggestions(
+  componentName: string,
+  propertyName: string
+): CompletionSuggestion[] {
+  const componentMeta = COMPONENTS[componentName as keyof typeof COMPONENTS];
+  if (!componentMeta || !componentMeta.propertyValues) {
+    return [];
+  }
+
+  const values = componentMeta.propertyValues[propertyName as keyof typeof componentMeta.propertyValues];
+  if (!values) {
+    return [];
+  }
+
+  return (Array.isArray(values) ? values : [values]).map((value) => ({
+    label: value.toString(),
+    kind: 'Value',
+    documentation: `Value for ${propertyName}`,
+  }));
+}
+
 export default {
   KEYWORD_COMPLETIONS,
   CONTAINER_COMPLETIONS,
@@ -274,4 +329,6 @@ export default {
   getContextualCompletions,
   isPropertyContext,
   getCurrentWord,
+  getComponentPropertiesForCompletion,
+  getPropertyValueSuggestions,
 };

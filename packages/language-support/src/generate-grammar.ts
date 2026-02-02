@@ -5,7 +5,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { ALL_KEYWORDS } from './index.js';
+import { COMPONENTS, KEYWORDS, PROPERTY_VALUES } from './components.js';
 
 interface TextMateGrammar {
   $schema: string;
@@ -23,9 +23,9 @@ interface TextMateGrammar {
 
 export function generateGrammar(): TextMateGrammar {
   // Agrupar keywords por tipo
-  const keywords = ALL_KEYWORDS.filter(k => k.type === 'keyword').map(k => k.name);
-  const components = ALL_KEYWORDS.filter(k => k.type === 'component').map(k => k.name);
-  const properties = ALL_KEYWORDS.filter(k => k.type === 'property').map(k => k.name);
+  const keywords: string[] = ['project', 'screen', 'component', 'if', 'for', 'let', 'const', 'state', 'render'];
+  const components: string[] = Object.keys(COMPONENTS);
+  const properties: string[] = Object.keys(PROPERTY_VALUES);
 
   // Crear patrones regex
   const keywordPattern = keywords.join('|');
