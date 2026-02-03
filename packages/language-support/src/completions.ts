@@ -4,6 +4,7 @@
  */
 
 import { COMPONENTS, LAYOUTS, PROPERTY_VALUES } from './components';
+import type { DocumentScope } from './context-detection';
 
 export interface CompletionContext {
   line: string;
@@ -31,28 +32,28 @@ export const KEYWORD_COMPLETIONS: CompletionItem[] = [
     kind: 'Keyword',
     detail: 'Define a Wire project',
     documentation: 'project "My App" { ... }',
-    insertText: 'project "${1:name}" {\n\t$0\n}',
+    insertText: 'project "',
   },
   {
     label: 'screen',
     kind: 'Keyword',
     detail: 'Define a screen/page',
     documentation: 'screen MyScreen { ... }',
-    insertText: 'screen ${1:MyScreen} {\n\t$0\n}',
+    insertText: 'screen ',
   },
   {
     label: 'component',
     kind: 'Keyword',
-    detail: 'Define a reusable component',
-    documentation: 'component MyComponent { ... }',
-    insertText: 'component ${1:MyComponent} {\n\t$0\n}',
+    detail: 'Use a component',
+    documentation: 'component Button label: "Click"',
+    insertText: 'component ',
   },
   {
-    label: 'state',
+    label: 'layout',
     kind: 'Keyword',
-    detail: 'Declare state variable',
-    documentation: 'state count: number = 0',
-    insertText: 'state ${1:name}: ${2:type} = ${3:value}',
+    detail: 'Define a layout container',
+    documentation: 'layout stack(direction: vertical) { ... }',
+    insertText: 'layout ',
   },
 ];
 
@@ -61,36 +62,36 @@ export const CONTAINER_COMPLETIONS: CompletionItem[] = [
     label: 'stack',
     kind: 'Component',
     detail: 'Vertical/horizontal layout',
-    documentation: 'stack { ... }',
-    insertText: 'stack {\n\t$0\n}',
+    documentation: 'layout stack(direction: vertical, gap: md) { ... }',
+    insertText: 'stack(',
   },
   {
     label: 'grid',
     kind: 'Component',
     detail: 'Grid layout container',
-    documentation: 'grid { columns: 2 ... }',
-    insertText: 'grid {\n\tcolumns: ${1:2}\n\t$0\n}',
+    documentation: 'layout grid(columns: 2, gap: md) { ... }',
+    insertText: 'grid(',
   },
   {
     label: 'panel',
     kind: 'Component',
     detail: 'Panel with border',
-    documentation: 'panel { ... }',
-    insertText: 'panel {\n\t$0\n}',
+    documentation: 'layout panel(padding: md) { ... }',
+    insertText: 'panel(',
   },
   {
     label: 'card',
     kind: 'Component',
     detail: 'Card with shadow',
-    documentation: 'card { ... }',
-    insertText: 'card {\n\t$0\n}',
+    documentation: 'layout card(padding: md) { ... }',
+    insertText: 'card(',
   },
   {
     label: 'split',
     kind: 'Component',
     detail: 'Split pane layout',
-    documentation: 'split { ... }',
-    insertText: 'split {\n\t$0\n}',
+    documentation: 'layout split() { ... }',
+    insertText: 'split(',
   },
 ];
 
@@ -234,24 +235,37 @@ export const PROPERTY_COMPLETIONS: CompletionItem[] = [
 ];
 
 /**
- * Get completions based on context
+ * Detect if cursor is after 'component' keyword
+ * Returns component name if found, null otherwise
  */
-export function getContextualCompletions(
-  lineText: string,
-  word: string
-): CompletionItem[] {
-  const allCompletions = [
-    ...KEYWORD_COMPLETIONS,
-    ...CONTAINER_COMPLETIONS,
-    ...COMPONENT_COMPLETIONS,
-    ...PROPERTY_COMPLETIONS,
-  ];
+export function detectComponentKeyword(lineText: string): string | null {
+  // Match "component ComponentName" where ComponentName starts with uppercase
+  const match = lineText.match(/\bcomponent\s+([A-Z]\w*)/);
+  return match ? match[1] : null;
+}
 
-  // Filter by prefix
-  const lowerWord = word.toLowerCase();
-  return allCompletions.filter(item =>
-    item.label.toLowerCase().startsWith(lowerWord)
-  );
+/**
+ * Detect if cursor is after ':' in a property context
+ * Returns { propertyName, componentName } if in property value context
+ */
+export function detectPropertyValueContext(
+  lineText: string
+): { propertyName: string; componentName: string } | null {
+  // Match "component ComponentName ... property: "
+  const componentMatch = lineText.match(/\bcomponent\s+([A-Z]\w*)/);
+  if (!componentMatch) return null;
+
+  const componentName = componentMatch[1];
+  const afterComponent = lineText.substring(componentMatch.index! + componentMatch[0].length);
+  
+  // Match "property: " at the end
+  const propMatch = afterComponent.match(/(\w+)\s*:\s*$/);
+  if (!propMatch) return null;
+
+  return {
+    propertyName: propMatch[1],
+    componentName,
+  };
 }
 
 /**
@@ -263,12 +277,37 @@ export function isPropertyContext(lineText: string, position: number): boolean {
 }
 
 /**
- * Get the current word being typed
+ * Get all available component names (built-in ones that start with uppercase)
  */
-export function getCurrentWord(lineText: string, position: number): string {
-  const beforeCursor = lineText.substring(0, position);
-  const match = beforeCursor.match(/\w+$/);
-  return match ? match[0] : '';
+export function getAvailableComponents(): CompletionSuggestion[] {
+  return Object.entries(COMPONENTS)
+    .filter(([name]) => /^[A-Z]/.test(name))  // Only uppercase names
+    .map(([name, meta]) => ({
+      label: name,
+      kind: 'Component' as const,
+      detail: meta.description,
+      documentation: meta.description,
+      insertText: `${name} `,
+    }));
+}
+
+/**
+ * Get properties for a specific component
+ */
+export function getComponentProperties(componentName: string): CompletionSuggestion[] {
+  const component = COMPONENTS[componentName as keyof typeof COMPONENTS];
+  if (!component || !component.properties) {
+    return [];
+  }
+
+  return Object.entries(component.properties)
+    .map(([propName, propType]) => ({
+      label: propName,
+      kind: 'Property' as const,
+      detail: propType,
+      documentation: `Property: ${propName} (${propType})`,
+      insertText: `${propName}: `,
+    }));
 }
 
 /**
@@ -321,14 +360,110 @@ export function getPropertyValueSuggestions(
   }));
 }
 
+/**
+ * Get completions based on hierarchical scope
+ * 
+ * Hierarchy:
+ * - empty-file: suggest 'project' to start
+ * - inside-project: suggest project-level keywords (screen, theme, colors, mocks, define)
+ * - inside-screen: suggest 'layout' keyword and containers (stack, grid, split, panel, card)
+ * - inside-layout: suggest components and nested layouts
+ */
+export function getScopeBasedCompletions(
+  scope: 'empty-file' | 'inside-project' | 'inside-screen' | 'inside-layout'
+): CompletionSuggestion[] {
+  switch (scope) {
+    case 'empty-file':
+      // Only suggest project keyword to start
+      return KEYWORD_COMPLETIONS.filter(item => item.label === 'project');
+
+    case 'inside-project': {
+      // Suggest project-level keywords from KEYWORDS.topLevel
+      // topLevel: ['project', 'theme', 'colors', 'mocks', 'define']
+      const topLevelCompletions: CompletionSuggestion[] = [
+        {
+          label: 'screen',
+          kind: 'Keyword',
+          detail: 'Define a screen/page',
+          documentation: 'screen MyScreen { ... }',
+          insertText: 'screen ${1:MyScreen} {\n\t$0\n}',
+        },
+        {
+          label: 'theme',
+          kind: 'Keyword',
+          detail: 'Define theme properties',
+          documentation: 'theme { density: "comfortable" ... }',
+          insertText: 'theme {\n\t$0\n}',
+        },
+        {
+          label: 'colors',
+          kind: 'Keyword',
+          detail: 'Define color palette',
+          documentation: 'colors { primary: "#007AFF" ... }',
+          insertText: 'colors {\n\t$0\n}',
+        },
+        {
+          label: 'mocks',
+          kind: 'Keyword',
+          detail: 'Define mock data',
+          documentation: 'mocks { users: [...] ... }',
+          insertText: 'mocks {\n\t$0\n}',
+        },
+        {
+          label: 'define',
+          kind: 'Keyword',
+          detail: 'Define custom component',
+          documentation: 'define Component "Name" { ... }',
+          insertText: 'define Component "${1:CustomName}" {\n\t$0\n}',
+        },
+      ];
+      return topLevelCompletions;
+    }
+
+    case 'inside-screen':
+      // Suggest 'layout' keyword followed by container types
+      const layoutCompletions: CompletionSuggestion[] = [
+        {
+          label: 'layout',
+          kind: 'Keyword',
+          detail: 'Define a layout container',
+          documentation: 'layout stack(direction: vertical) { ... }',
+          insertText: 'layout ${1:stack}(${2:direction: vertical}) {\n\t$0\n}',
+        },
+        ...CONTAINER_COMPLETIONS,
+      ];
+      return layoutCompletions;
+
+    case 'inside-layout':
+      // Suggest components, nested layouts, and cells
+      return [
+        ...CONTAINER_COMPLETIONS,  // Allow nested layouts
+        {
+          label: 'cell',
+          kind: 'Keyword',
+          detail: 'Grid cell within layout',
+          documentation: 'cell span: 2 { ... }',
+          insertText: 'cell span: ${1:1} {\n\t$0\n}',
+        },
+        ...COMPONENT_COMPLETIONS,
+      ];
+
+    default:
+      return [];
+  }
+}
+
 export default {
   KEYWORD_COMPLETIONS,
   CONTAINER_COMPLETIONS,
   COMPONENT_COMPLETIONS,
   PROPERTY_COMPLETIONS,
-  getContextualCompletions,
   isPropertyContext,
-  getCurrentWord,
   getComponentPropertiesForCompletion,
   getPropertyValueSuggestions,
+  getScopeBasedCompletions,
+  detectComponentKeyword,
+  detectPropertyValueContext,
+  getAvailableComponents,
+  getComponentProperties,
 };

@@ -18,6 +18,12 @@ export interface CompletionContext {
 /**
  * Determine document scope by analyzing text structure
  * Returns: empty-file | inside-project | inside-screen | inside-layout
+ * 
+ * Hierarchy:
+ * project { ... }          <- empty-file → inside-project
+ *   screen Name { ... }    <- inside-project → inside-screen
+ *     layout stack(...) {  <- inside-screen → inside-layout
+ *       component Button   <- inside-layout
  */
 export function determineScope(textBeforeCursor: string): DocumentScope {
   const cleanText = textBeforeCursor.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '');
@@ -26,39 +32,57 @@ export function determineScope(textBeforeCursor: string): DocumentScope {
     return 'empty-file';
   }
 
-  // Count braces and track keywords
-  let projectCount = 0;
-  let screenCount = 0;
-  let layoutCount = 0;
-  let braceCount = 0;
+  // Track nesting depth by analyzing braces and keywords
+  let projectBraceCount = 0;
+  let screenBraceCount = 0;
+  let layoutBraceCount = 0;
+  
+  let hasProject = false;
+  let hasScreen = false;
+  let hasLayout = false;
 
   const lines = cleanText.split('\n');
   for (const line of lines) {
-    if (line.match(/\bproject\s+/)) projectCount++;
-    if (line.match(/\bscreen\s+/)) screenCount++;
-    if (line.match(/\blayout\s+/)) layoutCount++;
+    // Track keywords
+    if (line.match(/\bproject\s+"?[^{]*{/)) {
+      hasProject = true;
+    }
+    if (line.match(/\bscreen\s+[A-Za-z_][A-Za-z0-9_]*\s*{/)) {
+      hasScreen = true;
+    }
+    if (line.match(/\blayout\s+(?:stack|grid|card|panel|split)\s*\(/)) {
+      hasLayout = true;
+    }
 
-    braceCount += (line.match(/{/g) || []).length;
-    braceCount -= (line.match(/}/g) || []).length;
+    // Count opening braces
+    if (line.includes('project') && line.includes('{')) projectBraceCount++;
+    if (line.includes('screen') && line.includes('{')) screenBraceCount++;
+    if (line.includes('layout') && line.includes('{')) layoutBraceCount++;
+
+    // Count closing braces to track nesting level
+    projectBraceCount -= (line.match(/}/g) || []).length;
+    screenBraceCount -= (line.match(/}/g) || []).length;
+    layoutBraceCount -= (line.match(/}/g) || []).length;
   }
 
-  if (projectCount === 0) {
+  // Determine scope based on nesting hierarchy
+  if (!hasProject) {
     return 'empty-file';
   }
 
-  // Inside project but haven't entered screen yet
-  if (screenCount === 0 && braceCount > 0) {
-    return 'inside-project';
+  // We're inside a layout (deepest level)
+  if (hasLayout && layoutBraceCount > 0) {
+    return 'inside-layout';
   }
 
-  // Inside a screen but no layout yet
-  if (screenCount > 0 && layoutCount === 0 && braceCount > 0) {
+  // We're inside a screen but not in a layout
+  if (hasScreen && screenBraceCount > 0) {
     return 'inside-screen';
   }
 
-  // Inside a layout
-  if (layoutCount > 0 && braceCount > 0) {
-    return 'inside-layout';
+  // We're inside project level
+  if (hasProject && projectBraceCount > 0) {
+    return 'inside-project';
   }
 
   return 'inside-project';
