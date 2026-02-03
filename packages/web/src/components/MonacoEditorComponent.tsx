@@ -44,6 +44,7 @@ export const MonacoEditorComponent = React.forwardRef<
           wordWrap: 'on',
           autoClosingBrackets: 'always',
           autoClosingQuotes: 'always',
+          autoIndent: 'full',
           formatOnPaste: true,
           tabSize: 2,
           insertSpaces: true,

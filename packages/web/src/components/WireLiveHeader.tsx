@@ -39,9 +39,7 @@ export const WireLiveHeader: React.FC<WireLiveHeaderProps> = ({
 
   // Remove .wire extension from filename for display
   const fileNameWithoutExt = React.useMemo(() => {
-    return currentFileName.endsWith('.wire')
-      ? currentFileName.slice(0, -5)
-      : currentFileName;
+    return currentFileName.endsWith('.wire') ? currentFileName.slice(0, -5) : currentFileName;
   }, [currentFileName]);
 
   React.useEffect(() => {
@@ -61,7 +59,7 @@ export const WireLiveHeader: React.FC<WireLiveHeaderProps> = ({
       const newNameWithExt = newNameWithoutExt.endsWith('.wire')
         ? newNameWithoutExt
         : `${newNameWithoutExt}.wire`;
-      
+
       if (newNameWithExt !== currentFileName) {
         onRename(newNameWithExt);
       }
@@ -81,47 +79,94 @@ export const WireLiveHeader: React.FC<WireLiveHeaderProps> = ({
   };
 
   return (
-    <header style={{
-      height: '64px',
-      backgroundColor: '#ffffff',
-      borderBottom: '1px solid #e5e7eb',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingLeft: '24px',
-      paddingRight: '24px',
-      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)'
-    }}>
+    <header
+      style={{
+        height: '64px',
+        backgroundColor: '#ffffff',
+        borderBottom: '1px solid #e5e7eb',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingLeft: '24px',
+        paddingRight: '24px',
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)',
+      }}
+    >
       <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
         {/* Logo y nombre */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <div style={{
-            width: '32px',
-            height: '32px',
-            backgroundColor: '#3b82f6',
-            borderRadius: '8px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '18px',
-            fontWeight: 'bold'
-          }}>
-            📐
+          <div
+            style={{
+              width: '32px',
+              height: '32px',
+              backgroundColor: '#3b82f6',
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '18px',
+              fontWeight: 'bold',
+            }}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="234"
+              height="242"
+              viewBox="0 0 234 242"
+              role="img"
+              aria-label="Wire-DSL logo"
+            >
+              <defs>
+                <radialGradient id="bgGrad" cx="30%" cy="25%" r="75%">
+                  <stop offset="0%" stop-color="#FFFFAA" stop-opacity="1" />
+                  <stop offset="55%" stop-color="#AAAAAA" stop-opacity="1" />
+                  <stop offset="100%" stop-color="#AADDDD" stop-opacity="1" />
+                </radialGradient>
+
+                <radialGradient id="nodeGrad" cx="33%" cy="33%" r="75%">
+                  <stop offset="0%" stop-color="#EEEEEE" stop-opacity="1" />
+                  <stop offset="100%" stop-color="#AAAAAA" stop-opacity="1" />
+                </radialGradient>
+
+                <linearGradient id="strokeGrad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stop-color="#F4F4F4" stop-opacity="1" />
+                  <stop offset="100%" stop-color="#DADADA" stop-opacity="1" />
+                </linearGradient>
+              </defs>
+
+              <g fill="none" stroke-linecap="round" stroke-linejoin="round" transform="translate(0, 30)">
+                <g>
+                  <circle cx="44" cy="45" r="15" fill="url(#nodeGrad)" />
+                  <circle cx="86" cy="136" r="15" fill="url(#nodeGrad)" />
+                  <circle cx="117" cy="56" r="15" fill="url(#nodeGrad)" />
+                  <circle cx="148" cy="136" r="15" fill="url(#nodeGrad)" />
+                  <circle cx="190" cy="45" r="15" fill="url(#nodeGrad)" />
+                </g>
+
+                <path
+                  d="M 44 45 L 86 136 L 117 56 L 148 136 L 190 45"
+                  stroke="url(#strokeGrad)"
+                  stroke-width="18"
+                />
+              </g>
+            </svg>
           </div>
           <h1 style={{ fontSize: '18px', fontWeight: '600', color: '#111827', margin: 0 }}>
             Wire Live
           </h1>
-          <span style={{
-            fontSize: '11px',
-            backgroundColor: '#f3f4f6',
-            color: '#4b5563',
-            paddingLeft: '8px',
-            paddingRight: '8px',
-            paddingTop: '4px',
-            paddingBottom: '4px',
-            borderRadius: '6px',
-            fontWeight: '500'
-          }}>
+          <span
+            style={{
+              fontSize: '11px',
+              backgroundColor: '#f3f4f6',
+              color: '#4b5563',
+              paddingLeft: '8px',
+              paddingRight: '8px',
+              paddingTop: '4px',
+              paddingBottom: '4px',
+              borderRadius: '6px',
+              fontWeight: '500',
+            }}
+          >
             open-source
           </span>
         </div>
@@ -130,7 +175,15 @@ export const WireLiveHeader: React.FC<WireLiveHeaderProps> = ({
         <div style={{ width: '1px', height: '32px', backgroundColor: '#e5e7eb' }} />
 
         {/* Archivo actual */}
-        <div style={{ fontSize: '14px', color: '#4b5563', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div
+          style={{
+            fontSize: '14px',
+            color: '#4b5563',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+          }}
+        >
           {isRenamingFile ? (
             <input
               ref={inputRef}
@@ -192,7 +245,7 @@ export const WireLiveHeader: React.FC<WireLiveHeaderProps> = ({
             border: 'none',
             borderRadius: '6px',
             cursor: 'pointer',
-            transition: 'background-color 0.2s'
+            transition: 'background-color 0.2s',
           }}
           onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f3f4f6')}
           onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
@@ -220,7 +273,7 @@ export const WireLiveHeader: React.FC<WireLiveHeaderProps> = ({
             border: 'none',
             borderRadius: '6px',
             cursor: 'pointer',
-            transition: 'background-color 0.2s'
+            transition: 'background-color 0.2s',
           }}
           onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f3f4f6')}
           onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
@@ -248,7 +301,7 @@ export const WireLiveHeader: React.FC<WireLiveHeaderProps> = ({
             border: isDirty ? '1px solid #93c5fd' : 'none',
             borderRadius: '6px',
             cursor: 'pointer',
-            transition: 'all 0.2s'
+            transition: 'all 0.2s',
           }}
           onMouseEnter={(e) => {
             if (isDirty) {
@@ -285,7 +338,7 @@ export const WireLiveHeader: React.FC<WireLiveHeaderProps> = ({
               border: 'none',
               borderRadius: '6px',
               cursor: 'pointer',
-              transition: 'background-color 0.2s'
+              transition: 'background-color 0.2s',
             }}
             onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f3f4f6')}
             onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
@@ -315,28 +368,36 @@ export const WireLiveHeader: React.FC<WireLiveHeaderProps> = ({
               border: 'none',
               borderRadius: '6px',
               cursor: 'pointer',
-              transition: 'background-color 0.2s'
+              transition: 'background-color 0.2s',
             }}
             onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f3f4f6')}
             onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
           >
             Examples
-            <ChevronDown size={16} style={{ transform: examplesOpen ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }} />
+            <ChevronDown
+              size={16}
+              style={{
+                transform: examplesOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                transition: 'transform 0.2s',
+              }}
+            />
           </button>
 
           {examplesOpen && (
-            <div style={{
-              position: 'absolute',
-              top: '100%',
-              right: '0',
-              marginTop: '8px',
-              backgroundColor: '#ffffff',
-              border: '1px solid #e5e7eb',
-              borderRadius: '8px',
-              boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
-              zIndex: 10,
-              minWidth: '160px'
-            }}>
+            <div
+              style={{
+                position: 'absolute',
+                top: '100%',
+                right: '0',
+                marginTop: '8px',
+                backgroundColor: '#ffffff',
+                border: '1px solid #e5e7eb',
+                borderRadius: '8px',
+                boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                zIndex: 1000,
+                minWidth: '160px',
+              }}
+            >
               {examples.map((example, index) => (
                 <button
                   key={example}
@@ -393,7 +454,7 @@ export const WireLiveHeader: React.FC<WireLiveHeaderProps> = ({
             border: 'none',
             borderRadius: '6px',
             cursor: 'pointer',
-            transition: 'background-color 0.2s'
+            transition: 'background-color 0.2s',
           }}
           onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#2563eb')}
           onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '#3b82f6')}
@@ -402,12 +463,6 @@ export const WireLiveHeader: React.FC<WireLiveHeaderProps> = ({
           <Download size={16} />
           Export SVG
         </button>
-
-        {/* Status */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '16px', paddingLeft: '16px', borderLeft: '1px solid #e5e7eb' }}>
-          <div style={{ width: '8px', height: '8px', backgroundColor: '#10b981', borderRadius: '50%' }}></div>
-          <span style={{ fontSize: '12px', color: '#6b7280' }}>Local only</span>
-        </div>
       </div>
     </header>
   );

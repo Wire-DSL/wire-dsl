@@ -158,7 +158,9 @@ export const WireLiveEditor: React.FC = () => {
       'href',
       'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(renderResult.svg)
     );
-    element.setAttribute('download', `${currentFile?.name || 'export'}.svg`);
+    // Remove .wire extension if present before adding .svg
+    const fileNameWithoutExt = currentFile?.name?.replace(/\.wire$/, '') || 'export';
+    element.setAttribute('download', `${fileNameWithoutExt}.svg`);
     element.style.display = 'none';
     document.body.appendChild(element);
     element.click();
