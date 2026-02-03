@@ -118,23 +118,23 @@ export const WireLiveHeader: React.FC<WireLiveHeaderProps> = ({
             >
               <defs>
                 <radialGradient id="bgGrad" cx="30%" cy="25%" r="75%">
-                  <stop offset="0%" stop-color="#FFFFAA" stop-opacity="1" />
-                  <stop offset="55%" stop-color="#AAAAAA" stop-opacity="1" />
-                  <stop offset="100%" stop-color="#AADDDD" stop-opacity="1" />
+                  <stop offset="0%" stopColor="#FFFFAA" stopOpacity="1" />
+                  <stop offset="55%" stopColor="#AAAAAA" stopOpacity="1" />
+                  <stop offset="100%" stopColor="#AADDDD" stopOpacity="1" />
                 </radialGradient>
 
                 <radialGradient id="nodeGrad" cx="33%" cy="33%" r="75%">
-                  <stop offset="0%" stop-color="#EEEEEE" stop-opacity="1" />
-                  <stop offset="100%" stop-color="#AAAAAA" stop-opacity="1" />
+                  <stop offset="0%" stopColor="#EEEEEE" stopOpacity="1" />
+                  <stop offset="100%" stopColor="#AAAAAA" stopOpacity="1" />
                 </radialGradient>
 
                 <linearGradient id="strokeGrad" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stop-color="#F4F4F4" stop-opacity="1" />
-                  <stop offset="100%" stop-color="#DADADA" stop-opacity="1" />
+                  <stop offset="0%" stopColor="#F4F4F4" stopOpacity="1" />
+                  <stop offset="100%" stopColor="#DADADA" stopOpacity="1" />
                 </linearGradient>
               </defs>
 
-              <g fill="none" stroke-linecap="round" stroke-linejoin="round" transform="translate(0, 30)">
+              <g fill="none" strokeLinecap="round" strokeLinejoin="round" transform="translate(0, 30)">
                 <g>
                   <circle cx="44" cy="45" r="15" fill="url(#nodeGrad)" />
                   <circle cx="86" cy="136" r="15" fill="url(#nodeGrad)" />
@@ -146,7 +146,7 @@ export const WireLiveHeader: React.FC<WireLiveHeaderProps> = ({
                 <path
                   d="M 44 45 L 86 136 L 117 56 L 148 136 L 190 45"
                   stroke="url(#strokeGrad)"
-                  stroke-width="18"
+                  strokeWidth="18"
                 />
               </g>
             </svg>
