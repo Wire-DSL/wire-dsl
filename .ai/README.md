@@ -1,8 +1,5 @@
 # Wire-DSL AI Instructions Hub
 
-**Last Updated:** January 24, 2026  
-**Documentation Language:** English
-
 Central hub for all AI development guidance and documentation for Wire-DSL.
 
 ---
@@ -30,10 +27,7 @@ Wire-DSL/.ai/
 ├── README.md                              ← This file
 ├── AI-INSTRUCTIONS-MAIN.md                ← Comprehensive dev guide
 ├── AI-INSTRUCTIONS-INDEX.md               ← Navigation hub & lookup
-├── plans/                                 ← Strategic planning documents
-│   ├── 20260122-dsl-refactor-comprehensive-plan.md
-│   └── 20260123-vscode-extension-improvements.md
-└── _archive/                              ← Historical reference docs
+└── plans/                                 ← Strategic planning documents
 ```
 
 ---

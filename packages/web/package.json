@@ -16,6 +16,8 @@
   },
   "dependencies": {
     "@wire-dsl/engine": "workspace:*",
+    "@wire-dsl/editor-ui": "workspace:*",
+    "@wire-dsl/language-support": "workspace:*",
     "monaco-editor": "0.55.1",
     "react": "19.2.3",
     "react-dom": "19.2.3",
