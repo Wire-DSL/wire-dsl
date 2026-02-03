@@ -9,8 +9,9 @@ import {
   getAvailableComponents,
   getComponentProperties,
   getPropertyValueSuggestions,
+  determineScope,
+  type KeywordDefinition,
 } from '@wire-dsl/language-support';
-import { determineScope } from '@wire-dsl/language-support/context-detection';
 
 // Registrar el lenguaje Wire DSL en Monaco
 export function registerWireLanguage() {
@@ -18,8 +19,8 @@ export function registerWireLanguage() {
   monaco.languages.register({ id: 'wire' });
 
   // Construir patrones de keywords desde language-support
-  const keywordPattern = ALL_KEYWORDS
-    .map(kw => kw.name)
+  const keywordPattern = (ALL_KEYWORDS as KeywordDefinition[])
+    .map((kw: KeywordDefinition) => kw.name)
     .join('|');
 
   // Definir el tokenizer
@@ -261,7 +262,7 @@ export function registerWireLanguage() {
       const item: any = {
         label: key,
         kind: monaco.languages.CompletionItemKind.Keyword,
-        detail: layout.description,
+        detail: (layout as any).description,
       };
 
       // Monaco no soporta choice lists como VS Code, así que usamos insertText simple
@@ -294,7 +295,7 @@ export function registerWireLanguage() {
       const item = {
         label: name,
         kind: monaco.languages.CompletionItemKind.Class,
-        detail: metadata.description,
+        detail: (metadata as any).description,
         insertText: name + ' ',
       };
 
