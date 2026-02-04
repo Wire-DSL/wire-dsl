@@ -34,6 +34,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Build engine package
+        run: pnpm --filter @wire-dsl/engine build
+
       - name: Build documentation
         run: pnpm --filter @wire-dsl/docs build
 
@@ -42,19 +45,7 @@ jobs:
         uses: cloudflare/pages-action@v1
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: ${{ secrets.CLOUDFLARE_PROJECT_NAME }}
+          accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: ${{ vars.CLOUDFLARE_PROJECT_NAME }}
           directory: apps/docs/dist
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Comment on commit
-        if: github.event_name == 'push'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            github.rest.repos.createCommitComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              commit_sha: context.sha,
-              body: `✅ Documentation deployed to Cloudflare Pages\n🔗 [View live](https://${{ secrets.CLOUDFLARE_PROJECT_NAME }}.pages.dev)`
-            })
