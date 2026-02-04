@@ -27,6 +27,7 @@ export default defineConfig({
 			},
 			social: [
 				{ icon: 'github', label: 'GitHub', href: 'https://github.com/wire-dsl/wire-dsl' },
+				{ icon: 'rocket', label: 'Web Preview', href: 'https://wire-dsl-web.pages.dev/' },
 			],
 			sidebar: [
 				{
