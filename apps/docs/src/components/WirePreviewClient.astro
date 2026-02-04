@@ -92,7 +92,6 @@ function extractCode(preEl) {
 async function renderSVGPreview(code, containerEl) {
   try {
     const prepared = prepareCodeForRendering(code);
-	console.log(prepared)
     
     const { parseWireDSL, generateIR, calculateLayout, renderToSVG } = await import('@wire-dsl/engine');
     

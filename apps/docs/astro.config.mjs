@@ -19,7 +19,7 @@ export default defineConfig({
 			title: 'Wire-DSL Documentation',
 			description: 'Build wireframes with code, not clicks',
 			components: {
-				Head: './src/components/WirePreviewClient.astro',
+				Head: './src/components/Head.astro',
 			},
 			logo: {
 				light: './src/assets/logo-light.svg',

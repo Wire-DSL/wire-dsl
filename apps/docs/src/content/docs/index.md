@@ -10,7 +10,12 @@ hero:
       icon: right-arrow
     - text: Learn the Language
       link: /language/syntax/
+      variant: minimal
       icon: open-book
+    - text: Preview Online
+      link: https://google.com
+      variant: minimal
+      icon: external
 ---
 
 ## What is Wire-DSL?
