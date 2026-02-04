@@ -24,7 +24,7 @@ WireDSL is a **code-first wireframing tool** that lets you:
 pnpm install
 
 # Start web editor
-cd packages/web
+cd apps/web
 pnpm dev
 # → http://localhost:3000
 
@@ -118,7 +118,7 @@ project "Dashboard" {
 | [@wire-dsl/engine](./packages/engine)           | Parser, IR, layout, renderer   | 🚧 In Progress |
 | [@wire-dsl/exporters](./packages/exporters)     | SVG, PNG, PDF export (Node.js) | 🚧 In Progress |
 | [@wire-dsl/cli](./packages/cli)                 | Command-line tool              | 🚧 In Progress |
-| [@wire-dsl/web](./packages/web)                 | Live web editor                | 🚧 In Progress |
+| [@wire-dsl/web](./apps/web)                     | Live web editor                | 🚧 In Progress |
 
 ## 🎯 Example Workflow
 

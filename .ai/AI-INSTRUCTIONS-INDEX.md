@@ -89,17 +89,7 @@ Complete development guide for all AI agents. Contains:
 
 ---
 
-## 🗂️ Development Plans
-
-### Strategic Planning
-| Plan | Location | Focus Area | Status |
-|------|----------|-----------|--------|
-| **DSL Refactor Comprehensive Plan** | [plans/20260122-dsl-refactor-comprehensive-plan.md](plans/20260122-dsl-refactor-comprehensive-plan.md) | Strategic DSL improvements and refactoring | Active |
-| **VS Code Extension Improvements** | [plans/20260123-vscode-extension-improvements.md](plans/20260123-vscode-extension-improvements.md) | Extension development priorities and enhancements | Active |
-
----
-
-## 💡 Quick Start Guides
+##  Quick Start Guides
 
 ### For Different Roles
 
@@ -134,9 +124,8 @@ Wire-DSL/
 │   ├── AI-INSTRUCTIONS-MAIN.md    # Main comprehensive guide
 │   ├── AI-INSTRUCTIONS-INDEX.md   # This file
 │   ├── plans/                     # Development & strategic plans
-│   │   ├── 20260122-dsl-refactor-comprehensive-plan.md
-│   │   └── 20260123-vscode-extension-improvements.md
-│   └── _archive/                  # Historical documentation (reference only)
+│   ├── README.md                  # Folder overview
+│   └── ARCHITECTURE.md            # System architecture docs
 │
 ├── .github/                       # GitHub Configuration
 │   └── COPILOT-INSTRUCTIONS.md    # GitHub Copilot reference (AI-specific)
@@ -151,8 +140,7 @@ Wire-DSL/
 │   ├── THEME-GUIDE.md
 │   ├── CLI-REFERENCE.md
 │   ├── LLM-PROMPTING.md
-│   ├── DOCUMENTATION-INDEX.md
-│   └── _archive/                  # Old/archived documentation
+│   └── DOCUMENTATION-INDEX.md
 │
 ├── specs/                         # Technical Specifications
 │   ├── IR-CONTRACT-EN.md
@@ -160,12 +148,14 @@ Wire-DSL/
 │   └── VALIDATION-RULES-EN.md
 │
 ├── packages/                      # Monorepo Packages
-│   ├── core/                      # Main engine (parser, IR, layout, renderer)
+│   ├── engine/                    # Main engine (parser, IR, layout, renderer)
 │   ├── cli/                       # Command-line tool
-│   ├── web/                       # Web editor
-│   ├── vscode-extension/          # VS Code language support
-│   ├── studio/                    # Studio package
-│   └── ai-backend/                # AI backend services
+│   ├── language-support/          # VS Code language support
+│   ├── editor-ui/                 # React UI components
+│   └── exporters/                 # SVG, PNG, PDF exporters
+│
+├── apps/                          # Applications
+│   └── web/                       # Web editor
 │
 └── examples/                      # Example .wire files
 ```
@@ -189,7 +179,7 @@ Wire-DSL/
 **"I need to fix a bug"**
 1. Identify which layer (Parser, IR, Layout, Renderer)
 2. Review relevant spec in **Technical Specifications**
-3. Check test cases in `packages/core/tests/`
+3. Check test cases in `packages/engine/tests/`
 4. Follow debugging workflow from [AI-INSTRUCTIONS-MAIN.md](AI-INSTRUCTIONS-MAIN.md)
 
 **"I'm using an AI agent to help"**
@@ -224,12 +214,12 @@ This ensures consistency and accessibility for the global development community.
 1. [docs/ARCHITECTURE.md](../../docs/ARCHITECTURE.md) - Understand system design
 2. [AI-INSTRUCTIONS-MAIN.md](AI-INSTRUCTIONS-MAIN.md) - Development workflows
 3. [specs/IR-CONTRACT-EN.md](../../specs/IR-CONTRACT-EN.md) - Data structure
-4. `packages/core/tests/` - See how things work
+4. `packages/engine/tests/` - See how things work
 
 ### Advanced (Deep Modifications)
 1. [specs/LAYOUT-ENGINE-EN.md](../../specs/LAYOUT-ENGINE-EN.md) - Positioning algorithm
 2. [specs/VALIDATION-RULES-EN.md](../../specs/VALIDATION-RULES-EN.md) - Constraints
-3. Source code in `packages/core/src/` - Implementation details
+3. Source code in `packages/engine/src/` - Implementation details
 4. [.ai/plans/](plans/) - Strategic direction
 
 ---

@@ -22,7 +22,7 @@ npm install @wire-dsl/web
 ### Development
 
 ```bash
-cd packages/web
+cd apps/web
 npm install
 npm run dev
 ```

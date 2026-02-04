@@ -9,7 +9,7 @@
     "packages/exporters",
     "packages/engine",
     "packages/cli",
-    "packages/web"
+    "apps/web"
   ],
   "scripts": {
     "dev:web": "turbo dev --filter=@wire-dsl/web",

@@ -29,7 +29,7 @@ pnpm test
 ### Start the Live Editor
 
 ```bash
-cd packages/web
+cd apps/web
 pnpm dev
 # → Open http://localhost:3000
 ```
@@ -51,7 +51,7 @@ pnpm build
 node dist/index.js --help
 
 # Web Editor
-cd packages/web
+cd apps/web
 pnpm dev
 ```
 
@@ -122,7 +122,7 @@ For full details, see [MONOREPO.md](./MONOREPO.md)
 
 ## 🚀 Next Steps
 
-1. **Start the web editor**: `cd packages/web && pnpm dev`
+1. **Start the web editor**: `cd apps/web && pnpm dev`
 2. **Read the docs**: Start with [MONOREPO.md](./MONOREPO.md)
 3. **Explore examples**: Check [examples/](./examples/) for `.wire` files
 4. **Contribute**: See [CONTRIBUTING.md](./.github/CONTRIBUTING.md)

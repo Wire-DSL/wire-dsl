@@ -162,7 +162,7 @@ project "Icon Demo" {
 
 All icons are from [Feather Icons](https://feathericons.com) by Cole Bemis and contributors, licensed under the MIT License.
 
-See [ICONS-LICENSE.md](../../../packages/core/src/renderer/icons/ICONS-LICENSE.md) for full attribution details.
+See [ICONS-LICENSE.md](../../../packages/engine/src/renderer/icons/ICONS-LICENSE.md) for full attribution details.
 
 ## Rendering
 

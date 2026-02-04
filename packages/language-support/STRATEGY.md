@@ -56,7 +56,7 @@ npm publish @wire-dsl/language-support@1.0.0
 
 ### Phase 2: Update Wire Live (30 min)
 ```json
-// packages/web/package.json
+// apps/web/package.json
 "@wire-dsl/language-support": "^1.0.0"  // was: workspace:*
 ```
 

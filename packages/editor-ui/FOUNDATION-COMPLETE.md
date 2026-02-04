@@ -92,7 +92,7 @@ A **completely reusable, OSS-first component library** that serves as:
 - ✅ **QUICK-REFERENCE.md** - Developer cheat sheet
 
 ### Integration
-- ✅ Updated `packages/web/package.json` to depend on editor-ui
+- ✅ Updated `apps/web/package.json` to depend on editor-ui
 - ✅ Updated `turbo.json` for build ordering
 - ✅ Recognized by pnpm workspace
 
@@ -172,7 +172,7 @@ PHASE 1: Editor Base (WL-01)
 ### File Changes Expected
 
 ```
-packages/web/
+apps/web/
 ├── src/
 │   ├── App.tsx               (import editor-ui, Monaco setup)
 │   ├── store/

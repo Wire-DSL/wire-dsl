@@ -32,7 +32,7 @@ packages/
 ## Cómo Usar en Monaco (Web)
 
 ```typescript
-// packages/web/src/monaco/wireLanguage.ts
+// apps/web/src/monaco/wireLanguage.ts
 import { ALL_KEYWORDS, getCompletions } from '@wire-dsl/language-support';
 
 export function registerWireLanguage() {

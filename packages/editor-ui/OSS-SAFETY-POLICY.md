@@ -74,7 +74,7 @@ It provides the foundation for Wire Live and any downstream applications. To mai
 ### ✅ Correct: Application Wraps Components
 
 ```tsx
-// packages/web/src/App.tsx
+// apps/web/src/App.tsx
 import { EditorPanel, PreviewPanel, SplitView } from '@wire-dsl/editor-ui';
 
 export function App() {

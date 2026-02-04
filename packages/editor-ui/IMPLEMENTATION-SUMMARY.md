@@ -125,7 +125,7 @@ Todo cambio a `editor-ui` debe pasar el checklist OSS-Safety.
 
 ### Actualización Realizada
 
-✅ **`packages/web/package.json`**: Agregó dependencia en `@wire-dsl/editor-ui`
+✅ **`apps/web/package.json`**: Agregó dependencia en `@wire-dsl/editor-ui`
 ✅ **`turbo.json`**: Aseguró que `editor-ui` se compila antes que `web`
 ✅ **Workspace**: Automáticamente reconocido por pnpm
 
@@ -146,7 +146,7 @@ Con `editor-ui` listo, podemos proceder con **FASE 1: Editor Base (WL-01)**
 
 #### **FASE 1: Editor Base + Integración Monaco (WL-01)**
 ```
-packages/web/src/App.tsx
+apps/web/src/App.tsx
 ├── Importar SplitView, EditorPanel, PreviewPanel de editor-ui
 ├── Integrar Monaco Editor en EditorPanel
 ├── Crear store Zustand para estado de app
@@ -223,7 +223,7 @@ pnpm type-check
 # Should compile without errors
 
 # Verify web can import
-grep "@wire-dsl/editor-ui" packages/web/package.json
+grep "@wire-dsl/editor-ui" apps/web/package.json
 # Should show dependency added
 ```
 
@@ -288,7 +288,7 @@ grep "@wire-dsl/editor-ui" packages/web/package.json
    - Leer `OSS-SAFETY-POLICY.md`
 
 3. **Empezar FASE 1**:
-   - Actualizar `packages/web/App.tsx`
+   - Actualizar `apps/web/App.tsx`
    - Integrar Monaco Editor
    - Crear store Zustand
 
