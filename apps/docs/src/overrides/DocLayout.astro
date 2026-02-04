@@ -1,0 +1,60 @@
+---
+// Overridden Starlight BaseLayout with wire preview support
+
+import type { Props } from '@astrojs/starlight/props';
+import DefaultLayout from '@astrojs/starlight/layouts/BaseLayout.astro';
+
+const props = Astro.props as Props;
+---
+
+<DefaultLayout {...props}>
+  <slot />
+</DefaultLayout>
+
+<!-- Wire Preview Initializer -->
+<script is:inline define:vars={{}}>
+  (() => {
+    function initWirePreview() {
+      const codeBlocks = document.querySelectorAll('pre.wire-preview-enabled > code.language-wire');
+      
+      codeBlocks.forEach((codeEl) => {
+        if (codeEl.parentElement?.querySelector('.wire-preview-controls')) {
+          return; // Already initialized
+        }
+
+        const preEl = codeEl.parentElement;
+        if (!preEl) return;
+
+        // Extract code content
+        let codeContent = '';
+        const walker = document.createTreeWalker(codeEl, NodeFilter.SHOW_TEXT, null);
+        let node;
+        while ((node = walker.nextNode())) {
+          codeContent += node.textContent || '';
+        }
+
+        if (!codeContent.trim()) return;
+
+        // Create preview button
+        const btnContainer = document.createElement('div');
+        btnContainer.className = 'wire-preview-controls';
+        const btn = document.createElement('button');
+        btn.className = 'wire-preview-btn';
+        btn.innerHTML = '<span>▶️</span><span>Preview</span>';
+        btn.addEventListener('click', () => {
+          console.log('Preview:', codeContent.substring(0, 50));
+        });
+        btnContainer.appendChild(btn);
+        preEl.parentElement?.insertBefore(btnContainer, preEl.nextSibling);
+      });
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initWirePreview);
+    } else {
+      initWirePreview();
+    }
+
+    document.addEventListener('astro:after-swap', initWirePreview);
+  })();
+</script>

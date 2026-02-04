@@ -15,7 +15,7 @@ Return ONLY valid `.wire` code. No explanations, no markdown formatting (except 
 
 ### Quality Requirements
 - Syntax must be 100% valid per Wire-DSL grammar
-- All components must exist in the 23-component catalog
+- All components must exist in the component catalog
 - All property values must be valid for their types
 - Layouts must be properly nested and closed
 - Use sensible defaults when ambiguous
@@ -95,13 +95,12 @@ border: false
 
 ---
 
-## The 23 Components
+## The 28 Components
 
-### Text (4)
+### Text (3)
 ```wire
 component Heading text: "Title"
 component Text content: "Body text"
-component Paragraph content: "Long text..."
 component Label text: "Field label"
 ```
 
@@ -123,10 +122,11 @@ component IconButton icon: "search"
 
 **Button variants**: `primary`, `secondary`, `ghost`
 
-### Navigation (4)
+### Navigation (5)
 ```wire
 component Topbar title: "Dashboard" subtitle: "Admin"
 component SidebarMenu items: "Home,Users,Settings" active: 0
+component Sidebar title: "Navigation" items: "Home,Profile,Settings"
 component Breadcrumbs items: "Home,Users,Detail"
 component Tabs items: "Profile,Settings,Privacy" activeIndex: 0
 ```
@@ -137,26 +137,24 @@ component Table columns: "Name,Email,Status" rows: 8
 component List items: "Item 1,Item 2,Item 3"
 ```
 
-### Media (3)
+### Media (2)
 ```wire
 component Image placeholder: "square" height: 250
 component Icon name: "search"
-component Avatar placeholder: "avatar"
 ```
 
 **Image placeholders**: `square`, `landscape`, `portrait`, `avatar`, `circle`
 
-### Display (4)
+### Display (3)
 ```wire
 component Divider
 component Badge text: "New" variant: primary
-component Link text: "Click here"
 component Alert type: "error" message: "Error message"
 ```
 
 **Alert types**: `info`, `success`, `warning`, `error`
 
-### Info (3)
+### Information (3)
 ```wire
 component StatCard title: "Users" value: "1,234"
 component Code code: "const x = 10;"
@@ -165,9 +163,13 @@ component ChartPlaceholder type: "bar" height: 300
 
 **Chart types**: `bar`, `line`, `pie`, `area`
 
-### Feedback (2)
+### Modal & Overlay (1)
 ```wire
 component Modal title: "Confirm" content: "Are you sure?"
+```
+
+### Loading & Feedback (1)
+```wire
 component Spinner
 ```
 
@@ -249,6 +251,7 @@ layout card(padding: lg, gap: md, radius: md, border: true) {
 ## Common Patterns
 
 ### Login Form
+<!-- wire-preview:start -->
 ```wire
 project "Login" {
   theme {
@@ -270,8 +273,10 @@ project "Login" {
   }
 }
 ```
+<!-- wire-preview:end -->
 
 ### Dashboard
+<!-- wire-preview:start -->
 ```wire
 screen Dashboard {
   layout split(sidebar: 260, gap: md) {
@@ -291,6 +296,7 @@ screen Dashboard {
   }
 }
 ```
+<!-- wire-preview:end -->
 
 ### Product Cards
 ```wire
@@ -357,7 +363,7 @@ Before returning generated code, verify:
 - ✅ At least one `screen` defined
 - ✅ Each screen has exactly ONE root `layout`
 - ✅ All `screen` names are in `CamelCase`
-- ✅ All component names are from the 23-component catalog
+- ✅ All component names are from the component catalog
 - ✅ String property values are quoted
 - ✅ Numeric property values are unquoted
 - ✅ Enum property values are unquoted
@@ -373,6 +379,7 @@ Before returning generated code, verify:
 User asks: "Create a simple user login form with email and password fields"
 
 Your response:
+<!-- wire-preview:start -->
 ````wire
 project "Login App" {
   theme {
@@ -402,6 +409,7 @@ project "Login App" {
   }
 }
 ````
+<!-- wire-preview:end -->
 
 ---
 

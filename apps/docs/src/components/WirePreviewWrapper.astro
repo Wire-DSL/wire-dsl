@@ -1,0 +1,81 @@
+---
+// WirePreviewWrapper.astro
+//
+// Wrapper component that processes wire code blocks and injects preview capability
+// Uses a clever approach: scans HTML for pre>code.language-wire and checks for metadata
+
+interface Props {
+  html: string;
+}
+
+const { html } = Astro.props;
+
+// Simple regex to detect wire code blocks with canPreview metadata
+// Looks for: <pre data-wire-preview="true"><code class="language-wire">
+const hasWirePreview = html.includes('data-wire-preview="true"');
+---
+
+<Fragment set:html={html} />
+
+{hasWirePreview && (
+  <script is:inline>
+    // Process wire code blocks that need preview functionality
+    document.querySelectorAll('pre[data-wire-preview="true"]').forEach((preEl) => {
+      const codeEl = preEl.querySelector('code.language-wire');
+      if (!codeEl) return;
+
+      // Extract the code content (handling syntax highlighting spans)
+      let codeContent = '';
+      const walker = document.createTreeWalker(
+        codeEl,
+        NodeFilter.SHOW_TEXT,
+        null
+      );
+      let node;
+      while ((node = walker.nextNode())) {
+        codeContent += node.textContent;
+      }
+
+      if (!codeContent) return;
+
+      // Create a button to trigger preview
+      const buttonContainer = document.createElement('div');
+      buttonContainer.className = 'wire-preview-controls';
+      buttonContainer.innerHTML = `
+        <button class="wire-preview-btn" data-code="${escapeHtml(codeContent)}">
+          <span>▶️</span>
+          <span>Preview</span>
+        </button>
+      `;
+
+      // Insert button after code block
+      preEl.parentElement?.insertBefore(buttonContainer, preEl.nextSibling);
+
+      // Add click handler
+      const btn = buttonContainer.querySelector('.wire-preview-btn');
+      btn?.addEventListener('click', async (e) => {
+        e.preventDefault();
+        const code = (e.currentTarget as HTMLElement).getAttribute('data-code');
+        if (code) {
+          try {
+            const decodedCode = JSON.parse('"' + code.replace(/"/g, '\\"') + '"');
+            await showPreviewModal(decodedCode);
+          } catch (err) {
+            console.error('Failed to show preview:', err);
+          }
+        }
+      });
+    });
+
+    function escapeHtml(text: string): string {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    async function showPreviewModal(code: string) {
+      // Placeholder - would be implemented with modal logic
+      console.log('Preview:', code);
+    }
+  </script>
+)}

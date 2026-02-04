@@ -137,6 +137,7 @@ layout stack(direction: vertical, gap: md, padding: lg) {
 **Examples**:
 
 Horizontal stack with equal width (default):
+<!-- wire-preview:start -->
 ```wire
 layout stack(direction: horizontal, gap: md) {
   component Button text: "Save"
@@ -144,14 +145,17 @@ layout stack(direction: horizontal, gap: md) {
   component Button text: "Delete"
 }
 ```
+<!-- wire-preview:end -->
 
 Horizontal stack with right-aligned buttons:
+<!-- wire-preview:start -->
 ```wire
 layout stack(direction: horizontal, gap: md, align: "right") {
   component Button text: "Back"
   component Button text: "Next" variant: primary
 }
 ```
+<!-- wire-preview:end -->
 
 ⚠️ **Note**: Layouts without explicit padding default to **0px** (no inheritance from project theme).
 
@@ -299,10 +303,9 @@ define Component "ButtonGroup" {
 
 ### Example
 
+<!-- wire-preview:start -->
 ```wire
 project "Form App" {
-  theme { ... }
-
   define Component "ButtonGroup" {
     layout stack(direction: horizontal, gap: md) {
       component Button text: "OK" variant: primary
@@ -320,6 +323,7 @@ project "Form App" {
   }
 }
 ```
+<!-- wire-preview:end -->
 
 ### Usage Rules
 
@@ -359,6 +363,7 @@ Properties use `key: value` syntax:
 
 ## Complete Example
 
+<!-- wire-preview:start -->
 ```wire
 project "Admin Dashboard" {
   theme {
@@ -420,6 +425,7 @@ project "Admin Dashboard" {
   }
 }
 ```
+<!-- wire-preview:end -->
 
 ---
 

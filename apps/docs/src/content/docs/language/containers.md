@@ -59,6 +59,7 @@ layout stack(direction: vertical, gap: md, padding: lg) {
 ### Examples
 
 **Vertical Stack (Default)**:
+<!-- wire-preview:start -->
 ```wire
 layout stack(direction: vertical, gap: md) {
   component Heading text: "Form"
@@ -67,8 +68,10 @@ layout stack(direction: vertical, gap: md) {
   component Button text: "Submit" variant: primary
 }
 ```
+<!-- wire-preview:end -->
 
 **Horizontal Stack with Equal Width (Default)**:
+<!-- wire-preview:start -->
 ```wire
 layout stack(direction: horizontal, gap: md, padding: md) {
   component Button text: "Save" variant: primary
@@ -76,9 +79,11 @@ layout stack(direction: horizontal, gap: md, padding: md) {
   component Button text: "Delete" variant: ghost
 }
 ```
+<!-- wire-preview:end -->
 All buttons divide the width equally, filling 100% of the container.
 
 **Horizontal Stack - Left Aligned**:
+<!-- wire-preview:start -->
 ```wire
 layout stack(direction: horizontal, gap: md, align: "left") {
   component Button text: "Save" variant: primary
@@ -86,24 +91,29 @@ layout stack(direction: horizontal, gap: md, align: "left") {
   component Button text: "Reset"
 }
 ```
+<!-- wire-preview:end -->
 Buttons group on the left with their natural width, useful for left-aligned action bars.
 
 **Horizontal Stack - Center Aligned**:
+<!-- wire-preview:start -->
 ```wire
 layout stack(direction: horizontal, gap: md, align: "center") {
   component Button text: "Agree" variant: primary
   component Button text: "Disagree"
 }
 ```
+<!-- wire-preview:end -->
 Buttons group in the center with their natural width, ideal for dialogs or confirmations.
 
 **Horizontal Stack - Right Aligned**:
+<!-- wire-preview:start -->
 ```wire
 layout stack(direction: horizontal, gap: md, align: "right") {
   component Button text: "Back"
   component Button text: "Next" variant: primary
 }
 ```
+<!-- wire-preview:end -->
 Buttons group on the right with their natural width, typical pattern for form navigation or dialog actions.
 
 ### Horizontal Stack Alignment
@@ -165,6 +175,7 @@ layout grid(columns: 12, gap: md) {
 ### Examples
 
 **Responsive Dashboard**:
+<!-- wire-preview:start -->
 ```wire
 layout grid(columns: 12, gap: md) {
   cell span: 3 {
@@ -181,8 +192,10 @@ layout grid(columns: 12, gap: md) {
   }
 }
 ```
+<!-- wire-preview:end -->
 
 **Sidebar + Content**:
+<!-- wire-preview:start -->
 ```wire
 layout grid(columns: 12, gap: md) {
   cell span: 3 {
@@ -196,8 +209,10 @@ layout grid(columns: 12, gap: md) {
   }
 }
 ```
+<!-- wire-preview:end -->
 
 **Search + Results**:
+<!-- wire-preview:start -->
 ```wire
 layout grid(columns: 12, gap: md) {
   cell span: 8 {
@@ -210,6 +225,7 @@ layout grid(columns: 12, gap: md) {
 
 component Table columns: "Name,Email,Status,Role" rows: 10
 ```
+<!-- wire-preview:end -->
 
 ### Important Notes
 
@@ -259,6 +275,7 @@ Split **requires exactly 2 children**, both typically `stack` layouts:
 ### Examples
 
 **Admin Dashboard**:
+<!-- wire-preview:start -->
 ```wire
 layout split(sidebar: 260, gap: md) {
   layout stack(padding: lg) {
@@ -279,8 +296,10 @@ layout split(sidebar: 260, gap: md) {
   }
 }
 ```
+<!-- wire-preview:end -->
 
 **Content Management System**:
+<!-- wire-preview:start -->
 ```wire
 layout split(sidebar: 280, gap: lg) {
   layout stack(gap: md, padding: md) {
@@ -294,6 +313,7 @@ layout split(sidebar: 280, gap: lg) {
   }
 }
 ```
+<!-- wire-preview:end -->
 
 ### Important Notes
 
@@ -342,13 +362,16 @@ layout panel(padding: lg) {
 ### Examples
 
 **Single Component Panel**:
+<!-- wire-preview:start -->
 ```wire
 layout panel(padding: md) {
   component Text content: "Important information goes here"
 }
 ```
+<!-- wire-preview:end -->
 
 **Grouped Content**:
+<!-- wire-preview:start -->
 ```wire
 layout panel(padding: lg) {
   layout stack(gap: md) {
@@ -359,8 +382,10 @@ layout panel(padding: lg) {
   }
 }
 ```
+<!-- wire-preview:end -->
 
 **Form Section**:
+<!-- wire-preview:start -->
 ```wire
 layout panel(padding: lg) {
   layout stack(gap: md) {
@@ -371,6 +396,7 @@ layout panel(padding: lg) {
   }
 }
 ```
+<!-- wire-preview:end -->
 
 ### Important Notes
 
@@ -418,6 +444,7 @@ layout card(padding: lg, gap: md, radius: md, border: true) {
 ### Examples
 
 **Product Card**:
+<!-- wire-preview:start -->
 ```wire
 layout card(padding: md, gap: md, radius: lg, border: true) {
   component Image placeholder: "square" height: 200
@@ -430,11 +457,12 @@ layout card(padding: md, gap: md, radius: lg, border: true) {
   }
 }
 ```
+<!-- wire-preview:end -->
 
 **User Profile Card**:
+<!-- wire-preview:start -->
 ```wire
 layout card(padding: lg, gap: md, radius: md) {
-  component Avatar placeholder: "avatar"
   component Heading text: "John Doe"
   component Text content: "Senior Software Engineer"
   component Text content: "john@example.com"
@@ -445,17 +473,20 @@ layout card(padding: lg, gap: md, radius: md) {
   }
 }
 ```
+<!-- wire-preview:end -->
 
 **Blog Post Card**:
+<!-- wire-preview:start -->
 ```wire
 layout card(padding: md, gap: md, radius: md, border: true) {
   component Image placeholder: "landscape" height: 180
   component Heading text: "Getting Started with Wire-DSL"
   component Text content: "Learn how to create interactive wireframes with Wire-DSL in 5 minutes"
   component Badge text: "Tutorial"
-  component Link text: "Read More"
+  component Button text: "Read More"
 }
 ```
+<!-- wire-preview:end -->
 
 ### Important Notes
 

@@ -119,6 +119,7 @@ For a full reference of all available icons, visit the [Feather Icons Gallery](h
 
 ## Complete Example
 
+<!-- wire-preview:start -->
 ```wire
 project "Icon Gallery" {
   theme {
@@ -134,7 +135,6 @@ project "Icon Gallery" {
       component Heading text: "Feather Icons Gallery"
       component Text content: "Complete collection of available icons organized by category"
 
-      // UI Navigation Section
       layout card(padding: lg, gap: md, radius: md, border: true) {
         component Heading text: "UI Navigation"
         layout grid(columns: 12, gap: md) {
@@ -185,7 +185,6 @@ project "Icon Gallery" {
         }
       }
 
-      // Arrows & Navigation Section
       layout card(padding: lg, gap: md, radius: md, border: true) {
         component Heading text: "Arrows & Navigation"
         layout grid(columns: 12, gap: md) {
@@ -216,7 +215,6 @@ project "Icon Gallery" {
         }
       }
 
-      // Search & Input Section
       layout card(padding: lg, gap: md, radius: md, border: true) {
         component Heading text: "Search & Input"
         layout grid(columns: 12, gap: md) {
@@ -235,7 +233,6 @@ project "Icon Gallery" {
         }
       }
 
-      // Edit & Actions Section
       layout card(padding: lg, gap: md, radius: md, border: true) {
         component Heading text: "Edit & Actions"
         layout grid(columns: 12, gap: md) {
@@ -304,7 +301,6 @@ project "Icon Gallery" {
         }
       }
 
-      // Notifications & Feedback Section
       layout card(padding: lg, gap: md, radius: md, border: true) {
         component Heading text: "Notifications & Feedback"
         layout grid(columns: 12, gap: md) {
@@ -335,7 +331,6 @@ project "Icon Gallery" {
         }
       }
 
-      // User & Account Section
       layout card(padding: lg, gap: md, radius: md, border: true) {
         component Heading text: "User & Account"
         layout grid(columns: 12, gap: md) {
@@ -378,7 +373,6 @@ project "Icon Gallery" {
         }
       }
 
-      // Communication Section
       layout card(padding: lg, gap: md, radius: md, border: true) {
         component Heading text: "Communication"
         layout grid(columns: 12, gap: md) {
@@ -409,7 +403,6 @@ project "Icon Gallery" {
         }
       }
 
-      // Data & Information Section
       layout card(padding: lg, gap: md, radius: md, border: true) {
         component Heading text: "Data & Information"
         layout grid(columns: 12, gap: md) {
@@ -446,7 +439,6 @@ project "Icon Gallery" {
         }
       }
 
-      // Media & Visuals Section
       layout card(padding: lg, gap: md, radius: md, border: true) {
         component Heading text: "Media & Visuals"
         layout grid(columns: 12, gap: md) {
@@ -471,7 +463,6 @@ project "Icon Gallery" {
         }
       }
 
-      // Feedback & Social Section
       layout card(padding: lg, gap: md, radius: md, border: true) {
         component Heading text: "Feedback & Social"
         layout grid(columns: 12, gap: md) {
@@ -490,7 +481,6 @@ project "Icon Gallery" {
         }
       }
 
-      // Loading & Misc Section
       layout card(padding: lg, gap: md, radius: md, border: true) {
         component Heading text: "Loading & Misc"
         layout grid(columns: 12, gap: md) {
@@ -515,7 +505,6 @@ project "Icon Gallery" {
         }
       }
 
-      // Icon Buttons Demo
       layout card(padding: lg, gap: md, radius: md, border: true) {
         component Heading text: "Icon Buttons"
         component Text content: "IconButton variants and states"
@@ -557,6 +546,7 @@ project "Icon Gallery" {
   }
 }
 ```
+<!-- wire-preview:end -->
 
 ---
 

@@ -305,6 +305,7 @@ project "EnterpriseApp" {
 
 ### Admin Dashboard Theme
 
+<!-- wire-preview:start -->
 ```wire
 project "AdminPortal" {
   theme {
@@ -344,9 +345,11 @@ project "AdminPortal" {
   }
 }
 ```
+<!-- wire-preview:end -->
 
 ### E-Commerce Product Page Theme
 
+<!-- wire-preview:start -->
 ```wire
 project "ECommerceStore" {
   theme {
@@ -391,6 +394,7 @@ project "ECommerceStore" {
   }
 }
 ```
+<!-- wire-preview:end -->
 
 ---
 

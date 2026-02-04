@@ -4,6 +4,7 @@ import starlight from '@astrojs/starlight';
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import rehypeWirePreviewPlugin from './src/lib/rehype-wire-previews.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -17,6 +18,9 @@ export default defineConfig({
 		starlight({
 			title: 'Wire-DSL Documentation',
 			description: 'Build wireframes with code, not clicks',
+			components: {
+				Head: './src/components/WirePreviewClient.astro',
+			},
 			logo: {
 				light: './src/assets/logo-light.svg',
 				dark: './src/assets/logo-dark.svg',
@@ -77,6 +81,7 @@ export default defineConfig({
 		}),
 	],
 	markdown: {
+		rehypePlugins: [rehypeWirePreviewPlugin],
 		shikiConfig: {
 			langs: [
 				{

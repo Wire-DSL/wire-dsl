@@ -109,3 +109,18 @@
 		color: #8b949e;
 	}
 }
+
+/* Wire Preview Initialization Script - Injected Inline */
+@supports (display: contents) {
+	:root {
+		--wire-preview-init: initial;
+	}
+}
+
+/* This CSS block includes inline JavaScript via Astro's special handling */
+@media screen {
+	html::before {
+		content: '';
+		display: none;
+	}
+}

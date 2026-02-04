@@ -122,6 +122,7 @@ When there are errors, the preview panel shows:
 
 ### Quickly Test Layouts
 
+<!-- wire-preview:start -->
 ```wire
 project "Layout Tests" {
   theme {
@@ -147,6 +148,7 @@ project "Layout Tests" {
   }
 }
 ```
+<!-- wire-preview:end -->
 
 ### Preview Multiple Screens
 

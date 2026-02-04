@@ -33,6 +33,7 @@ project "ProjectName" {
 
 Create a file called `login.wire` and add the following:
 
+<!-- wire-preview:start -->
 ```wire
 project "Login App" {
   theme {
@@ -62,6 +63,7 @@ project "Login App" {
   }
 }
 ```
+<!-- wire-preview:end -->
 
 ## Using the Web Editor
 
@@ -146,6 +148,7 @@ Building blocks of your wireframe. Wire-DSL has 20+ component types covering tex
 
 ### Card with Form
 
+<!-- wire-preview:start -->
 ```wire
 layout card(padding: lg, gap: md, radius: md, border: true) {
   component Heading text: "Sign In"
@@ -160,28 +163,33 @@ layout card(padding: lg, gap: md, radius: md, border: true) {
   component Button text: "Sign In" variant: primary
 }
 ```
+<!-- wire-preview:end -->
 
 ### Two-Column Form
 
+<!-- wire-preview:start -->
 ```wire
-layout grid(columns: 12, gap: md) {
+layout grid(columns: 12, gap: md, padding: "md") {
   cell span: 6 {
-    component Input label: "First Name"
+    component Input label: "First Name" placeholder: "Juan"
   }
   cell span: 6 {
-    component Input label: "Last Name"
+    component Input label: "Last Name" placeholder: "Pérez"
   }
 }
 ```
+<!-- wire-preview:end -->
 
 ### Action Buttons
 
+<!-- wire-preview:start -->
 ```wire
 layout stack(direction: horizontal, gap: md, align: "right") {
   component Button text: "Cancel" variant: secondary
   component Button text: "Save" variant: primary
 }
 ```
+<!-- wire-preview:end -->
 
 ## Validation
 

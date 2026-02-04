@@ -19,6 +19,7 @@ Wire-DSL is a **declarative, block-based domain-specific language (DSL)** for cr
 
 Instead of dragging components in a design tool, you write clean, readable code:
 
+<!-- wire-preview:start -->
 ```wire
 project "Login App" {
   theme { density: "comfortable" }
@@ -33,6 +34,7 @@ project "Login App" {
   }
 }
 ```
+<!-- wire-preview:end -->
 
 Render it instantly to SVG, PNG, or PDF.
 
@@ -41,7 +43,7 @@ Render it instantly to SVG, PNG, or PDF.
 ## Why Wire-DSL?
 
 - **Code-First Workflow** – Version control, diff, and collaborate like code
-- **23 Built-In Components** – Buttons, forms, tables, navigation, more
+- **28 Built-In Components** – Buttons, forms, tables, navigation, more
 - **5 Layout Types** – Stack, Grid, Split, Panel, Card with intelligent spacing
 - **Design Tokens** – Consistent theming across wireframes
 - **Instant Rendering** – SVG, PNG, PDF exports
@@ -113,19 +115,20 @@ project "Hello" {
 
 ---
 
-## 23 Components
+## 28 Components
 
 | Category | Components |
 |----------|------------|
-| **Text** | Heading, Text, Paragraph, Label |
+| **Text** | Heading, Text, Label |
 | **Input** | Input, Textarea, Select, Checkbox, Radio, Toggle |
 | **Buttons** | Button, IconButton |
-| **Navigation** | Topbar, SidebarMenu, Breadcrumbs, Tabs |
+| **Navigation** | Topbar, SidebarMenu, Sidebar, Breadcrumbs, Tabs |
 | **Data** | Table, List |
-| **Media** | Image, Icon, Avatar |
-| **Display** | Divider, Badge, Link, Alert |
-| **Info** | StatCard, Code, ChartPlaceholder |
-| **Feedback** | Modal, Spinner |
+| **Media** | Image, Icon |
+| **Display** | Divider, Badge, Alert |
+| **Information** | StatCard, Code, ChartPlaceholder |
+| **Modal & Overlay** | Modal |
+| **Loading & Feedback** | Spinner |
 
 ---
 
@@ -220,6 +223,7 @@ screens/
 5. **Accessible** – Built-in best practices
 6. **Fast** – Instant rendering
 7. **Versionable** – Works with Git, diff-friendly
+8. **AI-Powered** – Generate from natural language with predictable, LLM-friendly syntax
 
 ---
 

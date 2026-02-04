@@ -1,0 +1,66 @@
+---
+// Head component that Starlight includes
+// This is automatically injected by Starlight in the <head>
+
+---
+
+<script is:inline>
+  // Wire Preview Initialization
+  // Auto-initializes wire code preview functionality on page load
+
+  (function initializeWirePreview() {
+    function processWireBlocks() {
+      // Find all pre.wire-preview-enabled > code.language-wire blocks
+      const codeBlocks = document.querySelectorAll('pre.wire-preview-enabled > code.language-wire');
+      
+      codeBlocks.forEach((codeEl) => {
+        const preEl = codeEl.parentElement;
+        if (!preEl || preEl.querySelector('.wire-preview-controls')) {
+          return; // Already has button or no parent
+        }
+
+        // Extract code content from all text nodes
+        let codeContent = '';
+        const walker = document.createTreeWalker(
+          codeEl,
+          NodeFilter.SHOW_TEXT,
+          null
+        );
+        
+        let node;
+        while ((node = walker.nextNode())) {
+          codeContent += node.textContent || '';
+        }
+
+        if (!codeContent.trim()) return;
+
+        // Create preview button container
+        const buttonContainer = document.createElement('div');
+        buttonContainer.className = 'wire-preview-controls';
+
+        const button = document.createElement('button');
+        button.className = 'wire-preview-btn';
+        button.innerHTML = '<span>▶️</span><span>Preview</span>';
+        
+        button.addEventListener('click', (e) => {
+          e.preventDefault();
+          console.log('Preview clicked for code:', codeContent.substring(0, 100));
+          // TODO: Implement full preview modal
+        });
+
+        buttonContainer.appendChild(button);
+        preEl.parentElement?.insertBefore(buttonContainer, preEl.nextSibling);
+      });
+    }
+
+    // Initialize when DOM is ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', processWireBlocks);
+    } else {
+      processWireBlocks();
+    }
+
+    // Re-initialize on Astro's SPA navigation
+    document.addEventListener('astro:after-swap', processWireBlocks);
+  })();
+</script>

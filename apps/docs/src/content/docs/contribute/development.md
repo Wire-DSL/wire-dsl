@@ -193,8 +193,7 @@ Wire-DSL/
 │   └── exporters/                 # PNG, PDF export
 ├── apps/
 │   ├── docs/                      # Astro Starlight docs
-│   ├── web/                       # Web editor app
-│   └── package.json
+│   └── web/                       # Web editor app
 ├── package.json                   # Root workspace
 ├── pnpm-workspace.yaml            # Monorepo config
 └── turbo.json                     # Turbo build config
