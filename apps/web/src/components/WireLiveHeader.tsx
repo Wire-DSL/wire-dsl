@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronDown, Download, FolderOpen, Plus, Save, FileDown } from 'lucide-react';
+import { ChevronDown, Download, FolderOpen, Plus, Save, FileDown, Book, ExternalLink } from 'lucide-react';
 
 export interface WireLiveHeaderProps {
   currentFileName: string;
@@ -436,7 +436,40 @@ export const WireLiveHeader: React.FC<WireLiveHeaderProps> = ({
         {/* Separador */}
         <div style={{ width: '1px', height: '32px', backgroundColor: '#e5e7eb' }} />
 
-        {/* Exportar */}
+        {/* Documentación */}
+        <a
+          href="https://wire-dsl-docs.pages.dev/"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            paddingLeft: '12px',
+            paddingRight: '12px',
+            paddingTop: '8px',
+            paddingBottom: '8px',
+            fontSize: '14px',
+            fontWeight: '500',
+            color: '#374151',
+            backgroundColor: 'transparent',
+            border: 'none',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            textDecoration: 'none',
+            transition: 'background-color 0.2s',
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#f3f4f6')}
+          onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+          title="Open documentation"
+        >
+          <Book size={16} />
+          Docs
+          <ExternalLink size={14} style={{ opacity: 0.6 }} />
+        </a>
+
+        {/* Separador */}
+        <div style={{ width: '1px', height: '32px', backgroundColor: '#e5e7eb' }} />
         <button
           onClick={onExport}
           style={{
