@@ -6,6 +6,7 @@ on:
     paths:
       - 'apps/docs/**'
       - '.github/workflows/deploy-docs.yml'
+  workflow_dispatch:  # Permite ejecutar manualmente desde GitHub Actions UI
 
 jobs:
   build-and-deploy:
