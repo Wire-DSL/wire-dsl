@@ -43,22 +43,6 @@ component Text content: "User profile information goes here"
 
 ---
 
-### Paragraph
-
-Multi-line paragraph text with word wrapping.
-
-**Properties**:
-- `content` (string): Paragraph content
-
-**Example**:
-```wire
-component Paragraph content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-```
-
-**Rendering**: Regular text with automatic line wrapping
-
----
-
 ### Label
 
 Small, often bold text used for form field labels.
@@ -276,6 +260,24 @@ component SidebarMenu items: "Dashboard,Analytics,Reports,Admin" active: 1
 
 ---
 
+### Sidebar
+
+Side navigation panel.
+
+**Properties**:
+- `title` (string): Sidebar title
+- `items` (string, CSV): Navigation item labels
+
+**Example**:
+```wire
+component Sidebar title: "Navigation" items: "Home,Profile,Settings"
+component Sidebar title: "Dashboard" items: "Overview,Users,Reports,Logs"
+```
+
+**Rendering**: Vertical panel with title and navigation items
+
+---
+
 ### Breadcrumbs
 
 Navigation hierarchy showing current page location.
@@ -394,23 +396,6 @@ component Icon name: "download"
 
 ---
 
-### Avatar
-
-Circular avatar/profile picture placeholder.
-
-**Properties**:
-- `placeholder` (string): Avatar type - `avatar` | `initials` | `color`
-
-**Example**:
-```wire
-component Avatar placeholder: "avatar"
-component Avatar placeholder: "initials"
-```
-
-**Rendering**: Circular placeholder for profile image
-
----
-
 ## Display Components
 
 ### Divider
@@ -445,23 +430,6 @@ component Badge text: "Alert" variant: warning
 ```
 
 **Rendering**: Small rounded label with colored background
-
----
-
-### Link
-
-Hyperlink text.
-
-**Properties**:
-- `text` (string): Link text
-
-**Example**:
-```wire
-component Link text: "Click here"
-component Link text: "Learn more"
-```
-
-**Rendering**: Blue underlined text
 
 ---
 
@@ -587,7 +555,6 @@ component Spinner
 |-----------|------|----------|
 | Heading | Text | Page titles |
 | Text | Text | Body content |
-| Paragraph | Text | Long text |
 | Label | Text | Form labels |
 | Input | Input | Single-line input |
 | Textarea | Input | Multi-line input |
@@ -599,16 +566,15 @@ component Spinner
 | IconButton | Button | Icon-based action |
 | Topbar | Navigation | Header bar |
 | SidebarMenu | Navigation | Vertical menu |
+| Sidebar | Navigation | Side panel |
 | Breadcrumbs | Navigation | Navigation path |
 | Tabs | Navigation | Tabbed content |
 | Table | Data | Data grid |
 | List | Data | Item list |
 | Image | Media | Image placeholder |
 | Icon | Media | Icon symbol |
-| Avatar | Media | Profile picture |
 | Divider | Display | Visual separator |
 | Badge | Display | Status label |
-| Link | Display | Hyperlink |
 | Alert | Display | Alert message |
 | StatCard | Info | Metric display |
 | Code | Info | Code block |
@@ -616,7 +582,7 @@ component Spinner
 | Modal | Overlay | Dialog box |
 | Spinner | Feedback | Loading indicator |
 
-**Total: 31 Components**
+**Total: 28 Components**
 
 ---
 

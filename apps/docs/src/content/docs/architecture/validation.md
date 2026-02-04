@@ -188,27 +188,39 @@ project "App" {
 
 ### Theme Properties
 
-- ✅ Theme block must have all 5 required properties: `density`, `spacing`, `radius`, `stroke`, `font`
-- ✅ All theme values must be valid strings
-- ✅ Theme properties must use quoted string values
+- ✅ Theme block is optional but highly recommended
+- ✅ When included, theme values must be valid strings with quotes
+- ✅ If omitted, sensible defaults are applied
 
-**Invalid**:
+**Minimal (theme optional)**:
 ```wire
-theme {
-  density: normal        // ❌ Missing quotes
-  // ❌ Missing spacing, radius, stroke, font
+project "App" {
+  // Theme omitted - defaults will be applied
+  screen Home {
+    layout stack {
+      component Heading text: "Hello"
+    }
+  }
 }
 ```
 
-**Valid**:
+**With Theme (recommended)**:
 ```wire
-theme {
-  density: "normal"
-  spacing: "md"
-  radius: "md"
-  stroke: "normal"
-  font: "base"
+project "App" {
+  theme {
+    density: "normal"
+    spacing: "md"
+    radius: "md"
+    stroke: "normal"
+    font: "base"
+  }
+  screen Home {
+    layout stack {
+      component Heading text: "Hello"
+    }
+  }
 }
+```
 ```
 
 ### Layout Constraints

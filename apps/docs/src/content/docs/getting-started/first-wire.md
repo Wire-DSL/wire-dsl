@@ -140,17 +140,24 @@ component Input label: "Email" placeholder: "user@example.com"
 component Button text: "Sign In" variant: primary
 ```
 
-Building blocks of your wireframe. Wire-DSL has 23 component types covering text, inputs, buttons, navigation, and more.
+Building blocks of your wireframe. Wire-DSL has 20+ component types covering text, inputs, buttons, navigation, and more.
 
 ## Common Patterns
 
-### Centered Card
+### Card with Form
 
 ```wire
-layout stack(direction: vertical, gap: md, padding: lg, align: "center") {
-  component Heading text: "Title"
-  component Text content: "Description"
-  component Button text: "Action" variant: primary
+layout card(padding: lg, gap: md, radius: md, border: true) {
+  component Heading text: "Sign In"
+  component Text content: "Enter your credentials"
+  
+  layout stack(direction: vertical, gap: md) {
+    component Input label: "Email" placeholder: "user@example.com"
+    component Input label: "Password" placeholder: "••••••••"
+    component Checkbox label: "Remember me"
+  }
+  
+  component Button text: "Sign In" variant: primary
 }
 ```
 
@@ -190,7 +197,7 @@ If there are errors, they'll be reported with helpful messages.
 
 ## What's Next?
 
-- **Explore components**: [All 23 Component Types](../language/components.md)
+- **Explore components**: [All Component Types](../language/components.md)
 - **Learn layouts**: [Containers & Layouts](../language/containers.md)
 - **Master the syntax**: [Complete DSL Syntax](../language/syntax.md)
 - **Build examples**: Check the [examples/](../../examples) folder for more samples

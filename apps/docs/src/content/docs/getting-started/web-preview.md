@@ -93,11 +93,11 @@ Download the final wireframe in SVG or PNG format.
 
 ### Common Errors
 
-**Missing theme block**:
+**Missing or incomplete theme block** (optional but recommended):
 ```
-Error: theme block is required
+Warning: theme block recommended for consistent styling
 ```
-Solution: Ensure every project has a theme block.
+Solution: Add a theme block to define design tokens. If omitted, defaults are applied.
 
 **Invalid component name**:
 ```
@@ -124,7 +124,13 @@ When there are errors, the preview panel shows:
 
 ```wire
 project "Layout Tests" {
-  theme { density: "normal", spacing: "md", radius: "md", stroke: "normal", font: "base" }
+  theme {
+    density: "normal"
+    spacing: "md"
+    radius: "md"
+    stroke: "normal"
+    font: "base"
+  }
   
   screen StackExample {
     layout stack(direction: vertical, gap: md) {

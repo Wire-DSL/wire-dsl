@@ -33,7 +33,7 @@ project "MyApp" {
 
 ### Theme Properties
 
-All theme properties are **required** and must use **string values with quotes**.
+When a theme block is included (highly recommended), all theme properties must use **string values with quotes**. If a property is omitted, a sensible default is applied.
 
 | Property | Type | Options | Default | Impact |
 |----------|------|---------|---------|--------|

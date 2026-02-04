@@ -64,7 +64,7 @@ The IR transforms raw DSL into an unambiguous, renderable format:
 |-------|------|----------|-------------|
 | `id` | string | Yes | Unique project identifier |
 | `name` | string | Yes | Human-readable name |
-| `theme` | object | Yes | Theme tokens (all properties required) |
+| `theme` | object | No | Theme tokens (defaults applied if omitted) |
 | `screens` | array | Yes | Screen definitions (at least 1) |
 | `nodes` | object | Yes | All nodes referenced by screens |
 

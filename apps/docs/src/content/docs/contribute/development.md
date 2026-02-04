@@ -389,7 +389,7 @@ pnpm dev --filter @wire-dsl/web -- --port 3000
 
 All documentation source files are in `docs/`:
 - `DSL-SYNTAX.md` – Language grammar
-- `COMPONENTS-REFERENCE.md` – All 23 components
+- `COMPONENTS-REFERENCE.md` – All components
 - `ARCHITECTURE.md` – System design
 - See [DOCUMENTATION-INDEX.md](../DOCUMENTATION-INDEX.md) for full list
 

@@ -7,20 +7,47 @@ The Wire-DSL CLI is a command-line tool for validating, rendering, and managing 
 
 ## Installation
 
-### Via npm
+### Option 1: Global Installation (Recommended)
+
+Install the CLI globally via npm:
 
 ```bash
 npm install -g @wire-dsl/cli
 ```
 
-### From Source
+Then use the `wire` command anywhere:
+
+```bash
+wire validate myfile.wire
+wire render myfile.wire -o output.svg
+```
+
+**Advantages**:
+- Available from any directory
+- Simple command syntax
+- Works after single installation
+
+### Option 2: From Source
+
+For development or building from source:
 
 ```bash
 cd packages/cli
 pnpm install
 pnpm build
-node dist/index.js --help
 ```
+
+Then run commands using Node directly:
+
+```bash
+node dist/cli.js validate myfile.wire
+node dist/cli.js render myfile.wire -o output.svg
+```
+
+**Advantages**:
+- Test latest changes immediately
+- No global installation needed
+- Full control over version
 
 ---
 
@@ -70,6 +97,8 @@ wire render myfile.wire -png -o output.png
 
 ## Command Reference
 
+All examples use the global `wire` command. If using from source, replace `wire` with `node dist/cli.js`.
+
 ### validate
 
 Validate syntax and semantics of a Wire-DSL file.
@@ -77,6 +106,11 @@ Validate syntax and semantics of a Wire-DSL file.
 **Usage**:
 ```bash
 wire validate <file.wire>
+```
+
+**From Source**:
+```bash
+node dist/cli.js validate <file.wire>
 ```
 
 **Options**:
@@ -116,6 +150,11 @@ Render a Wire-DSL file to various formats.
 wire render <file.wire> [options]
 ```
 
+**From Source**:
+```bash
+node dist/cli.js render <file.wire> [options]
+```
+
 **Options**:
 - `-o, --output <path>` – Output file path (required)
 - `-svg` – Output as SVG (default)
@@ -136,12 +175,23 @@ wire render dashboard.wire -png -o dashboard.png --width 1920 --height 1080
 wire render dashboard.wire -pdf -o dashboard.pdf
 ```
 
+**From Source**:
+```bash
+node dist/cli.js render dashboard.wire -o dashboard.svg
+node dist/cli.js render dashboard.wire -png -o dashboard.png --width 1920
+```
+
 ### init
 
 Initialize a new Wire-DSL project (future feature).
 
 ```bash
 wire init my-project
+```
+
+Or from source:
+```bash
+node dist/cli.js init my-project
 ```
 
 ---
@@ -187,8 +237,14 @@ pnpm build
 # Test
 pnpm test
 
-# Run
-node dist/index.js --help
+# Run directly from source
+node dist/cli.js --help
+node dist/cli.js validate <file.wire>
+node dist/cli.js render <file.wire> -o output.svg
+
+# Install globally from source
+npm install -g .
+wire --help
 ```
 
 ### Web Editor
@@ -261,16 +317,26 @@ pnpm build --filter=[HEAD~1]
 ### Show Help
 
 ```bash
+# Global installation
 wire --help
 wire validate --help
 wire render --help
+
+# From source
+node dist/cli.js --help
+node dist/cli.js validate --help
 ```
 
 ### Verbose Output
 
 ```bash
+# Global installation
 wire validate myfile.wire --verbose
 wire render myfile.wire -o output.svg --verbose
+
+# From source
+node dist/cli.js validate myfile.wire --verbose
+node dist/cli.js render myfile.wire -o output.svg --verbose
 ```
 
 ### Watch Mode (Engine)
@@ -323,8 +389,14 @@ Shows detailed debug output for troubleshooting.
 Validate all `.wire` files in a directory:
 
 ```bash
+# Using global installation
 for file in *.wire; do
   wire validate "$file" && echo "✅ $file" || echo "❌ $file"
+done
+
+# From source
+for file in *.wire; do
+  node dist/cli.js validate "$file" && echo "✅ $file" || echo "❌ $file"
 done
 ```
 
@@ -333,15 +405,30 @@ done
 Render all files to SVG:
 
 ```bash
+# Using global installation
 for file in *.wire; do
   name="${file%.wire}"
   wire render "$file" -o "output/${name}.svg"
+done
+
+# From source
+for file in *.wire; do
+  name="${file%.wire}"
+  node dist/cli.js render "$file" -o "output/${name}.svg"
 done
 ```
 
 ### CI/CD Integration
 
 Validate in a pipeline:
+
+```bash
+# Using global installation
+wire validate *.wire || exit 1
+
+# From source
+node dist/cli.js validate *.wire || exit 1
+```
 
 ```yaml
 # GitHub Actions example
@@ -361,11 +448,19 @@ Validate in a pipeline:
 If `wire` command is not found:
 
 ```bash
-# Install globally
+# Option 1: Install globally (if not already installed)
 npm install -g @wire-dsl/cli
 
-# Or use npx
+# Option 2: Use npx (requires no installation)
 npx @wire-dsl/cli validate myfile.wire
+
+# Option 3: Use from source (from monorepo)
+cd packages/cli
+pnpm build
+node dist/cli.js validate myfile.wire
+
+# Option 4: Check if installed
+npm list -g @wire-dsl/cli
 ```
 
 ### File Not Found
@@ -373,11 +468,17 @@ npx @wire-dsl/cli validate myfile.wire
 Ensure the file path is correct:
 
 ```bash
-# Absolute path
+# Check if file exists
+ls -la myfile.wire
+
+# Use absolute path
 wire validate /full/path/to/file.wire
 
-# Relative path
+# Use relative path (from current directory)
 wire validate ./wireframes/dashboard.wire
+
+# Debug: List all .wire files in current directory
+ls *.wire
 ```
 
 ### Permission Denied
@@ -388,8 +489,43 @@ When rendering to a directory without write permissions:
 # Check permissions
 ls -la output/
 
-# Create output directory
+# Create output directory with proper permissions
 mkdir -p output
+chmod 755 output
+
+# Render with full path to writable directory
+wire render myfile.wire -o /tmp/output.svg
+```
+
+### Port Already in Use (Web Editor)
+
+If `pnpm dev` fails due to port conflicts:
+
+```bash
+# Use a different port
+pnpm dev --port 3001
+```
+
+### Out of Memory
+
+For large renders:
+
+```bash
+# Increase Node.js memory
+NODE_OPTIONS=--max-old-space-size=4096 wire render large.wire -o output.svg
+```
+
+### Performance Issues
+
+Profile and debug rendering:
+
+```bash
+# Debug mode
+DEBUG=wire-dsl:* wire render myfile.wire -o output.svg
+
+# Check rendering time
+time wire render myfile.wire -o output.svg
+```
 
 # Set permissions
 chmod 755 output

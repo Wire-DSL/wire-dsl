@@ -43,7 +43,7 @@ project "Admin Dashboard" {
 
 **Properties**:
 - `name`: Project name (string, required)
-- `theme`: Design tokens configuration (required)
+- `theme`: Design tokens configuration (highly recommended)
 
 ---
 
@@ -300,15 +300,15 @@ define Component "ButtonGroup" {
 ### Example
 
 ```wire
-define Component "ButtonGroup" {
-  layout stack(direction: horizontal, gap: md) {
-    component Button text: "OK" variant: primary
-    component Button text: "Cancel" variant: secondary
-  }
-}
-
 project "Form App" {
   theme { ... }
+
+  define Component "ButtonGroup" {
+    layout stack(direction: horizontal, gap: md) {
+      component Button text: "OK" variant: primary
+      component Button text: "Cancel" variant: secondary
+    }
+  }
 
   screen LoginScreen {
     layout stack(direction: vertical, gap: lg, padding: xl) {
@@ -323,10 +323,11 @@ project "Form App" {
 
 ### Usage Rules
 
-1. **Definitions come first** - Place `define Component` before screens
-2. **Can reference other components** - Both built-in and custom
-3. **Can nest layouts** - Define complex patterns once, reuse everywhere
-4. **No parameters** - Components are templates, not functions
+1. **Definitions inside project** - Place `define Component` inside the project block
+2. **Define before use** - Highly recommended to define before first use (hoisting supported)
+3. **Can reference other components** - Both built-in and custom
+4. **Can nest layouts** - Define complex patterns once, reuse everywhere
+5. **No parameters** - Components are templates, not functions
 
 ---
 
@@ -447,6 +448,6 @@ project "Admin Dashboard" {
 
 ## Next Steps
 
-- [All 23 Component Types](./components.md)
+- [All Component Types](./components.md)
 - [Containers & Layouts](./containers.md)
 - [Theme Configuration](./theming.md)

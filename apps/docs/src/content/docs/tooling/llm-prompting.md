@@ -260,7 +260,7 @@ project "Login" {
   }
 
   screen LoginScreen {
-    layout stack(direction: vertical, gap: lg, padding: xl, align: "center") {
+    layout card(padding: lg, gap: md, radius: md, border: true) {
       component Heading text: "Sign In"
       component Input label: "Email" placeholder: "you@example.com"
       component Input label: "Password" placeholder: "••••••••"
@@ -384,13 +384,15 @@ project "Login App" {
   }
 
   screen LoginScreen {
-    layout stack(direction: vertical, gap: lg, padding: xl, align: "center") {
+    layout card(padding: lg, gap: md, radius: md, border: true) {
       component Heading text: "Welcome Back"
       component Text content: "Enter your credentials"
       
-      component Input label: "Email" placeholder: "you@example.com"
-      component Input label: "Password" placeholder: "••••••••"
-      component Checkbox label: "Remember me"
+      layout stack(direction: vertical, gap: md) {
+        component Input label: "Email" placeholder: "you@example.com"
+        component Input label: "Password" placeholder: "••••••••"
+        component Checkbox label: "Remember me"
+      }
       
       layout stack(direction: horizontal, gap: md) {
         component Button text: "Sign Up" variant: secondary

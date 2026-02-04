@@ -24,7 +24,7 @@ project "Login App" {
   theme { density: "comfortable" }
   
   screen LoginScreen {
-    layout stack(direction: vertical, gap: lg, padding: xl) {
+    layout card(padding: lg, gap: md, radius: md, border: true) {
       component Heading text: "Welcome"
       component Input label: "Email"
       component Input label: "Password"
@@ -85,7 +85,7 @@ project "Hello" {
 
 ### 📚 [Language Guide](./language/syntax)
 - Complete DSL syntax
-- All 23 components
+- All components
 - Layout containers
 - Theme system
 - Icons & styling
@@ -151,7 +151,8 @@ layout grid(columns: 12, gap: lg) {
 
 ### 📋 Forms
 ```wire
-layout stack(direction: vertical, gap: md, padding: lg) {
+layout card(padding: lg, gap: md, radius: md, border: true) {
+  component Heading text: "Signup Form"
   component Input label: "Name" placeholder: "John Doe"
   component Select label: "Country" items: "USA,Canada,Mexico"
   component Checkbox label: "I agree to terms"
