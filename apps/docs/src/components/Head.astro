@@ -1,0 +1,12 @@
+---
+// Head component that Starlight includes
+// This is automatically injected by Starlight in the <head>
+
+import StarlightHead from '@astrojs/starlight/components/Head.astro';
+import WirePreviewClient from './WirePreviewClient.astro';
+
+---
+
+<StarlightHead {...Astro.props} />
+
+<WirePreviewClient />

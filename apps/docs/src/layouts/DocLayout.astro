@@ -1,0 +1,16 @@
+---
+// src/layouts/DocLayout.astro
+// Inyecta WirePreviewClient en todas las páginas
+
+import type { Props } from '@astrojs/starlight/props';
+import Default from '@astrojs/starlight/layouts/BaseLayout.astro';
+import WirePreviewClient from '../components/WirePreviewClient.astro';
+
+const props = Astro.props as Props;
+---
+
+<Default {...props}>
+  <slot />
+</Default>
+
+<WirePreviewClient />

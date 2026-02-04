@@ -1,0 +1,21 @@
+{
+  "name": "@wire-dsl/docs",
+  "private": true,
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/starlight": "^0.37.6",
+    "@wire-dsl/engine": "workspace:*",
+    "astro": "^5.6.1",
+    "preact": "^10.x",
+    "sharp": "^0.34.2",
+    "unist-util-visit": "^5.0.0"
+  }
+}

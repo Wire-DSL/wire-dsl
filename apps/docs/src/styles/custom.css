@@ -1,0 +1,126 @@
+/* Wire-DSL Syntax Highlighting Styles */
+
+/* Keywords - project, screen, layout, component */
+.shiki .keyword\.declaration\.wire {
+	color: var(--sl-color-accent-high);
+	font-weight: 600;
+}
+
+/* Control Keywords - stack, grid, panel, split, card */
+.shiki .keyword\.control\.wire {
+	color: var(--sl-color-accent);
+	font-weight: 600;
+}
+
+/* Other Keywords - theme */
+.shiki .keyword\.other\.wire {
+	color: var(--sl-color-accent);
+	font-weight: 600;
+}
+
+/* Component Names - Heading, Button, Input, etc. */
+.shiki .entity\.name\.class\.wire {
+	color: var(--sl-color-text-accent);
+	font-weight: 700;
+}
+
+/* Properties - text, label, placeholder, etc. */
+.shiki .variable\.other\.property\.wire {
+	color: var(--sl-color-text);
+}
+
+/* Strings */
+.shiki .string\.quoted\.double\.wire,
+.shiki .string\.quoted\.single\.wire {
+	color: var(--sl-color-green);
+}
+
+/* Comments */
+.shiki .comment\.line\.double-slash\.wire,
+.shiki .comment\.block\.wire {
+	color: var(--sl-color-gray);
+	font-style: italic;
+}
+
+/* Numbers and Spacing Values (xs, sm, md, lg, xl) */
+.shiki .constant\.numeric\.wire,
+.shiki .constant\.numeric\.spacing\.wire {
+	color: var(--sl-color-orange);
+	font-weight: 500;
+}
+
+/* Colors */
+.shiki .constant\.color\.hex\.wire,
+.shiki .constant\.color\.named\.wire {
+	color: var(--sl-color-purple);
+	font-weight: 500;
+}
+
+/* Operators */
+.shiki .keyword\.operator\.wire {
+	color: var(--sl-color-text);
+}
+
+/* Punctuation */
+.shiki .punctuation\.definition\.block\.wire,
+.shiki .punctuation\.separator\.wire {
+	color: var(--sl-color-text);
+}
+
+/* Code Block Styling */
+.shiki.lang-wire {
+	background-color: var(--sl-color-gray-6);
+	border-radius: 8px;
+	padding: 1rem;
+}
+
+.shiki.lang-wire code {
+	font-family: 'Courier New', monospace;
+	font-size: 0.875rem;
+	line-height: 1.5;
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+	.shiki .keyword\.declaration\.wire {
+		color: #7ee787;
+	}
+
+	.shiki .keyword\.control\.wire {
+		color: #79c0ff;
+	}
+
+	.shiki .entity\.name\.class\.wire {
+		color: #ffa657;
+	}
+
+	.shiki .string\.quoted\.double\.wire,
+	.shiki .string\.quoted\.single\.wire {
+		color: #a5d6ff;
+	}
+
+	.shiki .constant\.color\.hex\.wire,
+	.shiki .constant\.color\.named\.wire {
+		color: #d2a8ff;
+	}
+
+	.shiki .comment\.line\.double-slash\.wire,
+	.shiki .comment\.block\.wire {
+		color: #8b949e;
+	}
+}
+
+/* Wire Preview Initialization Script - Injected Inline */
+@supports (display: contents) {
+	:root {
+		--wire-preview-init: initial;
+	}
+}
+
+/* This CSS block includes inline JavaScript via Astro's special handling */
+@media screen {
+	html::before {
+		content: '';
+		display: none;
+	}
+}

@@ -1,0 +1,335 @@
+---
+// WirePreviewClient.astro
+// Envuelve bloques wire-preview en tabs Code/Preview intercambiables
+// Mantiene el syntax highlighting original del código
+---
+
+<script>
+function prepareCodeForRendering(code) {
+  const trimmed = code.trim();
+
+  const indent = (text, spaces) => {
+    const indentStr = ' '.repeat(spaces);
+    return text
+      .split('\n')
+      .map((line, idx) => {
+        if (idx === 0) return line;
+        if (line.trim() === '') return '';
+        return indentStr + line;
+      })
+      .join('\n');
+  };
+
+  const lines = trimmed.split('\n');
+  let firstKeyword = '';
+  for (const line of lines) {
+    const match = line.trim().match(/^(\w+)/);
+    if (match) {
+      firstKeyword = match[1].toLowerCase();
+      break;
+    }
+  }
+
+  if (firstKeyword === 'project') return code;
+  if (firstKeyword === 'screen') {
+    return `project "Default" {
+  theme {
+    density: "normal"
+    spacing: "md"
+    radius: "md"
+    stroke: "normal"
+    font: "base"
+  }
+  ${indent(code, 2)}
+}`;
+  }
+//   if (firstKeyword === 'layout') {
+//     return `project "Default" {
+//   theme {
+//     density: "normal"
+//     spacing: "md"
+//     radius: "md"
+//     stroke: "normal"
+//     font: "base"
+//   }
+//   screen Main {
+//     ${indent(code, 4)}
+//   }
+// }`;
+//   }
+
+  return `project "Default" {
+  theme {
+    density: "normal"
+    spacing: "md"
+    radius: "md"
+    stroke: "normal"
+    font: "base"
+  }
+  screen Main {
+    layout stack (padding: "lg") {
+      ${indent(code, 6)}
+    }
+  }
+}`;
+}
+
+function extractCode(preEl) {
+  // Extraer texto del código dentro del <pre>
+  const codeEl = preEl.querySelector('code');
+  if (codeEl) {
+    const walker = document.createTreeWalker(codeEl, NodeFilter.SHOW_TEXT);
+    let text = '';
+    let node;
+    while ((node = walker.nextNode())) {
+      text += node.textContent;
+    }
+    return text.trim();
+  }
+  return preEl.textContent.trim();
+}
+
+async function renderSVGPreview(code, containerEl) {
+  try {
+    const prepared = prepareCodeForRendering(code);
+    
+    const { parseWireDSL, generateIR, calculateLayout, renderToSVG } = await import('@wire-dsl/engine');
+    
+    const ast = parseWireDSL(prepared);
+    if (!ast) {
+      throw new Error('parseWireDSL retornó null');
+    }
+
+    const ir = generateIR(ast);
+    if (!ir) {
+      throw new Error('generateIR retornó null');
+    }
+    
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+    if (!svg) {
+      throw new Error('renderToSVG retornó null');
+    }
+
+    containerEl.innerHTML = svg;
+  } catch (err) {
+    console.error('[WirePreview] ❌ Error:', err);
+    containerEl.innerHTML = `<div class="wire-preview-error"><p><strong>Error:</strong> ${err.message}</p></div>`;
+  }
+}
+
+function initializeWirePreviews() {
+  // Buscar comentarios de inicio
+  const walker = document.createTreeWalker(
+    document.body,
+    NodeFilter.SHOW_COMMENT,
+    null,
+    false
+  );
+  
+  const comments = [];
+  let node;
+  while ((node = walker.nextNode())) {
+    if (node.nodeValue && node.nodeValue.includes('wire-preview:start')) {
+      comments.push(node);
+    }
+  }
+  
+  comments.forEach((comment, idx) => {
+    // Buscar el siguiente <pre> o <div> que contenga <pre>
+    let sibling = comment.nextSibling;
+    let preEl = null;
+    let preWrapper = null;
+    let depth = 0;
+    
+    while (sibling && depth < 10) {
+      // Si es <pre> directamente
+      if (sibling.nodeType === 1 && sibling.tagName === 'PRE') {
+        preEl = sibling;
+        preWrapper = sibling;
+        break;
+      }
+      
+      // Si es <div>, buscar <pre> dentro (ej: expressive-code)
+      if (sibling.nodeType === 1 && sibling.tagName === 'DIV') {
+        const preDentro = sibling.querySelector('pre');
+        if (preDentro) {
+          preEl = preDentro;
+          preWrapper = sibling;
+          break;
+        }
+      }
+      
+      sibling = sibling.nextSibling;
+      depth++;
+    }
+    
+    if (preEl && preWrapper) {
+      const code = extractCode(preEl);
+      if (code) {
+        // Crear contenedor de tabs
+        const container = document.createElement('div');
+        container.className = 'wire-preview-container';
+        
+        // Header tabs
+        const header = document.createElement('div');
+        header.className = 'wire-preview-header';
+        
+        const btnCode = document.createElement('button');
+        btnCode.className = 'wire-preview-btn active';
+        btnCode.textContent = 'Code';
+        btnCode.type = 'button';
+        
+        const btnPreview = document.createElement('button');
+        btnPreview.className = 'wire-preview-btn';
+        btnPreview.textContent = 'Preview';
+        btnPreview.type = 'button';
+        
+        header.appendChild(btnCode);
+        header.appendChild(btnPreview);
+        
+        // Panel Code - mover el preWrapper original (con syntax highlighting)
+        const panelCode = document.createElement('div');
+        panelCode.className = 'wire-preview-panel active';
+        
+        // Panel Preview
+        const panelPreview = document.createElement('div');
+        panelPreview.className = 'wire-preview-panel';
+        panelPreview.innerHTML = '<div class="wire-preview-loading">Renderizando preview...</div>';
+        
+        // Guardar el parentElement ANTES de mover preWrapper
+        const originalParent = preWrapper.parentElement;
+        
+        // Construir el contenedor
+        container.appendChild(header);
+        container.appendChild(panelCode);
+        container.appendChild(panelPreview);
+        
+        // Insertar PRIMERO el container en la posición original (mientras preWrapper aún es hijo de originalParent)
+        if (originalParent) {
+          originalParent.insertBefore(container, preWrapper);
+        }
+        
+        // DESPUÉS mover el preWrapper original (con todos sus estilos y highlighting) al panel code
+        panelCode.appendChild(preWrapper);
+        
+        // Event listeners para tabs
+        let previewRendered = false;
+        
+        btnCode.addEventListener('click', () => {
+          btnCode.classList.add('active');
+          btnPreview.classList.remove('active');
+          panelCode.classList.add('active');
+          panelPreview.classList.remove('active');
+        });
+        
+        btnPreview.addEventListener('click', async () => {
+          btnPreview.classList.add('active');
+          btnCode.classList.remove('active');
+          panelPreview.classList.add('active');
+          panelCode.classList.remove('active');
+          
+          // Renderizar preview solo cuando se hace click
+          if (!previewRendered) {
+            await renderSVGPreview(code, panelPreview);
+            previewRendered = true;
+          }
+        });
+      }
+    }
+  });
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeWirePreviews);
+} else {
+  initializeWirePreviews();
+}
+document.addEventListener('astro:after-swap', initializeWirePreviews);
+</script>
+
+<style>
+  :global(.wire-preview-container) {
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 0.5rem;
+    overflow: hidden;
+    background-color: var(--sl-color-gray-7);
+    margin: 1.5rem 0;
+  }
+
+  :global(.wire-preview-header) {
+    display: flex;
+    border-bottom: 1px solid var(--sl-color-gray-5);
+    background-color: var(--sl-color-gray-6);
+  }
+
+  :global(.wire-preview-btn) {
+    flex: 0 0 auto;
+    padding: 0.75rem 1.5rem;
+    margin: 0;
+    background: none;
+    border: none;
+    color: var(--sl-color-gray-2);
+    font-weight: 600;
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 200ms ease-in-out;
+    border-bottom: 2px solid transparent;
+    position: relative;
+    bottom: -1px;
+  }
+
+  :global(.wire-preview-btn:hover) {
+    color: var(--sl-color-white);
+    background-color: rgba(255, 255, 255, 0.05);
+  }
+
+  :global(.wire-preview-btn.active) {
+    color: var(--sl-color-accent);
+    border-bottom-color: var(--sl-color-accent);
+  }
+
+  :global(.wire-preview-panel) {
+    display: none;
+    animation: fadeIn 200ms ease-in-out;
+	margin-top: 0px;
+  }
+
+  :global(.wire-preview-panel.active) {
+    display: block;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  :global(.wire-preview-panel pre) {
+    margin: 0;
+    border-radius: 0;
+  }
+
+  :global(.wire-preview-loading) {
+    padding: 2rem;
+    text-align: center;
+    color: var(--sl-color-gray-2);
+    font-style: italic;
+  }
+
+  :global(.wire-preview-panel svg) {
+    display: block;
+    margin: 1.5rem auto;
+    max-width: 100%;
+    max-height: 600px;
+    height: auto;
+  }
+
+  :global(.wire-preview-error) {
+    padding: 1rem;
+    background-color: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 0.375rem;
+    color: #ef4444;
+    margin: 1rem;
+  }
+</style>

@@ -1,0 +1,57 @@
+---
+// WirePreviewBlock.astro
+// 
+// Deprecated: This component is handled differently now.
+// Wire code blocks are processed client-side with the WirePreviewEnhancer.
+
+import WirePreviewButton from './WirePreviewButton';
+
+interface Props {
+  code: string;
+  canPreview?: boolean;
+}
+
+const { code, canPreview = false } = Astro.props as Props;
+---
+
+<div class="wire-preview-block">
+  <div class="wire-code-container">
+    <pre><code class="language-wire">{code}</code></pre>
+  </div>
+
+  {canPreview && (
+    <WirePreviewButton 
+      code={code}
+      client:load
+    />
+  )}
+</div>
+
+<style>
+  .wire-preview-block {
+    position: relative;
+    margin: 1.5rem 0;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    background: var(--sl-color-black);
+  }
+
+  .wire-code-container {
+    position: relative;
+  }
+
+  .wire-code-container pre {
+    margin: 0;
+    padding: 1.25rem;
+    overflow-x: auto;
+    border-radius: 0.5rem 0.5rem 0 0;
+  }
+
+  .wire-code-container code {
+    font-family: var(--sl-font-mono);
+    font-size: 0.875rem;
+    line-height: 1.5;
+    color: var(--sl-color-gray-1);
+  }
+</style>
+
