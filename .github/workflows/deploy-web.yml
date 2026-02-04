@@ -1,16 +1,19 @@
-name: Deploy Docs to Cloudflare Pages
+name: Deploy Web Preview to Cloudflare Pages
 
 on:
   push:
     branches: [main]
     paths:
-      - 'apps/docs/**'
-      - '.github/workflows/deploy-docs.yml'
+      - 'apps/web/**'
+      - 'packages/engine/**'
+      - 'packages/editor-ui/**'
+      - 'packages/language-support/**'
+      - '.github/workflows/deploy-web.yml'
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    name: Build & Deploy Documentation
+    name: Build & Deploy Web Preview
 
     environment:
       name: production
@@ -36,8 +39,14 @@ jobs:
       - name: Build engine package
         run: pnpm --filter @wire-dsl/engine build
 
-      - name: Build documentation
-        run: pnpm --filter @wire-dsl/docs build
+      - name: Build editor-ui package
+        run: pnpm --filter @wire-dsl/editor-ui build
+
+      - name: Build language-support package
+        run: pnpm --filter @wire-dsl/language-support build
+
+      - name: Build web preview
+        run: pnpm --filter @wire-dsl/web build
 
       - name: Deploy to Cloudflare Pages
         id: deploy
@@ -45,6 +54,5 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: ${{ vars.CLOUDFLARE_DOCS_PROJECT_NAME }}
-          directory: apps/docs/dist
-
+          projectName: ${{ vars.CLOUDFLARE_WEB_PROJECT_NAME }}
+          directory: apps/web/dist
