@@ -13,7 +13,7 @@ hero:
       variant: minimal
       icon: open-book
     - text: Preview Online
-      link: https://google.com
+      link: https://wire-dsl-web.pages.dev/
       variant: minimal
       icon: external
 ---
