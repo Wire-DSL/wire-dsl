@@ -113,7 +113,7 @@ See [../../.ai/AI-INSTRUCTIONS-MAIN.md](../../.ai/AI-INSTRUCTIONS-MAIN.md) for d
 The `@wire-dsl/web` package uses `editor-ui`:
 
 ```tsx
-// packages/web/src/App.tsx
+// apps/web/src/App.tsx
 import { EditorPanel, PreviewPanel } from '@wire-dsl/editor-ui';
 
 export function App() {

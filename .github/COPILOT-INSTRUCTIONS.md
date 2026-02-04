@@ -42,7 +42,7 @@ Contains all detailed information about:
 
 **Important**: Do NOT create excessive .md files.
 - **Consolidate**: Merge documentation into existing files or single STRATEGY.md
-- **No Timestamps**: Except in roadmap (plans/) - dates make docs obsolete
+- **No Timestamps**: Dates make docs obsolete
 - **Quality > Quantity**: One comprehensive doc beats 8 scattered ones
 - **Example**: Instead of 8 separate files → Create one STRATEGY.md with sections
 

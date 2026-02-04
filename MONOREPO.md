@@ -11,7 +11,7 @@ This is a monorepo containing all packages for the WireDSL project.
 - **[@wire-dsl/engine](./packages/engine)** - Parser, IR generator, layout engine, and SVG renderer
 - **[@wire-dsl/exporters](./packages/exporters)** - Exporter to SVG, PDF and PNG
 - **[@wire-dsl/cli](./packages/cli)** - Command-line interface for WireDSL
-- **[@wire-dsl/web](./packages/web)** - Live web editor (React + Monaco)
+- **[@wire-dsl/web](./apps/web)** - Live web editor (React + Monaco)
 
 ## 🚀 Quick Start
 
@@ -207,7 +207,7 @@ pnpm release
 # Configure in Cloudflare Pages:
 # - Framework: React
 # - Build command: pnpm build:web
-# - Build output: packages/web/dist
+# - Build output: apps/web/dist
 ```
 
 ### AI Backend (Cloudflare Workers)

@@ -72,7 +72,7 @@ pnpm build:core
 pnpm test:cli
 
 # Develop web editor
-cd packages/web
+cd apps/web
 pnpm dev
 ```
 

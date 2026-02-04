@@ -405,10 +405,10 @@ docs/
 
 ## Additional Resources
 
-- **Parser Grammar**: See `packages/core/src/parser/index.ts`
-- **IR Specification**: See `packages/core/src/ir/index.ts`
-- **Renderer Logic**: See `packages/core/src/renderer/index.ts`
-- **VS Code Extension**: See `packages/vscode-extension/`
+- **Parser Grammar**: See `packages/engine/src/parser/index.ts`
+- **IR Specification**: See `packages/engine/src/ir/index.ts`
+- **Renderer Logic**: See `packages/engine/src/renderer/index.ts`
+- **VS Code Extension**: See `packages/language-support/`
 
 ---
 

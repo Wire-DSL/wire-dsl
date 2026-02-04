@@ -5,7 +5,7 @@
 **Paquete creado**: `@wire-dsl/editor-ui` v0.0.1  
 **Propósito**: Componentes reutilizables OSS-first para Wire Live + futuras versiones privadas  
 **Estado**: ✅ Listo para producción (Wire Live FASE 1)  
-**Próximo paso**: Integración en `packages/web` (WL-01)
+**Próximo paso**: Integración en `apps/web` (WL-01)
 
 ---
 
@@ -396,7 +396,7 @@ Antes de cambiar editor-ui, validar:
 
 ### Integration
 
-✅ Agregado a `packages/web/package.json`  
+✅ Agregado a `apps/web/package.json`  
 ✅ Reconocido por pnpm workspace  
 ✅ Build order correcto en turbo.json  
 ✅ Listo para import en web
@@ -409,7 +409,7 @@ Antes de cambiar editor-ui, validar:
 
 ```bash
 # Automático (pnpm workspace)
-cd packages/web
+cd apps/web
 pnpm install
 ```
 
@@ -454,7 +454,7 @@ export function App() {
 
 ## 🎯 Próximos Pasos (FASE WL-01)
 
-### What Changes in packages/web
+### What Changes in apps/web
 
 1. **App.tsx**
    - Importar componentes de editor-ui

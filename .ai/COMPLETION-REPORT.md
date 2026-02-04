@@ -154,7 +154,7 @@ Wire-DSL/
 2. Study public documentation in `docs/`
 3. Review technical specs in `specs/`
 4. Check examples in `examples/`
-5. Review source code in `packages/core/src/`
+5. Review source code in `packages/engine/src/`
 
 ---
 
@@ -190,7 +190,6 @@ Wire-DSL/
 ### Development Guides
 - **Main Development** → [.ai/AI-INSTRUCTIONS-MAIN.md](.ai/AI-INSTRUCTIONS-MAIN.md)
 - **Navigation & Lookup** → [.ai/AI-INSTRUCTIONS-INDEX.md](.ai/AI-INSTRUCTIONS-INDEX.md)
-- **Planning Documents** → [.ai/plans/](./plans/)
 
 ---
 
@@ -252,7 +251,7 @@ Wire-DSL/
 2. [docs/](../docs/) folder (30 min)
 3. [specs/](../specs/) folder (30 min)
 4. [examples/](../examples/) folder (30 min)
-5. Source code review (unlimited)
+5. Source code review in `packages/engine/src/` (unlimited)
 
 ---
 

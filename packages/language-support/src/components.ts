@@ -3,7 +3,7 @@
  * Used for autocompletion and hover documentation
  * 
  * SYNC SOURCES:
- * 1. Built-in components: Check packages/core/src/renderer/index.ts renderComponent() method
+ * 1. Built-in components: Check packages/engine/src/renderer/index.ts renderComponent() method
  *    for latest component implementations. Update this file when new components are added.
  * 2. User-defined components: Syntax is `define Component "Name" { ... }`
  *    These are parsed and resolved before IR generation.

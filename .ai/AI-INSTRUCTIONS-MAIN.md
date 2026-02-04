@@ -14,10 +14,6 @@ Start here when building new functionality:
 - [Components Reference](../docs/COMPONENTS-REFERENCE.md) - Available UI components
 - [Validation Rules](../specs/VALIDATION-RULES-EN.md) - Business rule constraints
 
-**Planning Documents:**
-- [DSL Refactor Comprehensive Plan](plans/20260122-dsl-refactor-comprehensive-plan.md)
-- [VS Code Extension Improvements](plans/20260123-vscode-extension-improvements.md)
-
 ---
 
 ### 🐛 For Maintenance & Bug Fixes
@@ -50,12 +46,13 @@ Wire-DSL/
 │   ├── LAYOUT-ENGINE-EN.md       # Layout calculation engine
 │   └── VALIDATION-RULES-EN.md    # Validation & constraints
 ├── packages/
-│   ├── core/                     # @wire-dsl/core (Parser, IR, Layout, SVG)
+│   ├── engine/                   # @wire-dsl/engine (Parser, IR, Layout, SVG)
 │   ├── cli/                      # @wire-dsl/cli (Command-line tool)
-│   ├── web/                      # Web editor & preview
-│   ├── vscode-extension/         # VS Code extension
-│   ├── studio/                   # Studio package
-│   └── ai-backend/               # AI backend services
+│   ├── language-support/         # @wire-dsl/language-support (VS Code, Monaco)
+│   ├── editor-ui/                # @wire-dsl/editor-ui (React components)
+│   └── exporters/                # @wire-dsl/exporters (SVG, PNG, PDF export)
+├── apps/
+│   └── web/                      # @wire-dsl/web (Web editor & preview)
 ├── examples/                     # Example .wire files
 └── tests/                        # Test suites
 ```
@@ -173,19 +170,19 @@ Apply visual consistency through theming:
 ### Adding a New Component
 
 1. **Define in DSL Syntax** → Update [DSL-SYNTAX.md](../docs/DSL-SYNTAX.md)
-2. **Update Parser** → `packages/core/src/parser/`
-3. **Add IR Schema** → `packages/core/src/ir/` (update Zod schema)
-4. **Update Layout Engine** → `packages/core/src/layout/`
-5. **Implement Renderer** → `packages/core/src/renderer/`
+2. **Update Parser** → `packages/engine/src/parser/`
+3. **Add IR Schema** → `packages/engine/src/ir/` (update Zod schema)
+4. **Update Layout Engine** → `packages/engine/src/layout/`
+5. **Implement Renderer** → `packages/engine/src/renderer/`
 6. **Update Components Reference** → [COMPONENTS-REFERENCE.md](../docs/COMPONENTS-REFERENCE.md)
-7. **Add Test Cases** → `packages/core/tests/`
+7. **Add Test Cases** → `packages/engine/tests/`
 8. **Create Example** → `examples/`
 
 ### Fixing a Parser/Validation Issue
 
 1. **Check Validation Rules** → [VALIDATION-RULES-EN.md](../specs/VALIDATION-RULES-EN.md)
-2. **Review Parser Tests** → `packages/core/tests/parser/`
-3. **Update Parser** → `packages/core/src/parser/`
+2. **Review Parser Tests** → `packages/engine/tests/parser/`
+3. **Update Parser** → `packages/engine/src/parser/`
 4. **Validate Against Spec** → [IR-CONTRACT-EN.md](../specs/IR-CONTRACT-EN.md)
 5. **Add Test Case** → Ensure coverage of edge case
 6. **Update Documentation** → If behavior changed, update docs
@@ -193,8 +190,8 @@ Apply visual consistency through theming:
 ### Updating the Layout Engine
 
 1. **Review Current Logic** → [LAYOUT-ENGINE-EN.md](../specs/LAYOUT-ENGINE-EN.md)
-2. **Check Test Cases** → `packages/core/tests/layout/`
-3. **Modify Engine** → `packages/core/src/layout/`
+2. **Check Test Cases** → `packages/engine/tests/layout/`
+3. **Modify Engine** → `packages/engine/src/layout/`
 4. **Validate Against Spec** → Ensure compliance with spec
 5. **Test Rendering** → Check SVG output is correct
 6. **Update Examples** → Add test case if demonstrating new behavior
@@ -227,11 +224,11 @@ All `.wire` files must comply with:
 
 | File | Purpose |
 |------|---------|
-| `packages/core/src/parser/` | DSL parser implementation |
-| `packages/core/src/ir/` | IR generation and schema |
-| `packages/core/src/layout/` | Layout calculation engine |
-| `packages/core/src/renderer/` | SVG output generation |
-| `packages/core/tests/` | Test suites |
+| `packages/engine/src/parser/` | DSL parser implementation |
+| `packages/engine/src/ir/` | IR generation and schema |
+| `packages/engine/src/layout/` | Layout calculation engine |
+| `packages/engine/src/renderer/` | SVG output generation |
+| `packages/engine/tests/` | Test suites |
 | `docs/ARCHITECTURE.md` | System design documentation |
 | `specs/IR-CONTRACT-EN.md` | IR schema specification |
 | `specs/LAYOUT-ENGINE-EN.md` | Layout engine specification |
@@ -261,7 +258,7 @@ All `.wire` files must comply with:
 
 1. **Consolidate over Create**: Use existing files or merge into single comprehensive file
 2. **One Strategy per Feature**: Not separate files for recommendation, visualization, decision, quickstart, etc.
-3. **No Timestamps or Status Markers**: Except in main roadmap (plans/) - dates make docs stale
+3. **No Timestamps or Status Markers**: Dates make docs stale
 4. **Max Effort**: If documentation effort > feature effort = WRONG APPROACH
 5. **Quality Over Quantity**: One well-written STRATEGY.md > 8 scattered files
 

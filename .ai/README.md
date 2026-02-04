@@ -146,8 +146,7 @@ Wire-DSL/
     ├── README.md                          ← This file (overview & navigation)
     ├── AI-INSTRUCTIONS-MAIN.md            ← Comprehensive development guide
     ├── AI-INSTRUCTIONS-INDEX.md           ← Resource navigation hub
-    ├── plans/                             ← Strategic planning documents
-    └── _archive/                          ← Historical reference docs
+    └── plans/                             ← Development plans
 ```
 
 ---
@@ -211,11 +210,14 @@ Wire-DSL/
 ├── docs/                                  # Public documentation
 ├── specs/                                 # Technical specifications
 ├── examples/                              # Example .wire files
+├── apps/                                  # Applications
+│   └── web/                               # Web editor
 └── packages/                              # Monorepo packages
-    ├── core/                              # Parser, IR, Layout, Renderer
+    ├── engine/                            # Parser, IR, Layout, Renderer
     ├── cli/                               # Command-line tool
-    ├── web/                               # Web editor
-    └── vscode-extension/                  # VS Code plugin
+    ├── language-support/                  # VS Code language support
+    ├── editor-ui/                         # React UI components
+    └── exporters/                         # SVG, PNG, PDF exporters
 ```
 
 ---

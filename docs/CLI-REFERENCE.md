@@ -15,7 +15,7 @@ pnpm lint             # Check code style
 pnpm build            # Build all packages
 
 # Specific Package
-cd packages/core
+cd packages/engine
 pnpm test:watch       # Watch mode for tests
 pnpm dev              # Start dev server (if available)
 
@@ -29,10 +29,10 @@ pnpm clean            # Remove all build artifacts
 
 ## 📦 Package-Specific Commands
 
-### @wire-dsl/core
+### @wire-dsl/engine
 
 ```bash
-cd packages/core
+cd packages/engine
 pnpm build            # Build parser library
 pnpm test             # Run parser tests
 pnpm test:watch       # Watch mode
@@ -50,7 +50,7 @@ node dist/cli.js --help
 ### @wire-dsl/web
 
 ```bash
-cd packages/web
+cd apps/web
 pnpm dev              # Start dev server (http://localhost:3000)
 pnpm build            # Build for production
 pnpm preview          # Preview production build
@@ -144,13 +144,13 @@ pnpm test
 pnpm test --filter=@wire-dsl/core
 
 # Watch mode
-cd packages/core && pnpm test:watch
+cd packages/engine && pnpm test:watch
 
 # Coverage report
 pnpm test -- --coverage
 
 # UI mode
-cd packages/core && pnpm test:ui
+cd packages/engine && pnpm test:ui
 ```
 
 ### Test File Location
@@ -188,7 +188,7 @@ pnpm type-check
 
 ```bash
 # Navigate to package
-cd packages/core
+cd packages/engine
 
 # Add external package
 pnpm add lodash
@@ -197,7 +197,7 @@ pnpm add lodash
 pnpm add -D vitest
 
 # Add workspace package
-pnpm add @wire-dsl/core --workspace
+pnpm add @wire-dsl/engine --workspace
 ```
 
 ### Update Dependencies
@@ -210,7 +210,7 @@ pnpm outdated
 pnpm update -r
 
 # Update specific
-cd packages/core && pnpm update zod
+cd packages/engine && pnpm update zod
 ```
 
 ---
@@ -221,7 +221,7 @@ cd packages/core && pnpm update zod
 
 ```bash
 # Preview locally
-cd packages/web
+cd apps/web
 pnpm dev
 
 # Build for production
@@ -269,7 +269,7 @@ wrangler tail
 ```bash
 pnpm type-check
 # or per-package
-cd packages/core && tsc --noEmit
+cd packages/engine && tsc --noEmit
 ```
 
 ### Build Issues
@@ -282,7 +282,7 @@ pnpm build          # Full rebuild
 ### Test Failures
 
 ```bash
-cd packages/core
+cd packages/engine
 pnpm test -- --reporter=verbose
 pnpm test -- src/parser/index.test.ts
 ```
@@ -305,11 +305,11 @@ pnpm ls --depth=0    # Top level only
 # Root
 cd .
 
-# Core package
-cd packages/core
+# Engine package
+cd packages/engine
 
 # Web editor
-cd packages/web
+cd apps/web
 
 # CLI tool
 cd packages/cli
@@ -419,11 +419,11 @@ pnpm test -- --no-coverage
 
 ```bash
 git checkout -b feature/my-feature
-cd packages/core
+cd packages/engine
 # Edit files
 pnpm test:watch     # See tests pass
 pnpm lint:fix       # Auto-fix style
-git commit -m "feat(core): my feature"
+git commit -m "feat(engine): my feature"
 git push origin feature/my-feature
 # Create PR on GitHub
 ```
@@ -445,7 +445,7 @@ git push
 ### Deploy Web
 
 ```bash
-cd packages/web
+cd apps/web
 pnpm build
 # Cloudflare Pages auto-deploys from main
 # Or: wrangler deploy
