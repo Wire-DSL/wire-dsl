@@ -58,18 +58,18 @@
   },
   "dependencies": {
     "@wire-dsl/engine": "workspace:*",
-    "zustand": "^5.0.0",
-    "lucide-react": "^0.563.0"
+    "zustand": "5.0.0",
+    "lucide-react": "0.563.0"
   },
   "devDependencies": {
-    "@types/node": "^25.0.9",
-    "@types/react": "^19.2.9",
-    "@types/react-dom": "^19.2.3",
-    "@typescript-eslint/eslint-plugin": "^8.53.1",
-    "@typescript-eslint/parser": "^8.53.1",
-    "esbuild": "^0.27.2",
-    "eslint": "^9.39.2",
-    "typescript": "^5.9.3"
+    "@types/node": "25.0.9",
+    "@types/react": "19.2.9",
+    "@types/react-dom": "19.2.3",
+    "@typescript-eslint/eslint-plugin": "8.53.1",
+    "@typescript-eslint/parser": "8.53.1",
+    "esbuild": "0.27.2",
+    "eslint": "9.39.2",
+    "typescript": "5.9.3"
   },
   "engines": {
     "node": ">=20.0.0"

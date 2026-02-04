@@ -21,7 +21,7 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
         with:
-          version: 8
+          version: 10
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -39,4 +39,4 @@ jobs:
         run: pnpm type-check
 
       - name: Run tests
-        run: pnpm test --filter "@wire-dsl/core"
+        run: pnpm test --filter "@wire-dsl/engine" --filter "@wire-dsl/exporters"
