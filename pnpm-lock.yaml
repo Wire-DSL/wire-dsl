@@ -33,6 +33,79 @@ importers:
         specifier: 5.9.3
         version: 5.9.3
 
+  apps/web:
+    dependencies:
+      '@radix-ui/react-dialog':
+        specifier: 1.1.15
+        version: 1.1.15(@types/react-dom@19.2.3(@types/react@19.2.9))(@types/react@19.2.9)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      '@radix-ui/react-slot':
+        specifier: 1.2.4
+        version: 1.2.4(@types/react@19.2.9)(react@19.2.3)
+      '@wire-dsl/editor-ui':
+        specifier: workspace:*
+        version: link:../../packages/editor-ui
+      '@wire-dsl/engine':
+        specifier: workspace:*
+        version: link:../../packages/engine
+      '@wire-dsl/language-support':
+        specifier: workspace:*
+        version: link:../../packages/language-support
+      lucide-react:
+        specifier: 0.562.0
+        version: 0.562.0(react@19.2.3)
+      monaco-editor:
+        specifier: 0.55.1
+        version: 0.55.1
+      react:
+        specifier: 19.2.3
+        version: 19.2.3
+      react-dom:
+        specifier: 19.2.3
+        version: 19.2.3(react@19.2.3)
+      zustand:
+        specifier: 5.0.10
+        version: 5.0.10(@types/react@19.2.9)(react@19.2.3)
+    devDependencies:
+      '@tailwindcss/postcss':
+        specifier: 4.1.18
+        version: 4.1.18
+      '@types/node':
+        specifier: 25.0.9
+        version: 25.0.9
+      '@types/react':
+        specifier: 19.2.9
+        version: 19.2.9
+      '@types/react-dom':
+        specifier: 19.2.3
+        version: 19.2.3(@types/react@19.2.9)
+      '@typescript-eslint/eslint-plugin':
+        specifier: 8.53.1
+        version: 8.53.1(@typescript-eslint/parser@8.53.1(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3)
+      '@typescript-eslint/parser':
+        specifier: 8.53.1
+        version: 8.53.1(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3)
+      '@vitejs/plugin-react':
+        specifier: 5.1.2
+        version: 5.1.2(vite@7.3.1(@types/node@25.0.9)(jiti@2.6.1)(lightningcss@1.30.2))
+      autoprefixer:
+        specifier: 10.4.23
+        version: 10.4.23(postcss@8.5.6)
+      eslint:
+        specifier: 9.39.2
+        version: 9.39.2(jiti@2.6.1)
+      postcss:
+        specifier: 8.5.6
+        version: 8.5.6
+      tailwindcss:
+        specifier: 4.1.18
+        version: 4.1.18
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+      vite:
+        specifier: 7.3.1
+        version: 7.3.1(@types/node@25.0.9)(jiti@2.6.1)(lightningcss@1.30.2)
+
   packages/cli:
     dependencies:
       '@wire-dsl/engine':
@@ -85,10 +158,10 @@ importers:
         specifier: 0.563.0
         version: 0.563.0(react@19.2.3)
       react:
-        specifier: 18.0.0 || ^19.0.0
+        specifier: ^18.0.0 || ^19.0.0
         version: 19.2.3
       react-dom:
-        specifier: 18.0.0 || ^19.0.0
+        specifier: ^18.0.0 || ^19.0.0
         version: 19.2.3(react@19.2.3)
       zustand:
         specifier: 5.0.0
@@ -195,79 +268,6 @@ importers:
       typescript:
         specifier: 5.9.3
         version: 5.9.3
-
-  packages/web:
-    dependencies:
-      '@radix-ui/react-dialog':
-        specifier: 1.1.15
-        version: 1.1.15(@types/react-dom@19.2.3(@types/react@19.2.9))(@types/react@19.2.9)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      '@radix-ui/react-slot':
-        specifier: 1.2.4
-        version: 1.2.4(@types/react@19.2.9)(react@19.2.3)
-      '@wire-dsl/editor-ui':
-        specifier: workspace:*
-        version: link:../editor-ui
-      '@wire-dsl/engine':
-        specifier: workspace:*
-        version: link:../engine
-      '@wire-dsl/language-support':
-        specifier: workspace:*
-        version: link:../language-support
-      lucide-react:
-        specifier: 0.562.0
-        version: 0.562.0(react@19.2.3)
-      monaco-editor:
-        specifier: 0.55.1
-        version: 0.55.1
-      react:
-        specifier: 19.2.3
-        version: 19.2.3
-      react-dom:
-        specifier: 19.2.3
-        version: 19.2.3(react@19.2.3)
-      zustand:
-        specifier: 5.0.10
-        version: 5.0.10(@types/react@19.2.9)(react@19.2.3)
-    devDependencies:
-      '@tailwindcss/postcss':
-        specifier: 4.1.18
-        version: 4.1.18
-      '@types/node':
-        specifier: 25.0.9
-        version: 25.0.9
-      '@types/react':
-        specifier: 19.2.9
-        version: 19.2.9
-      '@types/react-dom':
-        specifier: 19.2.3
-        version: 19.2.3(@types/react@19.2.9)
-      '@typescript-eslint/eslint-plugin':
-        specifier: 8.53.1
-        version: 8.53.1(@typescript-eslint/parser@8.53.1(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3)
-      '@typescript-eslint/parser':
-        specifier: 8.53.1
-        version: 8.53.1(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3)
-      '@vitejs/plugin-react':
-        specifier: 5.1.2
-        version: 5.1.2(vite@7.3.1(@types/node@25.0.9)(jiti@2.6.1)(lightningcss@1.30.2))
-      autoprefixer:
-        specifier: 10.4.23
-        version: 10.4.23(postcss@8.5.6)
-      eslint:
-        specifier: 9.39.2
-        version: 9.39.2(jiti@2.6.1)
-      postcss:
-        specifier: 8.5.6
-        version: 8.5.6
-      tailwindcss:
-        specifier: 4.1.18
-        version: 4.1.18
-      typescript:
-        specifier: 5.9.3
-        version: 5.9.3
-      vite:
-        specifier: 7.3.1
-        version: 7.3.1(@types/node@25.0.9)(jiti@2.6.1)(lightningcss@1.30.2)
 
 packages:
 
