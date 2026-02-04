@@ -49,14 +49,3 @@ jobs:
           projectName: ${{ vars.CLOUDFLARE_PROJECT_NAME }}
           directory: apps/docs/dist
 
-      - name: Comment on commit
-        if: github.event_name == 'push'
-        uses: actions/github-script@v7
-        with:
-          script: |
-            github.rest.repos.createCommitComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              commit_sha: context.sha,
-              body: `✅ Documentation deployed to Cloudflare Pages\n🔗 [View live](https://${{ vars.CLOUDFLARE_PROJECT_NAME }}.pages.dev)`
-            })
