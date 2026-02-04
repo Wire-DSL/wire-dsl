@@ -48,7 +48,6 @@ jobs:
           accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
           projectName: ${{ vars.CLOUDFLARE_PROJECT_NAME }}
           directory: apps/docs/dist
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Comment on commit
         if: github.event_name == 'push'
