@@ -1,0 +1,157 @@
+{
+  "scopeName": "source.wire",
+  "name": "Wire DSL",
+  "fileTypes": [
+    "wire"
+  ],
+  "patterns": [
+    {
+      "include": "#comments"
+    },
+    {
+      "include": "#keywords"
+    },
+    {
+      "include": "#components"
+    },
+    {
+      "include": "#properties"
+    },
+    {
+      "include": "#strings"
+    },
+    {
+      "include": "#colors"
+    },
+    {
+      "include": "#numbers"
+    },
+    {
+      "include": "#operators"
+    },
+    {
+      "include": "#punctuation"
+    }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.wire",
+          "match": "//.*$"
+        },
+        {
+          "name": "comment.block.wire",
+          "begin": "/\\*",
+          "end": "\\*/"
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.declaration.wire",
+          "match": "\\b(project|screen|layout|component|cell|define)\\b"
+        },
+        {
+          "name": "keyword.declaration.wire",
+          "match": "\\b(tokens|colors|mocks)\\b"
+        },
+        {
+          "name": "keyword.control.wire",
+          "match": "\\b(stack|grid|panel|split|card)\\b"
+        },
+        {
+          "name": "keyword.other.wire",
+          "match": "\\b(theme)\\b"
+        }
+      ]
+    },
+    "components": {
+      "patterns": [
+        {
+          "name": "entity.name.class.wire",
+          "match": "\\b(Heading|Text|Paragraph|Label|Button|IconButton|Input|Textarea|Select|Checkbox|CheckboxGroup|Radio|RadioGroup|Toggle|Image|Icon|Divider|Badge|Link|Breadcrumbs|Tabs|SidebarMenu|Topbar|Sidebar|Panel|Card|StatCard|ChartPlaceholder|Table|List|Modal|Alert|Code|Spinner|Avatar)\\b"
+        }
+      ]
+    },
+    "properties": {
+      "patterns": [
+        {
+          "name": "variable.other.property.wire",
+          "match": "\\b(title|subtitle|text|content|label|placeholder|items|active|variant|user|icon|rows|columns|span|sidebar|direction|gap|padding|background|color|align|radius|border|mock|density|spacing|stroke|font|disabled|required|readonly|type|value|src|alt|height|itemsMock|dismissible)\\b"
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.wire",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            {
+              "name": "constant.character.escape.wire",
+              "match": "\\\\."
+            }
+          ]
+        },
+        {
+          "name": "string.quoted.single.wire",
+          "begin": "'",
+          "end": "'",
+          "patterns": [
+            {
+              "name": "constant.character.escape.wire",
+              "match": "\\\\."
+            }
+          ]
+        }
+      ]
+    },
+    "colors": {
+      "patterns": [
+        {
+          "name": "constant.color.hex.wire",
+          "match": "#[0-9A-Fa-f]{3}([0-9A-Fa-f]{3})?\\b"
+        },
+        {
+          "name": "constant.color.named.wire",
+          "match": "\\b(primary|secondary|success|error|warning|info|light|dark|gray|white|black|transparent)\\b"
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.wire",
+          "match": "\\b\\d+(\\.\\d+)?\\b"
+        },
+        {
+          "name": "constant.numeric.spacing.wire",
+          "match": "\\b(xs|sm|md|lg|xl)\\b"
+        }
+      ]
+    },
+    "operators": {
+      "patterns": [
+        {
+          "name": "keyword.operator.wire",
+          "match": ":|="
+        }
+      ]
+    },
+    "punctuation": {
+      "patterns": [
+        {
+          "name": "punctuation.definition.block.wire",
+          "match": "[{}\\[\\]()]"
+        },
+        {
+          "name": "punctuation.separator.wire",
+          "match": "[,;]"
+        }
+      ]
+    }
+  }
+}

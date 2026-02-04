@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="234" height="242" viewBox="0 0 234 242" role="img" aria-label="Wire-DSL logo">
+  <defs>
+    <radialGradient id="bgGrad" cx="30%" cy="25%" r="75%">
+      <stop offset="0%"  stop-color="#FFFFAA" stop-opacity="1"/>
+      <stop offset="55%" stop-color="#AAAAAA" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#AADDDD" stop-opacity="1"/>
+    </radialGradient>
+
+    <radialGradient id="nodeGrad" cx="33%" cy="33%" r="75%">
+      <stop offset="0%"  stop-color="#EEEEEE" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#AAAAAA" stop-opacity="1"/>
+    </radialGradient>
+
+    <linearGradient id="strokeGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#F4F4F4" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#DADADA" stop-opacity="1"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="0" y="0" width="234" height="242" rx="43" fill="#000000"/>
+
+  <rect x="7" y="7" width="220" height="228" rx="36" fill="url(#bgGrad)" opacity="0.1"/>
+
+  <!-- Symmetric W (axis x=117): (44,36)->(86,136)->(117,56)->(148,136)->(190,36) -->
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    
+
+    <!-- Nodes -->
+    <g>
+      <circle cx="44"  cy="45"  r="15" fill="url(#nodeGrad)"/>
+      <circle cx="86"  cy="136" r="15" fill="url(#nodeGrad)"/>
+      <circle cx="117" cy="56"  r="15" fill="url(#nodeGrad)"/>
+      <circle cx="148" cy="136" r="15" fill="url(#nodeGrad)"/>
+      <circle cx="190" cy="45"  r="15" fill="url(#nodeGrad)"/>
+    </g>
+
+    <!-- Curved connectors -->
+    <path
+      d="M 44 45 L 86 136 L 117 56 L 148 136 L 190 45"
+      stroke="url(#strokeGrad)"
+      stroke-width="18"
+    />
+  </g>
+
+  <text
+    x="25"
+    y="216"
+    fill="#DDDDDD"
+    font-size="54"
+    font-weight="600"
+    letter-spacing="0"
+    font-family="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace"
+  >
+    <tspan>&gt; wire</tspan>
+  </text>
+</svg>
