@@ -34,6 +34,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Build engine package
+        run: pnpm --filter @wire-dsl/engine build
+
       - name: Build documentation
         run: pnpm --filter @wire-dsl/docs build
 
