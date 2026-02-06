@@ -1,0 +1,89 @@
+name: ✨ Feature request
+description: Propose a new feature or improvement for Wire DSL.
+title: "[Feature]: "
+labels: ["type: feature", "status: needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for proposing an improvement 🙌
+        The more context, the easier to evaluate priority and scope.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Target area
+      options:
+        - engine
+        - exporters
+        - language-support
+        - docs
+        - tooling
+        - not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / use case
+      description: What problem does this solve? For whom?
+      placeholder: "As a user, I want..., so that I can..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: How do you envision the solution?
+      placeholder: |
+        - Proposed API / syntax
+        - examples
+        - expected behavior
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What other options did you evaluate?
+      placeholder: "Alternative A... / Alternative B..."
+    validations:
+      required: false
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope / Out of scope
+      description: What should be included and what explicitly should not.
+      placeholder: |
+        Scope:
+        - ...
+        Out of scope:
+        - ...
+    validations:
+      required: false
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria (if applicable)
+      description: How do we know when it's done?
+      placeholder: |
+        - Given ...
+        - When ...
+        - Then ...
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I searched for similar issues.
+          required: true
+        - label: I'm willing to contribute with a PR (optional).
+          required: false

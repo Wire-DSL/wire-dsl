@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Discussions
+    url: https://github.com/Wire-DSL/wire-dsl/discussions
+    about: Use Discussions for questions, open ideas, or usage help.
+  - name: Documentation
+    url: https://wire-dsl.org
+    about: Check the official Wire DSL documentation.
