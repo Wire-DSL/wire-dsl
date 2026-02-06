@@ -1,0 +1,112 @@
+name: 🐛 Bug report
+description: Report a reproducible issue in Wire DSL.
+title: "[Bug]: "
+labels: ["type: bug", "status: needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting a bug 🙌
+        To resolve it quickly, we'll need a minimal reproduction or clear steps.
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      description: In which part of the project does this occur?
+      options:
+        - engine
+        - exporters
+        - language-support
+        - docs
+        - tooling
+        - not sure
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Versions
+      description: Indicate exact version(s). E.g: @wire-dsl/engine@0.4.2, @wire-dsl/exporters@0.4.2
+      placeholder: "@wire-dsl/engine@x.y.z"
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Node, OS, package manager, etc.
+      placeholder: "Node 20.x | Windows 11 | pnpm 9.x"
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+      description: What did you expect to happen?
+      placeholder: "Should render the SVG with..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual result
+      description: What actually happened?
+      placeholder: "An error is generated / the SVG is empty..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Concrete and ordered steps.
+      placeholder: |
+        1. Install ...
+        2. Run ...
+        3. Execute the command ...
+        4. See error ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: minimal_repro
+    attributes:
+      label: Minimal reproduction (ideal)
+      description: If possible, paste a minimal example (wire code, command, repo, etc.).
+      placeholder: |
+        ```wire
+        ...
+        ```
+        Command:
+        ```bash
+        pnpm ...
+        ```
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / stacktrace
+      description: Paste the complete error (if applicable).
+      render: shell
+      placeholder: |
+        Error: ...
+        at ...
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I verified this occurs in the latest available version.
+          required: false
+        - label: I searched if a similar issue already exists.
+          required: true

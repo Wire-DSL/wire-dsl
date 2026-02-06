@@ -1,12 +1,43 @@
-# Contributing to WireDSL
+# Contributing to Wire-DSL
 
-Thank you for your interest in contributing to WireDSL! This document provides guidelines and instructions for contributing.
+Thank you for your interest in contributing to Wire-DSL! This document provides guidelines and instructions for contributing.
 
-## 🚀 Getting Started
+Wire-DSL is a **monorepo** with multiple packages:
+- `@wire-dsl/engine` - Parser, IR, layout, renderer
+- `@wire-dsl/exporters` - SVG, PNG, PDF export
+- `@wire-dsl/cli` - Command-line tool
+- `@wire-dsl/language-support` - Editor integrations
+- `@wire-dsl/editor-ui` - Reusable components
+- `apps/web` - Web editor
+- `apps/docs` - Documentation site
+
+## Reporting Issues
+
+### Bug Reports
+
+Use the **"Bug report"** issue template and include:
+- Clear description of the bug
+- Steps to reproduce
+- Expected vs. actual behavior
+- Node.js version and OS
+- Minimal reproducible example if possible
+
+### Feature Requests
+
+Use the **"Feature request"** issue template with:
+- Use case and motivation
+- Proposed solution (if you have one)
+- Examples or mockups
+
+### Questions
+
+Prefer **GitHub Discussions** for questions: https://github.com/Wire-DSL/wire-dsl/discussions
+
+## Getting Started
 
 ### Prerequisites
 
-- Node.js 20+ (LTS)
+- Node.js 20+ (LTS recommended)
 - pnpm 8+
 - Git
 
@@ -17,14 +48,29 @@ Thank you for your interest in contributing to WireDSL! This document provides g
 git clone https://github.com/wire-dsl/wire-dsl.git
 cd wire-dsl
 
-# Install dependencies
+# Install all dependencies (monorepo)
 pnpm install
 
-# Start development server
+# Start development mode (watches all packages)
 pnpm dev
 ```
 
-## 📋 Development Workflow
+For specific packages:
+```bash
+# Engine package
+cd packages/engine
+pnpm dev
+
+# Web editor
+cd apps/web
+pnpm dev
+
+# Documentation
+cd apps/docs
+pnpm dev
+```
+
+## Development Workflow
 
 ### Creating a Feature Branch
 
@@ -47,6 +93,7 @@ We use [Conventional Commits](https://www.conventionalcommits.org/):
 ```bash
 git commit -m "feat: add new feature"
 git commit -m "fix: resolve bug"
+git commit -m "chore: maintenance tasks"
 git commit -m "docs: update documentation"
 git commit -m "test: add test cases"
 git commit -m "refactor: reorganize code"
@@ -57,23 +104,57 @@ git commit -m "refactor: reorganize code"
 1. Push your branch: `git push origin feature/your-feature-name`
 2. Open a PR on GitHub
 3. Describe your changes clearly
-4. Reference related issues: `Fixes #123`
+4. Reference related issues: `Fixes #123` (when possible)
 5. Wait for review and CI checks
 
-## 📦 Package Structure
+## PR Conventions
 
-### Working on Specific Packages
+### Linking to Issues
+
+- Associate your PR with an issue when possible
+- Use `Fixes #123` to auto-close related issues
+- Include context in the PR description
+
+### Keep Changes Focused
+
+- One feature or bug fix per PR
+- Avoid mixing refactoring with feature work
+- Keep PRs reasonably sized for easier review
+
+### When Modifying DSL Syntax or Behavior
+
+- Update relevant documentation in `docs/` or `apps/docs/`
+- Add test cases if the project has tests
+- Include examples in the PR description
+- Update TypeDoc comments for API changes
+
+### Code Quality Standards
+
+- Run `pnpm test` before submitting
+- Run `pnpm lint` and `pnpm format`
+- Pass `pnpm type-check`
+- All CI checks must pass
+
+### When in Doubt
+
+- Open an issue first to discuss the approach
+- We prefer incremental, focused changes
+- Ask for guidance before starting major work
+- Comment PRs are welcome and encouraged
+
+## Package-Specific Development
+
+Working on a specific package?
 
 ```bash
-# Build only @wire-dsl/core
-pnpm build:core
+# Test a single package
+pnpm test --filter=@wire-dsl/engine
 
-# Test only @wire-dsl/cli
-pnpm test:cli
+# Build a single package
+pnpm build --filter=@wire-dsl/cli
 
-# Develop web editor
-cd apps/web
-pnpm dev
+# Lint a single package
+pnpm lint --filter=@wire-dsl/language-support
 ```
 
 ### Adding Dependencies
@@ -89,7 +170,7 @@ pnpm add zod
 pnpm add @wire-dsl/core --workspace
 ```
 
-## 🧪 Testing
+## Testing
 
 ### Running Tests
 
@@ -131,7 +212,7 @@ describe('parseWireDSL', () => {
 });
 ```
 
-## 🔍 Code Quality
+## Code Quality
 
 ### Linting
 
@@ -153,7 +234,7 @@ pnpm type-check
 
 We use Prettier for formatting. Format is applied automatically on commit.
 
-## 📝 Documentation
+## Documentation
 
 ### Updating Docs
 
@@ -180,7 +261,7 @@ export function parseWireDSL(input: string): ParsedWireframe {
 }
 ````
 
-## 🔄 Version Management
+## Version Management
 
 ### Creating a Changeset
 
@@ -194,28 +275,21 @@ This will prompt you to:
 2. Choose version bump (major, minor, patch)
 3. Write a change description
 
-## 🐛 Reporting Issues
 
-When reporting bugs, include:
 
-- **Description**: Clear explanation of the issue
-- **Steps to Reproduce**: How to reproduce the bug
-- **Expected Behavior**: What should happen
-- **Actual Behavior**: What actually happens
-- **Environment**: Node version, OS, etc.
-
-## 🎨 Code Review Process
+## Code Review Process
 
 - At least one approval required
 - All CI checks must pass
 - Code must follow project style guide
 - Documentation must be updated
 
-## 📚 Resources
+## Resources
 
-- [WireDSL Docs](../docs/README.md)
-- [Technical Stack](../docs/technical-stack.md)
-- [DSL Syntax](../docs/dsl-syntax.md)
+- [Wire-DSL Documentation](https://wire-dsl.org)
+- [DSL Syntax Guide](../docs/DSL-SYNTAX.md)
+- [Architecture Overview](../docs/ARCHITECTURE.md)
+- [Development Roadmap](../docs/ROADMAP.md)
 
 ## ✨ Recognition
 
@@ -225,12 +299,12 @@ Contributors are recognized in:
 - Release notes
 - Documentation
 
-## ❓ Questions?
+## Questions or Need Help?
 
-- Open a GitHub Discussion
-- Check existing issues and PRs
-- Join our Discord community (coming soon)
+- Open a **GitHub Discussion** (preferred for questions)
+- Check **existing issues and PRs** to avoid duplicates
+- Review **documentation** in `/docs` and `/apps/docs`
 
 ---
 
-**Thank you for contributing to WireDSL!** 🎉
+**Thank you for contributing to Wire-DSL!**
