@@ -13,7 +13,7 @@ hero:
       variant: minimal
       icon: open-book
     - text: Preview Online
-      link: https://wire-dsl-web.pages.dev/
+      link: https://live.wire-dsl.org
       variant: minimal
       icon: external
 ---
@@ -268,7 +268,7 @@ screens/
 
 ## Community & Support
 
-- 📖 [Documentation Index](https://docs.wire-dsl.dev)
+- 📖 [Documentation Index](https://wire-dsl.org)
 - 🐛 [Issues & Bug Reports](https://github.com/wire-dsl/wire-dsl/issues)
 - 💬 [Discussions](https://github.com/wire-dsl/wire-dsl/discussions)
 - 🤝 [Contributing Guide](./contribute/development)
