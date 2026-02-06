@@ -1,5 +1,15 @@
 # @wire-dsl/cli
 
+## 0.2.1
+
+### Patch Changes
+
+- [#38](https://github.com/Wire-DSL/wire-dsl/pull/38) [`b02316c`](https://github.com/Wire-DSL/wire-dsl/commit/b02316c5079eddf17dc3338ea283518171adf070) Thanks [@roxguel](https://github.com/roxguel)! - Update documentation project
+
+- Updated dependencies [[`b02316c`](https://github.com/Wire-DSL/wire-dsl/commit/b02316c5079eddf17dc3338ea283518171adf070)]:
+  - @wire-dsl/engine@0.0.3
+  - @wire-dsl/exporters@0.0.3
+
 ## 0.2.0
 
 ### Minor Changes
