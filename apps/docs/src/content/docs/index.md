@@ -298,8 +298,6 @@ Wire-DSL is actively developed. Current status:
 - 🚀 Phase 4: Source Maps & Debugging (in progress)
 
 **Planned Features**:
-- Advanced exporters (HTML, React, Vue, Figma)
-- AI-assisted wireframing
 - LSP support for universal editor integration
 
 **→ [Full Development Roadmap](./contribute/roadmap)**
