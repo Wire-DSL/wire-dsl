@@ -290,13 +290,17 @@ screens/
 
 ## Roadmap
 
-Wire-DSL is actively developed. Current focus:
+Wire-DSL is actively developed. Current status:
 
-- ✅ Core DSL and rendering (complete)
-- ✅ Theme system and design tokens (complete)
-- Advanced exporters (HTML, React, Figma)
+- ✅ Phase 1: Core DSL and rendering (complete)
+- ✅ Phase 2: Theme system and design tokens (complete)
+- ✅ Phase 3: VS Code Extension (complete)
+- 🚀 Phase 4: Source Maps & Debugging (in progress)
+
+**Planned Features**:
+- Advanced exporters (HTML, React, Vue, Figma)
 - AI-assisted wireframing
-- Enhanced VS Code extension
+- LSP support for universal editor integration
 
 **→ [Full Development Roadmap](./contribute/roadmap)**
 
