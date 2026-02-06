@@ -25,7 +25,9 @@ const wireCode = `
       font: "base"
     }
     screen Home {
-      layout stack { component Heading text: "Welcome" }
+      layout stack {
+        component Heading text: "Welcome" 
+      }
     }
   }
 `;
