@@ -438,7 +438,7 @@ export const WireLiveHeader: React.FC<WireLiveHeaderProps> = ({
 
         {/* Documentación */}
         <a
-          href="https://wire-dsl-docs.pages.dev/"
+          href="https://wire-dsl.org"
           target="_blank"
           rel="noopener noreferrer"
           style={{
