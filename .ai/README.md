@@ -59,9 +59,9 @@ Wire-DSL/.ai/
 
 | Specification | Location |
 |---------------|----------|
-| IR Contract | [specs/IR-CONTRACT-EN.md](../../specs/IR-CONTRACT-EN.md) |
-| Layout Engine | [specs/LAYOUT-ENGINE-EN.md](../../specs/LAYOUT-ENGINE-EN.md) |
-| Validation Rules | [specs/VALIDATION-RULES-EN.md](../../specs/VALIDATION-RULES-EN.md) |
+| IR Contract | [specs/IR-CONTRACT](../../specs/IR-CONTRACT) |
+| Layout Engine | [specs/LAYOUT-ENGINE](../../specs/LAYOUT-ENGINE) |
+| Validation Rules | [specs/VALIDATION-RULES](../../specs/VALIDATION-RULES) |
 
 ---
 
@@ -126,7 +126,7 @@ Use these for deep dives on specific topics:
 5. Add test case for the bug
 
 ### For Code Review
-1. Check against [specs/VALIDATION-RULES-EN.md](../../specs/VALIDATION-RULES-EN.md)
+1. Check against [specs/VALIDATION-RULES](../../specs/VALIDATION-RULES)
 2. Review test coverage
 3. Verify documentation updates
 4. Check examples if applicable

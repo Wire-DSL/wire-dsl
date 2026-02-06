@@ -57,9 +57,9 @@ Quick lookup hub with:
 | **System Design** | [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md) |
 | **DSL Syntax** | [docs/DSL-SYNTAX.md](../docs/DSL-SYNTAX.md) |
 | **All 23 Components** | [docs/COMPONENTS-REFERENCE.md](../docs/COMPONENTS-REFERENCE.md) |
-| **IR Schema** | [specs/IR-CONTRACT-EN.md](../specs/IR-CONTRACT-EN.md) |
-| **Validation Rules** | [specs/VALIDATION-RULES-EN.md](../specs/VALIDATION-RULES-EN.md) |
-| **Layout Algorithm** | [specs/LAYOUT-ENGINE-EN.md](../specs/LAYOUT-ENGINE-EN.md) |
+| **IR Schema** | [specs/IR-CONTRACT](../specs/IR-CONTRACT) |
+| **Validation Rules** | [specs/VALIDATION-RULES](../specs/VALIDATION-RULES) |
+| **Layout Algorithm** | [specs/LAYOUT-ENGINE](../specs/LAYOUT-ENGINE) |
 
 ---
 

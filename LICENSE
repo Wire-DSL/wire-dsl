@@ -19,18 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
----
-
-## Third-Party Components & Assets
-
-### Feather Icons
-
-This project includes icons from Feather Icons (https://feathericons.com), created by Cole Bemis and contributors.
-
-- **License**: MIT License
-- **Repository**: https://github.com/feathericons/feather
-- **Location in project**: `packages/engine/src/renderer/icons/`
-- **Full details**: See `packages/engine/src/renderer/icons/ICONS-LICENSE.md`
-
-Feather Icons are used under the terms of the MIT License, which is fully compatible with this project's MIT License.

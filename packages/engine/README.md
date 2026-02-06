@@ -93,9 +93,9 @@ validateIR(ir); // Throws if invalid
 
 ## Documentation
 
-- [IR Contract Specification](https://github.com/Wire-DSL/wire-dsl/blob/main/specs/IR-CONTRACT-EN.md)
-- [Layout Engine Algorithm](https://github.com/Wire-DSL/wire-dsl/blob/main/specs/LAYOUT-ENGINE-EN.md)
-- [Validation Rules](https://github.com/Wire-DSL/wire-dsl/blob/main/specs/VALIDATION-RULES-EN.md)
+- [IR Contract Specification](https://github.com/Wire-DSL/wire-dsl/blob/main/specs/IR-CONTRACT)
+- [Layout Engine Algorithm](https://github.com/Wire-DSL/wire-dsl/blob/main/specs/LAYOUT-ENGINE)
+- [Validation Rules](https://github.com/Wire-DSL/wire-dsl/blob/main/specs/VALIDATION-RULES)
 
 ## License
 

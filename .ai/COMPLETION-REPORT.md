@@ -183,9 +183,9 @@ Wire-DSL/
 - **AI Prompting** → [docs/LLM-PROMPTING.md](docs/LLM-PROMPTING.md)
 
 ### Technical Specifications
-- **IR Schema** → [specs/IR-CONTRACT-EN.md](specs/IR-CONTRACT-EN.md)
-- **Layout Engine** → [specs/LAYOUT-ENGINE-EN.md](specs/LAYOUT-ENGINE-EN.md)
-- **Validation Rules** → [specs/VALIDATION-RULES-EN.md](specs/VALIDATION-RULES-EN.md)
+- **IR Schema** → [specs/IR-CONTRACT](specs/IR-CONTRACT)
+- **Layout Engine** → [specs/LAYOUT-ENGINE](specs/LAYOUT-ENGINE)
+- **Validation Rules** → [specs/VALIDATION-RULES](specs/VALIDATION-RULES)
 
 ### Development Guides
 - **Main Development** → [.ai/AI-INSTRUCTIONS-MAIN.md](.ai/AI-INSTRUCTIONS-MAIN.md)
