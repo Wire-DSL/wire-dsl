@@ -1,6 +1,6 @@
-# Starlight Starter Kit: Basics
+# Wire-DSL Documentation
 
-[![Built with Starlight](https://astro.badg.es/v2/built-with-starlight/tiny.svg)](https://starlight.astro.build)
+Official documentation website for Wire-DSL
 
 ```
 pnpm create astro@latest -- --template starlight

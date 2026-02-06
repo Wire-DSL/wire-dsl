@@ -23,7 +23,8 @@ const suggestions = getCompletions('but'); // → [button, ...]
 
 ## What's Included
 
-- **35+ Keywords & Components** - All Wire DSL language definitions
+- **Core Keywords** - project, screen, theme, layout, component, define
+- **23 UI Components** - All built-in components with autocomplete
 - **Autocomplete Logic** - Context-aware suggestions
 - **Syntax Grammar** - For Monaco, VS Code, and TextMate editors
 
