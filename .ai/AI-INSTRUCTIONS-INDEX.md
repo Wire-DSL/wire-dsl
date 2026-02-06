@@ -84,7 +84,7 @@ Complete development guide for all AI agents. Contains:
 | Specification | Location | Purpose |
 |---------------|----------|---------|
 | **IR Contract** | [specs/IR-CONTRACT.md](../../specs/IR-CONTRACT.md) | Internal representation JSON schema (Zod definitions) |
-| **Layout Engine** | [specs/LAYOUT-ENGINE.md](../../specs/LAYOUT-ENGINE.md.md) | Grid-based positioning algorithm and specifications |
+| **Layout Engine** | [specs/LAYOUT-ENGINE.md](../../specs/LAYOUT-ENGINE.md) | Grid-based positioning algorithm and specifications |
 | **Validation Rules** | [specs/VALIDATION-RULES.md](../../specs/VALIDATION-RULES.md) | Validation rules, constraints, and business logic |
 
 ---
@@ -232,7 +232,7 @@ When starting work on Wire-DSL:
 - [ ] Check [docs/DSL-SYNTAX.md](../../docs/DSL-SYNTAX.md)
 - [ ] Review relevant spec document
 - [ ] Check `examples/` for similar patterns
-- [ ] Run tests: `pnpm test --filter @wire-dsl/engine`
+- [ ] Run tests: `pnpm test --filter=@wire-dsl/engine --filter=@wire-dsl/exporters`
 - [ ] Read this index for reference locations
 
 ---

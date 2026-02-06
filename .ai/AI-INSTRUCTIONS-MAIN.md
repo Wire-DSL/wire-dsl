@@ -216,7 +216,7 @@ All `.wire` files must comply with:
 - End-to-end tests for complete pipeline
 - Visual tests for SVG output
 
-**Test Location:** `packages/engine/tests/`
+**Test Location:** `packages/engine/tests/` and `packages/exporters/tests/`
 
 ---
 

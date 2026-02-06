@@ -67,6 +67,7 @@ export default defineConfig({
 					label: 'Tooling',
 					items: [
 						{ label: 'CLI Reference', slug: 'tooling/cli' },
+						{ label: 'Web Editor', slug: 'tooling/web-editor' },
 						{ label: 'LLM Prompting', slug: 'tooling/llm-prompting' },
 					],
 				},
