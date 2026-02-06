@@ -83,9 +83,9 @@ import { parseWireDSL, generateIR } from '@wire-dsl/engine';
 
 **Component & Container References**
 
-- **[specs/IR-CONTRACT](./specs/IR-CONTRACT)** - Intermediate representation format
-- **[specs/LAYOUT-ENGINE](./specs/LAYOUT-ENGINE)** - Layout algorithms
-- **[specs/VALIDATION-RULES](./specs/VALIDATION-RULES)** - Validation rules
+- **[specs/IR-CONTRACT.md](./specs/IR-CONTRACT.md)** - Intermediate representation format
+- **[specs/LAYOUT-ENGINE.md](./specs/LAYOUT-ENGINE.md)** - Layout algorithms
+- **[specs/VALIDATION-RULES.md](./specs/VALIDATION-RULES.md)** - Validation rules
 
 **Planning & Roadmap**
 

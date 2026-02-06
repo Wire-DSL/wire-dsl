@@ -678,4 +678,4 @@ layout stack(direction: vertical, gap: lg, padding: lg) {
 
 For container/layout documentation, see [CONTAINERS-REFERENCE.md](CONTAINERS-REFERENCE.md)  
 For theme configuration, see [THEME-GUIDE.md](THEME-GUIDE.md)  
-For syntax details, see [DSL-SYNTAX](DSL-SYNTAX)
+For syntax details, see [DSL-SYNTAX.md](DSL-SYNTAX.md)

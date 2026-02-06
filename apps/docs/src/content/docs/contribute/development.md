@@ -168,9 +168,9 @@ Wire-DSL/
 ├── .github/                       # GitHub workflows, templates
 ├── docs/                          # Public documentation sources
 ├── specs/                         # Technical specifications
-│   ├── IR-CONTRACT
-│   ├── LAYOUT-ENGINE
-│   └── VALIDATION-RULES
+│   ├── IR-CONTRACT.md
+│   ├── LAYOUT-ENGINE.md
+│   └── VALIDATION-RULES.md
 ├── examples/                      # Example .wire files
 ├── packages/
 │   ├── engine/                    # Core parser, IR, layout, renderer

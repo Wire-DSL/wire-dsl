@@ -92,9 +92,9 @@ Wire-DSL/
 │   └── 📄 DOCUMENTATION-INDEX.md
 │
 ├── 📁 specs/
-│   ├── 📄 IR-CONTRACT
-│   ├── 📄 LAYOUT-ENGINE
-│   └── 📄 VALIDATION-RULES
+│   ├── 📄 IR-CONTRACT.md
+│   ├── 📄 LAYOUT-ENGINE.md
+│   └── 📄 VALIDATION-RULES.md
 │
 ├── 📁 examples/
 │   └── 📄 [Example .wire files]
@@ -269,9 +269,9 @@ Start with AI-INSTRUCTIONS-INDEX.md
     ↓
 Look up: Quick reference table
     ↓
-Find: specs/VALIDATION-RULES
+Find: specs/VALIDATION-RULES.md
     ↓
-Reference: VALIDATION-RULES section
+Reference: VALIDATION-RULES.md section
 
 "I'm using Copilot, what do I do?"
     ↓
@@ -295,9 +295,9 @@ Check examples for patterns
 | DSL Syntax | docs/DSL-SYNTAX.md | .ai/AI-INSTRUCTIONS-MAIN.md |
 | Components | docs/COMPONENTS-REFERENCE.md | examples/ |
 | Architecture | docs/ARCHITECTURE.md | .ai/AI-INSTRUCTIONS-MAIN.md |
-| Layout System | specs/LAYOUT-ENGINE | docs/ARCHITECTURE.md |
-| IR Schema | specs/IR-CONTRACT | .ai/AI-INSTRUCTIONS-MAIN.md |
-| Validation | specs/VALIDATION-RULES | .ai/AI-INSTRUCTIONS-MAIN.md |
+| Layout System | specs/LAYOUT-ENGINE.md | docs/ARCHITECTURE.md |
+| IR Schema | specs/IR-CONTRACT.md | .ai/AI-INSTRUCTIONS-MAIN.md |
+| Validation | specs/VALIDATION-RULES.md | .ai/AI-INSTRUCTIONS-MAIN.md |
 | How to develop | .ai/AI-INSTRUCTIONS-MAIN.md | AI agent-specific file |
 | Where to find X | .ai/AI-INSTRUCTIONS-INDEX.md | .ai/README.md |
 

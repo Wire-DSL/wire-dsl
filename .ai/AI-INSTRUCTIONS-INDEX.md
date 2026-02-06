@@ -83,9 +83,9 @@ Complete development guide for all AI agents. Contains:
 
 | Specification | Location | Purpose |
 |---------------|----------|---------|
-| **IR Contract** | [specs/IR-CONTRACT](../../specs/IR-CONTRACT) | Internal representation JSON schema (Zod definitions) |
-| **Layout Engine** | [specs/LAYOUT-ENGINE](../../specs/LAYOUT-ENGINE) | Grid-based positioning algorithm and specifications |
-| **Validation Rules** | [specs/VALIDATION-RULES](../../specs/VALIDATION-RULES) | Validation rules, constraints, and business logic |
+| **IR Contract** | [specs/IR-CONTRACT.md](../../specs/IR-CONTRACT.md) | Internal representation JSON schema (Zod definitions) |
+| **Layout Engine** | [specs/LAYOUT-ENGINE.md](../../specs/LAYOUT-ENGINE.md.md) | Grid-based positioning algorithm and specifications |
+| **Validation Rules** | [specs/VALIDATION-RULES.md](../../specs/VALIDATION-RULES.md) | Validation rules, constraints, and business logic |
 
 ---
 
@@ -96,7 +96,7 @@ Complete development guide for all AI agents. Contains:
 **👨‍💻 Developers (Writing New Features)**
 1. Start with: [AI-INSTRUCTIONS-MAIN.md](AI-INSTRUCTIONS-MAIN.md)
 2. Reference: [docs/DSL-SYNTAX.md](../../docs/DSL-SYNTAX.md)
-3. Check: [specs/IR-CONTRACT](../../specs/IR-CONTRACT)
+3. Check: [specs/IR-CONTRACT.md](../../specs/IR-CONTRACT.md)
 4. Use examples from: `examples/` folder
 
 **🤖 AI Agents (Code Generation)**
@@ -106,7 +106,7 @@ Complete development guide for all AI agents. Contains:
 
 **🔧 Code Reviewers & Maintainers**
 1. Check: [AI-INSTRUCTIONS-MAIN.md](AI-INSTRUCTIONS-MAIN.md)
-2. Validate against: [specs/VALIDATION-RULES](../../specs/VALIDATION-RULES)
+2. Validate against: [specs/VALIDATION-RULES.md](../../specs/VALIDATION-RULES.md)
 3. Review examples: [examples/](../../examples/)
 
 **📚 Documentation Writers**
@@ -213,12 +213,12 @@ This ensures consistency and accessibility for the global development community.
 ### Intermediate (Building Features)
 1. [docs/ARCHITECTURE.md](../../docs/ARCHITECTURE.md) - Understand system design
 2. [AI-INSTRUCTIONS-MAIN.md](AI-INSTRUCTIONS-MAIN.md) - Development workflows
-3. [specs/IR-CONTRACT](../../specs/IR-CONTRACT) - Data structure
+3. [specs/IR-CONTRACT.md](../../specs/IR-CONTRACT.md) - Data structure
 4. `packages/engine/tests/` - See how things work
 
 ### Advanced (Deep Modifications)
-1. [specs/LAYOUT-ENGINE](../../specs/LAYOUT-ENGINE) - Positioning algorithm
-2. [specs/VALIDATION-RULES](../../specs/VALIDATION-RULES) - Constraints
+1. [specs/LAYOUT-ENGINE.md](../../specs/LAYOUT-ENGINE.md) - Positioning algorithm
+2. [specs/VALIDATION-RULES.md](../../specs/VALIDATION-RULES.md) - Constraints
 3. Source code in `packages/engine/src/` - Implementation details
 4. [.ai/plans/](plans/) - Strategic direction
 
@@ -243,9 +243,9 @@ For questions about:
 - **DSL Syntax** → [docs/DSL-SYNTAX.md](../../docs/DSL-SYNTAX.md)
 - **Architecture** → [docs/ARCHITECTURE.md](../../docs/ARCHITECTURE.md)
 - **Components** → [docs/COMPONENTS-REFERENCE.md](../../docs/COMPONENTS-REFERENCE.md)
-- **Layout System** → [specs/LAYOUT-ENGINE](../../specs/LAYOUT-ENGINE)
-- **Data Schema** → [specs/IR-CONTRACT](../../specs/IR-CONTRACT)
-- **Validation** → [specs/VALIDATION-RULES](../../specs/VALIDATION-RULES)
+- **Layout System** → [specs/LAYOUT-ENGINE.md](../../specs/LAYOUT-ENGINE.md)
+- **Data Schema** → [specs/IR-CONTRACT.md](../../specs/IR-CONTRACT.md)
+- **Validation** → [specs/VALIDATION-RULES.md](../../specs/VALIDATION-RULES.md)
 - **CLI Tool** → [docs/CLI-REFERENCE.md](../../docs/CLI-REFERENCE.md)
 - **AI Development** → [docs/LLM-PROMPTING.md](../../docs/LLM-PROMPTING.md)
 - **Development Workflow** → [AI-INSTRUCTIONS-MAIN.md](AI-INSTRUCTIONS-MAIN.md)

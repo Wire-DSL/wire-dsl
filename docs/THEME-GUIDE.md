@@ -580,6 +580,6 @@ layout stack(gap: md) {
 
 ## Next Steps
 
-- [DSL-SYNTAX](DSL-SYNTAX) - Complete syntax reference
+- [DSL-SYNTAX.md](DSL-SYNTAX.md) - Complete syntax reference
 - [CONTAINERS-REFERENCE.md](CONTAINERS-REFERENCE.md) - Layout containers
 - [COMPONENTS-REFERENCE.md](COMPONENTS-REFERENCE.md) - Component catalog

@@ -375,7 +375,7 @@ try {
 ## Full Specification
 
 For complete technical specification including all validation rules, see:
-- [specs/VALIDATION-RULES](../../specs/VALIDATION-RULES) in the repository
+- [specs/VALIDATION-RULES.md](../../specs/VALIDATION-RULES.md) in the repository
 
 ## Next Steps
 

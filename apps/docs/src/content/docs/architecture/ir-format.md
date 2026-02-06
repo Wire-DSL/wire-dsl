@@ -319,7 +319,7 @@ Invalid IR produces detailed validation errors.
 ## Full Specification
 
 For complete technical specification with all property definitions, see:
-- [specs/IR-CONTRACT](../../specs/IR-CONTRACT) in the repository
+- [specs/IR-CONTRACT.md](../../specs/IR-CONTRACT.md) in the repository
 
 ## Next Steps
 
