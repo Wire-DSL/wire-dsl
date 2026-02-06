@@ -1,8 +1,8 @@
-# `@wire-dsl/editor-ui`
+# @wire-dsl/editor-ui
 
 Reusable UI components and hooks for Wire DSL editors.
 
-## 🎯 Philosophy
+## Philosophy
 
 This package is **intentionally minimal and OSS-safe**:
 
@@ -14,7 +14,7 @@ This package is **intentionally minimal and OSS-safe**:
 
 **Cloud features (auth, sync, collaboration, AI) belong in application-level code**, not here.
 
-## 📦 What's Inside
+## What's Inside
 
 ### Components
 
@@ -47,7 +47,7 @@ This package is **intentionally minimal and OSS-safe**:
 - `createDebounce()` / `createThrottle()` - Functional utilities
 - And more...
 
-## 🚀 Quick Start
+## Quick Start
 
 ```bash
 # Install
@@ -75,7 +75,7 @@ const App = () => {
 };
 ```
 
-## 🔒 Design Principles
+## Design Principles
 
 ### OSS-Safe
 No cloud-specific bindings. Everything works standalone.
@@ -156,4 +156,4 @@ Contributions welcome! Remember:
 
 ## 📄 License
 
-MIT - Same as Wire DSL
+MIT

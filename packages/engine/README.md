@@ -11,13 +11,24 @@ npm install @wire-dsl/engine
 ## Quick Start
 
 ```typescript
-import { parseWire, generateIR, computeLayout, renderSVG } from '@wire-dsl/engine';
+import { parseWire, generateIR, computeLayout } from '@wire-dsl/engine';
 
 // Parse .wire DSL file
 const ast = parseWire(`
-  screen "Home" {
-    heading "Welcome"
-    button "Click me"
+  project "MyWireframe" {
+    theme {
+      density: "normal"
+      spacing: "md"
+      radius: "md"
+      stroke: "normal"
+      font: "base"
+    }
+    screen Home {
+      layout stack(direction: vertical, gap: md, padding: lg) {
+        component Heading text: "Welcome"
+        component Button text: "Click me" variant: primary
+      }
+    }
   }
 `);
 
@@ -65,22 +76,25 @@ validateIR(ir); // Throws if invalid
 ```
 
 ### Components
-23 built-in UI components including:
+30+ built-in UI components:
 
-**Basic:**
-- Text, Heading, Button, Link
+**Text**: Heading, Text, Paragraph, Label
 
-**Forms:**
-- Input, TextArea, Select, Checkbox, Radio
+**Input**: Input, Textarea, Select, Checkbox, Radio, Toggle
 
-**Containers:**
-- Stack, Grid, Split, Panel, Card
+**Buttons**: Button, IconButton
 
-**Interactive:**
-- Modal, Dialog, Tabs, Accordion
+**Navigation**: Topbar, SidebarMenu, Breadcrumbs, Tabs
 
-**Advanced:**
-- Form, Embed, Icon, Badge, Tooltip
+**Data**: Table, List
+
+**Media**: Image, Icon, Avatar
+
+**Display**: Divider, Badge, Link, Alert
+
+**Info**: StatCard, Code, ChartPlaceholder
+
+**Feedback**: Modal, Spinner
 
 ## Features
 
@@ -93,9 +107,9 @@ validateIR(ir); // Throws if invalid
 
 ## Documentation
 
-- [IR Contract Specification](https://github.com/Wire-DSL/wire-dsl/blob/main/specs/IR-CONTRACT-EN.md)
-- [Layout Engine Algorithm](https://github.com/Wire-DSL/wire-dsl/blob/main/specs/LAYOUT-ENGINE-EN.md)
-- [Validation Rules](https://github.com/Wire-DSL/wire-dsl/blob/main/specs/VALIDATION-RULES-EN.md)
+- [IR Contract Specification](https://github.com/Wire-DSL/wire-dsl/blob/main/specs/IR-CONTRACT.md)
+- [Layout Engine Algorithm](https://github.com/Wire-DSL/wire-dsl/blob/main/specs/LAYOUT-ENGINE.md)
+- [Validation Rules](https://github.com/Wire-DSL/wire-dsl/blob/main/specs/VALIDATION-RULES.md)
 
 ## License
 

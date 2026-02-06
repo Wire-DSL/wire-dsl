@@ -252,7 +252,7 @@ pnpm test:watch
 ## 🔗 Links
 
 - **GitHub**: https://github.com/wire-dsl/wire-dsl
-- **Website**: https://wire-dsl.dev
+- **Website**: https://wire-dsl.org
 - **NPM**: https://www.npmjs.com/org/wire-dsl
 - **Discord**: Coming soon
 

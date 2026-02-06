@@ -255,34 +255,6 @@ Technologies:
 
 ---
 
-### `@wire-dsl/ai-backend` (AI Service)
-
-**Responsibility**: AI-powered wireframe generation
-
-Deployment: Cloudflare Workers
-
-Features:
-- LLM integration (Claude Haiku)
-- Rate limiting
-- Usage tracking via Cloudflare KV
-- Free tier support (user-provided API keys)
-- Pro tier (pooled backend API keys)
-
----
-
-### `@wire-dsl/studio` (Future)
-
-**Responsibility**: Visual wireframe designer
-
-Planned features:
-- Canvas-based design (Konva.js)
-- Drag-and-drop components
-- Visual property editor
-- Real-time preview
-- Undo/redo system
-
----
-
 ## Data Flow
 
 ### Basic Rendering Pipeline
@@ -290,29 +262,17 @@ Planned features:
 ```
 .wire file (text)
     │
-    ├─────────────────────────────────────────────┐
-    │                                             │
-    ▼                                             ▼
-PARSER (Chevrotain)                       Raw Text
-    │                                             │
-    ▼                                             │
-AST (Tokens)                                      │
-    │                                             │
-    ├──────────────────┐                          │
-    │                  │                          │
-    ▼                  │                          │
-IR GENERATOR           │                          │
-    │                  │                          │
-    ▼                  │                          │
-IR Contract (JSON)     │                          ▼
-    │                  │                     AI LLM Service
-    │                  │                          │
-    │                  │                          ▼
-    │                  │                     Raw WireDSL
-    │                  │                          │
-    │                  └──────────┬───────────────┘
-    │                             │
-    ├─────────────────────────────┘
+    ▼
+PARSER (Chevrotain)
+    │
+    ▼
+AST (Tokens)
+    │
+    ▼
+IR GENERATOR
+    │
+    ▼
+IR Contract (JSON)
     │
     ▼
 LAYOUT ENGINE
@@ -327,37 +287,6 @@ SVG Renderer    Code Generator
     │                │
     ▼                ▼
 SVG File       React/Vue Code
-```
-
-### AI Generation Flow
-
-```
-User Input: "Create a login form"
-    │
-    ▼
-User Prompt → Cloudflare Worker
-    │
-    ▼
-Claude Haiku API (rate-limited, tracked)
-    │
-    ▼
-Raw WireDSL Text
-    │
-    ▼
-Wire-DSL Validator
-    │
-    ├─ Syntax check
-    ├─ Component validation
-    └─ Fix invalid syntax
-    │
-    ▼
-Valid WireDSL → Parser
-    │
-    ▼
-Render Preview → Show in Editor
-    │
-    ▼
-User Can Adjust/Refine
 ```
 
 ---
@@ -383,17 +312,6 @@ User Can Adjust/Refine
     ├─ chevrotain (parser)
     └─ zod (validation)
 
-@wire-dsl/ai-backend (Workers)
-    ├─ hono
-    ├─ zod
-    └─ @cloudflare/workers-types
-
-@wire-dsl/studio (Roadmap)
-    └─ @wire-dsl/core
-       ├─ konva.js (canvas)
-       ├─ dnd-kit (drag-drop)
-       ├─ react-hook-form (forms)
-       └─ immer (undo/redo)
 ```
 
 ---
@@ -403,24 +321,24 @@ User Can Adjust/Refine
 ```
 GitHub (main branch)
     │
-    ├────────────────────┬──────────────┬────────────────┐
-    │                    │              │                │
-    ▼                    ▼              ▼                ▼
-Build & Test         Publish NPM   Deploy Web       Deploy AI
-(GitHub Actions)  (@wire-dsl/*)  (Cloudflare)    (Workers)
-    │                    │              │                │
-    └────────────────────┼──────────────┼────────────────┘
-                         │              │                │
-                  ┌──────▼────┐  ┌─────▼─────┐   ┌──────▼────┐
-                  │ NPM Reg   │  │ Cloudflare│   │ Workers  │
-                  │           │  │ Pages/CDN │   │ KV Store │
-                  │@wire-dsl/ │  │           │   │          │
-                  │ core      │  │wire-dsl   │   │ AI Svc   │
-                  │@wire-dsl/ │  │.dev       │   │ Rate Lim │
-                  │ cli       │  │           │   │ Usage    │
-                  │@wire-dsl/ │  │           │   │Tracking  │
-                  │ web       │  │           │   │          │
-                  └───────────┘  └───────────┘   └──────────┘
+    ├──────────────────┬──────────────┬──────────────┐
+    │                  │              │              │
+    ▼                  ▼              ▼              ▼
+Build & Test      Publish NPM   Deploy Web
+(GitHub Actions)  (@wire-dsl/*)  (Cloudflare Pages)
+    │                  │              │
+    └──────────────────┼──────────────┘
+                       │              │
+                ┌──────▼────┐  ┌──────▼──────┐
+                │ NPM Reg   │  │ Cloudflare  │
+                │           │  │ Pages/CDN   │
+                │@wire-dsl/ │  │             │
+                │ core      │  │wire-dsl.org │
+                │@wire-dsl/ │  │(web editor) │
+                │ cli       │  │             │
+                │@wire-dsl/ │  │             │
+                │ web       │  │             │
+                └───────────┘  └─────────────┘
 ```
 
 ---
@@ -448,13 +366,6 @@ Build & Test         Publish NPM   Deploy Web       Deploy AI
 - **Colors**: Chalk
 - **Progress**: Ora spinner
 
-### AI Backend
-
-- **Framework**: Hono (Cloudflare Workers)
-- **Hosting**: Cloudflare Workers
-- **Storage**: Cloudflare KV
-- **LLM**: Anthropic Claude (primary provider)
-
 ### DevOps & Build
 
 - **Build Orchestration**: Turborepo
@@ -464,7 +375,7 @@ Build & Test         Publish NPM   Deploy Web       Deploy AI
 - **Formatting**: Prettier
 - **Release**: Changesets
 - **CI/CD**: GitHub Actions
-- **Hosting**: Cloudflare Pages / Workers
+- **Hosting**: Cloudflare Pages
 
 ---
 
@@ -572,12 +483,6 @@ Use IR versioning:
 - Data binding
 - Custom validations
 - Plugin system
-
-### Phase 4: Studio
-- Visual wireframe designer
-- Canvas-based editing
-- Real-time collaboration (planned)
-- Component library management
 
 ---
 

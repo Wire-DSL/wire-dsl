@@ -110,6 +110,7 @@ project "Hello" {
 
 ### 🛠️ [Tooling](./tooling/cli)
 - CLI reference
+- Web editor
 - LLM prompting guide
 
 ### 🤝 [Contributing](./contribute/development)
@@ -257,12 +258,12 @@ screens/
 ## Tools & Integration
 
 - **CLI** – Command-line tool for rendering
-- **Web Editor** – Browser-based code editor
+- **Web Editor** – Browser-based code editor  
 - **VS Code Extension** – Syntax highlighting, intellisense
 - **LLM Prompting** – Generate from natural language
 - **GitHub Integration** – Version control ready
 
-**→ [Tools Documentation](./tooling/cli)**
+**→ [Tools Documentation](./tooling/cli) | [Web Editor Guide](./tooling/web-editor)**
 
 ---
 
@@ -289,13 +290,15 @@ screens/
 
 ## Roadmap
 
-Wire-DSL is actively developed. Current focus:
+Wire-DSL is actively developed. Current status:
 
-- ✅ Core DSL and rendering (complete)
-- ✅ Theme system and design tokens (complete)
-- 🚀 Advanced exporters (HTML, React, Figma)
-- 🚀 AI-assisted wireframing
-- 🚀 Enhanced VS Code extension
+- ✅ Phase 1: Core DSL and rendering (complete)
+- ✅ Phase 2: Theme system and design tokens (complete)
+- ✅ Phase 3: VS Code Extension (complete)
+- 🚀 Phase 4: Source Maps & Debugging (in progress)
+
+**Planned Features**:
+- LSP support for universal editor integration
 
 **→ [Full Development Roadmap](./contribute/roadmap)**
 

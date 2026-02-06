@@ -235,7 +235,7 @@ Layout engine supports responsive sizing:
 ## Full Specification
 
 For complete technical specification including all algorithms and edge cases, see:
-- [specs/LAYOUT-ENGINE-EN.md](../../specs/LAYOUT-ENGINE-EN.md) in the repository
+- [specs/LAYOUT-ENGINE.md](../../specs/LAYOUT-ENGINE.md) in the repository
 
 ## Next Steps
 

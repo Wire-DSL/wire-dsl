@@ -1,21 +1,19 @@
-# @wire-dsl/web
+# wire-dsl/web
 
-Live editor and renderer for Wire-DSL. Create and preview interactive wireframes in real-time with a modern web-based interface.
+Live web editor for Wire-DSL. Create and preview interactive wireframes in real-time with a browser-based interface.
 
-## Installation
+## Online Access
 
-```bash
-npm install @wire-dsl/web
-```
+The web editor is available at **[https://live.wire-dsl.org](https://live.wire-dsl.org)** - no installation required.
 
 ## Features
 
-- 🎨 **Live Editor** - Real-time syntax highlighting and validation
-- 👁️ **Live Preview** - Instant preview of wireframe changes
-- 💾 **Auto-save** - Automatic state persistence
-- 📱 **Responsive** - Works on desktop and tablets
-- ⚡ **Fast** - Powered by Vite for instant HMR
-- 🎯 **Intuitive UI** - Monaco editor with Wire-DSL syntax support
+- **Live Editor** - Real-time syntax highlighting and validation
+- **Live Preview** - Instant preview of wireframe changes
+- **Auto-save** - Automatic state persistence
+- **Responsive** - Works on desktop and tablets
+- **Fast** - Powered by Vite for instant HMR
+- **Export Options** - Download as SVG, PNG, or JSON IR
 
 ## Getting Started
 
@@ -42,7 +40,7 @@ The Web editor is designed for interactive development of `.wire` files:
 
 1. **Write** your wireframe definition in the editor (left panel)
 2. **See** the live preview update instantly (right panel)
-3. **Export** your wireframe as HTML, JSON, or components
+3. **Export** your wireframe as SVG, PNG, or JSON IR
 4. **Share** your designs with team members
 
 ## Editor Features
@@ -51,12 +49,12 @@ The Web editor is designed for interactive development of `.wire` files:
 - **Error Messages** - Real-time validation feedback
 - **Code Completion** - Smart suggestions and snippets
 - **Theme Support** - Light and dark modes
-- **Export Options** - HTML, JSON, React components
+- **Export Options** - SVG, PNG, JSON IR
 
 ## Technology Stack
 
-- **React 19** - Modern UI framework
-- **Vite 7** - Fast build tool
+- **React 18+** - Modern UI framework
+- **Vite 5+** - Fast build tool
 - **Monaco Editor** - Powerful code editor
 - **Tailwind CSS** - Utility-first styling
 - **Zustand** - Lightweight state management
