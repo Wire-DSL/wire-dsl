@@ -143,9 +143,9 @@ Wire-DSL/
 │   └── DOCUMENTATION-INDEX.md
 │
 ├── specs/                         # Technical Specifications
-│   ├── IR-CONTRACT
-│   ├── LAYOUT-ENGINE
-│   └── VALIDATION-RULES
+│   ├── IR-CONTRACT.md
+│   ├── LAYOUT-ENGINE.md
+│   └── VALIDATION-RULES.md
 │
 ├── packages/                      # Monorepo Packages
 │   ├── engine/                    # Main engine (parser, IR, layout, renderer)
@@ -232,7 +232,7 @@ When starting work on Wire-DSL:
 - [ ] Check [docs/DSL-SYNTAX.md](../../docs/DSL-SYNTAX.md)
 - [ ] Review relevant spec document
 - [ ] Check `examples/` for similar patterns
-- [ ] Run tests: `pnpm test --filter @wire-dsl/core`
+- [ ] Run tests: `pnpm test --filter @wire-dsl/engine`
 - [ ] Read this index for reference locations
 
 ---

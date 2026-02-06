@@ -500,7 +500,7 @@ layout card(padding: md, gap: md, radius: md, border: true) {
 
 ## Best Practices
 
-### Do's ✅
+### Do's
 
 ✅ Use Stack for sequential content  
 ✅ Use Grid for responsive multi-column layouts  
@@ -510,7 +510,7 @@ layout card(padding: md, gap: md, radius: md, border: true) {
 ✅ Limit nesting depth to 3-4 levels  
 ✅ Use consistent spacing with theme tokens  
 
-### Don'ts ❌
+### Don'ts
 
 ❌ Don't nest the same layout type excessively  
 ❌ Don't leave containers empty  

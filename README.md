@@ -294,17 +294,25 @@ This project includes icons from [Feather Icons](https://feathericons.com), crea
 
 Feather Icons are used under the terms of the MIT License, which is fully compatible with this project's MIT License.
 
-## ✨ Why WireDSL vs Mermaid/Excalidraw?
+## ✨ Why WireDSL vs Mermaid/Excalidraw/Figma/v0?
 
-| Aspect | WireDSL | Mermaid | Excalidraw |
-|--------|---------|---------|--------------|
-| **UI/UX focused** | ✅ 30+ UI components | ❌ Diagrams only | ✅ Visual sketches |
-| **Code-first** | ✅ Full DSL | ✅ Limited syntax | ❌ GUI-only |
-| **AI-generation ready** | ✅ Predictable syntax | ⚠️ Works OK | ❌ Not designed for AI |
-| **Version control friendly** | ✅ Text diffs work great | ✅ Text-based | ❌ Binary format |
-| **Export formats** | ✅ SVG, PNG, PDF | ❌ Limited | ✅ SVG, PNG |
+| Aspect | WireDSL | Mermaid | Excalidraw | Figma | v0 by Vercel |
+|--------|---------|---------|--------------|-------|-----|
+| **Purpose** | ✅ Wireframe ideas | ❌ Diagrams | ✅ Sketches | 🎨 Design system | ❌ Production code |
+| **UI/UX focused** | ✅ 30+ UI components | ❌ Diagrams only | ✅ Visual sketches | ✅ Full design | ✅ React apps |
+| **Code-first** | ✅ Full DSL | ✅ Limited syntax | ❌ GUI-only | ❌ GUI-only | ❌ GUI/prompt |
+| **Layout model** | ✅ Declarative containers (Stack, Grid, Panel) | ❌ N/A | ❌ Pixel-based | ❌ Absolute positioning | ✅ HTML-like |
+| **AI-generation ready** | ✅ Predictable syntax | ⚠️ Works OK | ❌ Not designed for AI | ⚠️ Limited | ✅ LLM-powered |
+| **Version control friendly** | ✅ Text diffs work great | ✅ Text-based | ❌ Binary format | ❌ Binary format | ❌ Code files |
+| **Export formats** | ✅ SVG, PNG, PDF | ❌ Limited | ✅ SVG, PNG | ✅ Multiple | ❌ React code |
+| **License & Pricing** | ✅ Open Source (MIT) | ✅ Open Source (MIT) | ✅ Open Source (MIT) | ❌ Paid plans | ⚠️ Free tier limited |
 
-**TL;DR:** Mermaid for diagrams, Excalidraw for sketches, **WireDSL for code-first interactive wireframes**.
+**TL;DR:** 
+- **WireDSL**: Wireframe ideas in code (fast ideation + brainstorming)
+- **v0**: Production React apps from AI (fully coded, ready to deploy)
+- **Figma**: Design system & collaboration (professional design tool)
+- **Mermaid**: Diagrams as code
+- **Excalidraw**: Hand-drawn sketches
 
 ## 🙏 Acknowledgments
 
@@ -316,6 +324,8 @@ Inspired by:
 - **DSL design patterns** - Language engineering
 
 ## 📈 Roadmap
+
+**→ [Full Roadmap Details](./docs/ROADMAP.md)**
 
 **Phase 1** ✅ (Completed)
 

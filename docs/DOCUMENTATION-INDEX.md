@@ -301,7 +301,7 @@ Property names match common UI terminology.
 ## Code Examples
 
 ### Complete Dashboard Example
-See [DSL-SYNTAX - Complete Example](DSL-SYNTAX.md#complete-example)
+See [DSL-SYNTAX.md - Complete Example](DSL-SYNTAX.md#complete-example)
 
 ### Product Card Example
 See [CONTAINERS-REFERENCE.md - Card Container Examples](CONTAINERS-REFERENCE.md#examples-5)

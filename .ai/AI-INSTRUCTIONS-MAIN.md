@@ -42,9 +42,9 @@ Wire-DSL/
 │   ├── LLM-PROMPTING.md          # AI prompt engineering
 │   └── DOCUMENTATION-INDEX.md    # Full doc index
 ├── specs/                        # Technical specifications
-│   ├── IR-CONTRACT         # Internal representation schema
-│   ├── LAYOUT-ENGINE       # Layout calculation engine
-│   └── VALIDATION-RULES    # Validation & constraints
+│   ├── IR-CONTRACT.md            # Internal representation schema
+│   ├── LAYOUT-ENGINE.md          # Layout calculation engine
+│   └── VALIDATION-RULES.md       # Validation & constraints
 ├── packages/
 │   ├── engine/                   # @wire-dsl/engine (Parser, IR, Layout, SVG)
 │   ├── cli/                      # @wire-dsl/cli (Command-line tool)
@@ -206,7 +206,7 @@ All `.wire` files must comply with:
 - **Schema Validation** - IR Contract schema (Zod)
 - **Constraint Validation** - Business rules and limits
 
-**Full Rules:** [VALIDATION-RULES](../specs/VALIDATION-RULES.md)
+**Full Rules:** [VALIDATION-RULES.md](../specs/VALIDATION-RULES.md)
 
 ### Testing Strategy
 
@@ -216,7 +216,7 @@ All `.wire` files must comply with:
 - End-to-end tests for complete pipeline
 - Visual tests for SVG output
 
-**Test Location:** `packages/core/tests/`
+**Test Location:** `packages/engine/tests/`
 
 ---
 
@@ -280,9 +280,9 @@ Example: Instead of creating RECOMMENDATION.md + VISUAL-ANALYSIS.md + DECISION.m
 - **Prompt Engineering** → [LLM-PROMPTING.md](../docs/LLM-PROMPTING.md)
 
 **Specifications by Topic:**
-- **Data Structure** → [IR-CONTRACT](../specs/IR-CONTRACT.md)
-- **Positioning Logic** → [LAYOUT-ENGINE](../specs/LAYOUT-ENGINE.md)
-- **Validation Rules** → [VALIDATION-RULES](../specs/VALIDATION-RULES.md)
+- **Data Structure** → [IR-CONTRACT.md](../specs/IR-CONTRACT.md)
+- **Positioning Logic** → [LAYOUT-ENGINE.md](../specs/LAYOUT-ENGINE.md)
+- **Validation Rules** → [VALIDATION-RULES.md](../specs/VALIDATION-RULES.md)
 
 ---
 
@@ -295,13 +295,13 @@ Check [examples/](../examples/) directory for templates. Reference [LLM-PROMPTIN
 1. Enable parser debug mode
 2. Check token output
 3. Compare against [DSL-SYNTAX.md](../docs/DSL-SYNTAX.md) grammar
-4. Review parser tests in `packages/core/tests/parser/`
+4. Review parser tests in `packages/engine/tests/parser/`
 
 ### Check Component Behavior
 1. Find component in [COMPONENTS-REFERENCE.md](../docs/COMPONENTS-REFERENCE.md)
-2. Review renderer implementation in `packages/core/src/renderer/`
+2. Review renderer implementation in `packages/engine/src/renderer/`
 3. Check test cases for usage examples
-4. Validate against IR schema in [IR-CONTRACT](../specs/IR-CONTRACT.md)
+4. Validate against IR schema in [IR-CONTRACT.md](../specs/IR-CONTRACT.md)
 
 ### Understand a Complex Feature
 1. Start with [ARCHITECTURE.md](../docs/ARCHITECTURE.md)

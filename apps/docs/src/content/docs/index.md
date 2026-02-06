@@ -84,35 +84,35 @@ project "Hello" {
 
 ## Core Sections
 
-### 🚀 [Getting Started](./getting-started/installation)
+### [Getting Started](./getting-started/installation)
 - Installation and setup
 - Your first wireframe
 - Web editor preview
 - Common patterns
 
-### 📚 [Language Guide](./language/syntax)
+### [Language Guide](./language/syntax)
 - Complete DSL syntax
 - All components
 - Layout containers
 - Theme system
 - Icons & styling
 
-### 🏗️ [Architecture](./architecture/overview)
+### [Architecture](./architecture/overview)
 - System design (7-layer pipeline)
 - IR format specification
 - Layout engine algorithms
 - Validation rules
 
-### 💡 [Examples](./examples/)
+### [Examples](./examples/)
 - 20+ example files
 - Dashboard, forms, cards
 - Learning paths
 
-### 🛠️ [Tooling](./tooling/cli)
+### [Tooling](./tooling/cli)
 - CLI reference
 - LLM prompting guide
 
-### 🤝 [Contributing](./contribute/development)
+### [Contributing](./contribute/development)
 - Development setup
 - Code quality standards
 - Contribution workflow
@@ -149,7 +149,7 @@ project "Hello" {
 
 ## Popular Use Cases
 
-### 📊 Dashboards
+### Dashboards
 ```wire
 layout grid(columns: 12, gap: lg) {
   cell span: 4 { component StatCard title: "Users" value: "1,234" }
@@ -157,7 +157,7 @@ layout grid(columns: 12, gap: lg) {
 }
 ```
 
-### 📋 Forms
+### Forms
 ```wire
 layout card(padding: lg, gap: md, radius: md, border: true) {
   component Heading text: "Signup Form"
@@ -168,7 +168,7 @@ layout card(padding: lg, gap: md, radius: md, border: true) {
 }
 ```
 
-### 🎨 Design Systems
+### Design Systems
 ```wire
 theme {
   density: "comfortable"
@@ -268,10 +268,10 @@ screens/
 
 ## Community & Support
 
-- 📖 [Documentation Index](https://wire-dsl.org)
-- 🐛 [Issues & Bug Reports](https://github.com/wire-dsl/wire-dsl/issues)
-- 💬 [Discussions](https://github.com/wire-dsl/wire-dsl/discussions)
-- 🤝 [Contributing Guide](./contribute/development)
+- [Documentation Index](https://wire-dsl.org)
+- [Issues & Bug Reports](https://github.com/wire-dsl/wire-dsl/issues)
+- [Discussions](https://github.com/wire-dsl/wire-dsl/discussions)
+- [Contributing Guide](./contribute/development)
 
 ---
 
@@ -293,9 +293,9 @@ Wire-DSL is actively developed. Current focus:
 
 - ✅ Core DSL and rendering (complete)
 - ✅ Theme system and design tokens (complete)
-- 🚀 Advanced exporters (HTML, React, Figma)
-- 🚀 AI-assisted wireframing
-- 🚀 Enhanced VS Code extension
+- Advanced exporters (HTML, React, Figma)
+- AI-assisted wireframing
+- Enhanced VS Code extension
 
 **→ [Full Development Roadmap](./contribute/roadmap)**
 

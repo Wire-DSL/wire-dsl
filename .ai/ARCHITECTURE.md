@@ -70,16 +70,16 @@ Wire-DSL/
 │   │   └─ Central reference for finding information
 │   │   └─ Contains: Quick lookups, learning paths, support
 │   │
-│   ├── 📄 README.md                      (7.8 KB)
-│   │   └─ Overview of .ai folder
-│   │   └─ Explains structure and organization
-│   │
-│   └── 📁 plans/
-│       ├── 📄 20260122-dsl-refactor-comprehensive-plan.md
-│       └── 📄 20260123-vscode-extension-improvements.md
+│   └── 📄 README.md                      (7.8 KB)
+│       └─ Overview of .ai folder
+│       └─ Explains structure and organization
 │
 ├── 📄 AI-INSTRUCTIONS-SETUP.md            (Quick start guide)
 │   └─ This system's overview and quick start
+│
+│── 📁
+│   ├── 📁 docs/  (Documentation)
+│   └── 📁 web/   (Web editor)
 │
 ├── 📁 docs/
 │   ├── 📄 ARCHITECTURE.md
@@ -100,12 +100,10 @@ Wire-DSL/
 │   └── 📄 [Example .wire files]
 │
 └── 📁 packages/
-    ├── 📁 core/        (Parser, IR, Layout, Renderer)
-    ├── 📁 cli/         (Command-line tool)
-    ├── 📁 web/         (Web editor)
-    ├── 📁 vscode-extension/
-    ├── 📁 studio/
-    └── 📁 ai-backend/  (AI services)
+    ├── 📁 cli/                (Command-line tool)
+    ├── 📁 engine/             (Parser, IR, Layout, Renderer)
+    ├── 📁 exporters/          (SVG, PDF, PNG)
+    └── 📁 lenguage-support/   (Lenguage syntax)
 ```
 
 ---
