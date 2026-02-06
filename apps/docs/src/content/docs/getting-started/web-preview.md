@@ -9,6 +9,14 @@ The Wire-DSL web editor is a live, interactive environment for building and prev
 
 ## Starting the Editor
 
+### Online (No Installation)
+
+Visit **[https://live.wire-dsl.org](https://live.wire-dsl.org)** to start editing immediately in your browser.
+
+### Local Development
+
+To run the editor locally with your own files:
+
 ```bash
 cd apps/web
 pnpm dev
@@ -202,4 +210,4 @@ Export your wireframes and commit them to git:
 - [Explore All Components](../language/components.md)
 - [Check Example Wireframes](../examples/index.md)
 
-Happy wireframing! 🚀
+Happy wireframing!

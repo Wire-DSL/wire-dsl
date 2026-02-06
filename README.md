@@ -3,9 +3,10 @@
 > **Wireframes as Code.** Declarative wireframing with AI-friendly syntax.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![npm version](https://img.shields.io/npm/v/@wire-dsl/engine)](https://www.npmjs.com/package/@wire-dsl/engine)
+[![Build](https://img.shields.io/github/actions/workflow/status/wire-dsl/wire-dsl/ci-core.yml?branch=main)](https://github.com/wire-dsl/wire-dsl/actions)
 [![Node.js](https://img.shields.io/badge/Node.js-20+-green)](https://nodejs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.3+-blue)](https://www.typescriptlang.org/)
-[![pnpm](https://img.shields.io/badge/pnpm-8+-FF6B6B)](https://pnpm.io/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9+-blue)](https://www.typescriptlang.org/)
 
 ## What is WireDSL?
 
@@ -19,29 +20,48 @@ WireDSL is a **code-first wireframing tool** that lets you:
 
 ## 🚀 Quick Start
 
+**Try online (no installation needed):**
+
+Visit [**live.wire-dsl.org**](https://live.wire-dsl.org) to use the web editor in your browser.
+
+**Start the web editor locally (connected to your files):**
+
 ```bash
-# Install dependencies
-pnpm install
+pnpm install && cd apps/web && pnpm dev
+```
 
-# Start web editor
-cd apps/web
-pnpm dev
-# → http://localhost:3000
+→ Open http://localhost:3000
 
-# Use CLI
-npm install -g @wire-dsl/cli
-wire render myfile.wire -o output.svg
+**Try the CLI (one-liner):**
 
-# Use as library
+```bash
+npm install -g @wire-dsl/cli && wire render examples/simple-dashboard.wire -o output.svg
+```
+
+**Use as a library:**
+
+```bash
 npm install @wire-dsl/engine
 import { parseWireDSL, generateIR } from '@wire-dsl/engine';
 ```
 
+## 🎬 Demo: `.wire` Code → SVG Preview
+
+> Live editor showing:
+> - Left: `.wire` code in Monaco editor
+> - Right: Real-time SVG preview (hot reload)
+> - Changes appear instantly as you type
+>
+> ![](./assets/screeshot.png)
+> *Note: screenshot from Wire Live on [live.wire-dsl.org](https://live.wire-dsl.org/).*
+
+---
+
 ## 📖 First Time? Read This
 
-1. **[SETUP_COMPLETE.txt](./SETUP_COMPLETE.txt)** - 2-minute orientation (REQUIRED)
-2. **[QUICKSTART.md](./QUICKSTART.md)** - Setup guide (5 minutes)
-3. **[MONOREPO.md](./MONOREPO.md)** - How the project is organized (10 minutes)
+1. **[QUICKSTART.md](./QUICKSTART.md)** - Setup guide (5 minutes)
+2. **[MONOREPO.md](./MONOREPO.md)** - How the project is organized (10 minutes)
+3. **[docs/DOCUMENTATION-INDEX.md](./docs/DOCUMENTATION-INDEX.md)** - Complete documentation index
 
 ## 📚 Full Documentation
 
@@ -58,18 +78,14 @@ import { parseWireDSL, generateIR } from '@wire-dsl/engine';
 - **[docs/DSL-SYNTAX.md](./docs/DSL-SYNTAX.md)** - Language syntax guide
 - **[docs/THEME-GUIDE.md](./docs/THEME-GUIDE.md)** - Theme system documentation
 - **[docs/LLM-PROMPTING.md](./docs/LLM-PROMPTING.md)** - Guide for AI generation from natural language
+- **[docs/ICONS-GUIDE.md](./docs/ICONS-GUIDE.md)** - Icons library and usage
+- **[docs/ICON-AND-BUTTON-SIZING.md](./docs/ICON-AND-BUTTON-SIZING.md)** - Icon and button sizing guide
 
 **Component & Container References**
 
-- **[docs/COMPONENTS-REFERENCE.md](./docs/COMPONENTS-REFERENCE.md)** - All 23 components
-- **[docs/CONTAINERS-REFERENCE.md](./docs/CONTAINERS-REFERENCE.md)** - Layout containers
-- **[docs/CLI-REFERENCE.md](./docs/CLI-REFERENCE.md)** - CLI commands
-
-**Specifications**
-
-- **[specs/IR-CONTRACT-EN.md](./specs/IR-CONTRACT-EN.md)** - Intermediate representation format
-- **[specs/LAYOUT-ENGINE-EN.md](./specs/LAYOUT-ENGINE-EN.md)** - Layout algorithms
-- **[specs/VALIDATION-RULES-EN.md](./specs/VALIDATION-RULES-EN.md)** - Validation rules
+- **[specs/IR-CONTRACT.md](./specs/IR-CONTRACT.md)** - Intermediate representation format
+- **[specs/LAYOUT-ENGINE.md](./specs/LAYOUT-ENGINE.md)** - Layout algorithms
+- **[specs/VALIDATION-RULES.md](./specs/VALIDATION-RULES.md)** - Validation rules
 
 **Planning & Roadmap**
 
@@ -81,16 +97,16 @@ import { parseWireDSL, generateIR } from '@wire-dsl/engine';
 
 ---
 
-## 🎯 ¿Qué es WireDSL?
+## 🎯 Why WireDSL?
 
-WireDSL es una plataforma para crear wireframes declarativos donde:
+WireDSL is a platform for creating declarative wireframes where:
 
-- ✍️ **Se declara**, no se dibuja
-- 🤖 **AI-friendly**: sintaxis predecible para generación automática
-- 📐 **Determinístico**: misma entrada → mismo output
-- 🔄 **Versionable**: los wireframes son código
+- ✍️ **You declare**, you don't draw
+- 🤖 **AI-friendly**: predictable syntax for automatic generation
+- 📐 **Deterministic**: same input → same output
+- 🔄 **Versionable**: wireframes are code
 
-### Ejemplo Rápido
+### Quick Example
 
 ```wire
 project "Dashboard" {
@@ -111,14 +127,16 @@ project "Dashboard" {
 }
 ```
 
-## 📦 Packages
+## 📦 Packages & Apps
 
-| Package                                         | Purpose                        | Status         |
-| ----------------------------------------------- | ------------------------------ | -------------- |
-| [@wire-dsl/engine](./packages/engine)           | Parser, IR, layout, renderer   | 🚧 In Progress |
-| [@wire-dsl/exporters](./packages/exporters)     | SVG, PNG, PDF export (Node.js) | 🚧 In Progress |
-| [@wire-dsl/cli](./packages/cli)                 | Command-line tool              | 🚧 In Progress |
-| [@wire-dsl/web](./apps/web)                     | Live web editor                | 🚧 In Progress |
+| Package/App                                          | Purpose                        | Status         |
+| ---------------------------------------------------- | ------------------------------ | -------------- |
+| [@wire-dsl/engine](./packages/engine)               | Parser, IR, layout, renderer   | ✅ Published   |
+| [@wire-dsl/exporters](./packages/exporters)         | SVG, PNG, PDF export (Node.js) | ✅ Published   |
+| [@wire-dsl/cli](./packages/cli)                     | Command-line tool              | ✅ Published   |
+| [@wire-dsl/language-support](./packages/language-support) | VS Code syntax & type support  | ✅ Published   |
+| [wire-dsl/web](./apps/web)                          | Live web editor                | ✅ Published   |
+| [wire-dsl/docs](./apps/docs)                        | Documentation site             | ✅ Published   |
 
 ## 🎯 Example Workflow
 
@@ -175,7 +193,7 @@ User: "Create a login form with email, password, and remember me"
 
 - TypeScript 5.3 (strict mode)
 - Chevrotain 11.x (parser)
-- Zod 3.x (validation)
+- Zod 4.x (validation)
 
 **Web Editor**
 
@@ -215,7 +233,7 @@ Positioned Elements
    ↓
 SVG Renderer
    ↓
-SVG / PNG / PDF / React
+SVG / PNG / PDF
 ```
 
 ## 🚢 Deployment
@@ -223,13 +241,14 @@ SVG / PNG / PDF / React
 - **Web Editor**: Automatic via Cloudflare Pages (git push → live)
 - **CLI Tool**: Automatic via GitHub Actions + NPM (changesets → publish)
 
-## � What's Included
+## 📦 What's Included
 
 **Free & Open Source**
 
 - ✅ Engine library (@wire-dsl/engine) - Pure TypeScript parser + layout
 - ✅ Exporters library (@wire-dsl/exporters) - SVG, PNG, PDF output
 - ✅ CLI tool (@wire-dsl/cli) - Command-line rendering
+- ✅ Language support (@wire-dsl/language-support) - VS Code integration
 - ✅ Web editor - Live editing and preview with AI integration
 - ✅ Full source code on GitHub
 
@@ -251,7 +270,8 @@ git push origin feature/your-feature
 
 ## 🔗 Links
 
-- **Website**: https://wire-dsl.dev (coming soon)
+- **Website**: https://wire-dsl.org - Official documentation site
+- **Live Editor**: https://live.wire-dsl.org - Try WireDSL in your browser
 - **GitHub**: https://github.com/wire-dsl/wire-dsl
 - **NPM Org**: https://www.npmjs.com/org/wire-dsl
 - **Issues**: [GitHub Issues](https://github.com/wire-dsl/wire-dsl/issues)
@@ -261,31 +281,38 @@ git push origin feature/your-feature
 
 MIT License - Free for personal and commercial use
 
-## ✨ Why WireDSL?
+## ⚖️ Third-Party Components & Assets
 
-### vs Figma
+### Feather Icons
 
-- ✅ Version control (git)
-- ✅ Text-based (diffs)
-- ✅ AI-friendly syntax
-- ✅ Open source
-- ❌ Less visual
+This project includes icons from [Feather Icons](https://feathericons.com), created by Cole Bemis and contributors.
 
-### vs Mermaid
+- **License**: MIT License
+- **Repository**: https://github.com/feathericons/feather
+- **Location in project**: `packages/engine/src/renderer/icons/`
+- **Full details**: See `packages/engine/src/renderer/icons/ICONS-LICENSE.md`
 
-- ✅ Made for UI/UX
-- ✅ More components (23 types)
-- ✅ Multiple export formats
-- ✅ Layout engine
-- ✅ AI generation ready
-- ❌ Younger project
+Feather Icons are used under the terms of the MIT License, which is fully compatible with this project's MIT License.
 
-### vs Code Templates
+## ✨ Why WireDSL vs Mermaid/Excalidraw/Figma/v0?
 
-- ✅ Language-agnostic
-- ✅ Instant visual feedback
-- ✅ AI-powered generation
-- ✅ No framework lock-in
+| Aspect | WireDSL | Mermaid | Excalidraw | Figma | v0 by Vercel |
+|--------|---------|---------|--------------|-------|-----|
+| **Purpose** | ✅ Wireframe ideas | ❌ Diagrams | ✅ Sketches | 🎨 Design system | ❌ Production code |
+| **UI/UX focused** | ✅ 30+ UI components | ❌ Diagrams only | ✅ Visual sketches | ✅ Full design | ✅ React apps |
+| **Code-first** | ✅ Full DSL | ✅ Limited syntax | ❌ GUI-only | ❌ GUI-only | ❌ GUI/prompt |
+| **Layout model** | ✅ Declarative containers (Stack, Grid, Panel) | ❌ N/A | ❌ Pixel-based | ❌ Absolute positioning | ✅ HTML-like |
+| **AI-generation ready** | ✅ Predictable syntax | ⚠️ Works OK | ❌ Not designed for AI | ⚠️ Limited | ✅ LLM-powered |
+| **Version control friendly** | ✅ Text diffs work great | ✅ Text-based | ❌ Binary format | ❌ Binary format | ❌ Code files |
+| **Export formats** | ✅ SVG, PNG, PDF | ❌ Limited | ✅ SVG, PNG | ✅ Multiple | ❌ React code |
+| **License & Pricing** | ✅ Open Source (MIT) | ✅ Open Source (MIT) | ✅ Open Source (MIT) | ❌ Paid plans | ⚠️ Free tier limited |
+
+**TL;DR:** 
+- **WireDSL**: Wireframe ideas in code (fast ideation + brainstorming)
+- **v0**: Production React apps from AI (fully coded, ready to deploy)
+- **Figma**: Design system & collaboration (professional design tool)
+- **Mermaid**: Diagrams as code
+- **Excalidraw**: Hand-drawn sketches
 
 ## 🙏 Acknowledgments
 
@@ -298,6 +325,8 @@ Inspired by:
 
 ## 📈 Roadmap
 
+**→ [Full Roadmap Details](./docs/ROADMAP.md)**
+
 **Phase 1** ✅ (Completed)
 
 - ✅ Parser implementation
@@ -308,37 +337,54 @@ Inspired by:
 - ✅ CLI tool
 - ✅ PNG/PDF export
 
-**Phase 2** (Next)
+**Phase 2** ✅ (Completed)
 
-- [ ] Component library templates
-- [ ] Code generation (React/Vue)
-- [ ] Figma import/export
+- ✅ Theme system with design tokens
+- ✅ 23+ built-in components
+- ✅ Component composition & validation
+- ✅ Complete documentation
+
+**Phase 3** ✅ (Completed)
+
+- ✅ VS Code extension with syntax highlighting
+- ✅ Real-time error detection
+- ✅ Component intellisense
+- ✅ Document formatting
+- ✅ Live preview pane
+- 🔗 [GitHub Repository](https://github.com/Wire-DSL/vscode-extension) | [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=wire-dsl.wire-dsl)
+
+**Phase 4** 🚀 (Current)
+
+- [ ] **Source maps** - Map `.wire` source to rendered components
+- [ ] LSP (Language Server Protocol) support
+- [ ] Enhanced debugging capabilities
+
+**Future Features**
+
+- Code generation (React/Vue templates)
+- Figma import/export
+- Real-time collaboration
+- *...and more exciting features in the pipeline! 🎉*
 
 ## 👥 Status
 
 ```
-✅ Architecture designed
-✅ Tech stack decided
-✅ Monorepo setup complete
-✅ CI/CD pipelines ready
-✅ AI-friendly DSL designed
-✅ DSL parser (implemented)
-✅ IR generator (implemented)
-✅ Layout engine (implemented)
-✅ SVG renderer (implemented)
-✅ Web editor MVP (implemented)
-✅ CLI tool (implemented)
-✅ SVG/PNG/PDF exporters (implemented)
-✅ Engine + Exporters separation (completed)
-✅ VS Code extension (implemented)
-📅 LSP support
-📅 Code generation (React/Vue)
-📅 Figma import/export
+✅ Phase 1: Core MVP (completed)
+✅ Phase 2: Theme System & Design Tokens (completed)
+✅ Phase 3: VS Code Extension (completed)
+
+🚀 Phase 4: Source Maps (in progress)
+   ├─ Source map generation
+   ├─ Debugging support
+   └─ Error reporting with precise locations
+
+📅 LSP support (planned)
+📅 Code generation (planned)
+📅 More features in the pipeline 🎉
 ```
 
 ---
 
-**Last Updated**: February 1, 2026  
+**Last Updated**: February 6, 2026  
 **Status**: ✅ Production-Ready, Open Source  
-**Current Branch**: refactor/core-to-engine → Ready to merge  
-**Next**: `pnpm install && pnpm dev`
+**Next**: Visit [live.wire-dsl.org](https://live.wire-dsl.org) to try it now!

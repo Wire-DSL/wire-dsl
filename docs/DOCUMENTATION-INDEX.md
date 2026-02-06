@@ -8,7 +8,7 @@ Welcome to the comprehensive English documentation for Wire-DSL. This guide cove
 
 New to Wire-DSL? Start here:
 
-1. **[DSL Syntax Guide](DSL-SYNTAX-EN.md)** - Learn the basic syntax and structure
+1. **[DSL Syntax Guide](DSL-SYNTAX.md)** - Learn the basic syntax and structure
 2. **[Components Reference](COMPONENTS-REFERENCE.md)** - Explore all 23 available components
 3. **[Icons Guide](ICONS-GUIDE.md)** - Use Feather Icons in your wireframes
 4. **[Containers Reference](CONTAINERS-REFERENCE.md)** - Understand layout containers
@@ -18,7 +18,7 @@ New to Wire-DSL? Start here:
 
 ## Core Documentation
 
-### [DSL Syntax Guide](DSL-SYNTAX-EN.md)
+### [DSL Syntax Guide](DSL-SYNTAX.md)
 The authoritative reference for Wire-DSL syntax, including:
 - Project structure
 - Screen definition
@@ -301,7 +301,7 @@ Property names match common UI terminology.
 ## Code Examples
 
 ### Complete Dashboard Example
-See [DSL-SYNTAX-EN.md - Complete Example](DSL-SYNTAX-EN.md#complete-example)
+See [DSL-SYNTAX.md - Complete Example](DSL-SYNTAX.md#complete-example)
 
 ### Product Card Example
 See [CONTAINERS-REFERENCE.md - Card Container Examples](CONTAINERS-REFERENCE.md#examples-5)
@@ -365,7 +365,7 @@ Key documentation files:
 
 ```
 docs/
-├── DSL-SYNTAX-EN.md           # Main syntax reference
+├── DSL-SYNTAX.md           # Main syntax reference
 ├── COMPONENTS-REFERENCE.md    # All 23 components
 ├── CONTAINERS-REFERENCE.md    # All 5 container types
 ├── THEME-GUIDE.md             # Theme system
@@ -378,7 +378,7 @@ docs/
 
 ## Next Steps
 
-1. **Read** [DSL-SYNTAX-EN.md](DSL-SYNTAX-EN.md) for language syntax
+1. **Read** [DSL-SYNTAX.md](DSL-SYNTAX.md) for language syntax
 2. **Explore** [COMPONENTS-REFERENCE.md](COMPONENTS-REFERENCE.md) for available components
 3. **Learn** [CONTAINERS-REFERENCE.md](CONTAINERS-REFERENCE.md) for layout patterns
 4. **Discover** [THEME-GUIDE.md](THEME-GUIDE.md) for design consistency

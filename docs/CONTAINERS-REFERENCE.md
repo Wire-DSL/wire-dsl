@@ -633,6 +633,6 @@ layout split(sidebar: 260, gap: md)
 
 ## Next Steps
 
-- [DSL-SYNTAX-EN.md](DSL-SYNTAX-EN.md) - Complete syntax reference
+- [DSL-SYNTAX.md](DSL-SYNTAX.md) - Complete syntax reference
 - [COMPONENTS-REFERENCE.md](COMPONENTS-REFERENCE.md) - All component types
 - [THEME-GUIDE.md](THEME-GUIDE.md) - Theme configuration

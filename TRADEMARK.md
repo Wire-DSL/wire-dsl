@@ -61,7 +61,7 @@ You may use the "WireDSL" name in the following contexts WITHOUT prior permissio
 
 If you want to use the WireDSL trademark in a way not covered above, please contact:
 
-📧 **trademark@wire-dsl.dev** (when established)  
+📧 **trademark@wire-dsl.org** (when established)  
 Or open an issue: https://github.com/wire-dsl/wire-dsl/issues
 
 Common approval scenarios:

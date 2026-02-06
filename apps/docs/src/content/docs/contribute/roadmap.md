@@ -13,13 +13,15 @@ Wire-DSL is actively maintained with a clear evolution path. This roadmap descri
 
 ---
 
-## Phase 1: Core MVP ✅ COMPLETE
+## Phase 1: Core MVP
+
+**Status**: Completed ✅
 
 **Goal**: Create functional base with DSL parser, IR generation, layout engine, and renderer.
 
 **Status**: Fully implemented and stable.
 
-### Deliverables ✅
+### Deliverables
 
 **DSL + Parser**
 - ✅ Lexer for tokenization
@@ -76,13 +78,15 @@ Wire-DSL is actively maintained with a clear evolution path. This roadmap descri
 
 ---
 
-## Phase 2: Theme System & Design Tokens ✅ COMPLETE
+## Phase 2: Theme System & Design Tokens
+
+**Status**: Completed ✅
 
 **Goal**: Implement theme tokens for visual consistency.
 
 **Status**: Fully implemented and integrated.
 
-### Deliverables ✅
+### Deliverables
 
 **Theme System**
 - ✅ Theme block configuration
@@ -104,141 +108,70 @@ Wire-DSL is actively maintained with a clear evolution path. This roadmap descri
 
 ---
 
-## Phase 3: Advanced Exporters 🚀 PLANNED
+## Phase 3: VS Code Extension
 
-**Goal**: Generate code and designs in multiple formats.
-
-### Deliverables
-
-**HTML Exporter**
-- [ ] Semantic HTML generation
-- [ ] CSS layout styling
-- [ ] Accessibility (ARIA) support
-- [ ] Responsive design output
-
-**React Exporter**
-- [ ] React component generation
-- [ ] Props interface generation
-- [ ] Component composition preservation
-- [ ] Styled components or CSS-in-JS output
-
-**Vue Exporter**
-- [ ] Vue component generation
-- [ ] Template structure preservation
-- [ ] Component binding patterns
-
-**Figma Exporter**
-- [ ] Convert to Figma components
-- [ ] Design system structure
-- [ ] Layout fidelity preservation
-
----
-
-## Phase 4: AI-Assisted Wireframing 🚀 PLANNED
-
-**Goal**: LLM integration for automatic wireframe generation.
-
-### Deliverables
-
-**LLM Integration**
-- [ ] OpenAI/Claude API integration
-- [ ] Prompt optimization for wire-dsl output
-- [ ] Iterative refinement workflow
-
-**AI Studio Interface**
-- [ ] Web-based UI for AI wireframing
-- [ ] Real-time preview during generation
-- [ ] Design system constraint checking
-
-**Context-Aware Generation**
-- [ ] Learn from existing wireframes
-- [ ] Component reuse suggestions
-- [ ] Design pattern recommendations
-
----
-
-## Phase 5: VS Code Extension 🎯 ACTIVE
+**Status**: Completed ✅
 
 **Goal**: Professional IDE support for Wire-DSL development.
 
-### Implemented Features ✅
-- ✅ Syntax highlighting
-- ✅ Real-time error detection
-- ✅ Component intellisense
-- ✅ Document formatting
-- ✅ File icons
+**Status**: Fully implemented and published on VS Code Marketplace.
 
-### Planned Enhancements 🔄
-- [ ] Code snippet library
+### Delivered Features
+
+**Core IDE Features**
+- ✅ Syntax highlighting with proper tokenization
+- ✅ Real-time error detection and reporting
+- ✅ Component intellisense and autocomplete
+- ✅ Document formatting and beautification
+- ✅ File icons for `.wire` files
+- ✅ Live preview pane in editor
+
+**Installation**
+- 🔗 [GitHub Repository](https://github.com/Wire-DSL/vscode-extension)
+- 🔗 [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=wire-dsl.wire-dsl)
+
+---
+
+## Phase 4: Source Maps & Debugging
+
+**Status**: In Progress
+
+**Goal**: Advanced debugging and source map support for development and production.
+
+**Current Status**: In progress
+
+### Planned Features
+
+**Source Maps**
+- [ ] Generate source maps (`.wire.map`) for compiled output
+- [ ] Map rendered SVG elements back to source DSL code
+- [ ] Bidirectional tracing (source ↔ output)
+
+**Debugging Support**
+- [ ] Debug information in IR output
+- [ ] Enhanced error messages with line/column precision
+- [ ] Variable inspection tools
+
+**LSP (Language Server Protocol)**
+- [ ] Full LSP implementation for universal editor support
 - [ ] Go-to-definition navigation
-- [ ] Auto-complete for component properties
-- [ ] Live preview pane
-- [ ] Refactoring tools
-- [ ] Performance metrics
+- [ ] Symbol renaming support
+- [ ] Find all references functionality
 
 ---
 
-## Phase 6: Advanced Language Features 🚀 PLANNED
+## Future Features Pipeline
 
-**Goal**: Support dynamic and interactive wireframing.
+The following features are planned and will be prioritized based on community feedback:
 
-### Features
-
-**Component Parameters**
-- [ ] Props/parameters for custom components
-- [ ] Default parameter values
-- [ ] Type system for parameters
-
-**Conditional Rendering**
-- [ ] If/else block support
-- [ ] Dynamic property values
-- [ ] State management basics
-
-**Data Binding**
-- [ ] Template variables
-- [ ] Data source integration
-- [ ] Dynamic list rendering
-
-**Event Handling**
-- [ ] Click event support
-- [ ] Form submission handling
-- [ ] State transitions
-
----
-
-## Phase 7: Plugin System 🚀 FUTURE
-
-**Goal**: Allow community extensions and custom components.
-
-### Features
-
-**Component Plugins**
-- [ ] Custom component registration
-- [ ] Plugin lifecycle hooks
-- [ ] Plugin marketplace/registry
-
-**Exporter Plugins**
-- [ ] Custom exporter development
-- [ ] Third-party tool integrations
-
-**Language Extensions**
-- [ ] Custom DSL extensions
-- [ ] Domain-specific plugins
-
----
-
-## Phase 8: v1.0 Release 🎉 TARGET
-
-**Goal**: Production-ready Wire-DSL with comprehensive tooling.
-
-### Release Criteria
-- [ ] All core features polished and tested
-- [ ] Documentation complete (English)
-- [ ] Community feedback integration
-- [ ] Performance optimizations
-- [ ] Backwards compatibility guarantee
-- [ ] Security review complete
-- [ ] CLI stability guaranteed
+- **Advanced Exporters**: HTML, React, Vue, and Figma component generation
+- **AI-Assisted Wireframing**: Natural language to `.wire` code generation
+- **Code Generation**: Auto-generate React/Vue components from wireframes
+- **Real-time Collaboration**: Multi-user editing and commenting
+- **Figma Import/Export**: Bidirectional design sync
+- **Plugin System**: Community extensions and custom components
+- **Performance Optimizations**: Faster rendering for complex wireframes
+- **Additional Features**: Lots more exciting improvements coming! 🎉
 
 ---
 
@@ -253,13 +186,15 @@ Wire-DSL is actively maintained with a clear evolution path. This roadmap descri
 - ✅ 23 built-in components
 - ✅ Component validation (cycles, undefined references)
 - ✅ CLI with render/validate commands
-- ✅ VS Code syntax highlighting
+- ✅ VS Code syntax highlighting and live preview
+- ✅ Web editor with real-time preview
 
 ### What's Next
-- 🔄 Advanced HTML/React exporters
-- 🔄 AI-assisted generation
-- 🔄 Enhanced VS Code extension
-- 🔄 Community testing and feedback
+- [ ] Source maps and advanced debugging
+- [ ] LSP support for all editors
+- [ ] Advanced exporters (HTML, React, Vue, Figma)
+- [ ] AI-assisted generation
+- [ ] Community feedback integration
 
 ---
 
@@ -286,6 +221,6 @@ Wire-DSL welcomes community contributions. Want to help?
 
 ---
 
-**Last Updated**: January 2026  
+**Last Updated**: February 6, 2026  
 **Maintenance Status**: Active  
-**Next Milestone**: Advanced Exporters (HTML, React, Vue, Figma)
+**Current Phase**: Phase 4 - Source Maps & Debugging

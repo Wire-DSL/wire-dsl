@@ -1,6 +1,6 @@
 # @wire-dsl/cli
 
-Command-line interface for Wire-DSL. Transform `.wire` DSL files into interactive wireframes, components, and releases.
+Command-line interface for Wire-DSL. Transform `.wire` DSL files into SVG, PNG, and PDF wireframes.
 
 ## Installation
 
@@ -66,14 +66,26 @@ Wire-DSL is a **block-declarative Domain-Specific Language** for creating intera
 Write wireframes like this:
 
 ```wire
-screen "Dashboard" {
-  layout grid(columns: 2, gap: 16) {
-    layout card(padding: lg, gap: md, border: true) {
-      component StatCard title: "Q4 Revenue" value: "$2.5M"
-    }
-    
-    layout card(padding: lg, gap: md, border: true) {
-      component StatCard title: "Active Users" value: "1.2K"
+project "Dashboard" {
+  theme {
+    density: "normal"
+    spacing: "md"
+    radius: "md"
+    stroke: "normal"
+    font: "base"
+  }
+  screen Dashboard {
+    layout grid(columns: 2, gap: md) {
+      cell span: 1 {
+        layout card(padding: lg, gap: md, radius: md, border: true) {
+          component StatCard title: "Q4 Revenue" value: "$2.5M"
+        }
+      }
+      cell span: 1 {
+        layout card(padding: lg, gap: md, radius: md, border: true) {
+          component StatCard title: "Active Users" value: "1.2K"
+        }
+      }
     }
   }
 }
@@ -82,7 +94,7 @@ screen "Dashboard" {
 ## Features
 
 - 🎯 **Block-declarative syntax** - Intuitive, structured definitions
-- 📱 **23 UI components** - Buttons, forms, cards, modals, and more
+- 📱 **30+ UI components** - Buttons, forms, cards, modals, and more
 - 🎨 **Theming support** - Customize colors, typography, spacing
 - 🔄 **Responsive layouts** - Grid, Stack, Split containers
 - ⚡ **Fast compilation** - Powered by Chevrotain parser

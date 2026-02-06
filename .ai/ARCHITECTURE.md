@@ -70,16 +70,16 @@ Wire-DSL/
 │   │   └─ Central reference for finding information
 │   │   └─ Contains: Quick lookups, learning paths, support
 │   │
-│   ├── 📄 README.md                      (7.8 KB)
-│   │   └─ Overview of .ai folder
-│   │   └─ Explains structure and organization
-│   │
-│   └── 📁 plans/
-│       ├── 📄 20260122-dsl-refactor-comprehensive-plan.md
-│       └── 📄 20260123-vscode-extension-improvements.md
+│   └── 📄 README.md                      (7.8 KB)
+│       └─ Overview of .ai folder
+│       └─ Explains structure and organization
 │
 ├── 📄 AI-INSTRUCTIONS-SETUP.md            (Quick start guide)
 │   └─ This system's overview and quick start
+│
+│── 📁
+│   ├── 📁 docs/  (Documentation)
+│   └── 📁 web/   (Web editor)
 │
 ├── 📁 docs/
 │   ├── 📄 ARCHITECTURE.md
@@ -92,20 +92,18 @@ Wire-DSL/
 │   └── 📄 DOCUMENTATION-INDEX.md
 │
 ├── 📁 specs/
-│   ├── 📄 IR-CONTRACT-EN.md
-│   ├── 📄 LAYOUT-ENGINE-EN.md
-│   └── 📄 VALIDATION-RULES-EN.md
+│   ├── 📄 IR-CONTRACT.md
+│   ├── 📄 LAYOUT-ENGINE.md
+│   └── 📄 VALIDATION-RULES.md
 │
 ├── 📁 examples/
 │   └── 📄 [Example .wire files]
 │
 └── 📁 packages/
-    ├── 📁 core/        (Parser, IR, Layout, Renderer)
-    ├── 📁 cli/         (Command-line tool)
-    ├── 📁 web/         (Web editor)
-    ├── 📁 vscode-extension/
-    ├── 📁 studio/
-    └── 📁 ai-backend/  (AI services)
+    ├── 📁 cli/                (Command-line tool)
+    ├── 📁 engine/             (Parser, IR, Layout, Renderer)
+    ├── 📁 exporters/          (SVG, PDF, PNG)
+    └── 📁 lenguage-support/   (Lenguage syntax)
 ```
 
 ---
@@ -269,9 +267,9 @@ Start with AI-INSTRUCTIONS-INDEX.md
     ↓
 Look up: Quick reference table
     ↓
-Find: specs/VALIDATION-RULES-EN.md
+Find: specs/VALIDATION-RULES.md
     ↓
-Reference: VALIDATION-RULES-EN.md section
+Reference: VALIDATION-RULES.md section
 
 "I'm using Copilot, what do I do?"
     ↓
@@ -295,9 +293,9 @@ Check examples for patterns
 | DSL Syntax | docs/DSL-SYNTAX.md | .ai/AI-INSTRUCTIONS-MAIN.md |
 | Components | docs/COMPONENTS-REFERENCE.md | examples/ |
 | Architecture | docs/ARCHITECTURE.md | .ai/AI-INSTRUCTIONS-MAIN.md |
-| Layout System | specs/LAYOUT-ENGINE-EN.md | docs/ARCHITECTURE.md |
-| IR Schema | specs/IR-CONTRACT-EN.md | .ai/AI-INSTRUCTIONS-MAIN.md |
-| Validation | specs/VALIDATION-RULES-EN.md | .ai/AI-INSTRUCTIONS-MAIN.md |
+| Layout System | specs/LAYOUT-ENGINE.md | docs/ARCHITECTURE.md |
+| IR Schema | specs/IR-CONTRACT.md | .ai/AI-INSTRUCTIONS-MAIN.md |
+| Validation | specs/VALIDATION-RULES.md | .ai/AI-INSTRUCTIONS-MAIN.md |
 | How to develop | .ai/AI-INSTRUCTIONS-MAIN.md | AI agent-specific file |
 | Where to find X | .ai/AI-INSTRUCTIONS-INDEX.md | .ai/README.md |
 

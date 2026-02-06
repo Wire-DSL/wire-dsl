@@ -12,15 +12,15 @@ Start here when building new functionality:
 - [DSL Syntax Reference](../docs/DSL-SYNTAX.md) - Language grammar and structure
 - [Architecture Overview](../docs/ARCHITECTURE.md) - System design and layers
 - [Components Reference](../docs/COMPONENTS-REFERENCE.md) - Available UI components
-- [Validation Rules](../specs/VALIDATION-RULES-EN.md) - Business rule constraints
+- [Validation Rules](../specs/VALIDATION-RULES.md) - Business rule constraints
 
 ---
 
 ### 🐛 For Maintenance & Bug Fixes
 When troubleshooting or fixing issues:
 - [CLI Reference](../docs/CLI-REFERENCE.md) - Command-line tool documentation
-- [Layout Engine Specification](../specs/LAYOUT-ENGINE-EN.md) - Grid and positioning system
-- [IR Contract Specification](../specs/IR-CONTRACT-EN.md) - Internal representation schema
+- [Layout Engine Specification](../specs/LAYOUT-ENGINE.md) - Grid and positioning system
+- [IR Contract Specification](../specs/IR-CONTRACT.md) - Internal representation schema
 - [Components Reference](../docs/COMPONENTS-REFERENCE.md) - Component behavior details
 
 ---
@@ -42,9 +42,9 @@ Wire-DSL/
 │   ├── LLM-PROMPTING.md          # AI prompt engineering
 │   └── DOCUMENTATION-INDEX.md    # Full doc index
 ├── specs/                        # Technical specifications
-│   ├── IR-CONTRACT-EN.md         # Internal representation schema
-│   ├── LAYOUT-ENGINE-EN.md       # Layout calculation engine
-│   └── VALIDATION-RULES-EN.md    # Validation & constraints
+│   ├── IR-CONTRACT.md            # Internal representation schema
+│   ├── LAYOUT-ENGINE.md          # Layout calculation engine
+│   └── VALIDATION-RULES.md       # Validation & constraints
 ├── packages/
 │   ├── engine/                   # @wire-dsl/engine (Parser, IR, Layout, SVG)
 │   ├── cli/                      # @wire-dsl/cli (Command-line tool)
@@ -180,16 +180,16 @@ Apply visual consistency through theming:
 
 ### Fixing a Parser/Validation Issue
 
-1. **Check Validation Rules** → [VALIDATION-RULES-EN.md](../specs/VALIDATION-RULES-EN.md)
+1. **Check Validation Rules** → [VALIDATION-RULES.md](../specs/VALIDATION-RULES.md)
 2. **Review Parser Tests** → `packages/engine/tests/parser/`
 3. **Update Parser** → `packages/engine/src/parser/`
-4. **Validate Against Spec** → [IR-CONTRACT-EN.md](../specs/IR-CONTRACT-EN.md)
+4. **Validate Against Spec** → [IR-CONTRACT.md](../specs/IR-CONTRACT.md)
 5. **Add Test Case** → Ensure coverage of edge case
 6. **Update Documentation** → If behavior changed, update docs
 
 ### Updating the Layout Engine
 
-1. **Review Current Logic** → [LAYOUT-ENGINE-EN.md](../specs/LAYOUT-ENGINE-EN.md)
+1. **Review Current Logic** → [LAYOUT-ENGINE.md](../specs/LAYOUT-ENGINE.md)
 2. **Check Test Cases** → `packages/engine/tests/layout/`
 3. **Modify Engine** → `packages/engine/src/layout/`
 4. **Validate Against Spec** → Ensure compliance with spec
@@ -206,7 +206,7 @@ All `.wire` files must comply with:
 - **Schema Validation** - IR Contract schema (Zod)
 - **Constraint Validation** - Business rules and limits
 
-**Full Rules:** [VALIDATION-RULES-EN.md](../specs/VALIDATION-RULES-EN.md)
+**Full Rules:** [VALIDATION-RULES.md](../specs/VALIDATION-RULES.md)
 
 ### Testing Strategy
 
@@ -216,7 +216,7 @@ All `.wire` files must comply with:
 - End-to-end tests for complete pipeline
 - Visual tests for SVG output
 
-**Test Location:** `packages/core/tests/`
+**Test Location:** `packages/engine/tests/` and `packages/exporters/tests/`
 
 ---
 
@@ -230,8 +230,8 @@ All `.wire` files must comply with:
 | `packages/engine/src/renderer/` | SVG output generation |
 | `packages/engine/tests/` | Test suites |
 | `docs/ARCHITECTURE.md` | System design documentation |
-| `specs/IR-CONTRACT-EN.md` | IR schema specification |
-| `specs/LAYOUT-ENGINE-EN.md` | Layout engine specification |
+| `specs/IR-CONTRACT.md` | IR schema specification |
+| `specs/LAYOUT-ENGINE.md` | Layout engine specification |
 
 ---
 
@@ -280,9 +280,9 @@ Example: Instead of creating RECOMMENDATION.md + VISUAL-ANALYSIS.md + DECISION.m
 - **Prompt Engineering** → [LLM-PROMPTING.md](../docs/LLM-PROMPTING.md)
 
 **Specifications by Topic:**
-- **Data Structure** → [IR-CONTRACT-EN.md](../specs/IR-CONTRACT-EN.md)
-- **Positioning Logic** → [LAYOUT-ENGINE-EN.md](../specs/LAYOUT-ENGINE-EN.md)
-- **Validation Rules** → [VALIDATION-RULES-EN.md](../specs/VALIDATION-RULES-EN.md)
+- **Data Structure** → [IR-CONTRACT.md](../specs/IR-CONTRACT.md)
+- **Positioning Logic** → [LAYOUT-ENGINE.md](../specs/LAYOUT-ENGINE.md)
+- **Validation Rules** → [VALIDATION-RULES.md](../specs/VALIDATION-RULES.md)
 
 ---
 
@@ -295,13 +295,13 @@ Check [examples/](../examples/) directory for templates. Reference [LLM-PROMPTIN
 1. Enable parser debug mode
 2. Check token output
 3. Compare against [DSL-SYNTAX.md](../docs/DSL-SYNTAX.md) grammar
-4. Review parser tests in `packages/core/tests/parser/`
+4. Review parser tests in `packages/engine/tests/parser/`
 
 ### Check Component Behavior
 1. Find component in [COMPONENTS-REFERENCE.md](../docs/COMPONENTS-REFERENCE.md)
-2. Review renderer implementation in `packages/core/src/renderer/`
+2. Review renderer implementation in `packages/engine/src/renderer/`
 3. Check test cases for usage examples
-4. Validate against IR schema in [IR-CONTRACT-EN.md](../specs/IR-CONTRACT-EN.md)
+4. Validate against IR schema in [IR-CONTRACT.md](../specs/IR-CONTRACT.md)
 
 ### Understand a Complex Feature
 1. Start with [ARCHITECTURE.md](../docs/ARCHITECTURE.md)

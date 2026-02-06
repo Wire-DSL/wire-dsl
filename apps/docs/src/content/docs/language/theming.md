@@ -400,7 +400,7 @@ project "ECommerceStore" {
 
 ## Best Practices
 
-### Do's ✅
+### Do's
 
 ✅ Choose one preset that matches your design vision  
 ✅ Keep theme consistent throughout entire project  
@@ -408,7 +408,7 @@ project "ECommerceStore" {
 ✅ Test different density settings with your content  
 ✅ Consider accessibility when choosing spacing  
 
-### Don'ts ❌
+### Don'ts
 
 ❌ Don't change theme mid-project (use screens instead)  
 ❌ Don't ignore theme values in layouts  

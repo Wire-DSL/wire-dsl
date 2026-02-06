@@ -317,7 +317,7 @@ Or use one of the 23 built-in components:
 
 ## Validation Best Practices
 
-### Do's ✅
+### Do's
 
 ✅ Validate files before rendering  
 ✅ Fix syntax errors first  
@@ -326,7 +326,7 @@ Or use one of the 23 built-in components:
 ✅ Define custom components before use  
 ✅ Use valid theme values  
 
-### Don'ts ❌
+### Don'ts
 
 ❌ Use unquoted string values  
 ❌ Reference undefined components  
@@ -375,7 +375,7 @@ try {
 ## Full Specification
 
 For complete technical specification including all validation rules, see:
-- [specs/VALIDATION-RULES-EN.md](../../specs/VALIDATION-RULES-EN.md) in the repository
+- [specs/VALIDATION-RULES.md](../../specs/VALIDATION-RULES.md) in the repository
 
 ## Next Steps
 
