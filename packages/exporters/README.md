@@ -17,7 +17,13 @@ import { parseWire, generateIR, computeLayout } from '@wire-dsl/engine';
 // Parse and layout your wireframe
 const wireCode = `
   project "MyWireframe" {
-    theme { density: "normal" spacing: "md" radius: "md" stroke: "normal" font: "base" }
+    theme {
+      density: "normal" 
+      spacing: "md" 
+      radius: "md" 
+      stroke: "normal" 
+      font: "base"
+    }
     screen Home {
       layout stack { component Heading text: "Welcome" }
     }
