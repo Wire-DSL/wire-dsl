@@ -24,7 +24,7 @@ const suggestions = getCompletions('but'); // → [button, ...]
 ## What's Included
 
 - **Core Keywords** - project, screen, theme, layout, component, define
-- **23 UI Components** - All built-in components with autocomplete
+- **30+ UI Components** - All built-in components with autocomplete
 - **Autocomplete Logic** - Context-aware suggestions
 - **Syntax Grammar** - For Monaco, VS Code, and TextMate editors
 
