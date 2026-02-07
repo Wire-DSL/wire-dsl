@@ -28,7 +28,7 @@ body:
     id: version
     attributes:
       label: Versions
-      description: Indicate exact version(s). E.g: @wire-dsl/engine@0.4.2, @wire-dsl/exporters@0.4.2
+      description: Indicate exact version(s). E.g @wire-dsl/engine@0.4.2, @wire-dsl/exporters@0.4.2
       placeholder: "@wire-dsl/engine@x.y.z"
     validations:
       required: true
@@ -78,7 +78,14 @@ body:
     attributes:
       label: Minimal reproduction (ideal)
       description: If possible, paste a minimal example (wire code, command, repo, etc.).
-      placeholder: "```wire\n...\n```\nCommand:\n```bash\npnpm ...\n```"
+      placeholder: |
+        ```wire
+        ...
+        ```
+        Command:
+        ```bash
+        pnpm ...
+        ```
     validations:
       required: false
 
@@ -88,7 +95,9 @@ body:
       label: Logs / stacktrace
       description: Paste the complete error (if applicable).
       render: shell
-      placeholder: "Error:\n...\nat ..."
+      placeholder: |
+        Error: ...
+        at ...
     validations:
       required: false
 
