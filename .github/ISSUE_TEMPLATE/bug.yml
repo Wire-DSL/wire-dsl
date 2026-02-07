@@ -78,14 +78,7 @@ body:
     attributes:
       label: Minimal reproduction (ideal)
       description: If possible, paste a minimal example (wire code, command, repo, etc.).
-      placeholder: |
-        ```wire
-        ...
-        ```
-        Command:
-        ```bash
-        pnpm ...
-        ```
+      placeholder: "```wire\n...\n```\nCommand:\n```bash\npnpm ...\n```"
     validations:
       required: false
 
@@ -95,9 +88,7 @@ body:
       label: Logs / stacktrace
       description: Paste the complete error (if applicable).
       render: shell
-      placeholder: |
-        Error: ...
-        at ...
+      placeholder: "Error:\n...\nat ..."
     validations:
       required: false
 
