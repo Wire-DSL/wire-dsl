@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseWireDSL } from '../parser/index';
+import { parseWireDSL, parseWireDSLWithSourceMap } from '../parser/index';
 import { generateIR } from '../ir/index';
 import { calculateLayout } from '../layout/index';
 import { renderToSVG } from './index';
@@ -573,5 +573,131 @@ describe('SVG Renderer', () => {
     expect(svg).toContain('Subscribe to newsletter');
     expect(svg).toContain('Submit');
     expect(svg).toContain('Cancel');
+  });
+});
+
+describe('SVG Renderer - SourceMap Integration (data-node-id)', () => {
+  it('should include data-node-id for components when parsed with SourceMap', () => {
+    const input = `
+      project "Test" {
+        screen Main {
+          layout stack {
+            component Heading text: "Title"
+            component Button text: "Click"
+          }
+        }
+      }
+    `;
+
+    const { ast } = parseWireDSLWithSourceMap(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    // Should include data-node-id attributes for components
+    expect(svg).toMatch(/data-node-id="component-heading-\d+"/);
+    expect(svg).toMatch(/data-node-id="component-button-\d+"/);
+  });
+
+  it('should include data-node-id for different component types', () => {
+    const input = `
+      project "Components" {
+        screen Main {
+          layout stack {
+            component Heading text: "Welcome"
+            component Input placeholder: "Enter name"
+            component Button text: "Submit"
+            component Text content: "Description"
+          }
+        }
+      }
+    `;
+
+    const { ast } = parseWireDSLWithSourceMap(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    // All components should have data-node-id
+    expect(svg).toMatch(/data-node-id="component-heading-\d+"/);
+    expect(svg).toMatch(/data-node-id="component-input-\d+"/);
+    expect(svg).toMatch(/data-node-id="component-button-\d+"/);
+    expect(svg).toMatch(/data-node-id="component-text-\d+"/);
+  });
+
+  it('should have unique data-node-id for identical components', () => {
+    const input = `
+      project "Test" {
+        screen Main {
+          layout stack {
+            component Button text: "First"
+            component Button text: "Second"
+            component Button text: "Third"
+          }
+        }
+      }
+    `;
+
+    const { ast } = parseWireDSLWithSourceMap(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    // Extract all data-node-id values for buttons
+    const buttonIds = svg.match(/data-node-id="component-button-\d+"/g) || [];
+    
+    // Should have 3 button data-node-ids
+    expect(buttonIds.length).toBe(3);
+    
+    // All IDs should be unique
+    const uniqueIds = new Set(buttonIds);
+    expect(uniqueIds.size).toBe(3);
+  });
+
+  it('should not include data-node-id when parsed without SourceMap', () => {
+    const input = `
+      project "Test" {
+        screen Main {
+          layout stack {
+            component Heading text: "Title"
+          }
+        }
+      }
+    `;
+
+    // Use parseWireDSL (without SourceMap)
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    // Should NOT include data-node-id (no SourceMap generated)
+    expect(svg).not.toContain('data-node-id');
+  });
+
+  it('should include data-node-id for nested layouts', () => {
+    const input = `
+      project "Nested" {
+        screen Main {
+          layout stack {
+            layout stack {
+              component Heading text: "Nested Title"
+            }
+            layout stack {
+              component Button text: "Action"
+            }
+          }
+        }
+      }
+    `;
+
+    const { ast } = parseWireDSLWithSourceMap(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    // Components in nested layouts should have data-node-id
+    expect(svg).toMatch(/data-node-id="component-heading-\d+"/);
+    expect(svg).toMatch(/data-node-id="component-button-\d+"/);
   });
 });

@@ -77,6 +77,7 @@ export interface IRStyle {
 
 export interface IRMeta {
   source?: string;
+  nodeId?: string;  // SourceMap nodeId for bidirectional selection
 }
 
 // Zod validation schemas
@@ -99,6 +100,7 @@ const IRStyleSchema = z.object({
 
 const IRMetaSchema = z.object({
   source: z.string().optional(),
+  nodeId: z.string().optional(),
 });
 
 const IRContainerNodeSchema = z.object({
@@ -412,7 +414,9 @@ export class IRGenerator {
       params: this.cleanParams(layout.params),
       children: childRefs,
       style,
-      meta: {},
+      meta: {
+        nodeId: layout._meta?.nodeId,  // Pass SourceMap nodeId from AST
+      },
     };
 
     this.nodes[nodeId] = containerNode;
@@ -442,7 +446,10 @@ export class IRGenerator {
       params: cell.props,
       children: childRefs,
       style: { padding: 'none' }, // Cells have no padding by default - grid gap handles spacing
-      meta: { source: 'cell' },
+      meta: { 
+        source: 'cell',
+        nodeId: cell._meta?.nodeId,  // Pass SourceMap nodeId from AST
+      },
     };
 
     this.nodes[nodeId] = containerNode;
@@ -479,7 +486,9 @@ export class IRGenerator {
       componentType: component.componentType,
       props: component.props,
       style: {},
-      meta: {},
+      meta: {
+        nodeId: component._meta?.nodeId,  // Pass SourceMap nodeId from AST
+      },
     };
 
     this.nodes[nodeId] = componentNode;
