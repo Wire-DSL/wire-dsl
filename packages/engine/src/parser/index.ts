@@ -1,4 +1,6 @@
 import { Lexer, createToken, CstParser, TokenType } from 'chevrotain';
+import { SourceMapBuilder } from '../sourcemap/builder';
+import type { ParseResult, CapturedTokens } from '../sourcemap/types';
 
 /**
  * WireDSL Parser
@@ -320,12 +322,18 @@ export interface AST {
   colors: Record<string, string>;
   definedComponents: ASTDefinedComponent[];
   screens: ASTScreen[];
+  _meta?: {
+    nodeId: string;
+  };
 }
 
 export interface ASTDefinedComponent {
   type: 'definedComponent';
   name: string;
   body: ASTLayout | ASTComponent;
+  _meta?: {
+    nodeId: string;
+  };
 }
 
 export interface ASTScreen {
@@ -333,6 +341,9 @@ export interface ASTScreen {
   name: string;
   params: Record<string, string | number>;
   layout: ASTLayout;
+  _meta?: {
+    nodeId: string;
+  };
 }
 
 export interface ASTLayout {
@@ -340,18 +351,27 @@ export interface ASTLayout {
   layoutType: string;
   params: Record<string, string | number>;
   children: (ASTComponent | ASTLayout | ASTCell)[];
+  _meta?: {
+    nodeId: string;
+  };
 }
 
 export interface ASTCell {
   type: 'cell';
   props: Record<string, string | number>;
   children: (ASTComponent | ASTLayout)[];
+  _meta?: {
+    nodeId: string;
+  };
 }
 
 export interface ASTComponent {
   type: 'component';
   componentType: string;
   props: Record<string, string | number>;
+  _meta?: {
+    nodeId: string;
+  };
 }
 
 // ============================================================================
@@ -362,6 +382,8 @@ const parserInstance = new WireDSLParser();
 const BaseCstVisitor = parserInstance.getBaseCstVisitorConstructor();
 
 class WireDSLVisitor extends BaseCstVisitor {
+  protected sourceMapBuilder?: SourceMapBuilder;
+
   constructor() {
     super();
     this.validateVisitor();
@@ -644,6 +666,355 @@ class WireDSLVisitor extends BaseCstVisitor {
 }
 
 // ============================================================================
+// VISITOR WITH SOURCEMAP SUPPORT
+// ============================================================================
+
+class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
+  constructor(sourceMapBuilder: SourceMapBuilder) {
+    super();
+    this.sourceMapBuilder = sourceMapBuilder;
+  }
+
+  project(ctx: any): AST {
+    const projectName = ctx.projectName[0].image.slice(1, -1); // Remove quotes
+    const theme: Record<string, string> = {};
+    const mocks: Record<string, string> = {};
+    const colors: Record<string, string> = {};
+    const definedComponents: ASTDefinedComponent[] = [];
+    const screens: ASTScreen[] = [];
+
+    // Capture tokens for project node
+    const tokens: CapturedTokens = {
+      keyword: ctx.Project[0],
+      name: ctx.projectName[0],
+      body: ctx.RCurly[0],
+    };
+
+    // Process theme, mocks, colors (same as parent)
+    if (ctx.themeDecl && ctx.themeDecl.length > 0) {
+      const themeBlock = this.visit(ctx.themeDecl[0]);
+      Object.assign(theme, themeBlock);
+    }
+
+    if (ctx.mocksDecl && ctx.mocksDecl.length > 0) {
+      const mocksBlock = this.visit(ctx.mocksDecl[0]);
+      Object.assign(mocks, mocksBlock);
+    }
+
+    if (ctx.colorsDecl && ctx.colorsDecl.length > 0) {
+      const colorsBlock = this.visit(ctx.colorsDecl[0]);
+      Object.assign(colors, colorsBlock);
+    }
+
+    const ast: AST = {
+      type: 'project',
+      name: projectName,
+      theme,
+      mocks,
+      colors,
+      definedComponents: [],  // Will be filled after push
+      screens: [],  // Will be filled after push
+    };
+
+    // Add to SourceMap BEFORE visiting children
+    if (this.sourceMapBuilder) {
+      const nodeId = this.sourceMapBuilder.addNode(
+        'project',
+        tokens,
+        { name: projectName }
+      );
+      // Inject nodeId into AST
+      ast._meta = { nodeId };
+      // Project is root, so we push it as parent for screens/components
+      this.sourceMapBuilder.pushParent(nodeId);
+    }
+
+    // Now visit defined components and screens (children will have correct parent)
+    if (ctx.definedComponent) {
+      ctx.definedComponent.forEach((comp: any) => {
+        definedComponents.push(this.visit(comp));
+      });
+    }
+
+    if (ctx.screen) {
+      ctx.screen.forEach((screen: any) => {
+        screens.push(this.visit(screen));
+      });
+    }
+
+    ast.definedComponents = definedComponents;
+    ast.screens = screens;
+
+    // Don't pop parent for project (it's root)
+
+    return ast;
+  }
+
+  screen(ctx: any): ASTScreen {
+    // Build AST manually (same as parent, but with SourceMap tracking)
+    const params = ctx.paramList ? this.visit(ctx.paramList[0]) : {};
+    const screenName = ctx.screenName[0].image;
+    
+    // Capture tokens
+    const tokens: CapturedTokens = {
+      keyword: ctx.Screen[0],
+      name: ctx.screenName[0],
+      paramList: ctx.paramList?.[0],
+      body: ctx.RCurly[0],
+    };
+
+    const ast: ASTScreen = {
+      type: 'screen',
+      name: screenName,
+      params,
+      layout: {} as any,  // Will be filled after push
+    };
+
+    // Add to SourceMap BEFORE visiting children
+    if (this.sourceMapBuilder) {
+      const nodeId = this.sourceMapBuilder.addNode(
+        'screen',
+        tokens,
+        { name: screenName }
+      );
+      // Inject nodeId into AST
+      ast._meta = { nodeId };
+      // Push as parent for layout/components inside
+      this.sourceMapBuilder.pushParent(nodeId);
+    }
+    
+    // Now visit layout (children will have correct parent)
+    ast.layout = this.visit(ctx.layout[0]);
+    
+    // Pop parent after processing
+    if (this.sourceMapBuilder) {
+      this.sourceMapBuilder.popParent();
+    }
+
+    return ast;
+  }
+
+  layout(ctx: any): ASTLayout {
+    // Build AST manually
+    const layoutType = ctx.layoutType[0].image;
+    const params: Record<string, string | number> = {};
+
+    if (ctx.paramList) {
+      const paramResult = this.visit(ctx.paramList);
+      Object.assign(params, paramResult);
+    }
+
+    // Capture tokens
+    const tokens: CapturedTokens = {
+      keyword: ctx.Layout[0],
+      name: ctx.layoutType[0],
+      paramList: ctx.paramList?.[0],
+      body: ctx.RCurly[0],
+    };
+
+    const ast: ASTLayout = {
+      type: 'layout',
+      layoutType,
+      params,
+      children: [],  // Will be filled after push
+    };
+
+    // Add to SourceMap BEFORE visiting children
+    if (this.sourceMapBuilder) {
+      const nodeId = this.sourceMapBuilder.addNode(
+        'layout',
+        tokens,
+        { layoutType }
+      );
+      // Inject nodeId into AST
+      ast._meta = { nodeId };
+      // Push as parent for children
+      this.sourceMapBuilder.pushParent(nodeId);
+    }
+
+    // Process children in order (same logic as parent)
+    const childNodes: Array<{ type: string; node: any; index: number }> = [];
+
+    if (ctx.component) {
+      ctx.component.forEach((comp: any) => {
+        const startToken = comp.children?.Component?.[0] || comp.children?.componentType?.[0];
+        childNodes.push({ type: 'component', node: comp, index: startToken.startOffset });
+      });
+    }
+    if (ctx.layout) {
+      ctx.layout.forEach((layout: any) => {
+        const startToken = layout.children?.Layout?.[0] || layout.children?.layoutType?.[0];
+        childNodes.push({ type: 'layout', node: layout, index: startToken.startOffset });
+      });
+    }
+    if (ctx.cell) {
+      ctx.cell.forEach((cell: any) => {
+        const startToken = cell.children?.Cell?.[0];
+        childNodes.push({ type: 'cell', node: cell, index: startToken.startOffset });
+      });
+    }
+
+    // Sort by position
+    childNodes.sort((a, b) => a.index - b.index);
+
+    // Visit children (will have correct parent from stack)
+    childNodes.forEach((item) => {
+      ast.children.push(this.visit(item.node));
+    });
+
+    // Pop parent
+    if (this.sourceMapBuilder) {
+      this.sourceMapBuilder.popParent();
+    }
+
+    return ast;
+  }
+
+  cell(ctx: any): ASTCell {
+    // Build AST manually
+    const props: Record<string, string | number> = {};
+
+    if (ctx.property) {
+      ctx.property.forEach((prop: any) => {
+        const result = this.visit(prop);
+        props[result.key] = result.value;
+      });
+    }
+
+    // Capture tokens
+    const tokens: CapturedTokens = {
+      keyword: ctx.Cell[0],
+      properties: ctx.property || [],
+      body: ctx.RCurly[0],
+    };
+
+    const ast: ASTCell = {
+      type: 'cell',
+      props,
+      children: [],  // Will be filled after push
+    };
+
+    // Add to SourceMap BEFORE visiting children
+    if (this.sourceMapBuilder) {
+      const nodeId = this.sourceMapBuilder.addNode(
+        'cell',
+        tokens
+      );
+      // Inject nodeId into AST
+      ast._meta = { nodeId };
+      // Push as parent for children
+      this.sourceMapBuilder.pushParent(nodeId);
+    }
+
+    // Process children in order
+    const childNodes: Array<{ type: string; node: any; index: number }> = [];
+
+    if (ctx.component) {
+      ctx.component.forEach((comp: any) => {
+        const startToken = comp.children?.Component?.[0] || comp.children?.componentType?.[0];
+        childNodes.push({ type: 'component', node: comp, index: startToken.startOffset });
+      });
+    }
+    if (ctx.layout) {
+      ctx.layout.forEach((layout: any) => {
+        const startToken = layout.children?.Layout?.[0] || layout.children?.layoutType?.[0];
+        childNodes.push({ type: 'layout', node: layout, index: startToken.startOffset });
+      });
+    }
+
+    childNodes.sort((a, b) => a.index - b.index);
+
+    childNodes.forEach((item) => {
+      ast.children.push(this.visit(item.node));
+    });
+
+    // Pop parent
+    if (this.sourceMapBuilder) {
+      this.sourceMapBuilder.popParent();
+    }
+
+    return ast;
+  }
+
+  component(ctx: any): ASTComponent {
+    // Capture tokens
+    const tokens: CapturedTokens = {
+      keyword: ctx.Component[0],
+      name: ctx.componentType[0],
+      properties: ctx.property || [],
+    };
+
+    // Call parent to get AST
+    const ast = super.component(ctx);
+
+    // Add to SourceMap
+    if (this.sourceMapBuilder) {
+      const nodeId = this.sourceMapBuilder.addNode(
+        'component',
+        tokens,
+        { componentType: ast.componentType }
+      );
+      // Inject nodeId into AST
+      ast._meta = { nodeId };
+    }
+
+    return ast;
+  }
+
+  definedComponent(ctx: any): ASTDefinedComponent {
+    // Build AST manually
+    const name = ctx.componentName[0].image.slice(1, -1); // Remove quotes
+
+    // Capture tokens
+    const tokens: CapturedTokens = {
+      keyword: ctx.Define[0],
+      name: ctx.componentName[0],
+      body: ctx.RCurly[0],
+    };
+
+    // Body can be either a layout or a component
+    let body: ASTLayout | ASTComponent;
+
+    const ast: ASTDefinedComponent = {
+      type: 'definedComponent',
+      name,
+      body: {} as any,  // Will be filled after push
+    };
+
+    // Add to SourceMap BEFORE visiting body
+    if (this.sourceMapBuilder) {
+      const nodeId = this.sourceMapBuilder.addNode(
+        'component-definition',
+        tokens,
+        { name }
+      );
+      // Inject nodeId into AST
+      ast._meta = { nodeId };
+      // Push as parent for body
+      this.sourceMapBuilder.pushParent(nodeId);
+    }
+
+    // Visit body
+    if (ctx.layout && ctx.layout.length > 0) {
+      body = this.visit(ctx.layout[0]);
+    } else if (ctx.component && ctx.component.length > 0) {
+      body = this.visit(ctx.component[0]);
+    } else {
+      throw new Error(`Defined component "${name}" must contain either a layout or component`);
+    }
+
+    ast.body = body;
+
+    // Pop parent
+    if (this.sourceMapBuilder) {
+      this.sourceMapBuilder.popParent();
+    }
+
+    return ast;
+  }
+}
+
+// ============================================================================
 // PUBLIC API
 // ============================================================================
 
@@ -672,6 +1043,72 @@ export function parseWireDSL(input: string): AST {
   validateComponentDefinitionCycles(ast);
   
   return ast;
+}
+
+/**
+ * Parse Wire DSL with SourceMap generation
+ * 
+ * Returns both AST and SourceMap for bidirectional code-canvas mapping
+ * Useful for:
+ * - Visual editors (Wire Studio)
+ * - Code navigation (click canvas → jump to code)
+ * - Error reporting with precise locations
+ * - Component inspection and manipulation
+ * 
+ * @param input - Wire DSL source code
+ * @param filePath - Optional file path (default: "<input>") - used for stable nodeIds
+ * @returns ParseResult with AST, SourceMap, and errors
+ * 
+ * @example
+ * ```typescript
+ * const { ast, sourceMap } = parseWireDSLWithSourceMap(code, 'screens/Main.wire');
+ * 
+ * // Find node by position
+ * const node = sourceMap.find(e => 
+ *   e.range.start.line === 5 && e.range.start.column === 4
+ * );
+ * 
+ * // Access AST node
+ * console.log(node.astNode.type);  // 'component'
+ * ```
+ */
+export function parseWireDSLWithSourceMap(
+  input: string, 
+  filePath: string = '<input>'
+): ParseResult {
+  // Tokenize
+  const lexResult = WireDSLLexer.tokenize(input);
+
+  if (lexResult.errors.length > 0) {
+    throw new Error(`Lexer errors:\n${lexResult.errors.map((e) => e.message).join('\n')}`);
+  }
+
+  // Parse
+  parserInstance.input = lexResult.tokens;
+  const cst = parserInstance.project();
+
+  if (parserInstance.errors.length > 0) {
+    throw new Error(`Parser errors:\n${parserInstance.errors.map((e) => e.message).join('\n')}`);
+  }
+
+  // Create SourceMap builder
+  const sourceMapBuilder = new SourceMapBuilder(filePath);
+  const visitorWithSourceMap = new WireDSLVisitorWithSourceMap(sourceMapBuilder);
+
+  // Convert CST to AST with SourceMap
+  const ast = visitorWithSourceMap.visit(cst);
+  
+  // Validate no circular references in component definitions
+  validateComponentDefinitionCycles(ast);
+
+  // Build SourceMap
+  const sourceMap = sourceMapBuilder.build();
+
+  return {
+    ast,
+    sourceMap,
+    errors: [],  // No errors if we got here (errors throw exceptions)
+  };
 }
 
 /**

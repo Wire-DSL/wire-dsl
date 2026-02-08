@@ -7,5 +7,8 @@ export * from './ir/index';
 export * from './layout/index';
 export * from './renderer/index';
 
+// SourceMap module (experimental)
+export * from './sourcemap/index';
+
 // Version
 export const version = '0.0.1';
