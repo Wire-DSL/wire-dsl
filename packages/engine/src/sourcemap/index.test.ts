@@ -414,3 +414,152 @@ describe('SourceMap - Complex Structures', () => {
     expect(nodeIds[0]).not.toBe(nodeIds[2]);
   });
 });
+
+describe('SourceMap - PropertySourceMap', () => {
+  it('captures property ranges for component properties', () => {
+    const code = `
+      project "Test" {
+        screen Main {
+          layout stack {
+            component Button text: "Click" color: "blue"
+          }
+        }
+      }
+    `;
+
+    const { sourceMap } = parseWireDSLWithSourceMap(code);
+
+    const button = sourceMap.find(e => e.componentType === 'Button');
+    expect(button).toBeDefined();
+    expect(button?.properties).toBeDefined();
+    
+    // Should have captured both properties
+    expect(button?.properties?.text).toBeDefined();
+    expect(button?.properties?.color).toBeDefined();
+    
+    // Verify property values
+    expect(button?.properties?.text.value).toBe('Click');
+    expect(button?.properties?.color.value).toBe('blue');
+    
+    // Verify property names
+    expect(button?.properties?.text.name).toBe('text');
+    expect(button?.properties?.color.name).toBe('color');
+  });
+
+  it('captures property ranges with correct positions', () => {
+    const code = `project "Test" { screen Main { layout stack { component Button text: "Hello" } } }`;
+
+    const { sourceMap } = parseWireDSLWithSourceMap(code);
+
+    const button = sourceMap.find(e => e.componentType === 'Button');
+    expect(button?.properties?.text).toBeDefined();
+    
+    const textProp = button!.properties!.text;
+    
+    // Should have ranges for name, value, and full property
+    expect(textProp.nameRange).toBeDefined();
+    expect(textProp.valueRange).toBeDefined();
+    expect(textProp.range).toBeDefined();
+    
+    // Full range should encompass name and value
+    expect(textProp.range.start.line).toBeLessThanOrEqual(textProp.nameRange.start.line);
+    expect(textProp.range.end.line).toBeGreaterThanOrEqual(textProp.valueRange.end.line);
+  });
+
+  it('captures properties in layout params', () => {
+    const code = `
+      project "Test" {
+        screen Main {
+          layout stack(direction: "vertical", spacing: 10) {
+            component Text
+          }
+        }
+      }
+    `;
+
+    const { sourceMap } = parseWireDSLWithSourceMap(code);
+
+    const layout = sourceMap.find(e => e.layoutType === 'stack');
+    expect(layout).toBeDefined();
+    expect(layout?.properties).toBeDefined();
+    
+    // Should have captured layout params as properties
+    expect(layout?.properties?.direction).toBeDefined();
+    expect(layout?.properties?.spacing).toBeDefined();
+    
+    // Verify values
+    expect(layout?.properties?.direction.value).toBe('vertical');
+    expect(layout?.properties?.spacing.value).toBe(10);
+  });
+
+  it('captures properties in cell props', () => {
+    const code = `
+      project "Test" {
+        screen Main {
+          layout grid {
+            cell span: 2 {
+              component Text
+            }
+          }
+        }
+      }
+    `;
+
+    const { sourceMap } = parseWireDSLWithSourceMap(code);
+
+    const cell = sourceMap.find(e => e.type === 'cell');
+    expect(cell).toBeDefined();
+    expect(cell?.properties).toBeDefined();
+    
+    // Should have captured cell prop
+    expect(cell?.properties?.span).toBeDefined();
+    expect(cell?.properties?.span.value).toBe(2);
+  });
+
+  it('handles components with no properties', () => {
+    const code = `
+      project "Test" {
+        screen Main {
+          layout stack {
+            component Icon
+          }
+        }
+      }
+    `;
+
+    const { sourceMap } = parseWireDSLWithSourceMap(code);
+
+    const icon = sourceMap.find(e => e.componentType === 'Icon');
+    expect(icon).toBeDefined();
+    
+    // Should either be undefined or empty object
+    if (icon?.properties) {
+      expect(Object.keys(icon.properties).length).toBe(0);
+    }
+  });
+
+  it('handles multiple properties with correct order', () => {
+    const code = `
+      project "Test" {
+        screen Main {
+          layout stack {
+            component Button text: "Submit" color: "blue" size: "large" disabled: "false"
+          }
+        }
+      }
+    `;
+
+    const { sourceMap } = parseWireDSLWithSourceMap(code);
+
+    const button = sourceMap.find(e => e.componentType === 'Button');
+    expect(button?.properties).toBeDefined();
+    
+    // All 4 properties should be captured
+    const propNames = Object.keys(button!.properties!);
+    expect(propNames).toContain('text');
+    expect(propNames).toContain('color');
+    expect(propNames).toContain('size');
+    expect(propNames).toContain('disabled');
+    expect(propNames.length).toBe(4);
+  });
+});

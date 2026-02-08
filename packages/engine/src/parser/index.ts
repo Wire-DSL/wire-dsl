@@ -828,6 +828,23 @@ class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
       );
       // Inject nodeId into AST
       ast._meta = { nodeId };
+
+      // Add properties from paramList to SourceMap
+      if (ctx.paramList && ctx.paramList[0]?.children?.property) {
+        ctx.paramList[0].children.property.forEach((propCtx: any) => {
+          const propResult = this.visit(propCtx);
+          this.sourceMapBuilder!.addProperty(
+            nodeId,
+            propResult.key,
+            propResult.value,
+            {
+              name: propCtx.children.propKey[0],
+              value: propCtx.children.propValue[0],
+            }
+          );
+        });
+      }
+
       // Push as parent for children
       this.sourceMapBuilder.pushParent(nodeId);
     }
@@ -902,6 +919,23 @@ class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
       );
       // Inject nodeId into AST
       ast._meta = { nodeId };
+
+      // Add properties to SourceMap
+      if (ctx.property) {
+        ctx.property.forEach((propCtx: any) => {
+          const propResult = this.visit(propCtx);
+          this.sourceMapBuilder!.addProperty(
+            nodeId,
+            propResult.key,
+            propResult.value,
+            {
+              name: propCtx.children.propKey[0],
+              value: propCtx.children.propValue[0],
+            }
+          );
+        });
+      }
+
       // Push as parent for children
       this.sourceMapBuilder.pushParent(nodeId);
     }
@@ -956,6 +990,22 @@ class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
       );
       // Inject nodeId into AST
       ast._meta = { nodeId };
+
+      // Add properties to SourceMap
+      if (ctx.property) {
+        ctx.property.forEach((propCtx: any) => {
+          const propResult = this.visit(propCtx);
+          this.sourceMapBuilder!.addProperty(
+            nodeId,
+            propResult.key,
+            propResult.value,
+            {
+              name: propCtx.children.propKey[0],
+              value: propCtx.children.propValue[0],
+            }
+          );
+        });
+      }
     }
 
     return ast;

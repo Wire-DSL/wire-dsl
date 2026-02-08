@@ -25,6 +25,18 @@ export interface CodeRange {
 }
 
 /**
+ * SourceMap for a single property
+ * Captures ranges for precise property editing
+ */
+export interface PropertySourceMap {
+  name: string;              // Property name (e.g., "text", "direction", "size")
+  value: any;                // Parsed value
+  range: CodeRange;          // Full range "name: value"
+  nameRange: CodeRange;      // Range of just the name
+  valueRange: CodeRange;     // Range of just the value (for precise replacement)
+}
+
+/**
  * Types of nodes in Wire DSL
  */
 export type SourceMapNodeType = 
@@ -64,17 +76,6 @@ export interface SourceMapEntry {
   bodyRange?: CodeRange;             // Only the body { ... }
   properties?: Record<string, PropertySourceMap>;  // Map of properties
   insertionPoint?: InsertionPoint;   // Where to insert new children (for editing)
-}
-
-/**
- * SourceMap for an individual property (FASE 3)
- */
-export interface PropertySourceMap {
-  name: string;                      // Property name (e.g., "direction", "text")
-  value: string | number;            // Parsed value
-  range: CodeRange;                  // Full range "name: value"
-  nameRange: CodeRange;              // Only the name part
-  valueRange: CodeRange;             // Only the value part (for precise replacement)
 }
 
 /**

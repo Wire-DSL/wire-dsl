@@ -28,6 +28,7 @@ import type {
   CodeRange,
   Position,
   CapturedTokens,
+  PropertySourceMap,
 } from './types';
 
 /**
@@ -147,6 +148,89 @@ export class SourceMapBuilder {
         // Fallback
         return `${type}-0`;
     }
+  }
+
+  /**
+   * Add a property to an existing node in the SourceMap
+   * Captures precise ranges for property name and value for surgical editing
+   * 
+   * @param nodeId - ID of the node that owns this property
+   * @param propertyName - Name of the property (e.g., "text", "direction")
+   * @param propertyValue - Parsed value of the property
+   * @param tokens - Captured tokens for the property
+   * @returns The PropertySourceMap entry created
+   */
+  addProperty(
+    nodeId: string,
+    propertyName: string,
+    propertyValue: any,
+    tokens: {
+      name?: any;           // Token for property name
+      value?: any;          // Token for property value
+      separator?: any;      // Token for ':' separator
+      full?: any;           // Full property token (if single token)
+    }
+  ): PropertySourceMap {
+    // Find the node entry
+    const entry = this.entries.find(e => e.nodeId === nodeId);
+    if (!entry) {
+      throw new Error(`Cannot add property to non-existent node: ${nodeId}`);
+    }
+
+    // Initialize properties map if not present
+    if (!entry.properties) {
+      entry.properties = {};
+    }
+
+    // Calculate ranges for name, value, and full property
+    let nameRange: CodeRange;
+    let valueRange: CodeRange;
+    let fullRange: CodeRange;
+
+    if (tokens.name && tokens.value) {
+      // Separate name and value tokens
+      nameRange = {
+        start: this.getTokenStart(tokens.name),
+        end: this.getTokenEnd(tokens.name),
+      };
+      valueRange = {
+        start: this.getTokenStart(tokens.value),
+        end: this.getTokenEnd(tokens.value),
+      };
+      
+      // Full range from name start to value end
+      fullRange = {
+        start: nameRange.start,
+        end: valueRange.end,
+      };
+    } else if (tokens.full) {
+      // Single token for the whole property (e.g., "text: 'Hello'")
+      fullRange = {
+        start: this.getTokenStart(tokens.full),
+        end: this.getTokenEnd(tokens.full),
+      };
+      
+      // Estimate name and value ranges (parser should provide separate tokens ideally)
+      // For now, use full range for both (will be refined when parser provides detail)
+      nameRange = fullRange;
+      valueRange = fullRange;
+    } else {
+      throw new Error(`Invalid tokens for property ${propertyName}: need either name+value or full`);
+    }
+
+    // Create PropertySourceMap
+    const propertySourceMap: PropertySourceMap = {
+      name: propertyName,
+      value: propertyValue,
+      range: fullRange,
+      nameRange,
+      valueRange,
+    };
+
+    // Add to entry
+    entry.properties[propertyName] = propertySourceMap;
+
+    return propertySourceMap;
   }
 
   /**
