@@ -29,46 +29,49 @@ Complete system architecture and design documentation for Wire-DSL.
                           │
                   Input: .wire files
                           │
-            ┌─────────────▼─────────────────────────────────────┐
-            │     @wire-dsl/core (Engine)                      │
-            ├──────────────────────────────────────────────────┤
-            │                                                   │
-            │  ┌──────────────────────────────────────────┐    │
-            │  │ 1. PARSER (Chevrotain)                  │    │
-            │  │   Input:  .wire (text)                  │    │
-            │  │   Output: AST (tokens)                  │    │
-            │  └──────────────┬───────────────────────────┘    │
-            │                 │                                 │
-            │  ┌──────────────▼───────────────────────────┐    │
-            │  │ 2. IR GENERATOR                         │    │
-            │  │   Input:  AST                           │    │
-            │  │   Output: IR Contract (JSON)            │    │
-            │  │   - Validates schema with Zod           │    │
-            │  └──────────────┬───────────────────────────┘    │
-            │                 │                                 │
-            │  ┌──────────────▼───────────────────────────┐    │
-            │  │ 3. LAYOUT ENGINE                        │    │
-            │  │   Input:  IR                            │    │
-            │  │   Output: Positioned components         │    │
-            │  │   - CSS Grid resolver                   │    │
-            │  │   - Calculates x, y, width, height      │    │
-            │  └──────────────┬───────────────────────────┘    │
-            │                 │                                 │
-            │  ┌──────────────▼───────────────────────────┐    │
-            │  │ 4. SVG RENDERER                         │    │
-            │  │   Input:  Layout + IR                   │    │
-            │  │   Output: SVG (DOM-independent)         │    │
-            │  │   - Accessible, optimized               │    │
-            │  │   - Exportable, scalable                │    │
-            │  └──────────────┬───────────────────────────┘    │
-            │                 │                                 │
-            └─────────────────┼──────────────────────────────────┘
+            ┌─────────────▼──────────────────────────────────┐
+            │     @wire-dsl/engine                           │
+            ├────────────────────────────────────────────────┤
+            │                                                │
+            │  ┌──────────────────────────────────────────┐  │
+            │  │ 1. PARSER (Chevrotain)                   │  │
+            │  │   Input:  .wire (text)                   │  │
+            │  │   Output: AST (tokens) + SourceMap       │  │
+            │  │   - SourceMap tracks code positions      │  │
+            │  │   - Semantic stable IDs                  │  │
+            │  └──────────────┬───────────────────────────┘  │
+            │                 │                              │
+            │  ┌──────────────▼───────────────────────────┐  │
+            │  │ 2. IR GENERATOR                          │  │
+            │  │   Input:  AST                            │  │
+            │  │   Output: IR Contract (JSON)             │  │
+            │  │   - Validates schema with Zod            │  │
+            │  └──────────────┬───────────────────────────┘  │
+            │                 │                              │
+            │  ┌──────────────▼───────────────────────────┐  │
+            │  │ 3. LAYOUT ENGINE                         │  │
+            │  │   Input:  IR                             │  │
+            │  │   Output: Positioned components          │  │
+            │  │   - CSS Grid resolver                    │  │
+            │  │   - Calculates x, y, width, height       │  │
+            │  └──────────────┬───────────────────────────┘  │
+            │                 │                              │
+            │  ┌──────────────▼───────────────────────────┐  │
+            │  │ 4. SVG RENDERER                          │  │
+            │  │   Input:  Layout + IR                    │  │
+            │  │   Output: SVG (DOM-independent)          │  │
+            │  │   - Accessible, optimized                │  │
+            │  │   - Exportable, scalable                 │  │
+            │  │   - data-node-id attributes (SourceMap)  │  │
+            │  └──────────────┬───────────────────────────┘  │
+            │                 │                              │
+            └─────────────────┼──────────────────────────────┘
                               │
                     Output: SVG / IR / AST
                               │
             ┌─────────────────┴───────────────────────────────┐
             │                                                 │
-    ┌───────▼──────────┐                          ┌──────────▼────┐
+    ┌───────▼──────────┐                          ┌───────────▼───┐
     │  Preview/Export  │                          │ Further Uses  │
     │  - SVG file      │                          │ - Figma       │
     │  - PNG file      │                          │ - Code gen    │
@@ -204,19 +207,62 @@ Export IR/rendered output to various formats:
 
 ---
 
+### Layer H — SourceMap System
+
+**Purpose**: Enable bidirectional code↔canvas selection
+
+**Components**:
+- **SourceMapBuilder** - Tracks nodes during parsing
+- **PropertySourceMap** - Property-level precision (nameRange, valueRange)
+- **SourceMapResolver** - Query API for bidirectional selection
+- **SVG Integration** - `data-node-id` attributes in rendered output
+
+**Features**:
+- Click in code editor → Highlight element in canvas
+- Click on canvas element → Jump to code definition  
+- Property-level selection and editing
+- Stable, semantic node IDs (`component-button-0`, `layout-stack-1`)
+- O(1) lookup by ID, O(n) lookup by position
+
+**Use Cases**:
+- Interactive web editor (Wire Studio)
+- VS Code extension
+- Developer tools and debugging
+- Code navigation and refactoring
+
+See [SourceMap Guide](./SOURCEMAP-GUIDE.md) for complete documentation.
+
+---
+
 ## Technical Architecture (Packages)
 
-### `@wire-dsl/core` (Engine)
+### `@wire-dsl/engine`
 
 **Responsibility**: Domain types and business logic
 
 Components:
 - **Parser** (Chevrotain) - Tokenization and parsing
+- **SourceMap Builder** - Code↔canvas mapping during parsing
 - **IR Generator** - AST → IR transformation with Zod validation
 - **Layout Engine** - Position and size calculation
-- **SVG Renderer** - Render tree to SVG
+- **SVG Renderer** - Render tree to SVG with `data-node-id` attributes
+- **SourceMap Resolver** - Query API for bidirectional selection
 - **IR types** - TypeScript interfaces for IR schema
 - **Validations** - Semantic and structural validation
+
+**Key APIs**:
+```typescript
+// Standard parsing
+const { ast } = parseWireDSL(code);
+
+// Parsing with SourceMap
+const { ast, sourceMap } = parseWireDSLWithSourceMap(code);
+const resolver = new SourceMapResolver(sourceMap);
+
+// Bidirectional selection
+const node = resolver.getNodeByPosition(line, col);  // Code → Canvas
+const node = resolver.getNodeById('component-button-0'); // Canvas → Code
+```
 
 ---
 
@@ -295,20 +341,21 @@ SVG File       React/Vue Code
 
 ```
 @wire-dsl/web (React App)
-    ├─ @wire-dsl/core
+    ├─ @wire-dsl/engine
     ├─ monaco-editor
     ├─ react 18
     ├─ zustand
     └─ tailwindcss
 
 @wire-dsl/cli (CLI Tool)
-    ├─ @wire-dsl/core
+    ├─ @wire-dsl/engine
+    ├─ @wire-dsl/exporters
     ├─ commander
     ├─ chalk
     ├─ ora
     └─ sharp
 
-@wire-dsl/core (Engine)
+@wire-dsl/engine (Engine)
     ├─ chevrotain (parser)
     └─ zod (validation)
 
