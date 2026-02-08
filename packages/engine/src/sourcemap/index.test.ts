@@ -1,39 +1,57 @@
 import { describe, it, expect } from 'vitest';
 import { parseWireDSL, parseWireDSLWithSourceMap } from '../parser/index';
-import { generateStableNodeId, isValidNodeId, getTypeFromNodeId } from './hash';
 
-describe('SourceMap - Hash Functions', () => {
-  it('generates stable nodeIds for same input', () => {
-    const nodeId1 = generateStableNodeId('component', 'test.wire', 5, 4, 'Icon');
-    const nodeId2 = generateStableNodeId('component', 'test.wire', 5, 4, 'Icon');
+describe('SourceMap - Semantic IDs', () => {
+  it('generates semantic IDs for each node type', () => {
+    const code = `
+      project "Test" {
+        screen Main {
+          layout stack {
+            component Button text: "A"
+            component Input text: "B"
+            component Button text: "C"
+          }
+        }
+      }
+    `;
+
+    const { sourceMap } = parseWireDSLWithSourceMap(code);
+
+    // Verify semantic IDs
+    expect(sourceMap.find(e => e.type === 'project')?.nodeId).toBe('project');
+    expect(sourceMap.find(e => e.type === 'screen')?.nodeId).toBe('screen-0');
+    expect(sourceMap.find(e => e.type === 'layout')?.nodeId).toBe('layout-stack-0');
     
-    expect(nodeId1).toBe(nodeId2);
+    const components = sourceMap.filter(e => e.type === 'component');
+    expect(components[0].nodeId).toBe('component-button-0');
+    expect(components[1].nodeId).toBe('component-input-0');
+    expect(components[2].nodeId).toBe('component-button-1');  // Second button
   });
 
-  it('generates different nodeIds for different positions', () => {
-    const nodeId1 = generateStableNodeId('component', 'test.wire', 5, 4);
-    const nodeId2 = generateStableNodeId('component', 'test.wire', 6, 4);
+  it('generates different IDs for identical components', () => {
+    const code = `
+      project "Test" {
+        screen Main {
+          layout stack {
+            component Button text: "Click"
+            component Button text: "Click"
+            component Button text: "Click"
+          }
+        }
+      }
+    `;
+
+    const { sourceMap } = parseWireDSLWithSourceMap(code);
+
+    const buttons = sourceMap.filter(e => e.type === 'component');
+    expect(buttons.length).toBe(3);
+    expect(buttons[0].nodeId).toBe('component-button-0');
+    expect(buttons[1].nodeId).toBe('component-button-1');
+    expect(buttons[2].nodeId).toBe('component-button-2');
     
-    expect(nodeId1).not.toBe(nodeId2);
-  });
-
-  it('generates different nodeIds for different files', () => {
-    const nodeId1 = generateStableNodeId('component', 'a.wire', 5, 4);
-    const nodeId2 = generateStableNodeId('component', 'b.wire', 5, 4);
-    
-    expect(nodeId1).not.toBe(nodeId2);
-  });
-
-  it('validates node ID format', () => {
-    const validId = generateStableNodeId('component', 'test.wire', 1, 0);
-    expect(isValidNodeId(validId)).toBe(true);
-    expect(isValidNodeId('invalid-id')).toBe(false);
-    expect(isValidNodeId('node-123')).toBe(false);
-  });
-
-  it('extracts type from node ID', () => {
-    const nodeId = generateStableNodeId('component', 'test.wire', 1, 0);
-    expect(getTypeFromNodeId(nodeId)).toBe('component');
+    // All IDs should be unique
+    const uniqueIds = new Set(buttons.map(b => b.nodeId));
+    expect(uniqueIds.size).toBe(3);
   });
 });
 
@@ -364,5 +382,35 @@ describe('SourceMap - Complex Structures', () => {
     const { sourceMap } = parseWireDSLWithSourceMap(code, 'screens/Main.wire');
 
     expect(sourceMap[0].filePath).toBe('screens/Main.wire');
+  });
+
+  it('generates unique nodeIds for identical components', () => {
+    // Caso del usuario: componentes idénticos deben tener IDs únicos
+    const code = `
+      project "Test" {
+        screen Main {
+          layout stack {
+            component Button text: "Click"
+            component Button text: "Click"
+            component Button text: "Click"
+          }
+        }
+      }
+    `;
+
+    const { sourceMap } = parseWireDSLWithSourceMap(code);
+
+    const buttons = sourceMap.filter(e => e.type === 'component');
+    expect(buttons.length).toBe(3);
+
+    // Verificar que todos los nodeIds son únicos
+    const nodeIds = buttons.map(b => b.nodeId);
+    const uniqueIds = new Set(nodeIds);
+    expect(uniqueIds.size).toBe(3);
+
+    // Verificar que ningún ID es duplicado
+    expect(nodeIds[0]).not.toBe(nodeIds[1]);
+    expect(nodeIds[1]).not.toBe(nodeIds[2]);
+    expect(nodeIds[0]).not.toBe(nodeIds[2]);
   });
 });

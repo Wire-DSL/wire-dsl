@@ -3,6 +3,20 @@
  * 
  * Browser-safe implementation (no crypto/node dependencies)
  * Generates stable IDs that persist across parses if code hasn't changed
+ * 
+ * **Uniqueness Strategy:**
+ * Includes `indexInParent` in the hash to ensure identical components
+ * in the same parent get unique IDs. This prevents nodeId collisions for:
+ * 
+ * ```wire
+ * layout stack {
+ *   component Button text: "Click"  // index 0
+ *   component Button text: "Click"  // index 1
+ *   component Button text: "Click"  // index 2
+ * }
+ * ```
+ * 
+ * Each button will have a different nodeId despite being identical.
  */
 
 import type { SourceMapNodeType } from './types';
@@ -28,17 +42,19 @@ function simpleHash(str: string): number {
  * - File path (distinguishes nodes across files)
  * - Line and column (unique position in file)
  * - Node type (component, layout, screen, etc.)
+ * - Index in parent array (distinguishes identical siblings)
  * - Optional name (for named nodes like screens, defined components)
  * 
  * Examples:
- * - "node-k7m2p9-component" (Icon component at Main.wire:5:4)
- * - "node-abc123-screen"    (Main screen at Main.wire:2:0)
- * - "node-xyz789-layout"    (stack layout at Main.wire:3:2)
+ * - "node-k7m2p9-component" (Icon component at Main.wire:5:4, index 0)
+ * - "node-abc123-screen"    (Main screen at Main.wire:2:0, index 0)
+ * - "node-xyz789-layout"    (stack layout at Main.wire:3:2, index 0)
  * 
  * @param type - Type of AST node
  * @param filePath - Source file path
  * @param line - Line number (1-based)
  * @param column - Column number (0-based)
+ * @param indexInParent - Index in parent's child array (0-based)
  * @param name - Optional name (for screens, defined components)
  * @returns Stable node ID
  */
@@ -47,16 +63,22 @@ export function generateStableNodeId(
   filePath: string,
   line: number,
   column: number,
+  indexInParent: number,
   name?: string
 ): string {
-  // Build content string that uniquely identifies this node
-  const content = `${filePath}:${line}:${column}:${type}${name ? `:${name}` : ''}`;
-  
-  // Generate hash
-  const hash = simpleHash(content);
+  // Create unique content signature
+  const content = [
+    filePath,
+    `${line}:${column}`,
+    type,
+    `idx:${indexInParent}`,
+    name || '',
+  ].join('|');
+
+  const hashNum = simpleHash(content);
   
   // Convert to base36 (shorter, alphanumeric)
-  const hashStr = hash.toString(36);
+  const hashStr = hashNum.toString(36);
   
   // Format: node-{hash}-{type}
   // Examples: node-k7m2p9-component, node-abc123-screen
