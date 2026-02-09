@@ -670,6 +670,8 @@ class WireDSLVisitor extends BaseCstVisitor {
 // ============================================================================
 
 class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
+  private definedComponentNames = new Set<string>();
+
   constructor(sourceMapBuilder: SourceMapBuilder) {
     super();
     this.sourceMapBuilder = sourceMapBuilder;
@@ -980,10 +982,16 @@ class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
 
     // Add to SourceMap
     if (this.sourceMapBuilder) {
+      // Check if this is a user-defined component
+      const isUserDefined = this.definedComponentNames.has(ast.componentType);
+
       const nodeId = this.sourceMapBuilder.addNode(
         'component',
         tokens,
-        { componentType: ast.componentType }
+        { 
+          componentType: ast.componentType,
+          isUserDefined
+        }
       );
       // Inject nodeId into AST
       ast._meta = { nodeId };
@@ -1011,6 +1019,9 @@ class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
   definedComponent(ctx: any): ASTDefinedComponent {
     // Build AST manually
     const name = ctx.componentName[0].image.slice(1, -1); // Remove quotes
+
+    // Track this component as user-defined
+    this.definedComponentNames.add(name);
 
     // Capture tokens
     const tokens: CapturedTokens = {
@@ -1286,7 +1297,7 @@ export function parseWireDSLWithSourceMap(
   }
 
   // Create SourceMap builder
-  const sourceMapBuilder = new SourceMapBuilder(filePath);
+  const sourceMapBuilder = new SourceMapBuilder(filePath, input);
   const visitorWithSourceMap = new WireDSLVisitorWithSourceMap(sourceMapBuilder);
 
   // Convert CST to AST with SourceMap

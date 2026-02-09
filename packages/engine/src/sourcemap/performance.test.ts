@@ -170,8 +170,9 @@ ${components.join('\n')}
       const codeSize = code.length;
 
       // SourceMap should be reasonable size compared to code
-      // For generated code, SourceMap can be larger than source
-      expect(sourceMapSize).toBeLessThan(codeSize * 20); // Very conservative
+      // Phase 2 & 3 added: isUserDefined, insertionPoint, keywordRange, nameRange, bodyRange
+      // This increased size slightly but provides full editing capabilities
+      expect(sourceMapSize).toBeLessThan(codeSize * 25); // Increased from 20 to accommodate new features
     });
 
     it('should scale linearly with component count', () => {

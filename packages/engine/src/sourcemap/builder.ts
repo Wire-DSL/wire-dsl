@@ -38,11 +38,13 @@ import type {
 export class SourceMapBuilder {
   private entries: SourceMapEntry[] = [];
   private filePath: string;
+  private sourceCode: string;
   private parentStack: string[] = [];  // Stack of parent nodeIds for hierarchy tracking
   private counters = new Map<string, number>();  // Counter per type-subtype
 
-  constructor(filePath: string = '<input>') {
+  constructor(filePath: string = '<input>', sourceCode: string = '') {
     this.filePath = filePath;
+    this.sourceCode = sourceCode;
   }
 
   /**
@@ -61,6 +63,7 @@ export class SourceMapBuilder {
       name?: string;
       layoutType?: string;
       componentType?: string;
+      isUserDefined?: boolean;
     }
   ): string {
     // Calculate range from tokens
@@ -74,6 +77,11 @@ export class SourceMapBuilder {
       ? this.parentStack[this.parentStack.length - 1] 
       : null;
 
+    // Calculate detailed ranges (keyword, name, body)
+    const keywordRange = tokens.keyword ? this.tokenToRange(tokens.keyword) : undefined;
+    const nameRange = tokens.name ? this.tokenToRange(tokens.name) : undefined;
+    const bodyRange = tokens.body ? this.calculateBodyRange(tokens.body) : undefined;
+
     // Create entry
     const entry: SourceMapEntry = {
       nodeId,
@@ -81,7 +89,10 @@ export class SourceMapBuilder {
       range,
       filePath: this.filePath,
       parentId,
-      ...metadata,  // Spread name, layoutType, componentType if provided
+      keywordRange,
+      nameRange,
+      bodyRange,
+      ...metadata,  // Spread name, layoutType, componentType, isUserDefined if provided
     };
 
     this.entries.push(entry);
@@ -105,7 +116,7 @@ export class SourceMapBuilder {
    */
   private generateNodeId(
     type: SourceMapNodeType,
-    metadata?: { name?: string; layoutType?: string; componentType?: string }
+    metadata?: { name?: string; layoutType?: string; componentType?: string; isUserDefined?: boolean }
   ): string {
     switch (type) {
       case 'project':
@@ -275,7 +286,30 @@ export class SourceMapBuilder {
    * Build and return the final SourceMap
    */
   build(): SourceMapEntry[] {
+    // Calculate insertionPoints for all container nodes
+    this.calculateAllInsertionPoints();
+    
     return this.entries;
+  }
+
+  /**
+   * Calculate insertionPoints for all container nodes
+   * Container nodes: project, screen, layout, cell, component-definition
+   */
+  private calculateAllInsertionPoints(): void {
+    const containerTypes: SourceMapNodeType[] = [
+      'project', 
+      'screen', 
+      'layout', 
+      'cell', 
+      'component-definition'
+    ];
+
+    for (const entry of this.entries) {
+      if (containerTypes.includes(entry.type)) {
+        entry.insertionPoint = this.calculateInsertionPoint(entry.nodeId);
+      }
+    }
   }
 
   /**
@@ -332,6 +366,31 @@ export class SourceMapBuilder {
   }
 
   /**
+   * Convert a single token to CodeRange
+   */
+  private tokenToRange(token: any): CodeRange {
+    return {
+      start: this.getTokenStart(token),
+      end: this.getTokenEnd(token),
+    };
+  }
+
+  /**
+   * Calculate body range from closing brace token
+   * Body range typically spans from opening brace to closing brace
+   */
+  private calculateBodyRange(closingBrace: any): CodeRange {
+    // We only have the closing brace token
+    // The body starts right after the opening brace (roughly)
+    // For now, we'll mark the closing brace position
+    // A full implementation would track the opening brace too
+    
+    // Return a range that covers just the closing brace for now
+    // TODO: Track opening brace in CapturedTokens for full body range
+    return this.tokenToRange(closingBrace);
+  }
+
+  /**
    * Extract start position from a Chevrotain token
    */
   private getTokenStart(token: any): Position {
@@ -356,9 +415,84 @@ export class SourceMapBuilder {
   /**
    * Reset the builder (for reuse)
    */
-  reset(filePath: string = '<input>'): void {
+  reset(filePath: string = '<input>', sourceCode: string = ''): void {
     this.entries = [];
     this.filePath = filePath;
+    this.sourceCode = sourceCode;
     this.parentStack = [];
+    this.counters.clear();
+  }
+
+  /**
+   * Calculate insertion point for adding new children to a container node
+   * 
+   * Strategy:
+   * - If node has children: insert after last child, preserve indentation
+   * - If node is empty: insert inside body, use parent indentation + 2 spaces
+   * 
+   * @param nodeId - ID of the container node
+   * @returns InsertionPoint with line, column, indentation, and optional after
+   */
+  calculateInsertionPoint(nodeId: string): { 
+    line: number; 
+    column: number; 
+    indentation: string; 
+    after?: string 
+  } | undefined {
+    const node = this.entries.find(e => e.nodeId === nodeId);
+    if (!node) {
+      return undefined;
+    }
+
+    // Find children of this node
+    const children = this.entries.filter(e => e.parentId === nodeId);
+
+    if (children.length > 0) {
+      // Insert after last child
+      const lastChild = children[children.length - 1];
+      const insertLine = lastChild.range.end.line;
+      
+      // Extract indentation from last child's line
+      const indentation = this.extractIndentation(lastChild.range.start.line);
+
+      return {
+        line: insertLine,
+        column: 0,  // Start of next line
+        indentation,
+        after: lastChild.nodeId,
+      };
+    }
+
+    // No children - insert inside body
+    // Body ends at node.range.end, we want to insert before closing brace
+    const bodyEndLine = node.range.end.line;
+    
+    // Get indentation from node's line and add 2 spaces
+    const parentIndentation = this.extractIndentation(node.range.start.line);
+    const indentation = parentIndentation + '  ';  // Add 2 spaces
+
+    return {
+      line: bodyEndLine,  // Insert right before closing brace
+      column: 0,
+      indentation,
+    };
+  }
+
+  /**
+   * Extract indentation (leading whitespace) from a line
+   */
+  private extractIndentation(lineNumber: number): string {
+    if (!this.sourceCode) {
+      return '';  // No source code available
+    }
+
+    const lines = this.sourceCode.split('\n');
+    if (lineNumber < 1 || lineNumber > lines.length) {
+      return '';
+    }
+
+    const line = lines[lineNumber - 1];  // lineNumber is 1-based
+    const match = line.match(/^(\s*)/);
+    return match ? match[1] : '';
   }
 }
