@@ -182,18 +182,47 @@ export class SVGRenderer {
     this.renderedNodeIds.add(nodeId);
 
     if (node.kind === 'container') {
-      // Special handling for panel and card: render border
-      if (node.containerType === 'panel') {
-        this.renderPanelBorder(node, pos, output);
-      }
-      if (node.containerType === 'card') {
-        this.renderCardBorder(node, pos, output);
+      // Wrapper group for all containers (enables selection in editor)
+      const containerGroup: string[] = [];
+      const hasNodeId = node.meta?.nodeId;
+      
+      if (hasNodeId) {
+        containerGroup.push(`<g${this.getDataNodeId(node)}>`);
       }
 
-      // Render container (usually invisible, just layout)
+      // Add invisible clickable rect for layouts (excluding panel/card which have visible borders)
+      const needsClickableArea = hasNodeId && 
+        node.containerType !== 'panel' && 
+        node.containerType !== 'card';
+      
+      if (needsClickableArea) {
+        // Transparent rectangle for click detection in editor
+        containerGroup.push(
+          `<rect x="${pos.x}" y="${pos.y}" width="${pos.width}" height="${pos.height}" ` +
+          `fill="transparent" stroke="none" pointer-events="all"/>`
+        );
+      }
+
+      // Special handling for panel and card: render border
+      if (node.containerType === 'panel') {
+        this.renderPanelBorder(node, pos, containerGroup);
+      }
+      if (node.containerType === 'card') {
+        this.renderCardBorder(node, pos, containerGroup);
+      }
+
+      // Render container children
       node.children.forEach((childRef) => {
-        this.renderNode(childRef.ref, output);
+        this.renderNode(childRef.ref, containerGroup);
       });
+
+      // Close wrapper group
+      if (hasNodeId) {
+        containerGroup.push('</g>');
+      }
+
+      // Add container output to main output
+      output.push(...containerGroup);
     } else if (node.kind === 'component') {
       // Render component
       const componentSvg = this.renderComponent(node, pos);

@@ -700,4 +700,33 @@ describe('SVG Renderer - SourceMap Integration (data-node-id)', () => {
     expect(svg).toMatch(/data-node-id="component-heading-\d+"/);
     expect(svg).toMatch(/data-node-id="component-button-\d+"/);
   });
+
+  it('should include data-node-id for layout containers', () => {
+    const input = `
+      project "App" {
+        screen Dashboard {
+          layout stack {
+            component Heading text: "Dashboard"
+            layout grid(columns: 2, gap: md) {
+              component Button text: "A"
+              component Button text: "B"
+            }
+          }
+        }
+      }
+    `;
+
+    const { ast } = parseWireDSLWithSourceMap(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    // Layouts should have data-node-id
+    expect(svg).toMatch(/data-node-id="layout-stack-\d+"/);
+    expect(svg).toMatch(/data-node-id="layout-grid-\d+"/);
+    
+    // Layouts should have transparent clickable rect
+    expect(svg).toContain('fill="transparent"');
+    expect(svg).toContain('pointer-events="all"');
+  });
 });
