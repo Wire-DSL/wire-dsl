@@ -45,7 +45,10 @@ export type SourceMapNodeType =
   | 'layout' 
   | 'component'
   | 'component-definition'  // For user-defined components (define Component "Name")
-  | 'cell';                 // For grid cells
+  | 'cell'                  // For grid cells
+  | 'theme'                 // Theme configuration block
+  | 'mocks'                 // Mocks data block
+  | 'colors';               // Colors palette block
 
 /**
  * Main SourceMap entry - represents one node in the AST

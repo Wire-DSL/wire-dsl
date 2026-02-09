@@ -94,6 +94,9 @@ export class SourceMapBuilder {
    * 
    * Examples:
    * - project → "project"
+   * - theme → "theme"
+   * - mocks → "mocks"
+   * - colors → "colors"
    * - screen → "screen-0", "screen-1"
    * - component Button → "component-button-0", "component-button-1"
    * - layout stack → "layout-stack-0", "layout-stack-1"
@@ -108,6 +111,18 @@ export class SourceMapBuilder {
       case 'project':
         // Only one project per file
         return 'project';
+        
+      case 'theme':
+        // Only one theme per project
+        return 'theme';
+        
+      case 'mocks':
+        // Only one mocks block per project
+        return 'mocks';
+        
+      case 'colors':
+        // Only one colors block per project
+        return 'colors';
         
       case 'screen':
         // screen-0, screen-1, etc. (by index, not name to avoid conflicts)

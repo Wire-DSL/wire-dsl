@@ -690,28 +690,12 @@ class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
       body: ctx.RCurly[0],
     };
 
-    // Process theme, mocks, colors (same as parent)
-    if (ctx.themeDecl && ctx.themeDecl.length > 0) {
-      const themeBlock = this.visit(ctx.themeDecl[0]);
-      Object.assign(theme, themeBlock);
-    }
-
-    if (ctx.mocksDecl && ctx.mocksDecl.length > 0) {
-      const mocksBlock = this.visit(ctx.mocksDecl[0]);
-      Object.assign(mocks, mocksBlock);
-    }
-
-    if (ctx.colorsDecl && ctx.colorsDecl.length > 0) {
-      const colorsBlock = this.visit(ctx.colorsDecl[0]);
-      Object.assign(colors, colorsBlock);
-    }
-
     const ast: AST = {
       type: 'project',
       name: projectName,
-      theme,
-      mocks,
-      colors,
+      theme: {},
+      mocks: {},
+      colors: {},
       definedComponents: [],  // Will be filled after push
       screens: [],  // Will be filled after push
     };
@@ -725,25 +709,38 @@ class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
       );
       // Inject nodeId into AST
       ast._meta = { nodeId };
-      // Project is root, so we push it as parent for screens/components
+      // Project is root, so we push it as parent for theme/screens/components
       this.sourceMapBuilder.pushParent(nodeId);
+    }
+
+    // Process theme, mocks, colors AFTER pushParent so they have project as parent
+    if (ctx.themeDecl && ctx.themeDecl.length > 0) {
+      const themeBlock = this.visit(ctx.themeDecl[0]);
+      Object.assign(ast.theme, themeBlock);
+    }
+
+    if (ctx.mocksDecl && ctx.mocksDecl.length > 0) {
+      const mocksBlock = this.visit(ctx.mocksDecl[0]);
+      Object.assign(ast.mocks, mocksBlock);
+    }
+
+    if (ctx.colorsDecl && ctx.colorsDecl.length > 0) {
+      const colorsBlock = this.visit(ctx.colorsDecl[0]);
+      Object.assign(ast.colors, colorsBlock);
     }
 
     // Now visit defined components and screens (children will have correct parent)
     if (ctx.definedComponent) {
       ctx.definedComponent.forEach((comp: any) => {
-        definedComponents.push(this.visit(comp));
+        ast.definedComponents.push(this.visit(comp));
       });
     }
 
     if (ctx.screen) {
       ctx.screen.forEach((screen: any) => {
-        screens.push(this.visit(screen));
+        ast.screens.push(this.visit(screen));
       });
     }
-
-    ast.definedComponents = definedComponents;
-    ast.screens = screens;
 
     // Don't pop parent for project (it's root)
 
@@ -1061,6 +1058,153 @@ class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
     }
 
     return ast;
+  }
+
+  // Override themeDecl to capture theme block in SourceMap
+  themeDecl(ctx: any): Record<string, string> {
+    const theme: Record<string, string> = {};
+    
+    // Capture tokens for theme block
+    const tokens: CapturedTokens = {
+      keyword: ctx.Theme[0],
+      body: ctx.RCurly[0],
+    };
+
+    // Add theme node to SourceMap
+    if (this.sourceMapBuilder) {
+      const nodeId = this.sourceMapBuilder.addNode(
+        'theme',
+        tokens,
+        { name: 'theme' }
+      );
+
+      // Process theme properties
+      if (ctx.themeProperty) {
+        ctx.themeProperty.forEach((propCtx: any) => {
+          const { key, value } = this.visit(propCtx);
+          theme[key] = value;
+
+          // Add property to SourceMap with precise ranges
+          this.sourceMapBuilder!.addProperty(
+            nodeId,
+            key,
+            value,
+            {
+              name: propCtx.children.themeKey[0],
+              value: propCtx.children.themeValue[0],
+            }
+          );
+        });
+      }
+    } else {
+      // No SourceMap builder, just collect properties
+      if (ctx.themeProperty) {
+        ctx.themeProperty.forEach((prop: any) => {
+          const { key, value } = this.visit(prop);
+          theme[key] = value;
+        });
+      }
+    }
+
+    return theme;
+  }
+
+  // Override mocksDecl to capture mocks block in SourceMap
+  mocksDecl(ctx: any): Record<string, string> {
+    const mocks: Record<string, string> = {};
+    
+    // Capture tokens for mocks block
+    const tokens: CapturedTokens = {
+      keyword: ctx.Mocks[0],
+      body: ctx.RCurly[0],
+    };
+
+    // Add mocks node to SourceMap
+    if (this.sourceMapBuilder) {
+      const nodeId = this.sourceMapBuilder.addNode(
+        'mocks',
+        tokens,
+        { name: 'mocks' }
+      );
+
+      // Process mock entries
+      if (ctx.mockEntry) {
+        ctx.mockEntry.forEach((entryCtx: any) => {
+          const { key, value } = this.visit(entryCtx);
+          mocks[key] = value;
+
+          // Add property to SourceMap with precise ranges
+          this.sourceMapBuilder!.addProperty(
+            nodeId,
+            key,
+            value,
+            {
+              name: entryCtx.children.mockKey[0],
+              value: entryCtx.children.mockValue[0],
+            }
+          );
+        });
+      }
+    } else {
+      // No SourceMap builder, just collect entries
+      if (ctx.mockEntry) {
+        ctx.mockEntry.forEach((entry: any) => {
+          const { key, value } = this.visit(entry);
+          mocks[key] = value;
+        });
+      }
+    }
+
+    return mocks;
+  }
+
+  // Override colorsDecl to capture colors block in SourceMap
+  colorsDecl(ctx: any): Record<string, string> {
+    const colors: Record<string, string> = {};
+    
+    // Capture tokens for colors block
+    const tokens: CapturedTokens = {
+      keyword: ctx.Colors[0],
+      body: ctx.RCurly[0],
+    };
+
+    // Add colors node to SourceMap
+    if (this.sourceMapBuilder) {
+      const nodeId = this.sourceMapBuilder.addNode(
+        'colors',
+        tokens,
+        { name: 'colors' }
+      );
+
+      // Process color entries
+      if (ctx.colorEntry) {
+        ctx.colorEntry.forEach((entryCtx: any) => {
+          const { key, value } = this.visit(entryCtx);
+          colors[key] = value;
+
+          // Add property to SourceMap with precise ranges
+          this.sourceMapBuilder!.addProperty(
+            nodeId,
+            key,
+            value,
+            {
+              name: entryCtx.children.colorKey[0],
+              value: entryCtx.children.colorValue[0],
+            }
+          );
+        });
+      }
+    } else {
+      // No SourceMap builder, just collect entries
+      if (ctx.colorEntry) {
+        ctx.colorEntry.forEach((entry: any) => {
+          const { key, value } = this.visit(entry);
+          colors[key] = value;
+        });
+      }
+    }
+
+    return colors;
   }
 }
 
