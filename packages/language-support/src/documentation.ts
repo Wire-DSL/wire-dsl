@@ -3,7 +3,7 @@
  * Provides detailed hover documentation for components, layouts, and properties
  */
 
-import { COMPONENTS, LAYOUTS, PROPERTY_VALUES } from './components';
+import { COMPONENTS, LAYOUTS } from './components';
 
 /**
  * Generate markdown documentation for a component
@@ -15,12 +15,13 @@ export function getComponentDocumentation(componentName: string): string | null 
   let doc = `## ${component.name}\n\n`;
   doc += `${component.description}\n\n`;
 
-  if (component.properties.length > 0) {
+  const properties = Object.values(component.properties);
+  if (properties.length > 0) {
     doc += `**Properties:**\n`;
-    component.properties.forEach((prop) => {
-      const propDoc = getPropertyDocumentation(componentName, prop);
-      const typeInfo = propDoc ? ` - ${propDoc}` : '';
-      doc += `- \`${prop}\`${typeInfo}\n`;
+    properties.forEach((prop) => {
+      const propDoc = getPropertyDocumentation(componentName, prop.name);
+      const typeInfo = propDoc ? ` - ${propDoc}` : `(${prop.type})`;
+      doc += `- \`${prop.name}\`${typeInfo}\n`;
     });
     doc += '\n';
   }
@@ -41,12 +42,13 @@ export function getLayoutDocumentation(layoutName: string): string | null {
   let doc = `## ${layout.name.toUpperCase()} Layout\n\n`;
   doc += `${layout.description}\n\n`;
 
-  if (layout.properties.length > 0) {
+  const properties = Object.values(layout.properties);
+  if (properties.length > 0) {
     doc += `**Properties:**\n`;
-    layout.properties.forEach((prop) => {
-      const values = PROPERTY_VALUES[prop as keyof typeof PROPERTY_VALUES];
-      const valuesInfo = values ? ` - Values: \`${values.join(' | ')}\`` : '';
-      doc += `- \`${prop}\`${valuesInfo}\n`;
+    properties.forEach((prop) => {
+      const values = prop.options;
+      const valuesInfo = values ? ` - Values: \`${values.join(' | ')}\`` : `(${prop.type})`;
+      doc += `- \`${prop.name}\`${valuesInfo}\n`;
     });
     doc += '\n';
   }
@@ -69,12 +71,12 @@ export function getPropertyDocumentation(componentName: string, propertyName: st
   const component = COMPONENTS[componentName as keyof typeof COMPONENTS];
   if (!component) return null;
 
-  if (!component.properties.includes(propertyName)) return null;
+  const propDef = component.properties[propertyName];
+  if (!propDef) return null;
 
   // Check if property has enum values
-  if (component.propertyValues && component.propertyValues[propertyName]) {
-    const values = component.propertyValues[propertyName];
-    return `Values: \`${values.join(' | ')}\``;
+  if (propDef.type === 'enum' && propDef.options) {
+    return `Values: \`${propDef.options.join(' | ')}\``;
   }
 
   // Return generic property documentation based on name

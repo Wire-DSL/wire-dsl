@@ -1,292 +1,228 @@
 /**
  * Wire DSL Component Metadata
- * Used for autocompletion and hover documentation
- * 
- * SYNC SOURCES:
- * 1. Built-in components: Check packages/engine/src/renderer/index.ts renderComponent() method
- *    for latest component implementations. Update this file when new components are added.
- * 2. User-defined components: Syntax is `define Component "Name" { ... }`
- *    These are parsed and resolved before IR generation.
- * 
- * Total components: 32 built-in + unlimited user-defined
- * Last synced: February 2, 2026
+ * Used for autocompletion, validation, and code intelligence.
+ *
+ * Last synced: February 9, 2026
  */
+
+export interface PropertyMetadata {
+  name: string;
+  type: 'string' | 'enum' | 'boolean' | 'number' | 'color';
+  description?: string;
+  defaultValue?: any;
+  required?: boolean;
+  options?: string[]; // For enums
+}
 
 export interface ComponentMetadata {
   name: string;
   description: string;
-  properties: string[];
-  propertyValues?: Record<string, string[]>;
+  properties: Record<string, PropertyMetadata>;
   example: string;
 }
 
 export interface LayoutMetadata {
   name: string;
   description: string;
-  properties: string[];
+  properties: Record<string, PropertyMetadata>;
   example: string;
   requiredProperties?: string[];
 }
+
+// Reusable Enum Definitions
+const sizeEnum: PropertyMetadata = { name: 'size', type: 'enum', options: ['sm', 'md', 'lg'] };
+const colorEnum: PropertyMetadata = { name: 'color', type: 'color', options: ['primary', 'secondary', 'danger', 'warning', 'info'] };
+const variantEnum: PropertyMetadata = { name: 'variant', type: 'enum', options: ['primary', 'secondary', 'danger', 'warning', 'info'] };
+const orientationEnum: PropertyMetadata = { name: 'orientation', type: 'enum', options: ['horizontal', 'vertical'] };
+const alignEnum: PropertyMetadata = { name: 'align', type: 'enum', options: ['justify', 'left', 'center', 'right'] };
+const paddingEnum: PropertyMetadata = { name: 'padding', type: 'enum', options: ['sm', 'md', 'lg'] };
+const gapEnum: PropertyMetadata = { name: 'gap', type: 'enum', options: ['sm', 'md', 'lg'] };
 
 export const COMPONENTS: Record<string, ComponentMetadata> = {
   // Text Components
   Heading: {
     name: 'Heading',
     description: 'Large heading/title text',
-    properties: ['text'],
+    properties: {
+      text: { name: 'text', type: 'string' },
+    },
     example: 'component Heading text: "Users"',
   },
   Text: {
     name: 'Text',
     description: 'Regular paragraph text',
-    properties: ['content'],
+    properties: {
+      content: { name: 'content', type: 'string' },
+    },
     example: 'component Text content: "Lorem ipsum dolor sit amet..."',
   },
   Label: {
     name: 'Label',
     description: 'Small label text',
-    properties: ['text'],
+    properties: {
+      text: { name: 'text', type: 'string' },
+    },
     example: 'component Label text: "Field label"',
   },
-  Code: {
-    name: 'Code',
-    description: 'Code or monospace text',
-    properties: ['content'],
-    example: 'component Code content: "const x = 42;"',
-  },
-
-  // Input Components
-  Input: {
-    name: 'Input',
-    description: 'Text input field',
-    properties: ['label', 'placeholder'],
-    example: 'component Input label: "Username" placeholder: "Enter name..."',
-  },
-  Textarea: {
-    name: 'Textarea',
-    description: 'Multi-line text input',
-    properties: ['label', 'placeholder', 'rows'],
-    example: 'component Textarea label: "Description" rows: 6',
-  },
-  Select: {
-    name: 'Select',
-    description: 'Dropdown selection list',
-    properties: ['label', 'options', 'placeholder'],
-    example: 'component Select label: "Role" options: ["Admin", "User", "Guest"]',
-  },
-  Checkbox: {
-    name: 'Checkbox',
-    description: 'Single checkbox input',
-    properties: ['label'],
-    example: 'component Checkbox label: "Remember me"',
-  },
-  Radio: {
-    name: 'Radio',
-    description: 'Single radio button',
-    properties: ['label'],
-    example: 'component Radio label: "Option"',
-  },
-  Toggle: {
-    name: 'Toggle',
-    description: 'Toggle switch input',
-    properties: ['label'],
-    example: 'component Toggle label: "Enable feature"',
-  },
-
-  // Button Components
-  Button: {
-    name: 'Button',
-    description: 'Clickable button element',
-    properties: ['text', 'variant'],
-    propertyValues: {
-      variant: ['primary', 'secondary', 'ghost'],
-    },
-    example: 'component Button text: "Save" variant: primary',
-  },
-  IconButton: {
-    name: 'IconButton',
-    description: 'Icon-only button element',
-    properties: ['icon', 'variant', 'size'],
-    propertyValues: {
-      variant: ['primary', 'secondary', 'ghost'],
-      size: ['xs', 'sm', 'md', 'lg', 'xl'],
-    },
-    example: 'component IconButton icon: "plus" variant: "primary" size: "md"',
-  },
-
-  // Navigation Components
-  SidebarMenu: {
-    name: 'SidebarMenu',
-    description: 'Vertical navigation menu',
-    properties: ['items'],
-    example: 'component SidebarMenu items: ["Users", "Roles", "Settings"]',
-  },
-  Topbar: {
-    name: 'Topbar',
-    description: 'Top navigation bar',
-    properties: ['title'],
-    example: 'component Topbar title: "Dashboard"',
-  },
-  Breadcrumbs: {
-    name: 'Breadcrumbs',
-    description: 'Breadcrumb navigation trail',
-    properties: ['items'],
-    example: 'component Breadcrumbs items: ["Home", "Users", "Detail"]',
-  },
-  Tabs: {
-    name: 'Tabs',
-    description: 'Tabbed content switcher',
-    properties: ['items', 'activeIndex'],
-    example: 'component Tabs items: ["Profile", "Settings", "Logs"]',
-  },
-
-  // Data Components
-  Table: {
-    name: 'Table',
-    description: 'Data table with rows and columns',
-    properties: ['columns', 'rowsMock', 'rowHeight'],
-    example: 'component Table columns: ["Name", "Email", "Status", "Role"] rowsMock: 8',
-  },
-  List: {
-    name: 'List',
-    description: 'Vertical list of items',
-    properties: ['items'],
-    example: 'component List items: ["Item 1", "Item 2", "Item 3"]',
-  },
-
-  // Container Components
-  Badge: {
-    name: 'Badge',
-    description: 'Small badge/tag element',
-    properties: ['text', 'variant'],
-    propertyValues: {
-      variant: ['primary', 'secondary', 'success', 'warning', 'error', 'info'],
-    },
-    example: 'component Badge text: "New" variant: primary',
-  },
-  Alert: {
-    name: 'Alert',
-    description: 'Alert message box',
-    properties: ['text', 'variant'],
-    propertyValues: {
-      variant: ['primary', 'secondary', 'success', 'warning', 'error', 'info'],
-    },
-    example: 'component Alert text: "Warning message" variant: warning',
-  },
-
   // Visual Components
   Icon: {
     name: 'Icon',
-    description: 'Icon element (visual symbol)',
-    properties: ['type', 'size'],
-    propertyValues: {
-      size: ['xs', 'sm', 'md', 'lg', 'xl'],
+    description: 'Renders an icon from a specified set.',
+    properties: {
+      icon: { name: 'icon', type: 'string' }, // Treated as string as requested
+      size: sizeEnum,
+      color: colorEnum,
     },
-    example: 'component Icon type: "home" size: "md"',
-  },
-  Divider: {
-    name: 'Divider',
-    description: 'Horizontal divider line',
-    properties: [],
-    example: 'component Divider',
+    example: 'component Icon icon: "home" size: md color: primary',
   },
   Image: {
     name: 'Image',
-    description: 'Image placeholder or actual image',
-    properties: ['src', 'alt', 'height', 'placeholder'],
-    propertyValues: {
-      placeholder: ['square', 'landscape', 'avatar', 'icon'],
+    description: 'Displays an image.',
+    properties: {
+      src: { name: 'src', type: 'string' },
+      alt: { name: 'alt', type: 'string' },
+      width: { name: 'width', type: 'number' },
+      height: { name: 'height', type: 'number' },
     },
-    example: 'component Image placeholder: "landscape" height: 300',
+    example: 'component Image src: "/path/to/image.png" alt: "An example image"',
   },
-  ChartPlaceholder: {
-    name: 'ChartPlaceholder',
-    description: 'Chart visualization placeholder',
-    properties: ['type', 'height'],
-    propertyValues: {
-      type: ['bar', 'line', 'pie'],
+  Avatar: {
+    name: 'Avatar',
+    description: 'Represents a user with an image or initials.',
+    properties: {
+      // Properties not defined as per user request
     },
-    example: 'component ChartPlaceholder type: "bar" height: 200',
-  },
-  Sidebar: {
-    name: 'Sidebar',
-    description: 'Sidebar navigation panel',
-    properties: ['title', 'items'],
-    example: 'component Sidebar title: "Navigation" items: ["Dashboard", "Users"]',
-  },
-
-  // Feedback Components
-  Modal: {
-    name: 'Modal',
-    description: 'Modal dialog window',
-    properties: ['title', 'content'],
-    example: 'component Modal title: "Confirm?" content: "Are you sure?"',
-  },
-  StatCard: {
-    name: 'StatCard',
-    description: 'Statistic card showing metric value',
-    properties: ['title', 'value'],
-    example: 'component StatCard title: "Total Users" value: "1,234"',
+    example: 'component Avatar src: "/path/to/user.png"',
   },
   Spinner: {
     name: 'Spinner',
-    description: 'Loading spinner/indicator',
-    properties: [],
-    example: 'component Spinner',
+    description: 'Indicates a loading state.',
+    properties: {
+      size: sizeEnum,
+    },
+    example: 'component Spinner size: lg',
+  },
+  Divider: {
+    name: 'Divider',
+    description: 'A horizontal or vertical line to separate content.',
+    properties: {
+      orientation: orientationEnum,
+    },
+    example: 'component Divider orientation: horizontal',
+  },
+  // Interactive Components
+  Button: {
+    name: 'Button',
+    description: 'A clickable button.',
+    properties: {
+      text: { name: 'text', type: 'string' },
+      variant: variantEnum,
+      icon: { name: 'icon', type: 'string' }, // Treated as string
+      onClick: { name: 'onClick', type: 'string' }, // Should be an action/event handler
+    },
+    example: 'component Button text: "Click me" variant: primary',
+  },
+  Link: {
+    name: 'Link',
+    description: 'A hyperlink.',
+    properties: {
+      text: { name: 'text', type: 'string' },
+      href: { name: 'href', type: 'string' },
+      target: { name: 'target', type: 'string' },
+    },
+    example: 'component Link text: "Go to Google" href: "https://google.com"',
+  },
+  TextInput: {
+    name: 'TextInput',
+    description: 'An input field for text.',
+    properties: {
+      placeholder: { name: 'placeholder', type: 'string' },
+      value: { name: 'value', type: 'string' },
+      label: { name: 'label', type: 'string' },
+    },
+    example: 'component TextInput label: "Name" placeholder: "Enter your name"',
+  },
+  Checkbox: {
+    name: 'Checkbox',
+    description: 'A checkbox input.',
+    properties: {
+      label: { name: 'label', type: 'string' },
+      checked: { name: 'checked', type: 'boolean' },
+    },
+    example: 'component Checkbox label: "I agree" checked: true',
+  },
+  Switch: {
+    name: 'Switch',
+    description: 'A toggle switch.',
+    properties: {
+      checked: { name: 'checked', type: 'boolean' },
+    },
+    example: 'component Switch checked: false',
+  },
+  // Container Components
+  Card: {
+    name: 'Card',
+    description: 'A container with a visual border, often with a title.',
+    properties: {
+      title: { name: 'title', type: 'string' },
+      subtitle: { name: 'subtitle', type: 'string' },
+    },
+    example: 'component Card title: "My Card" { ... }',
+  },
+  Alert: {
+    name: 'Alert',
+    description: 'A message box to draw attention.',
+    properties: {
+      message: { name: 'message', type: 'string' },
+      type: { name: 'type', type: 'color', options: colorEnum.options },
+    },
+    example: 'component Alert type: danger message: "An error occurred."',
+  },
+  Table: {
+    name: 'Table',
+    description: 'Displays data in a tabular format.',
+    properties: {
+      // Properties not defined as per user request
+    },
+    example: 'component Table data: [...] { ... }',
   },
 };
 
 export const LAYOUTS: Record<string, LayoutMetadata> = {
   stack: {
     name: 'stack',
-    description: 'Stack layout - arranges items in a row or column',
-    properties: ['direction', 'gap', 'padding', 'align', 'justify'],
-    example: 'layout stack(direction: vertical, gap: md, padding: lg) { ... }',
-    requiredProperties: [],
+    description: 'Lays out items in a single line (horizontal or vertical).',
+    properties: {
+      direction: { name: 'direction', type: 'enum', options: ['horizontal', 'vertical'] },
+      align: alignEnum,
+      padding: paddingEnum,
+      gap: gapEnum,
+    },
+    example: 'layout stack(direction: horizontal, gap: md) { ... }',
   },
   grid: {
     name: 'grid',
-    description: 'Grid layout - 12-column grid system',
-    properties: ['columns', 'gap', 'align', 'padding'],
-    example: 'layout grid(columns: 12, gap: md) { cell span: 6 { ... } }',
-    requiredProperties: ['columns'],
-  },
-  split: {
-    name: 'split',
-    description: 'Split layout - sidebar + main content',
-    properties: ['sidebar', 'gap', 'padding'],
-    example: 'layout split(sidebar: 260, gap: md) { ... }',
-    requiredProperties: ['sidebar'],
-  },
-  panel: {
-    name: 'panel',
-    description: 'Panel layout - container with border and padding',
-    properties: ['padding', 'background', 'radius', 'border'],
-    example: 'layout panel(padding: md, background: white) { ... }',
-    requiredProperties: [],
-  },
-  card: {
-    name: 'card',
-    description: 'Card layout - flexible vertical container',
-    properties: ['padding', 'gap', 'radius', 'border', 'background'],
-    example: 'layout card(padding: md, gap: md, radius: md) { ... }',
-    requiredProperties: [],
+    description: 'Lays out items in a grid.',
+    properties: {
+      columns: { name: 'columns', type: 'number' },
+      gap: gapEnum,
+      align: alignEnum,
+    },
+    example: 'layout grid(columns: 3, gap: lg) { ... }',
   },
 };
 
-// Property values for specific properties (layout-related)
 export const PROPERTY_VALUES: Record<string, string[]> = {
-  direction: ['vertical', 'horizontal'],
-  gap: ['xs', 'sm', 'md', 'lg', 'xl'],
-  padding: ['xs', 'sm', 'md', 'lg', 'xl'],
-  align: ['start', 'center', 'end'],
-  justify: ['start', 'center', 'end', 'space-between', 'space-around'],
-  radius: ['xs', 'sm', 'md', 'lg', 'xl'],
-  density: ['compact', 'normal', 'comfortable'],
-  spacing: ['xs', 'sm', 'md', 'lg', 'xl'],
+  size: sizeEnum.options!,
+  color: colorEnum.options!,
+  variant: variantEnum.options!,
+  orientation: orientationEnum.options!,
+  align: alignEnum.options!,
+  padding: paddingEnum.options!,
+  gap: gapEnum.options!,
+  direction: ['horizontal', 'vertical'],
 };
 
-// Keywords
 export const KEYWORDS = {
   topLevel: ['project', 'theme', 'colors', 'mocks', 'define'],
   screen: ['screen'],

@@ -14,6 +14,7 @@ export {
   KEYWORDS,
   type ComponentMetadata,
   type LayoutMetadata,
+  type PropertyMetadata,
 } from './components';
 
 export {
