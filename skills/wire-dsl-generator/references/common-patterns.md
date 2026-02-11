@@ -82,7 +82,7 @@ project "Registration" {
       component Label text: "Account Details"
       layout stack(direction: vertical, gap: md) {
         component Input label: "Username" placeholder: "johndoe"
-        component Input label label: "Password" placeholder: "••••••••"
+        component Input label: "Password" placeholder: "••••••••"
         component Input label: "Confirm Password" placeholder: "••••••••"
       }
 
@@ -310,6 +310,8 @@ project "Metrics Dashboard" {
 
 ### E-Commerce Product Grid
 
+Note: Using user-defined component.
+
 ```wire
 project "Product Catalog" {
   theme {
@@ -318,6 +320,19 @@ project "Product Catalog" {
     radius: "lg"
     stroke: "thin"
     font: "base"
+  }
+
+  define Component "ProductSample" {
+    layout card(padding: md, gap: md, radius: lg, border: true) {
+      component Image placeholder: "square" height: 250
+      component Heading text: "Smart Watch"
+      component Text content: "Track fitness and health metrics"
+      component Badge text: "Sale" variant: success
+      layout stack(direction: horizontal, gap: md, align: justify) {
+        component Heading text: "$199.99"
+        component Button text: "Add to Cart" variant: primary
+      }
+    }
   }
 
   screen Products {
@@ -336,7 +351,7 @@ project "Product Catalog" {
       }
 
       // Product Grid
-      layout grid(columns: 12, gap: lg) {
+      layout grid(columns: 12, gap: xl) {
         cell span: 4 {
           layout card(padding: md, gap: md, radius: lg, border: true) {
             component Image placeholder: "square" height: 250
@@ -344,75 +359,34 @@ project "Product Catalog" {
             component Text content: "Premium noise-cancelling headphones"
             component Badge text: "New" variant: primary
             layout stack(direction: horizontal, gap: md, align: justify) {
-              component Text content: "$129.99"
+              component Heading text: "$129.99"
               component Button text: "Add to Cart" variant: primary
             }
           }
         }
 
         cell span: 4 {
-          layout card(padding: md, gap: md, radius: lg, border: true) {
-            component Image placeholder: "square" height: 250
-            component Heading text: "Smart Watch"
-            component Text content: "Track fitness and health metrics"
-            component Badge text: "Sale" variant: success
-            layout stack(direction: horizontal, gap: md, align: justify) {
-              component Text content: "$199.99"
-              component Button text: "Add to Cart" variant: primary
-            }
-          }
+          component ProductSample
         }
 
         cell span: 4 {
-          layout card(padding: md, gap: md, radius: lg, border: true) {
-            component Image placeholder: "square" height: 250
-            component Heading text: "Laptop Stand"
-            component Text content: "Ergonomic aluminum design"
-            component Badge text: "Popular" variant: info
-            layout stack(direction: horizontal, gap: md, align: justify) {
-              component Text content: "$49.99"
-              component Button text: "Add to Cart" variant: primary
-            }
-          }
+          component ProductSample
         }
 
         cell span: 4 {
-          layout card(padding: md, gap: md, radius: lg, border: true) {
-            component Image placeholder: "square" height: 250
-            component Heading text: "Mechanical Keyboard"
-            component Text content: "RGB backlit, cherry switches"
-            component Badge text: "Hot" variant: error
-            layout stack(direction: horizontal, gap: md, align: justify) {
-              component Text content: "$89.99"
-              component Button text: "Add to Cart" variant: primary
-            }
-          }
+          component ProductSample
         }
 
         cell span: 4 {
-          layout card(padding: md, gap: md, radius: lg, border: true) {
-            component Image placeholder: "square" height: 250
-            component Heading text: "Wireless Mouse"
-            component Text content: "Precision gaming mouse"
-            layout stack(direction: horizontal, gap: md, align: justify) {
-              component Text content: "$39.99"
-              component Button text: "Add to Cart" variant: primary
-            }
-          }
+          component ProductSample
         }
 
         cell span: 4 {
-          layout card(padding: md, gap: md, radius: lg, border: true) {
-            component Image placeholder: "square" height: 250
-            component Heading text: "USB-C Hub"
-            component Text content: "7-in-1 connectivity solution"
-            layout stack(direction: horizontal, gap: md, align: justify) {
-              component Text content: "$34.99"
-              component Button text: "Add to Cart" variant: primary
-            }
-          }
+          component ProductSample
         }
       }
+
+      component Divider
 
       // Pagination
       layout stack(direction: horizontal, gap: sm, align: center) {
@@ -480,7 +454,7 @@ project "Product Detail" {
             component Select label: "Quantity" items: "1,2,3,4,5"
 
             // Actions
-            layout stack(direction: horizontal, gap: md) {
+            layout stack(direction: horizontal, gap: md, align: left) {
               component Button text: "Add to Cart" variant: primary
               component IconButton icon: "heart"
               component IconButton icon: "share-2"
@@ -715,24 +689,16 @@ project "Users Management" {
       }
 
       // Filters
-      layout stack(direction: horizontal, gap: md, align: left) {
-        component Select label: "Role" items: "All,Admin,User,Guest"
-        component Select label: "Status" items: "All,Active,Inactive,Pending"
-        component Button text: "Apply Filters"
+      layout card (padding: lg) {
+        layout stack(direction: horizontal, gap: md, align: justify) {
+          component Select label: "Role" items: "All,Admin,User,Guest"
+          component Select label: "Status" items: "All,Active,Inactive,Pending"
+          component Button text: "Apply Filters"
+        }
       }
 
       // Users Table
-      component Table columns: "Name,Email,Role,Status,Last Login,Actions" rows: 10
-
-      // Pagination
-      layout stack(direction: horizontal, gap: md, align: justify) {
-        component Text content: "Showing 1-10 of 234 users"
-        layout stack(direction: horizontal, gap: sm, align: right) {
-          component IconButton icon: "chevron-left"
-          component Text content: "Page 1 of 24"
-          component IconButton icon: "chevron-right"
-        }
-      }
+      component Table columns: "Name,Email,Role,Status,Last Login,Actions" rows: 10 pagination: true
     }
   }
 }
