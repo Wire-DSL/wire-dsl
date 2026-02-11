@@ -323,7 +323,7 @@ export function registerWireLanguage() {
       declaredProps.add(match[1]);
     }
 
-    for (const propName of properties) {
+    for (const propName of Object.keys(properties)) {
       // Skip if this property is already declared on this line
       if (declaredProps.has(propName)) {
         continue;
