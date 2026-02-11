@@ -391,9 +391,96 @@ export class SourceMapBuilder {
   }
 
   /**
-   * Extract start position from a Chevrotain token
+   * Extract the first real token from a CST node (earliest by offset)
+   * Recursively searches through children to find the token with smallest offset
+   */
+  private getFirstToken(cstNode: any): any {
+    if (!cstNode?.children) {
+      return cstNode; // Already a token
+    }
+
+    let earliestToken: any = null;
+    let earliestOffset = Infinity;
+
+    // Iterate through all child arrays in the CST node
+    for (const childArray of Object.values(cstNode.children)) {
+      if (Array.isArray(childArray)) {
+        for (const child of childArray) {
+          if (!child) continue;
+
+          let token: any;
+          // If it has children, recurse; otherwise it's a token
+          if (child.children) {
+            token = this.getFirstToken(child);
+          } else {
+            token = child;
+          }
+
+          // Check if this token is earlier than current earliest
+          if (token?.startOffset !== undefined && token.startOffset < earliestOffset) {
+            earliestToken = token;
+            earliestOffset = token.startOffset;
+          }
+        }
+      }
+    }
+
+    return earliestToken;
+  }
+
+  /**
+   * Extract the last real token from a CST node (latest by offset)
+   * Recursively searches through children to find the token with largest offset
+   */
+  private getLastToken(cstNode: any): any {
+    if (!cstNode?.children) {
+      return cstNode; // Already a token
+    }
+
+    let latestToken: any = null;
+    let latestOffset = -1;
+
+    // Iterate through all child arrays in the CST node
+    for (const childArray of Object.values(cstNode.children)) {
+      if (Array.isArray(childArray)) {
+        for (const child of childArray) {
+          if (!child) continue;
+
+          let token: any;
+          // If it has children, recurse; otherwise it's a token
+          if (child.children) {
+            token = this.getLastToken(child);
+          } else {
+            token = child;
+          }
+
+          // Use endOffset if available, otherwise startOffset
+          const tokenOffset = token?.endOffset ?? token?.startOffset;
+
+          // Check if this token is later than current latest
+          if (tokenOffset !== undefined && tokenOffset > latestOffset) {
+            latestToken = token;
+            latestOffset = tokenOffset;
+          }
+        }
+      }
+    }
+
+    return latestToken;
+  }
+
+  /**
+   * Extract start position from a Chevrotain token or CST node
    */
   private getTokenStart(token: any): Position {
+    // If this is a CST node (has children), extract the first token
+    if (token?.children) {
+      const firstToken = this.getFirstToken(token);
+      if (firstToken) {
+        return this.getTokenStart(firstToken);
+      }
+    }
+
     return {
       line: token.startLine || 1,
       column: token.startColumn !== undefined ? token.startColumn - 1 : 0,  // Chevrotain is 1-based, we want 0-based
@@ -402,9 +489,17 @@ export class SourceMapBuilder {
   }
 
   /**
-   * Extract end position from a Chevrotain token
+   * Extract end position from a Chevrotain token or CST node
    */
   private getTokenEnd(token: any): Position {
+    // If this is a CST node (has children), extract the last token
+    if (token?.children) {
+      const lastToken = this.getLastToken(token);
+      if (lastToken) {
+        return this.getTokenEnd(lastToken);
+      }
+    }
+
     return {
       line: token.endLine || token.startLine || 1,
       column: token.endColumn !== undefined ? token.endColumn : token.startColumn || 0,  // Chevrotain columns are 1-based
