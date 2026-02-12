@@ -1,5 +1,15 @@
 # @wire-dsl/web
 
+## 0.1.2
+
+### Patch Changes
+
+- [#42](https://github.com/Wire-DSL/wire-dsl/pull/42) [`b1c2c2f`](https://github.com/Wire-DSL/wire-dsl/commit/b1c2c2f6874bd726990c5ff637d89fe63c8eac54) Thanks [@roxguel](https://github.com/roxguel)! - Add support for SourceMap
+
+- Updated dependencies [[`b1c2c2f`](https://github.com/Wire-DSL/wire-dsl/commit/b1c2c2f6874bd726990c5ff637d89fe63c8eac54)]:
+  - @wire-dsl/language-support@0.1.0
+  - @wire-dsl/engine@0.1.0
+
 ## 0.1.1
 
 ### Patch Changes
