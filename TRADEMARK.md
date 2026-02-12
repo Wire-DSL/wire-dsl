@@ -32,7 +32,7 @@ You may use the "WireDSL" name in the following contexts WITHOUT prior permissio
 ```markdown
 "WireDSL parser"
 "WireDSL IR format"
-"@wire-dsl/core library"
+"@wire-dsl/engine library"
 ```
 
 ## Restricted Uses

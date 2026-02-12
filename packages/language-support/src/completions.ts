@@ -3,7 +3,7 @@
  * Shared completion logic for Monaco, VS Code, and other editors
  */
 
-import { COMPONENTS, LAYOUTS, PROPERTY_VALUES } from './components';
+import { COMPONENTS, LAYOUTS, PROPERTY_VALUES, PropertyMetadata } from './components';
 import type { DocumentScope } from './context-detection';
 
 export interface CompletionContext {
@@ -300,13 +300,13 @@ export function getComponentProperties(componentName: string): CompletionSuggest
     return [];
   }
 
-  return Object.entries(component.properties)
-    .map(([propName, propType]) => ({
-      label: propName,
+  return Object.values(component.properties)
+    .map((prop: PropertyMetadata) => ({
+      label: prop.name,
       kind: 'Property' as const,
-      detail: propType,
-      documentation: `Property: ${propName} (${propType})`,
-      insertText: `${propName}: `,
+      detail: prop.type,
+      documentation: `Property: ${prop.name} (${prop.type})`,
+      insertText: `${prop.name}: `,
     }));
 }
 
@@ -323,13 +323,13 @@ export function getComponentPropertiesForCompletion(
     return PROPERTY_COMPLETIONS;
   }
 
-  const availableProps: CompletionSuggestion[] = Object.entries(componentMeta.properties || {})
-    .filter(([propName]) => !alreadyDeclaredProps.includes(propName))
-    .map(([propName, propType]) => ({
-      label: propName,
+  const availableProps: CompletionSuggestion[] = Object.values(componentMeta.properties || {})
+    .filter((prop) => !alreadyDeclaredProps.includes(prop.name))
+    .map((prop) => ({
+      label: prop.name,
       kind: 'Property',
-      documentation: `Type: ${propType}`,
-      insertText: `${propName}: `,
+      documentation: `Type: ${prop.type}`,
+      insertText: `${prop.name}: `,
       detail: `${componentName} property`,
     }));
 
@@ -344,16 +344,16 @@ export function getPropertyValueSuggestions(
   propertyName: string
 ): CompletionSuggestion[] {
   const componentMeta = COMPONENTS[componentName as keyof typeof COMPONENTS];
-  if (!componentMeta || !componentMeta.propertyValues) {
+  if (!componentMeta) {
     return [];
   }
 
-  const values = componentMeta.propertyValues[propertyName as keyof typeof componentMeta.propertyValues];
-  if (!values) {
+  const propDef = componentMeta.properties[propertyName];
+  if (!propDef || propDef.type !== 'enum' || !propDef.options) {
     return [];
   }
 
-  return (Array.isArray(values) ? values : [values]).map((value) => ({
+  return (propDef.options).map((value) => ({
     label: value.toString(),
     kind: 'Value',
     documentation: `Value for ${propertyName}`,

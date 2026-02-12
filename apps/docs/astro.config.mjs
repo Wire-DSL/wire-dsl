@@ -55,6 +55,7 @@ export default defineConfig({
 						{ label: 'IR Format', slug: 'architecture/ir-format' },
 						{ label: 'Layout Engine', slug: 'architecture/layout-engine' },
 						{ label: 'Validation', slug: 'architecture/validation' },
+						{ label: 'SourceMap System', slug: 'architecture/sourcemap' },
 					],
 				},
 				{

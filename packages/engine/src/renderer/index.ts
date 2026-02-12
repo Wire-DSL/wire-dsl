@@ -1,4 +1,4 @@
-import type { IRContract, IRNode, IRComponentNode } from '../ir/index';
+import type { IRContract, IRNode, IRComponentNode, IRContainerNode } from '../ir/index';
 import type { LayoutResult } from '../layout/index';
 import { MockDataGenerator } from './mock-data';
 import { ColorResolver } from './colors';
@@ -182,18 +182,47 @@ export class SVGRenderer {
     this.renderedNodeIds.add(nodeId);
 
     if (node.kind === 'container') {
-      // Special handling for panel and card: render border
-      if (node.containerType === 'panel') {
-        this.renderPanelBorder(node, pos, output);
-      }
-      if (node.containerType === 'card') {
-        this.renderCardBorder(node, pos, output);
+      // Wrapper group for all containers (enables selection in editor)
+      const containerGroup: string[] = [];
+      const hasNodeId = node.meta?.nodeId;
+      
+      if (hasNodeId) {
+        containerGroup.push(`<g${this.getDataNodeId(node)}>`);
       }
 
-      // Render container (usually invisible, just layout)
+      // Add invisible clickable rect for layouts (excluding panel/card which have visible borders)
+      const needsClickableArea = hasNodeId && 
+        node.containerType !== 'panel' && 
+        node.containerType !== 'card';
+      
+      if (needsClickableArea) {
+        // Transparent rectangle for click detection in editor
+        containerGroup.push(
+          `<rect x="${pos.x}" y="${pos.y}" width="${pos.width}" height="${pos.height}" ` +
+          `fill="transparent" stroke="none" pointer-events="all"/>`
+        );
+      }
+
+      // Special handling for panel and card: render border
+      if (node.containerType === 'panel') {
+        this.renderPanelBorder(node, pos, containerGroup);
+      }
+      if (node.containerType === 'card') {
+        this.renderCardBorder(node, pos, containerGroup);
+      }
+
+      // Render container children
       node.children.forEach((childRef) => {
-        this.renderNode(childRef.ref, output);
+        this.renderNode(childRef.ref, containerGroup);
       });
+
+      // Close wrapper group
+      if (hasNodeId) {
+        containerGroup.push('</g>');
+      }
+
+      // Add container output to main output
+      output.push(...containerGroup);
     } else if (node.kind === 'component') {
       // Render component
       const componentSvg = this.renderComponent(node, pos);
@@ -283,7 +312,7 @@ export class SVGRenderer {
     const text = String(node.props.text || 'Heading');
     const fontSize = 20;
 
-    return `<g>
+    return `<g${this.getDataNodeId(node)}>
     <text x="${pos.x}" y="${pos.y + pos.height / 2 + 6}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="${fontSize}" 
@@ -312,7 +341,7 @@ export class SVGRenderer {
 
     const buttonWidth = Math.max(pos.width, 60);
 
-    return `<g>
+    return `<g${this.getDataNodeId(node)}>
     <rect x="${pos.x}" y="${pos.y}" 
           width="${buttonWidth}" height="${pos.height}" 
           rx="6" 
@@ -332,7 +361,7 @@ export class SVGRenderer {
     const label = String(node.props.label || '');
     const placeholder = String(node.props.placeholder || '');
 
-    return `<g>
+    return `<g${this.getDataNodeId(node)}>
     ${
       label
         ? `<text x="${pos.x + 8}" y="${pos.y - 6}" 
@@ -376,7 +405,7 @@ export class SVGRenderer {
       titleY = pos.y + pos.height / 2 + titleLineHeight / 2 - 4; // centered with slight upward shift
     }
 
-    let svg = `<g>
+    let svg = `<g${this.getDataNodeId(node)}>
     <rect x="${pos.x}" y="${pos.y}" 
           width="${pos.width}" height="${pos.height}" 
           fill="${this.renderTheme.cardBg}" 
@@ -544,7 +573,7 @@ export class SVGRenderer {
       mockRows.push(row);
     }
 
-    let svg = `<g>
+    let svg = `<g${this.getDataNodeId(node)}>
     <rect x="${pos.x}" y="${pos.y}" 
           width="${pos.width}" height="${pos.height}" 
           rx="8" 
@@ -674,7 +703,7 @@ export class SVGRenderer {
   private renderChartPlaceholder(node: IRComponentNode, pos: any): string {
     const type = String(node.props.type || 'bar');
 
-    return `<g>
+    return `<g${this.getDataNodeId(node)}>
     <rect x="${pos.x}" y="${pos.y}" 
           width="${pos.width}" height="${pos.height}" 
           rx="8" 
@@ -697,7 +726,7 @@ export class SVGRenderer {
     const text = String(node.props.content || 'Text content');
     const fontSize = 14;
 
-    return `<g>
+    return `<g${this.getDataNodeId(node)}>
     <text x="${pos.x}" y="${pos.y + 16}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="${fontSize}" 
@@ -708,7 +737,7 @@ export class SVGRenderer {
   private renderLabel(node: IRComponentNode, pos: any): string {
     const text = String(node.props.text || 'Label');
 
-    return `<g>
+    return `<g${this.getDataNodeId(node)}>
     <text x="${pos.x}" y="${pos.y + 12}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="12" 
@@ -719,7 +748,7 @@ export class SVGRenderer {
   private renderCode(node: IRComponentNode, pos: any): string {
     const code = String(node.props.code || 'const x = 42;');
 
-    return `<g>
+    return `<g${this.getDataNodeId(node)}>
     <rect x="${pos.x}" y="${pos.y}" 
           width="${pos.width}" height="${pos.height}" 
           rx="4" 
@@ -741,7 +770,7 @@ export class SVGRenderer {
     const label = String(node.props.label || '');
     const placeholder = String(node.props.placeholder || 'Enter text...');
 
-    return `<g>
+    return `<g${this.getDataNodeId(node)}>
     ${
       label
         ? `<text x="${pos.x}" y="${pos.y - 6}" 
@@ -767,7 +796,7 @@ export class SVGRenderer {
     const label = String(node.props.label || '');
     const placeholder = String(node.props.placeholder || 'Select...');
 
-    return `<g>
+    return `<g${this.getDataNodeId(node)}>
     ${
       label
         ? `<text x="${pos.x}" y="${pos.y - 6}" 
@@ -800,7 +829,7 @@ export class SVGRenderer {
     const checkboxSize = 18;
     const checkboxY = pos.y + pos.height / 2 - checkboxSize / 2;
 
-    return `<g>
+    return `<g${this.getDataNodeId(node)}>
     <rect x="${pos.x}" y="${checkboxY}" 
           width="${checkboxSize}" height="${checkboxSize}" 
           rx="4" 
@@ -830,7 +859,7 @@ export class SVGRenderer {
     const radioSize = 16;
     const radioY = pos.y + pos.height / 2 - radioSize / 2;
 
-    return `<g>
+    return `<g${this.getDataNodeId(node)}>
     <circle cx="${pos.x + radioSize / 2}" cy="${radioY + radioSize / 2}" 
             r="${radioSize / 2}" 
             fill="${this.renderTheme.cardBg}" 
@@ -858,7 +887,7 @@ export class SVGRenderer {
     const toggleHeight = 20;
     const toggleY = pos.y + pos.height / 2 - toggleHeight / 2;
 
-    return `<g>
+    return `<g${this.getDataNodeId(node)}>
     <rect x="${pos.x}" y="${toggleY}" 
           width="${toggleWidth}" height="${toggleHeight}" 
           rx="10" 
@@ -896,7 +925,7 @@ export class SVGRenderer {
     const padding = 16;
     const titleHeight = 40;
 
-    let svg = `<g>
+    let svg = `<g${this.getDataNodeId(node)}>
     <rect x="${pos.x}" y="${pos.y}" 
           width="${pos.width}" height="${pos.height}" 
           fill="${this.renderTheme.cardBg}" 
@@ -938,7 +967,7 @@ export class SVGRenderer {
     const tabs = itemsStr ? itemsStr.split(',').map((t) => t.trim()) : ['Tab 1', 'Tab 2', 'Tab 3'];
     const tabWidth = pos.width / tabs.length;
 
-    let svg = `<g>
+    let svg = `<g${this.getDataNodeId(node)}>
     <!-- Tab headers -->`;
 
     tabs.forEach((tab, i) => {
@@ -971,7 +1000,7 @@ export class SVGRenderer {
   }
 
   private renderDivider(node: IRComponentNode, pos: any): string {
-    return `<g>
+    return `<g${this.getDataNodeId(node)}>
     <line x1="${pos.x}" y1="${pos.y + pos.height / 2}" 
           x2="${pos.x + pos.width}" y2="${pos.y + pos.height / 2}" 
           stroke="${this.renderTheme.border}" 
@@ -996,7 +1025,7 @@ export class SVGRenderer {
 
     const bgColor = typeColors[type] || typeColors.info;
 
-    return `<g>
+    return `<g${this.getDataNodeId(node)}>
     <rect x="${pos.x}" y="${pos.y}" 
           width="${pos.width}" height="${pos.height}" 
           rx="6" 
@@ -1021,7 +1050,7 @@ export class SVGRenderer {
     const bgColor = variant === 'primary' ? this.renderTheme.primary : this.renderTheme.border;
     const textColor = variant === 'primary' ? 'white' : this.renderTheme.text;
 
-    return `<g>
+    return `<g${this.getDataNodeId(node)}>
     <rect x="${pos.x}" y="${pos.y}" 
           width="${pos.width}" height="${pos.height}" 
           rx="${pos.height / 2}" 
@@ -1047,7 +1076,7 @@ export class SVGRenderer {
     const modalX = (this.options.width - pos.width) / 2;
     const modalY = Math.max(40, (overlayHeight - pos.height) / 2);
 
-    return `<g>
+    return `<g${this.getDataNodeId(node)}>
     <!-- Modal backdrop -->
       <rect x="0" y="0" 
         width="${this.options.width}" height="${overlayHeight}" 
@@ -1105,7 +1134,7 @@ export class SVGRenderer {
     const itemHeight = 36;
     const titleHeight = title ? 40 : 0;
 
-    let svg = `<g>
+    let svg = `<g${this.getDataNodeId(node)}>
     <rect x="${pos.x}" y="${pos.y}" 
           width="${pos.width}" height="${pos.height}" 
           rx="8" 
@@ -1146,7 +1175,7 @@ export class SVGRenderer {
   }
 
   private renderGenericComponent(node: IRComponentNode, pos: any): string {
-    return `<g>
+    return `<g${this.getDataNodeId(node)}>
     <rect x="${pos.x}" y="${pos.y}" 
           width="${pos.width}" height="${pos.height}" 
           rx="4" 
@@ -1187,7 +1216,7 @@ export class SVGRenderer {
     const valueY = titleY + valueGap + valueSize;
     const captionY = valueY + captionGap + captionSize;
 
-    let svg = `<g>
+    let svg = `<g${this.getDataNodeId(node)}>
     <!-- StatCard Background -->
     <rect x="${pos.x}" y="${pos.y}" 
           width="${pos.width}" height="${pos.height}" 
@@ -1257,7 +1286,7 @@ export class SVGRenderer {
     let svgContent = '';
 
     // Background
-    let svg = `<g>
+    let svg = `<g${this.getDataNodeId(node)}>
     <!-- Image Background -->
     <rect x="${pos.x}" y="${pos.y}" width="${pos.width}" height="${pos.height}" fill="#E8E8E8"/>`;
 
@@ -1348,7 +1377,7 @@ export class SVGRenderer {
     const itemSpacing = 8;
 
     let currentX = pos.x;
-    let svg = '<g>';
+    let svg = `<g${this.getDataNodeId(node)}>`;
 
     items.forEach((item, index) => {
       const isLast = index === items.length - 1;
@@ -1391,7 +1420,7 @@ export class SVGRenderer {
     const fontSize = 14;
     const activeIndex = Number(node.props.active || 0);
 
-    let svg = '<g>';
+    let svg = `<g${this.getDataNodeId(node)}>`;
 
     items.forEach((item, index) => {
       const itemY = pos.y + index * itemHeight;
@@ -1446,7 +1475,7 @@ export class SVGRenderer {
 
     if (!iconSvg) {
       // Fallback: render a placeholder with question mark
-      return `<g>
+      return `<g${this.getDataNodeId(node)}>
     <!-- Icon not found: ${iconType} -->
     <circle cx="${pos.x + pos.width / 2}" cy="${pos.y + pos.height / 2}" r="${Math.min(pos.width, pos.height) / 2 - 2}" fill="none" stroke="rgba(100, 116, 139, 0.4)" stroke-width="1"/>
     <text x="${pos.x + pos.width / 2}" y="${pos.y + pos.height / 2 + 4}" font-family="system-ui, -apple-system, sans-serif" font-size="12" fill="rgba(100, 116, 139, 0.6)" text-anchor="middle">?</text>
@@ -1461,7 +1490,7 @@ export class SVGRenderer {
     const offsetY = pos.y + (pos.height - iconSize) / 2;
 
     // Wrap SVG with viewBox and sizing
-    const wrappedSvg = `<g transform="translate(${offsetX}, ${offsetY})">
+    const wrappedSvg = `<g${this.getDataNodeId(node)} transform="translate(${offsetX}, ${offsetY})">
     <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       ${this.extractSvgContent(iconSvg)}
     </svg>
@@ -1505,7 +1534,7 @@ export class SVGRenderer {
     const buttonSize = sizeMap[size as keyof typeof sizeMap] || 32;
     const radius = 6;
 
-    let svg = `<g opacity="${opacity}">
+    let svg = `<g${this.getDataNodeId(node)} opacity="${opacity}">
     <!-- IconButton background -->
     <rect x="${pos.x}" y="${pos.y}" width="${buttonSize}" height="${buttonSize}" rx="${radius}" fill="${bgColor}" stroke="${borderColor}" stroke-width="1"/>`;
 
@@ -1560,6 +1589,14 @@ export class SVGRenderer {
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&apos;');
+  }
+
+  /**
+   * Get data-node-id attribute string for SVG elements
+   * Enables bidirectional selection between code and canvas
+   */
+  private getDataNodeId(node: IRComponentNode | IRContainerNode): string {
+    return node.meta.nodeId ? ` data-node-id="${node.meta.nodeId}"` : '';
   }
 }
 

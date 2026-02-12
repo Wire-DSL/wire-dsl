@@ -153,25 +153,24 @@ export function getComponentPropertiesForCompletion(
   if (!component) return [];
 
   const items: CompletionItem[] = [];
-  const properties = component.properties || [];
+  const properties = Object.values(component.properties) || [];
 
-  for (const propName of properties) {
+  for (const prop of properties) {
     // Skip if this property is already declared
-    if (alreadyDeclared.has(propName)) {
+    if (alreadyDeclared.has(prop.name)) {
       continue;
     }
 
     const item: CompletionItem = {
-      label: propName,
+      label: prop.name,
       kind: 'Property',
       detail: `Property of ${componentName}`,
-      insertText: `${propName}: `,
+      insertText: `${prop.name}: `,
     };
 
     // Add property values if available
-    if (component.propertyValues && component.propertyValues[propName]) {
-      const values = component.propertyValues[propName];
-      item.insertText = `${propName}: ${values.length === 1 ? values[0] : ''}`;
+    if (prop.type === 'enum' && prop.options && prop.options.length > 0) {
+      item.insertText = `${prop.name}: ${prop.options.length === 1 ? prop.options[0] : ''}`;
     }
 
     items.push(item);
@@ -188,7 +187,7 @@ export function getAlreadyDeclaredProperties(lineText: string): Set<string> {
   const declaredProps = new Set<string>();
   const matches = lineText.matchAll(/(\w+):\s*/g);
 
-  for (const match of matches) {
+  for (const match of Array.from(matches)) {
     declaredProps.add(match[1]);
   }
 

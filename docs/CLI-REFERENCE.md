@@ -78,8 +78,8 @@ cd packages/studio
 ### Filter by Package
 
 ```bash
-# Build only core
-pnpm build --filter=@wire-dsl/core
+# Build only engine
+pnpm build --filter=@wire-dsl/engine
 
 # Test only web
 pnpm test --filter=@wire-dsl/web
@@ -141,7 +141,7 @@ cat .changeset/
 pnpm test
 
 # Run tests for specific package
-pnpm test --filter=@wire-dsl/core
+pnpm test --filter=@wire-dsl/engine
 
 # Watch mode
 cd packages/engine && pnpm test:watch
@@ -168,7 +168,7 @@ packages/[name]/src/[module]/[file].test.ts
 pnpm lint
 
 # Lint specific package
-pnpm lint --filter=@wire-dsl/core
+pnpm lint --filter=@wire-dsl/engine
 
 # Fix all
 pnpm lint:fix
@@ -367,7 +367,7 @@ git push origin feature/name
 pnpm build          # Uses cache from previous builds
 
 # Filter to specific packages
-pnpm build --filter=@wire-dsl/core
+pnpm build --filter=@wire-dsl/engine
 
 # Skip dependencies
 pnpm build -- --no-deps
@@ -524,7 +524,7 @@ wire render app.wire --pdf output.pdf
 
 ### Architectural Note
 
-As of January 27, 2026, the export functions (SVG, PNG, PDF) have been centralized in the `@wire-dsl/core` package. This enables reuse by other systems (web editor, studio, AI backend) without duplicating export logic. The CLI continues to provide the same interface, maintaining 100% backward compatibility.
+As of January 27, 2026, the export functions (SVG, PNG, PDF) have been centralized in the `@wire-dsl/engine` package. This enables reuse by other systems (web editor, studio, AI backend) without duplicating export logic. The CLI continues to provide the same interface, maintaining 100% backward compatibility.
 
 ---
 

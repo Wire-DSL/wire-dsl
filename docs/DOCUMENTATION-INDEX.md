@@ -100,6 +100,23 @@ Complete theme system documentation:
 
 ---
 
+### [SourceMap Guide](SOURCEMAP-GUIDE.md)
+Complete guide to the SourceMap system for bidirectional code↔canvas selection:
+- Quick start and basic usage
+- Semantic node IDs
+- SourceMapResolver API reference
+- Click in editor → highlight canvas
+- Click on canvas → jump to code
+- Property-level selection
+- Navigation and queries
+- Performance optimization
+- Integration patterns (Web editor, VS Code)
+- Best practices and troubleshooting
+
+**Best for**: Building interactive editors with code-to-canvas synchronization
+
+---
+
 ## Architecture
 
 ### Project Structure

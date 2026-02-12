@@ -167,7 +167,7 @@ cd packages/core
 pnpm add zod
 
 # Add internal dependency
-pnpm add @wire-dsl/core --workspace
+pnpm add @wire-dsl/engine --workspace
 ```
 
 ## Testing
