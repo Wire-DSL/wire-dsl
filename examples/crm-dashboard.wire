@@ -1,5 +1,5 @@
 project "CRM Dashboard" {
-  theme {
+  config {
     density: "normal"
     spacing: "md"
     radius: "md"

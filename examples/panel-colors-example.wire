@@ -1,5 +1,5 @@
 project "Panel with Colors" {
-  theme {
+  config {
     density: "comfortable"
     spacing: "md"
     radius: "md"

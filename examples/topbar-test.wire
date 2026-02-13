@@ -1,5 +1,5 @@
 project "Topbar Test" {
-  theme {
+  config {
     density: "normal"
     spacing: "md"
     radius: "md"

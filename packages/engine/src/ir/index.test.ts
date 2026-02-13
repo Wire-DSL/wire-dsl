@@ -37,7 +37,7 @@ describe('IR Generator', () => {
     const ast = parseWireDSL(input);
     const ir = generateIR(ast);
 
-    expect(ir.project.theme).toEqual({
+    expect(ir.project.config).toEqual({
       density: 'normal',
       spacing: 'md',
       radius: 'md',
@@ -49,7 +49,7 @@ describe('IR Generator', () => {
   it('should apply custom theme', () => {
     const input = `
       project "Custom" {
-        theme {
+        config {
           density: "comfortable"
           spacing: "lg"
         }
@@ -65,9 +65,9 @@ describe('IR Generator', () => {
     const ast = parseWireDSL(input);
     const ir = generateIR(ast);
 
-    expect(ir.project.theme.density).toBe('comfortable');
-    expect(ir.project.theme.spacing).toBe('lg');
-    expect(ir.project.theme.radius).toBe('md'); // default
+    expect(ir.project.config.density).toBe('comfortable');
+    expect(ir.project.config.spacing).toBe('lg');
+    expect(ir.project.config.radius).toBe('md'); // default
   });
 
   it('should generate unique node IDs', () => {
@@ -304,7 +304,7 @@ describe('IR Generator', () => {
   it('should handle complete example', () => {
     const input = `
       project "Complete Dashboard" {
-        theme {
+        config {
           density: "comfortable"
           spacing: "lg"
         }
@@ -341,7 +341,7 @@ describe('IR Generator', () => {
     const ir = generateIR(ast);
 
     expect(ir.project.name).toBe('Complete Dashboard');
-    expect(ir.project.theme.density).toBe('comfortable');
+    expect(ir.project.config.density).toBe('comfortable');
     expect(ir.project.screens).toHaveLength(1);
     expect(Object.keys(ir.project.nodes).length).toBeGreaterThan(5);
 
@@ -594,7 +594,7 @@ describe('IR Generator', () => {
   it('should expand StatCard with default styling', () => {
     const input = `
       project "Dashboard" {
-        theme {
+        config {
           density: "comfortable"
         }
         

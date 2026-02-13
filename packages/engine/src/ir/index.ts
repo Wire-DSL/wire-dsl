@@ -22,20 +22,22 @@ export interface IRContract {
 export interface IRProject {
   id: string;
   name: string;
-  theme: IRTheme;
+  config: IRConfig;
   mocks: Record<string, unknown>;
   colors: Record<string, string>;
   screens: IRScreen[];
   nodes: Record<string, IRNode>;
 }
 
-export interface IRTheme {
+export interface IRConfig {
   density: 'compact' | 'normal' | 'comfortable';
   spacing: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   radius: 'none' | 'sm' | 'md' | 'lg' | 'full';
   stroke: 'thin' | 'normal' | 'thick';
   font: 'sm' | 'base' | 'lg';
   background?: string;
+  theme?: string;  // Color scheme: "light" | "dark"
+  style?: string;  // Render style: "standard" | "clean" | custom
 }
 
 export interface IRScreen {
@@ -81,13 +83,15 @@ export interface IRMeta {
 }
 
 // Zod validation schemas
-const IRThemeSchema = z.object({
+const IRConfigSchema = z.object({
   density: z.enum(['compact', 'normal', 'comfortable']),
   spacing: z.enum(['xs', 'sm', 'md', 'lg', 'xl']),
   radius: z.enum(['none', 'sm', 'md', 'lg', 'full']),
   stroke: z.enum(['thin', 'normal', 'thick']),
   font: z.enum(['sm', 'base', 'lg']),
   background: z.string().optional(),
+  theme: z.string().optional(),
+  style: z.string().optional(),
 });
 
 const IRStyleSchema = z.object({
@@ -135,7 +139,7 @@ const IRScreenSchema = z.object({
 const IRProjectSchema = z.object({
   id: z.string(),
   name: z.string(),
-  theme: IRThemeSchema,
+  config: IRConfigSchema,
   mocks: z.record(z.string(), z.unknown()),
   colors: z.record(z.string(), z.string()),
   screens: z.array(IRScreenSchema),
@@ -177,7 +181,7 @@ export class IRGenerator {
   private definedComponentIndices: Map<string, number> = new Map();
   private undefinedComponentsUsed: Set<string> = new Set();
   private warnings: Array<{ message: string; type: string }> = [];
-  private theme: IRTheme = {
+  private config: IRConfig = {
     density: 'normal',
     spacing: 'md',
     radius: 'md',
@@ -201,8 +205,8 @@ export class IRGenerator {
       });
     }
 
-    // Apply theme from AST
-    this.applyTheme(ast.theme);
+    // Apply config from AST
+    this.applyConfig(ast.config);
 
     // Convert screens
     const screens: IRScreen[] = ast.screens.map((screen, screenIndex) => 
@@ -221,7 +225,7 @@ export class IRGenerator {
     const project: IRProject = {
       id: this.sanitizeId(ast.name),
       name: ast.name,
-      theme: this.theme,
+      config: this.config,
       mocks: ast.mocks || {},
       colors: ast.colors || {},
       screens,
@@ -237,24 +241,30 @@ export class IRGenerator {
     return IRContractSchema.parse(ir);
   }
 
-  private applyTheme(astTheme: Record<string, string>): void {
-    if (astTheme.density) {
-      this.theme.density = astTheme.density as IRTheme['density'];
+  private applyConfig(astConfig: Record<string, string>): void {
+    if (astConfig.density) {
+      this.config.density = astConfig.density as IRConfig['density'];
     }
-    if (astTheme.spacing) {
-      this.theme.spacing = astTheme.spacing as IRTheme['spacing'];
+    if (astConfig.spacing) {
+      this.config.spacing = astConfig.spacing as IRConfig['spacing'];
     }
-    if (astTheme.radius) {
-      this.theme.radius = astTheme.radius as IRTheme['radius'];
+    if (astConfig.radius) {
+      this.config.radius = astConfig.radius as IRConfig['radius'];
     }
-    if (astTheme.stroke) {
-      this.theme.stroke = astTheme.stroke as IRTheme['stroke'];
+    if (astConfig.stroke) {
+      this.config.stroke = astConfig.stroke as IRConfig['stroke'];
     }
-    if (astTheme.font) {
-      this.theme.font = astTheme.font as IRTheme['font'];
+    if (astConfig.font) {
+      this.config.font = astConfig.font as IRConfig['font'];
     }
-    if (astTheme.background) {
-      this.theme.background = astTheme.background;
+    if (astConfig.background) {
+      this.config.background = astConfig.background;
+    }
+    if (astConfig.theme) {
+      this.config.theme = astConfig.theme;
+    }
+    if (astConfig.style) {
+      this.config.style = astConfig.style;
     }
   }
 
@@ -268,11 +278,11 @@ export class IRGenerator {
       root: { ref: rootNodeId },
     };
 
-    // Add background if specified on screen, otherwise use theme default
+    // Add background if specified on screen, otherwise use config default
     if (screen.params.background) {
       irScreen.background = String(screen.params.background);
-    } else if (this.theme.background) {
-      irScreen.background = this.theme.background;
+    } else if (this.config.background) {
+      irScreen.background = this.config.background;
     }
 
     return irScreen;

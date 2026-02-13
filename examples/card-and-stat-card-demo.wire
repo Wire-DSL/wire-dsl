@@ -1,5 +1,5 @@
 project "Card & StatCard Demo" {
-  theme {
+  config {
     spacing: "md"
     density: "normal"
     radius: "md"

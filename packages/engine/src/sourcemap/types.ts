@@ -39,14 +39,14 @@ export interface PropertySourceMap {
 /**
  * Types of nodes in Wire DSL
  */
-export type SourceMapNodeType = 
-  | 'project' 
-  | 'screen' 
-  | 'layout' 
+export type SourceMapNodeType =
+  | 'project'
+  | 'screen'
+  | 'layout'
   | 'component'
   | 'component-definition'  // For user-defined components (define Component "Name")
   | 'cell'                  // For grid cells
-  | 'theme'                 // Theme configuration block
+  | 'config'                // Config configuration block (renamed from 'theme')
   | 'mocks'                 // Mocks data block
   | 'colors';               // Colors palette block
 

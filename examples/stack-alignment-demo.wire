@@ -1,5 +1,5 @@
 project "Stack Alignment Demo" {
-  theme {
+  config {
     spacing: "md"
     density: "normal"
     radius: "md"

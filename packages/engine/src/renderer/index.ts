@@ -73,10 +73,14 @@ export class SVGRenderer {
     this.ir = ir;
     this.layout = layout;
     this.selectedScreenName = options?.screenName;
+
+    // Resolve color scheme with priority: options.theme > config.theme > 'light'
+    const colorScheme = options?.theme || ir.project.config.theme || 'light';
+
     this.options = {
       width: options?.width || 1280,
       height: options?.height || 720,
-      theme: options?.theme || 'light',
+      theme: colorScheme as 'light' | 'dark',
       includeLabels: options?.includeLabels ?? true,
       screenName: options?.screenName,
     };
@@ -1577,7 +1581,7 @@ export class SVGRenderer {
       xl: 32,
     };
 
-    if (!spacing) return spacingMap[this.ir.project.theme.spacing] || 16;
+    if (!spacing) return spacingMap[this.ir.project.config.spacing] || 16;
     const value = spacingMap[spacing];
     return value !== undefined ? value : spacingMap.md;
   }
