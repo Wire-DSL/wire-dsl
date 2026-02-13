@@ -1,5 +1,5 @@
 project "Icon Demo" {
-  theme {
+  config {
     spacing: "md"
     density: "normal"
     radius: "md"

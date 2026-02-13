@@ -1,4 +1,4 @@
-import type { IRContract, IRNode, IRTheme } from '../ir/index';
+import type { IRContract, IRNode, IRConfig } from '../ir/index';
 
 /**
  * Layout Engine
@@ -47,7 +47,7 @@ const DENSITY_HEIGHTS: Record<string, number> = {
 
 export class LayoutEngine {
   private nodes: Record<string, IRNode>;
-  private theme: IRTheme;
+  private config: IRConfig;
   private result: LayoutResult = {};
   private viewport: { width: number; height: number };
   private ir: IRContract;
@@ -56,7 +56,7 @@ export class LayoutEngine {
   constructor(ir: IRContract) {
     this.ir = ir;
     this.nodes = ir.project.nodes;
-    this.theme = ir.project.theme;
+    this.config = ir.project.config;
     this.viewport = ir.project.screens[0]?.viewport || { width: 1280, height: 720 };
   }
 
@@ -580,13 +580,13 @@ export class LayoutEngine {
   }
 
   private resolveSpacing(spacing?: string): number {
-    if (!spacing) return SPACING_VALUES[this.theme.spacing];
+    if (!spacing) return SPACING_VALUES[this.config.spacing];
     const value = SPACING_VALUES[spacing];
     return value !== undefined ? value : SPACING_VALUES.md;
   }
 
   private getComponentHeight(): number {
-    return DENSITY_HEIGHTS[this.theme.density] || DENSITY_HEIGHTS.normal;
+    return DENSITY_HEIGHTS[this.config.density] || DENSITY_HEIGHTS.normal;
   }
 
   private getIntrinsicComponentHeight(node: IRNode, availableWidth?: number): number {

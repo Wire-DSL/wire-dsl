@@ -1,5 +1,5 @@
 project "Circular Reference Test" {
-  theme {
+  config {
     density: "normal"
     spacing: "md"
     radius: "md"

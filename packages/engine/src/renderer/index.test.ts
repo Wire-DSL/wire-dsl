@@ -293,7 +293,7 @@ describe('SVG Renderer', () => {
   it('should render complete dashboard example', () => {
     const input = `
       project "Dashboard" {
-        theme {
+        config {
           spacing: "lg"
         }
         
@@ -529,7 +529,7 @@ describe('SVG Renderer', () => {
   it('should render complete form example', () => {
     const input = `
       project "UserForm" {
-        theme {
+        config {
           spacing: "md"
         }
         

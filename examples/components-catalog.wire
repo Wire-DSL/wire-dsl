@@ -1,5 +1,5 @@
 project "Complete Components Catalog" {
-  theme {
+  config {
     density: "normal"
     spacing: "md"
     radius: "md"

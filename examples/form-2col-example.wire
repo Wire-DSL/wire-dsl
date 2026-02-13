@@ -1,5 +1,5 @@
 project "Form Example - Two Columns" {
-  theme {
+  config {
     density: "normal"
     spacing: "md"
     radius: "md"

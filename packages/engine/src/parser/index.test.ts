@@ -21,10 +21,10 @@ describe('WireDSL Parser', () => {
     expect(ast.screens[0].name).toBe('Main');
   });
 
-  it('should parse theme declarations', () => {
+  it('should parse config declarations', () => {
     const input = `
       project "Dashboard" {
-        theme {
+        config {
           density: "comfortable"
           spacing: "lg"
         }
@@ -39,7 +39,7 @@ describe('WireDSL Parser', () => {
 
     const ast = parseWireDSL(input);
 
-    expect(ast.theme).toEqual({
+    expect(ast.config).toEqual({
       density: 'comfortable',
       spacing: 'lg',
     });
@@ -198,7 +198,7 @@ describe('WireDSL Parser', () => {
   it('should parse complete example', () => {
     const input = `
       project "Simple Dashboard" {
-        theme {
+        config {
           density: "comfortable"
           spacing: "lg"
         }
@@ -238,7 +238,7 @@ describe('WireDSL Parser', () => {
     const ast = parseWireDSL(input);
 
     expect(ast.name).toBe('Simple Dashboard');
-    expect(ast.theme).toEqual({
+    expect(ast.config).toEqual({
       density: 'comfortable',
       spacing: 'lg',
     });

@@ -1,5 +1,5 @@
 project "Theme Test" {
-  theme {
+  config {
     density: "compact"
     spacing: "lg"
     radius: "md"
