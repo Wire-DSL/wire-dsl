@@ -1,5 +1,5 @@
 ---
-name: wire-dsl-generator
+name: wireframe-generator
 description: Generate Wire DSL code for wireframes and UI prototypes
 ---
 
