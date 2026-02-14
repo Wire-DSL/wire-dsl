@@ -3,6 +3,7 @@ import type { LayoutResult } from '../layout/index';
 import { MockDataGenerator } from './mock-data';
 import { ColorResolver } from './colors';
 import { getIcon } from './icons/iconLibrary';
+import { getStyle, type RenderStyleTokens } from './styles';
 
 /**
  * SVG Renderer
@@ -18,6 +19,7 @@ export interface SVGRenderOptions {
   width?: number;
   height?: number;
   theme?: 'light' | 'dark';
+  style?: string;  // Render style: 'standard' | 'clean' | custom
   includeLabels?: boolean;
   screenName?: string; // Select specific screen by name
 }
@@ -65,6 +67,7 @@ export class SVGRenderer {
   private layout: LayoutResult;
   private options: Required<Omit<SVGRenderOptions, 'screenName'>> & { screenName?: string };
   private renderTheme: typeof THEMES.light;
+  private styleTokens: RenderStyleTokens;
   private selectedScreenName?: string;
   private renderedNodeIds: Set<string> = new Set(); // Track nodes rendered in current pass
   private colorResolver: ColorResolver;
@@ -77,10 +80,15 @@ export class SVGRenderer {
     // Resolve color scheme with priority: options.theme > config.theme > 'light'
     const colorScheme = options?.theme || ir.project.config.theme || 'light';
 
+    // Resolve render style with priority: options.style > config.style > 'standard'
+    const styleName = options?.style || ir.project.config.style || 'standard';
+    this.styleTokens = getStyle(styleName) || getStyle('standard')!;
+
     this.options = {
       width: options?.width || 1280,
       height: options?.height || 720,
       theme: colorScheme as 'light' | 'dark',
+      style: styleName,
       includeLabels: options?.includeLabels ?? true,
       screenName: options?.screenName,
     };
@@ -153,8 +161,13 @@ export class SVGRenderer {
       backgroundColor = this.colorResolver.resolveColor(screen.background, this.renderTheme.bg);
     }
 
+    // Include SVG defs if the style provides them (e.g., filters, gradients)
+    const defs = this.styleTokens.svgDefs.trim()
+      ? `  <defs>\n    ${this.styleTokens.svgDefs.trim()}\n  </defs>\n`
+      : '';
+
     return `<svg width="${this.options.width}" height="${svgHeight}" viewBox="0 0 ${this.options.width} ${svgHeight}" xmlns="http://www.w3.org/2000/svg">
-  <rect width="100%" height="100%" fill="${backgroundColor}"/>
+${defs}  <rect width="100%" height="100%" fill="${backgroundColor}"/>
   ${children.join('\n  ')}
 </svg>`;
   }
@@ -314,13 +327,12 @@ export class SVGRenderer {
 
   private renderHeading(node: IRComponentNode, pos: any): string {
     const text = String(node.props.text || 'Heading');
-    const fontSize = 20;
 
     return `<g${this.getDataNodeId(node)}>
-    <text x="${pos.x}" y="${pos.y + pos.height / 2 + 6}" 
-          font-family="system-ui, -apple-system, sans-serif" 
-          font-size="${fontSize}" 
-          font-weight="600" 
+    <text x="${pos.x}" y="${pos.y + pos.height / 2 + 6}"
+          font-family="${this.styleTokens.fontFamily}"
+          font-size="${this.styleTokens.headingFontSize}"
+          font-weight="${this.styleTokens.headingFontWeight}"
           fill="${this.renderTheme.text}">${this.escapeXml(text)}</text>
   </g>`;
   }
@@ -330,14 +342,22 @@ export class SVGRenderer {
     const variant = String(node.props.variant || 'default');
     const size = String(node.props.size || 'md');
 
-    // Color configuration with reduced opacity/grayed tones
-    const bgColor = variant === 'primary' 
-      ? 'rgba(59, 130, 246, 0.85)'
-      : 'rgba(226, 232, 240, 0.9)';
-    const textColor = variant === 'primary' ? '#FFFFFF' : 'rgba(30, 41, 59, 0.85)';
-    const borderColor = variant === 'primary' 
-      ? 'rgba(59, 130, 246, 0.7)' 
-      : 'rgba(100, 116, 139, 0.4)';
+    // Color configuration - use solid or rgba based on style
+    let bgColor: string;
+    let textColor: string;
+    let borderColor: string;
+
+    if (this.styleTokens.buttonUseSolidColors) {
+      // Clean style: solid colors
+      bgColor = variant === 'primary' ? '#3B82F6' : '#E2E8F0';
+      textColor = variant === 'primary' ? '#FFFFFF' : '#1E293B';
+      borderColor = variant === 'primary' ? '#3B82F6' : '#64748B';
+    } else {
+      // Standard style: rgba with opacity
+      bgColor = variant === 'primary' ? 'rgba(59, 130, 246, 0.85)' : 'rgba(226, 232, 240, 0.9)';
+      textColor = variant === 'primary' ? '#FFFFFF' : 'rgba(30, 41, 59, 0.85)';
+      borderColor = variant === 'primary' ? 'rgba(59, 130, 246, 0.7)' : 'rgba(100, 116, 139, 0.4)';
+    }
 
     // Font size based on size prop
     const fontSizeMap = { 'sm': 12, 'md': 14, 'lg': 16 };
@@ -346,17 +366,17 @@ export class SVGRenderer {
     const buttonWidth = Math.max(pos.width, 60);
 
     return `<g${this.getDataNodeId(node)}>
-    <rect x="${pos.x}" y="${pos.y}" 
-          width="${buttonWidth}" height="${pos.height}" 
-          rx="6" 
-          fill="${bgColor}" 
-          stroke="${borderColor}" 
+    <rect x="${pos.x}" y="${pos.y}"
+          width="${buttonWidth}" height="${pos.height}"
+          rx="${this.styleTokens.buttonRadius}"
+          fill="${bgColor}"
+          stroke="${borderColor}"
           stroke-width="1"/>
-    <text x="${pos.x + buttonWidth / 2}" y="${pos.y + pos.height / 2 + 5}" 
-          font-family="system-ui, -apple-system, sans-serif" 
-          font-size="${fontSize}" 
-          font-weight="500" 
-          fill="${textColor}" 
+    <text x="${pos.x + buttonWidth / 2}" y="${pos.y + pos.height / 2 + 5}"
+          font-family="${this.styleTokens.fontFamily}"
+          font-size="${fontSize}"
+          font-weight="${this.styleTokens.buttonFontWeight}"
+          fill="${textColor}"
           text-anchor="middle">${this.escapeXml(text)}</text>
   </g>`;
   }
@@ -368,21 +388,21 @@ export class SVGRenderer {
     return `<g${this.getDataNodeId(node)}>
     ${
       label
-        ? `<text x="${pos.x + 8}" y="${pos.y - 6}" 
-          font-family="system-ui, -apple-system, sans-serif" 
-          font-size="12" 
+        ? `<text x="${pos.x + 8}" y="${pos.y - 6}"
+          font-family="${this.styleTokens.fontFamily}"
+          font-size="12"
           fill="${this.renderTheme.text}">${this.escapeXml(label)}</text>`
         : ''
     }
-    <rect x="${pos.x}" y="${pos.y}" 
-          width="${pos.width}" height="${pos.height}" 
-          rx="6" 
-          fill="${this.renderTheme.cardBg}" 
-          stroke="${this.renderTheme.border}" 
+    <rect x="${pos.x}" y="${pos.y}"
+          width="${pos.width}" height="${pos.height}"
+          rx="${this.styleTokens.inputRadius}"
+          fill="${this.renderTheme.cardBg}"
+          stroke="${this.renderTheme.border}"
           stroke-width="1"/>
-    <text x="${pos.x + 12}" y="${pos.y + pos.height / 2 + 5}" 
-          font-family="system-ui, -apple-system, sans-serif" 
-          font-size="14" 
+    <text x="${pos.x + 12}" y="${pos.y + pos.height / 2 + 5}"
+          font-family="${this.styleTokens.fontFamily}"
+          font-size="${this.styleTokens.baseFontSize}"
           fill="${this.renderTheme.textMuted}">${this.escapeXml(placeholder)}</text>
   </g>`;
   }
@@ -511,14 +531,14 @@ export class SVGRenderer {
   private renderCardBorder(node: IRNode, pos: any, output: string[]): void {
     if (node.kind !== 'container') return;
 
-    // Resolve radius parameter
+    // Use style token for card radius, but allow override from params
     const radiusMap: Record<string, number> = {
       none: 0,
       sm: 4,
-      md: 8,
+      md: this.styleTokens.cardRadius,
       lg: 12,
     };
-    const radius = radiusMap[String(node.params.radius) || 'md'] || 8;
+    const radius = radiusMap[String(node.params.radius) || 'md'] || this.styleTokens.cardRadius;
 
     // Resolve background color
     let fillColor = this.renderTheme.cardBg;
@@ -529,16 +549,21 @@ export class SVGRenderer {
     // Check if border is disabled (default true)
     const borderParam = String(node.params.border || 'true');
     const showBorder = borderParam !== 'false';
-    const strokeWidth = showBorder ? '1' : '0';
+    const strokeWidth = showBorder ? this.styleTokens.cardStrokeWidth : 0;
+
+    // Apply shadow filter if style provides one
+    const filterAttr = this.styleTokens.cardShadowFilter
+      ? ` filter="url(#${this.styleTokens.cardShadowFilter})"`
+      : '';
 
     // Render card border as a rectangle with padding, gap support
     const svg = `<g>
-    <rect x="${pos.x}" y="${pos.y}" 
-          width="${pos.width}" height="${pos.height}" 
-          rx="${radius}" 
-          fill="${fillColor}" 
-          stroke="${this.renderTheme.border}" 
-          stroke-width="${strokeWidth}"/>
+    <rect x="${pos.x}" y="${pos.y}"
+          width="${pos.width}" height="${pos.height}"
+          rx="${radius}"
+          fill="${fillColor}"
+          stroke="${this.renderTheme.border}"
+          stroke-width="${strokeWidth}"${filterAttr}/>
     </g>`;
     output.push(svg);
   }
@@ -1054,17 +1079,22 @@ export class SVGRenderer {
     const bgColor = variant === 'primary' ? this.renderTheme.primary : this.renderTheme.border;
     const textColor = variant === 'primary' ? 'white' : this.renderTheme.text;
 
+    // Badge radius: use 'pill' (height/2) or specific number from style
+    const badgeRadius = this.styleTokens.badgeRadius === 'pill'
+      ? pos.height / 2
+      : this.styleTokens.badgeRadius;
+
     return `<g${this.getDataNodeId(node)}>
-    <rect x="${pos.x}" y="${pos.y}" 
-          width="${pos.width}" height="${pos.height}" 
-          rx="${pos.height / 2}" 
-          fill="${bgColor}" 
+    <rect x="${pos.x}" y="${pos.y}"
+          width="${pos.width}" height="${pos.height}"
+          rx="${badgeRadius}"
+          fill="${bgColor}"
           stroke="none"/>
-    <text x="${pos.x + pos.width / 2}" y="${pos.y + pos.height / 2 + 4}" 
-          font-family="system-ui, -apple-system, sans-serif" 
-          font-size="12" 
-          font-weight="600" 
-          fill="${textColor}" 
+    <text x="${pos.x + pos.width / 2}" y="${pos.y + pos.height / 2 + 4}"
+          font-family="${this.styleTokens.fontFamily}"
+          font-size="12"
+          font-weight="600"
+          fill="${textColor}"
           text-anchor="middle">${this.escapeXml(text)}</text>
   </g>`;
   }

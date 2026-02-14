@@ -6,6 +6,7 @@ export * from './parser/index';
 export * from './ir/index';
 export * from './layout/index';
 export * from './renderer/index';
+export * from './renderer/styles';
 
 // SourceMap module (experimental)
 export * from './sourcemap/index';
