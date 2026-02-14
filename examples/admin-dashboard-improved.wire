@@ -1,5 +1,5 @@
 project "Admin Dashboard - Improved" {
-  config {
+  style {
     density: "comfortable"
     spacing: "md"
     radius: "md"
@@ -27,6 +27,7 @@ project "Admin Dashboard - Improved" {
           layout stack(direction: vertical, gap: 4) {
             component Heading text: "Dashboard"
             component Text content: "Welcome back, Admin"
+            component Button text: "View profile" variant: primary
           }
           layout stack(direction: horizontal, gap: 12) {
             component IconButton icon: "bell" variant: "default" size: "sm"

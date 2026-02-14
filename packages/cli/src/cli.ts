@@ -27,13 +27,13 @@ program
   .option('--width <number>', 'Override viewport width')
   .option('--height <number>', 'Override viewport height')
   .option('--theme <theme>', 'Color scheme (light|dark)', 'light')
-  .option('--style <style>', 'Render style (standard|skeleton|custom)')
+  .option('--renderer <renderer>', 'Renderer type (standard|skeleton)', 'standard')
   .option('-w, --watch', 'Watch input file and re-render on changes')
   .action((input, options) => {
     const width = options.width ? Number(options.width) : undefined;
     const height = options.height ? Number(options.height) : undefined;
     const theme = options.theme === 'dark' ? 'dark' : 'light';
-    const style = options.style;
+    const renderer = options.renderer || 'standard';
 
     return renderCommand(input, {
       out: options.out,
@@ -44,7 +44,7 @@ program
       width,
       height,
       theme,
-      style,
+      renderer,
       watch: Boolean(options.watch),
     });
   });

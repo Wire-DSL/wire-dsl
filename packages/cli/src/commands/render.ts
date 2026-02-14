@@ -1,7 +1,7 @@
 import { readFile, mkdir, stat } from 'fs/promises';
 import path from 'path';
 import chokidar from 'chokidar';
-import { LayoutEngine, SVGRenderer, generateIR, parseWireDSL } from '@wire-dsl/engine';
+import { LayoutEngine, SVGRenderer, SkeletonSVGRenderer, generateIR, parseWireDSL } from '@wire-dsl/engine';
 import { exportSVG, exportPNG, exportMultipagePDF } from '@wire-dsl/exporters';
 
 // Dynamic imports for ESM modules to handle CJS compatibility
@@ -35,7 +35,7 @@ type RenderOptions = {
   png?: string;
   screen?: string;
   theme?: 'light' | 'dark';
-  style?: string;
+  renderer?: string;
   width?: number;
   height?: number;
   watch?: boolean;
@@ -139,11 +139,13 @@ export const renderCommand = async (input: string, options: RenderOptions = {}):
         const width = options.width ?? viewport.width;
         const height = options.height ?? viewport.height;
 
-        const renderer = new SVGRenderer(ir, layout, {
+        // Select renderer class based on --renderer option
+        const RendererClass = options.renderer === 'skeleton' ? SkeletonSVGRenderer : SVGRenderer;
+
+        const renderer = new RendererClass(ir, layout, {
           width,
           height,
           theme: options.theme ?? 'light',
-          style: options.style,
           includeLabels: true,
           screenName: screen.name,
         });

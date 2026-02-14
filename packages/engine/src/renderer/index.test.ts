@@ -758,7 +758,7 @@ describe('SVG Renderer - SourceMap Integration (data-node-id)', () => {
 });
 
 describe('Skeleton SVG Renderer', () => {
-  it('should render button as shape only (no text)', () => {
+  it('should render button with same appearance as standard but no text', () => {
     const input = `
       project "Test" {
         screen Main {
@@ -777,8 +777,9 @@ describe('Skeleton SVG Renderer', () => {
     const renderer = new SkeletonSVGRenderer(ir, layout);
     const svg = renderer.render();
 
-    // Button should be outline only
-    expect(svg).toContain('fill="none"');
+    // Button should have same fill color as standard renderer
+    expect(svg).toContain('fill="rgba(226, 232, 240, 0.9)"');
+    // Button should not have text
     expect(svg).not.toContain('>Click me<');
   });
 
@@ -849,7 +850,7 @@ describe('Skeleton SVG Renderer', () => {
     expect(svg).not.toContain('viewBox="0 0 24 24"');
   });
 
-  it('should inherit standard rendering for other components', () => {
+  it('should render form inputs without text', () => {
     const input = `
       project "Test" {
         screen Main {
@@ -867,8 +868,8 @@ describe('Skeleton SVG Renderer', () => {
     const renderer = new SkeletonSVGRenderer(ir, layout);
     const svg = renderer.render();
 
-    // Input should still render normally (inherits from base)
+    // Input should render as shape only (no placeholder text)
     expect(svg).toContain('<rect');  // Input box
-    expect(svg).toContain('>Enter text<');  // Placeholder text
+    expect(svg).not.toContain('>Enter text<');  // Placeholder text should not appear
   });
 });
