@@ -11,7 +11,7 @@ Every `.wire` file has this basic structure:
 
 ```wire
 project "Project Name" {
-  theme {
+  config {
     density: "normal"
     spacing: "md"
     radius: "md"
@@ -35,7 +35,7 @@ Defines the complete wireframe project.
 
 ```wire
 project "Admin Dashboard" {
-  theme { ... }
+  config { ... }
   screen UsersList { ... }
   screen UserDetail { ... }
 }
@@ -53,7 +53,7 @@ Configures design tokens for visual consistency across the entire project.
 
 ```wire
 project "App" {
-  theme {
+  config {
     density: "normal"
     spacing: "md"
     radius: "md"
@@ -255,7 +255,7 @@ Wire-DSL supports two types of comments:
 // This is a line comment
 project "My App" {
   // Comments can appear anywhere
-  theme { ... }
+  config { ... }
 }
 ```
 
@@ -366,7 +366,7 @@ Properties use `key: value` syntax:
 <!-- wire-preview:start -->
 ```wire
 project "Admin Dashboard" {
-  theme {
+  config {
     density: "normal"
     spacing: "md"
     radius: "md"

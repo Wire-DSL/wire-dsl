@@ -24,7 +24,7 @@ The **IR (Intermediate Representation)** is a stable, versioned JSON that repres
   "project": {
     "id": "proj_admin_dashboard",
     "name": "Admin Dashboard",
-    "theme": { ... },
+    "config": { ... },
     "screens": [ ... ],
     "nodes": { ... }
   }
@@ -37,7 +37,7 @@ The **IR (Intermediate Representation)** is a stable, versioned JSON that repres
 {
   "id": "proj_admin_dashboard",
   "name": "Admin Dashboard",
-  "theme": {
+  "config": {
     "density": "normal",
     "spacing": "md",
     "radius": "md",

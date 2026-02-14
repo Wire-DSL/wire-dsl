@@ -197,7 +197,7 @@ Here's how a simple login form flows through the system:
 ### 1. Input DSL
 ```wire
 project "Login" {
-  theme { density: "normal", spacing: "md", ... }
+  config { density: "normal", spacing: "md", ... }
   screen LoginScreen {
     layout stack(direction: vertical, gap: md) {
       component Heading text: "Sign In"

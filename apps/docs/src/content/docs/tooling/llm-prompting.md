@@ -28,7 +28,7 @@ Every `.wire` file MUST have:
 
 ```wire
 project "ProjectName" {
-  theme {
+  config {
     density: "normal"
     spacing: "md"
     radius: "md"
@@ -254,7 +254,7 @@ layout card(padding: lg, gap: md, radius: md, border: true) {
 <!-- wire-preview:start -->
 ```wire
 project "Login" {
-  theme {
+  config {
     density: "comfortable"
     spacing: "lg"
     radius: "md"
@@ -320,7 +320,7 @@ layout grid(columns: 12, gap: lg) {
 
 ### Compact (Data-Dense)
 ```wire
-theme {
+config {
   density: "compact"
   spacing: "sm"
   radius: "sm"
@@ -331,7 +331,7 @@ theme {
 
 ### Normal (Balanced) – Most Common
 ```wire
-theme {
+config {
   density: "normal"
   spacing: "md"
   radius: "md"
@@ -342,7 +342,7 @@ theme {
 
 ### Comfortable (Accessible)
 ```wire
-theme {
+config {
   density: "comfortable"
   spacing: "lg"
   radius: "lg"
@@ -382,7 +382,7 @@ Your response:
 <!-- wire-preview:start -->
 ````wire
 project "Login App" {
-  theme {
+  config {
     density: "comfortable"
     spacing: "lg"
     radius: "md"

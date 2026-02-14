@@ -133,7 +133,7 @@ When there are errors, the preview panel shows:
 <!-- wire-preview:start -->
 ```wire
 project "Layout Tests" {
-  theme {
+  config {
     density: "normal"
     spacing: "md"
     radius: "md"

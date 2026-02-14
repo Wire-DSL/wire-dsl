@@ -16,7 +16,7 @@ The theme is defined as a block at the project level:
 
 ```
 project "MyApp" {
-  theme {
+  config {
     density: "normal"
     spacing: "md"
     radius: "md"
@@ -68,7 +68,7 @@ Controls the overall visual compactness of the UI.
 ```
 // Compact version
 project "CompactApp" {
-  theme {
+  config {
     density: "compact"
     spacing: "sm"
     // UI elements are smaller, tighter
@@ -78,7 +78,7 @@ project "CompactApp" {
 
 // Comfortable version
 project "ComfortableApp" {
-  theme {
+  config {
     density: "comfortable"
     spacing: "lg"
     // UI elements are larger, more spacious
@@ -107,7 +107,7 @@ When you specify `spacing: "md"` in theme, the default gap/padding values in lay
 
 ```
 project "MyApp" {
-  theme {
+  config {
     spacing: "md"  // Default to 16px gaps
   }
 
@@ -160,7 +160,7 @@ Controls the roundness of corners on cards, buttons, and containers.
 ```
 // Geometric Design
 project "ModernApp" {
-  theme {
+  config {
     radius: "none"
     stroke: "normal"
     // Sharp, angular appearance
@@ -169,7 +169,7 @@ project "ModernApp" {
 
 // Friendly Design
 project "FriendlyApp" {
-  theme {
+  config {
     radius: "lg"
     spacing: "lg"
     density: "comfortable"
@@ -199,7 +199,7 @@ Controls the thickness of borders on components and containers.
 ```
 // Minimal Design
 project "MinimalApp" {
-  theme {
+  config {
     stroke: "thin"
     // Subtle borders, high contrast
   }
@@ -207,7 +207,7 @@ project "MinimalApp" {
 
 // Strong Design
 project "StrongApp" {
-  theme {
+  config {
     stroke: "normal"
     // Clear borders, defined sections
   }
@@ -238,7 +238,7 @@ Typography affects all text components:
 ```
 // Professional Design
 project "LawFirmApp" {
-  theme {
+  config {
     font: "title"
     // Uses serif fonts for formal appearance
   }
@@ -246,7 +246,7 @@ project "LawFirmApp" {
 
 // Technical Design
 project "DeveloperTools" {
-  theme {
+  config {
     font: "mono"
     // Uses monospace fonts
   }
@@ -262,7 +262,7 @@ Common theme configurations for different design approaches:
 ### Preset: Modern Minimalist
 ```
 project "ModernApp" {
-  theme {
+  config {
     density: "normal"
     spacing: "md"
     radius: "none"
@@ -278,7 +278,7 @@ project "ModernApp" {
 ### Preset: Friendly & Accessible
 ```
 project "FriendlyApp" {
-  theme {
+  config {
     density: "comfortable"
     spacing: "lg"
     radius: "lg"
@@ -294,7 +294,7 @@ project "FriendlyApp" {
 ### Preset: Data-Intensive Dashboard
 ```
 project "DashboardApp" {
-  theme {
+  config {
     density: "compact"
     spacing: "sm"
     radius: "sm"
@@ -310,7 +310,7 @@ project "DashboardApp" {
 ### Preset: Professional Enterprise
 ```
 project "EnterpriseApp" {
-  theme {
+  config {
     density: "normal"
     spacing: "md"
     radius: "sm"
@@ -345,7 +345,7 @@ How each theme property affects components:
 
 ```
 project "AdminPortal" {
-  theme {
+  config {
     density: "compact"
     spacing: "md"
     radius: "sm"
@@ -387,7 +387,7 @@ project "AdminPortal" {
 
 ```
 project "ECommerceStore" {
-  theme {
+  config {
     density: "comfortable"
     spacing: "lg"
     radius: "lg"
@@ -459,7 +459,7 @@ Changing the theme at project level affects the entire wireframe:
 
 ```
 project "MyApp" {
-  theme {
+  config {
     density: "normal"  // Change this line
     spacing: "md"
     radius: "md"
@@ -501,7 +501,7 @@ project "App" {
 
 ```
 project "App" {
-  theme {
+  config {
     density: "normal"
     spacing: "md"
     radius: "md"
@@ -512,7 +512,7 @@ project "App" {
 ```
 
 **Key Changes**:
-- Block syntax: `theme { ... }` instead of individual `tokens` statements
+- Block syntax: `config { ... }` instead of individual `tokens` statements
 - String values: All values use quotes (e.g., `"normal"`)
 
 ---
@@ -527,13 +527,13 @@ project "App" {
 // ❌ Wrong
 project "App" {
   screen Dashboard {
-    theme { ... }  // Incorrect location
+    config { ... }  // Incorrect location
   }
 }
 
 // ✅ Correct
 project "App" {
-  theme { ... }  // Correct location
+  config { ... }  // Correct location
   screen Dashboard { ... }
 }
 ```
@@ -544,12 +544,12 @@ project "App" {
 
 ```
 // ❌ Wrong
-theme {
+config {
   density: normal  // Missing quotes
 }
 
 // ✅ Correct
-theme {
+config {
   density: "normal"  // With quotes
 }
 ```

@@ -165,7 +165,7 @@ All examples follow this structure:
 
 ```wire
 project "Example Name" {
-  theme {
+  config {
     density: "normal"
     spacing: "md"
     radius: "md"

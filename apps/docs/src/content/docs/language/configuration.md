@@ -19,7 +19,7 @@ The theme is defined as a block at the project level:
 
 ```wire
 project "MyApp" {
-  theme {
+  config {
     density: "normal"
     spacing: "md"
     radius: "md"
@@ -71,7 +71,7 @@ Controls the overall visual compactness of the UI.
 ```wire
 // Compact version
 project "CompactApp" {
-  theme {
+  config {
     density: "compact"
     spacing: "sm"
   }
@@ -80,7 +80,7 @@ project "CompactApp" {
 
 // Comfortable version
 project "ComfortableApp" {
-  theme {
+  config {
     density: "comfortable"
     spacing: "lg"
   }
@@ -108,7 +108,7 @@ When you specify `spacing: "md"` in theme, the default gap/padding values in lay
 
 ```wire
 project "MyApp" {
-  theme {
+  config {
     spacing: "md"  // Default to 16px gaps
   }
 
@@ -146,7 +146,7 @@ Controls the roundness of corners on cards, buttons, and containers.
 ```wire
 // Geometric Design
 project "ModernApp" {
-  theme {
+  config {
     radius: "none"
     stroke: "normal"
   }
@@ -154,7 +154,7 @@ project "ModernApp" {
 
 // Friendly Design
 project "FriendlyApp" {
-  theme {
+  config {
     radius: "lg"
     spacing: "lg"
     density: "comfortable"
@@ -183,14 +183,14 @@ Controls the thickness of borders on components and containers.
 ```wire
 // Minimal Design
 project "MinimalApp" {
-  theme {
+  config {
     stroke: "thin"
   }
 }
 
 // Strong Design
 project "StrongApp" {
-  theme {
+  config {
     stroke: "normal"
   }
 }
@@ -220,14 +220,14 @@ Typography affects all text components:
 ```wire
 // Professional Design
 project "LawFirmApp" {
-  theme {
+  config {
     font: "title"
   }
 }
 
 // Technical Design
 project "DeveloperTools" {
-  theme {
+  config {
     font: "mono"
   }
 }
@@ -242,7 +242,7 @@ Common theme configurations for different design approaches:
 ### Modern Minimalist
 ```wire
 project "ModernApp" {
-  theme {
+  config {
     density: "normal"
     spacing: "md"
     radius: "none"
@@ -257,7 +257,7 @@ project "ModernApp" {
 ### Friendly & Accessible
 ```wire
 project "FriendlyApp" {
-  theme {
+  config {
     density: "comfortable"
     spacing: "lg"
     radius: "lg"
@@ -272,7 +272,7 @@ project "FriendlyApp" {
 ### Data-Intensive Dashboard
 ```wire
 project "DashboardApp" {
-  theme {
+  config {
     density: "compact"
     spacing: "sm"
     radius: "sm"
@@ -287,7 +287,7 @@ project "DashboardApp" {
 ### Professional Enterprise
 ```wire
 project "EnterpriseApp" {
-  theme {
+  config {
     density: "normal"
     spacing: "md"
     radius: "sm"
@@ -308,7 +308,7 @@ project "EnterpriseApp" {
 <!-- wire-preview:start -->
 ```wire
 project "AdminPortal" {
-  theme {
+  config {
     density: "compact"
     spacing: "md"
     radius: "sm"
@@ -352,7 +352,7 @@ project "AdminPortal" {
 <!-- wire-preview:start -->
 ```wire
 project "ECommerceStore" {
-  theme {
+  config {
     density: "comfortable"
     spacing: "lg"
     radius: "lg"
@@ -427,13 +427,13 @@ project "ECommerceStore" {
 // ❌ Wrong
 project "App" {
   screen Dashboard {
-    theme { ... }  // Incorrect location
+    config { ... }  // Incorrect location
   }
 }
 
 // ✅ Correct
 project "App" {
-  theme { ... }  // Correct location
+  config { ... }  // Correct location
   screen Dashboard { ... }
 }
 ```
@@ -444,12 +444,12 @@ project "App" {
 
 ```wire
 // ❌ Wrong
-theme {
+config {
   density: normal  // Missing quotes
 }
 
 // ✅ Correct
-theme {
+config {
   density: "normal"  // With quotes
 }
 ```

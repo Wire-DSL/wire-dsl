@@ -122,7 +122,7 @@ For a full reference of all available icons, visit the [Feather Icons Gallery](h
 <!-- wire-preview:start -->
 ```wire
 project "Icon Gallery" {
-  theme {
+  config {
     density: "normal"
     spacing: "md"
     radius: "md"

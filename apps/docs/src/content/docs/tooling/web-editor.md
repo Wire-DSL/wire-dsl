@@ -54,7 +54,7 @@ Visit **[https://live.wire-dsl.org](https://live.wire-dsl.org)** to start coding
 <!-- wire-preview:start -->
 ```wire
 project "My Wireframe" {
-  theme {
+  config {
     density: "normal"
     spacing: "md"
     radius: "md"
@@ -91,7 +91,7 @@ project "My Wireframe" {
 
 **Change Theme**:
 ```wire
-theme {
+config {
   density: "comfortable"     // Options: compact, normal, comfortable
   spacing: "lg"              // Options: xs, sm, md, lg, xl
   radius: "lg"               // Options: none, sm, md, lg
@@ -151,7 +151,7 @@ Create complex projects with multiple screens:
 
 ```wire
 project "Multi-Screen App" {
-  theme { ... }
+  config { ... }
   
   screen LoginScreen {
     layout card { ... }
@@ -175,9 +175,9 @@ Quickly test design variations:
 
 ```wire
 // Test with different density levels
-theme { density: "compact" }   // Tight layout
-theme { density: "normal" }    // Balanced (default)
-theme { density: "comfortable" }  // Spacious
+config { density: "compact" }   // Tight layout
+config { density: "normal" }    // Balanced (default)
+config { density: "comfortable" }  // Spacious
 ```
 
 Just change and watch the preview update.

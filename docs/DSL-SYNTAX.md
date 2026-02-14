@@ -4,7 +4,7 @@
 
 ```
 project "Project Name" {
-  theme {
+  config {
     density: "normal"
     spacing: "md"
     radius: "md"
@@ -28,7 +28,7 @@ Defines the complete project.
 
 ```
 project "Admin Dashboard" {
-  theme {
+  config {
     density: "normal"
     spacing: "md"
     radius: "md"
@@ -48,13 +48,13 @@ project "Admin Dashboard" {
 
 ---
 
-### Theme Block
+### Config Block
 
 Configures design tokens for visual consistency across the entire project.
 
 ```
 project "App" {
-  theme {
+  config {
     density: "normal"
     spacing: "md"
     radius: "md"
@@ -319,7 +319,7 @@ Wire DSL supports two types of comments:
 // This is a line comment
 project "My App" {
   // Comments can appear anywhere
-  theme { ... }
+  config { ... }
 }
 ```
 
@@ -402,7 +402,7 @@ define Component "ButtonGroup" {
 }
 
 project "Form App" {
-  theme { ... }
+  config { ... }
 
   screen LoginScreen {
     layout stack(direction: vertical, gap: lg, padding: xl) {
@@ -573,7 +573,7 @@ component Button text: "Click me" variant: primary
 
 ```
 project "Admin Dashboard" {
-  theme {
+  config {
     density: "normal"
     spacing: "md"
     radius: "md"

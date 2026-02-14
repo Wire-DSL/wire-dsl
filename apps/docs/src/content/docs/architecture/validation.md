@@ -41,7 +41,7 @@ project "App" {
 **Valid Example**:
 ```wire
 project "App" {
-  theme {
+  config {
     density: "normal"
     spacing: "md"
     radius: "md"
@@ -156,7 +156,7 @@ Performed by the **IR Generator** after parsing.
 **Invalid**:
 ```wire
 project "App" {
-  theme { ... }
+  config { ... }
   
   screen Home {
     layout stack {
@@ -169,7 +169,7 @@ project "App" {
 **Valid**:
 ```wire
 project "App" {
-  theme { ... }
+  config { ... }
   
   define Component "CustomButton" {
     layout stack(direction: horizontal, gap: md) {
@@ -207,7 +207,7 @@ project "App" {
 **With Theme (recommended)**:
 ```wire
 project "App" {
-  theme {
+  config {
     density: "normal"
     spacing: "md"
     radius: "md"

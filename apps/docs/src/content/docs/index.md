@@ -27,7 +27,7 @@ Instead of dragging components in a design tool, you write clean, readable code:
 <!-- wire-preview:start -->
 ```wire
 project "Login App" {
-  theme { density: "comfortable" }
+  config { density: "comfortable" }
   
   screen LoginScreen {
     layout card(padding: lg, gap: md, radius: md, border: true) {
@@ -68,7 +68,7 @@ wire render myfile.wire output.svg
 ### Your First Wireframe
 ```wire
 project "Hello" {
-  theme { density: "normal" spacing: "md" }
+  config { density: "normal" spacing: "md" }
   
   screen Home {
     layout stack(padding: lg) {
@@ -171,7 +171,7 @@ layout card(padding: lg, gap: md, radius: md, border: true) {
 
 ### 🎨 Design Systems
 ```wire
-theme {
+config {
   density: "comfortable"
   spacing: "lg"
   radius: "lg"
