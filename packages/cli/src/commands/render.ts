@@ -35,6 +35,7 @@ type RenderOptions = {
   png?: string;
   screen?: string;
   theme?: 'light' | 'dark';
+  style?: string;
   width?: number;
   height?: number;
   watch?: boolean;
@@ -142,6 +143,7 @@ export const renderCommand = async (input: string, options: RenderOptions = {}):
           width,
           height,
           theme: options.theme ?? 'light',
+          style: options.style,
           includeLabels: true,
           screenName: screen.name,
         });

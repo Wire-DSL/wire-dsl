@@ -724,9 +724,131 @@ describe('SVG Renderer - SourceMap Integration (data-node-id)', () => {
     // Layouts should have data-node-id
     expect(svg).toMatch(/data-node-id="layout-stack-\d+"/);
     expect(svg).toMatch(/data-node-id="layout-grid-\d+"/);
-    
+
     // Layouts should have transparent clickable rect
     expect(svg).toContain('fill="transparent"');
     expect(svg).toContain('pointer-events="all"');
+  });
+
+  it('should render with default standard style', () => {
+    const input = `
+      project "Test" {
+        screen Main {
+          layout card {
+            component Button text: "Click"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    // Standard style: no shadow filters in defs
+    expect(svg).not.toContain('<filter');
+    expect(svg).not.toContain('shadow-sm');
+
+    // Standard style: button with rx="6" (standard buttonRadius)
+    expect(svg).toContain('rx="6"');
+  });
+
+  it('should render with clean style when specified in options', () => {
+    const input = `
+      project "Test" {
+        screen Main {
+          layout card {
+            component Button text: "Click"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout, { style: 'clean' });
+
+    // Clean style: should have shadow filter in defs
+    expect(svg).toContain('<defs>');
+    expect(svg).toContain('<filter id="shadow-sm"');
+    expect(svg).toContain('feDropShadow');
+
+    // Clean style: button with rx="8" (clean buttonRadius)
+    expect(svg).toContain('rx="8"');
+
+    // Clean style: card should reference the filter
+    expect(svg).toContain('filter="url(#shadow-sm)"');
+  });
+
+  it('should render with clean style when specified in DSL config', () => {
+    const input = `
+      project "Test" {
+        config {
+          style: "clean"
+        }
+        screen Main {
+          layout card {
+            component Heading text: "Title"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    // Should use clean style from config
+    expect(svg).toContain('<filter id="shadow-sm"');
+    expect(svg).toContain('filter="url(#shadow-sm)"');
+  });
+
+  it('should override DSL config style with render options', () => {
+    const input = `
+      project "Test" {
+        config {
+          style: "clean"
+        }
+        screen Main {
+          layout card {
+            component Button text: "Click"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+
+    // Override with standard style
+    const svg = renderToSVG(ir, layout, { style: 'standard' });
+
+    // Should use standard style (no filters)
+    expect(svg).not.toContain('<filter');
+    expect(svg).not.toContain('shadow-sm');
+  });
+
+  it('should fallback to standard style for unknown style names', () => {
+    const input = `
+      project "Test" {
+        screen Main {
+          layout card {
+            component Button text: "Click"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout, { style: 'nonexistent' });
+
+    // Should fallback to standard (no filters)
+    expect(svg).not.toContain('<filter');
   });
 });

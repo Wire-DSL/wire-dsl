@@ -26,12 +26,14 @@ program
   .option('-s, --screen <name>', 'Render specific screen by name (defaults to all screens)')
   .option('--width <number>', 'Override viewport width')
   .option('--height <number>', 'Override viewport height')
-  .option('--theme <theme>', 'Theme (light|dark)', 'light')
+  .option('--theme <theme>', 'Color scheme (light|dark)', 'light')
+  .option('--style <style>', 'Render style (standard|clean|custom)')
   .option('-w, --watch', 'Watch input file and re-render on changes')
   .action((input, options) => {
     const width = options.width ? Number(options.width) : undefined;
     const height = options.height ? Number(options.height) : undefined;
     const theme = options.theme === 'dark' ? 'dark' : 'light';
+    const style = options.style;
 
     return renderCommand(input, {
       out: options.out,
@@ -42,6 +44,7 @@ program
       width,
       height,
       theme,
+      style,
       watch: Boolean(options.watch),
     });
   });
