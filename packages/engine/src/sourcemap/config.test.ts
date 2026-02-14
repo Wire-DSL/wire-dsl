@@ -6,7 +6,7 @@ describe('SourceMap Config Support', () => {
   it('should capture theme block in SourceMap', () => {
     const code = `
       project "Test" {
-        config {
+        style {
           density: "compact"
           spacing: "lg"
           radius: "md"
@@ -24,16 +24,16 @@ describe('SourceMap Config Support', () => {
     const resolver = new SourceMapResolver(sourceMap);
 
     // Config should be in SourceMap
-    const configNode = resolver.getNodeById('config');
+    const configNode = resolver.getNodeById('style');
     expect(configNode).toBeDefined();
-    expect(configNode?.type).toBe('config');
+    expect(configNode?.type).toBe('style');
     expect(configNode?.parentId).toBe('project');
   });
 
   it('should capture theme properties with ranges', () => {
     const code = `
       project "Test" {
-        config {
+        style {
           density: "compact"
           spacing: "md"
           radius: "lg"
@@ -52,7 +52,7 @@ describe('SourceMap Config Support', () => {
     const { sourceMap } = parseWireDSLWithSourceMap(code);
     const resolver = new SourceMapResolver(sourceMap);
 
-    const configNode = resolver.getNodeById('config');
+    const configNode = resolver.getNodeById('style');
     expect(configNode).toBeDefined();
 
     // Check properties exist
@@ -78,7 +78,7 @@ describe('SourceMap Config Support', () => {
 
   it('should allow clicking theme in canvas to jump to code', () => {
     const code = `project "Dashboard" {
-  config {
+  style {
     density: "normal"
     spacing: "md"
   }
@@ -93,18 +93,18 @@ describe('SourceMap Config Support', () => {
     const resolver = new SourceMapResolver(sourceMap);
 
     // Simulate: User clicks "Config Settings" button in canvas
-    const configNode = resolver.getNodeById('config');
+    const configNode = resolver.getNodeById('style');
     expect(configNode).toBeDefined();
 
     // Should be able to get range for jump-to-code
-    expect(configNode?.range.start.line).toBe(2); // Line with "config {"
+    expect(configNode?.range.start.line).toBe(2); // Line with "style {"
     expect(configNode?.range.end.line).toBe(5);   // Line with "}"
   });
 
   it('should allow editing theme property values', () => {
     const code = `
       project "App" {
-        config {
+        style {
           density: "compact"
           spacing: "sm"
         }
@@ -119,7 +119,7 @@ describe('SourceMap Config Support', () => {
     const { sourceMap } = parseWireDSLWithSourceMap(code);
     const resolver = new SourceMapResolver(sourceMap);
 
-    const configNode = resolver.getNodeById('config');
+    const configNode = resolver.getNodeById('style');
     const densityProp = configNode?.properties?.density;
 
     expect(densityProp).toBeDefined();
@@ -154,7 +154,7 @@ describe('SourceMap Config Support', () => {
     const resolver = new SourceMapResolver(sourceMap);
 
     // Config should not exist
-    const configNode = resolver.getNodeById('config');
+    const configNode = resolver.getNodeById('style');
     expect(configNode).toBeNull();
 
     // Project should still exist
@@ -165,7 +165,7 @@ describe('SourceMap Config Support', () => {
   it('should include theme in hierarchy navigation', () => {
     const code = `
       project "Test" {
-        config {
+        style {
           density: "normal"
         }
         screen Main {
@@ -184,14 +184,14 @@ describe('SourceMap Config Support', () => {
 
     // Project should have theme and screen as children
     const childTypes = children.map(c => c.type);
-    expect(childTypes).toContain('config');
+    expect(childTypes).toContain('style');
     expect(childTypes).toContain('screen');
   });
 
   it('should include theme in statistics', () => {
     const code = `
       project "Dashboard" {
-        config {
+        style {
           density: "compact"
           spacing: "md"
         }
@@ -209,13 +209,13 @@ describe('SourceMap Config Support', () => {
     const stats = resolver.getStats();
 
     // Should have config node
-    expect(stats.byType.config).toBe(1);
+    expect(stats.byType.style).toBe(1);
     expect(stats.totalNodes).toBeGreaterThan(3); // project + config + screen + layout + component
   });
 
   it('should handle line-by-line property positioning', () => {
     const code = `project "App" {
-  config {
+  style {
     density: "compact"
     spacing: "md"
     radius: "lg"
@@ -228,7 +228,7 @@ describe('SourceMap Config Support', () => {
     const { sourceMap } = parseWireDSLWithSourceMap(code);
     const resolver = new SourceMapResolver(sourceMap);
 
-    const configNode = resolver.getNodeById('config');
+    const configNode = resolver.getNodeById('style');
     const props = configNode?.properties || {};
 
     // Each property should be on a different line

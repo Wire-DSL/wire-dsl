@@ -80,7 +80,7 @@ describe('SourceMap E2E Integration', () => {
     it('should handle complete dashboard example', () => {
       const code = `
         project "Dashboard" {
-          config {
+          style {
             density: "normal"
             spacing: "md"
           }
@@ -376,7 +376,7 @@ describe('SourceMap E2E Integration', () => {
     it('should preserve config in SourceMap', () => {
       const code = `
         project "Themed" {
-          config {
+          style {
             density: "compact"
             spacing: "sm"
             radius: "lg"
@@ -398,8 +398,8 @@ describe('SourceMap E2E Integration', () => {
 
       // But IR should have theme applied
       const ir = generateIR(ast);
-      expect(ir.project.config).toBeDefined();
-      expect(ir.project.config?.density).toBe('compact');
+      expect(ir.project.style).toBeDefined();
+      expect(ir.project.style?.density).toBe('compact');
     });
   });
 

@@ -27,7 +27,7 @@ program
   .option('--width <number>', 'Override viewport width')
   .option('--height <number>', 'Override viewport height')
   .option('--theme <theme>', 'Color scheme (light|dark)', 'light')
-  .option('--style <style>', 'Render style (standard|clean|custom)')
+  .option('--style <style>', 'Render style (standard|skeleton|custom)')
   .option('-w, --watch', 'Watch input file and re-render on changes')
   .action((input, options) => {
     const width = options.width ? Number(options.width) : undefined;

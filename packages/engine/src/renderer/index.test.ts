@@ -3,6 +3,7 @@ import { parseWireDSL, parseWireDSLWithSourceMap } from '../parser/index';
 import { generateIR } from '../ir/index';
 import { calculateLayout } from '../layout/index';
 import { renderToSVG } from './index';
+import { SkeletonSVGRenderer } from './skeleton';
 
 describe('SVG Renderer', () => {
   it('should render basic SVG', () => {
@@ -293,7 +294,7 @@ describe('SVG Renderer', () => {
   it('should render complete dashboard example', () => {
     const input = `
       project "Dashboard" {
-        config {
+        style {
           spacing: "lg"
         }
         
@@ -529,7 +530,7 @@ describe('SVG Renderer', () => {
   it('should render complete form example', () => {
     const input = `
       project "UserForm" {
-        config {
+        style {
           spacing: "md"
         }
         
@@ -754,12 +755,15 @@ describe('SVG Renderer - SourceMap Integration (data-node-id)', () => {
     expect(svg).toContain('rx="6"');
   });
 
-  it('should render with clean style when specified in options', () => {
+});
+
+describe('Skeleton SVG Renderer', () => {
+  it('should render button as shape only (no text)', () => {
     const input = `
       project "Test" {
         screen Main {
           layout card {
-            component Button text: "Click"
+            component Button text: "Click me"
           }
         }
       }
@@ -768,29 +772,22 @@ describe('SVG Renderer - SourceMap Integration (data-node-id)', () => {
     const ast = parseWireDSL(input);
     const ir = generateIR(ast);
     const layout = calculateLayout(ir);
-    const svg = renderToSVG(ir, layout, { style: 'clean' });
 
-    // Clean style: should have shadow filter in defs
-    expect(svg).toContain('<defs>');
-    expect(svg).toContain('<filter id="shadow-sm"');
-    expect(svg).toContain('feDropShadow');
+    // Instantiate SkeletonSVGRenderer directly
+    const renderer = new SkeletonSVGRenderer(ir, layout);
+    const svg = renderer.render();
 
-    // Clean style: button with rx="8" (clean buttonRadius)
-    expect(svg).toContain('rx="8"');
-
-    // Clean style: card should reference the filter
-    expect(svg).toContain('filter="url(#shadow-sm)"');
+    // Button should be outline only
+    expect(svg).toContain('fill="none"');
+    expect(svg).not.toContain('>Click me<');
   });
 
-  it('should render with clean style when specified in DSL config', () => {
+  it('should render heading as gray block', () => {
     const input = `
       project "Test" {
-        config {
-          style: "clean"
-        }
         screen Main {
-          layout card {
-            component Heading text: "Title"
+          layout stack {
+            component Heading text: "Dashboard"
           }
         }
       }
@@ -799,22 +796,21 @@ describe('SVG Renderer - SourceMap Integration (data-node-id)', () => {
     const ast = parseWireDSL(input);
     const ir = generateIR(ast);
     const layout = calculateLayout(ir);
-    const svg = renderToSVG(ir, layout);
 
-    // Should use clean style from config
-    expect(svg).toContain('<filter id="shadow-sm"');
-    expect(svg).toContain('filter="url(#shadow-sm)"');
+    const renderer = new SkeletonSVGRenderer(ir, layout);
+    const svg = renderer.render();
+
+    // Heading should be gray block, not text
+    expect(svg).not.toContain('>Dashboard<');
+    expect(svg).toMatch(/<rect[^>]*fill="[^"]*"/);
   });
 
-  it('should override DSL config style with render options', () => {
+  it('should render text as gray block', () => {
     const input = `
       project "Test" {
-        config {
-          style: "clean"
-        }
         screen Main {
-          layout card {
-            component Button text: "Click"
+          layout stack {
+            component Text content: "Some content"
           }
         }
       }
@@ -824,20 +820,19 @@ describe('SVG Renderer - SourceMap Integration (data-node-id)', () => {
     const ir = generateIR(ast);
     const layout = calculateLayout(ir);
 
-    // Override with standard style
-    const svg = renderToSVG(ir, layout, { style: 'standard' });
+    const renderer = new SkeletonSVGRenderer(ir, layout);
+    const svg = renderer.render();
 
-    // Should use standard style (no filters)
-    expect(svg).not.toContain('<filter');
-    expect(svg).not.toContain('shadow-sm');
+    expect(svg).not.toContain('>Some content<');
+    expect(svg).toMatch(/<rect[^>]*fill="[^"]*"/);
   });
 
-  it('should fallback to standard style for unknown style names', () => {
+  it('should hide icons', () => {
     const input = `
       project "Test" {
         screen Main {
-          layout card {
-            component Button text: "Click"
+          layout stack {
+            component Icon type: "user"
           }
         }
       }
@@ -846,9 +841,34 @@ describe('SVG Renderer - SourceMap Integration (data-node-id)', () => {
     const ast = parseWireDSL(input);
     const ir = generateIR(ast);
     const layout = calculateLayout(ir);
-    const svg = renderToSVG(ir, layout, { style: 'nonexistent' });
 
-    // Should fallback to standard (no filters)
-    expect(svg).not.toContain('<filter');
+    const renderer = new SkeletonSVGRenderer(ir, layout);
+    const svg = renderer.render();
+
+    // Icon should not appear
+    expect(svg).not.toContain('viewBox="0 0 24 24"');
+  });
+
+  it('should inherit standard rendering for other components', () => {
+    const input = `
+      project "Test" {
+        screen Main {
+          layout card {
+            component Input placeholder: "Enter text"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+
+    const renderer = new SkeletonSVGRenderer(ir, layout);
+    const svg = renderer.render();
+
+    // Input should still render normally (inherits from base)
+    expect(svg).toContain('<rect');  // Input box
+    expect(svg).toContain('>Enter text<');  // Placeholder text
   });
 });

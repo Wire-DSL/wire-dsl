@@ -50,7 +50,7 @@ const ComponentKeyword = createToken({
   pattern: /Component\b/,
 });
 const Define = createToken({ name: 'Define', pattern: /define/ });
-const Config = createToken({ name: 'Config', pattern: /config/ });
+const Style = createToken({ name: 'Style', pattern: /style/ });
 const Mocks = createToken({ name: 'Mocks', pattern: /mocks/ });
 const Colors = createToken({ name: 'Colors', pattern: /colors/ });
 const Cell = createToken({ name: 'Cell', pattern: /cell/ });
@@ -117,7 +117,7 @@ const allTokens = [
   ComponentKeyword,
   Component,
   Define,
-  Config,
+  Style,
   Mocks,
   Colors,
   Cell,
@@ -155,7 +155,7 @@ class WireDSLParser extends CstParser {
     this.MANY(() => {
       this.OR([
         { ALT: () => this.SUBRULE(this.definedComponent) },
-        { ALT: () => this.SUBRULE(this.configDecl) },
+        { ALT: () => this.SUBRULE(this.styleDecl) },
         { ALT: () => this.SUBRULE(this.mocksDecl) },
         { ALT: () => this.SUBRULE(this.colorsDecl) },
         { ALT: () => this.SUBRULE(this.screen) },
@@ -164,21 +164,21 @@ class WireDSLParser extends CstParser {
     this.CONSUME(RCurly);
   });
 
-  // config { density: "normal" }
-  private configDecl = this.RULE('configDecl', () => {
-    this.CONSUME(Config);
+  // style { density: "normal" }
+  private styleDecl = this.RULE('styleDecl', () => {
+    this.CONSUME(Style);
     this.CONSUME(LCurly);
     this.MANY(() => {
-      this.SUBRULE(this.configProperty);
+      this.SUBRULE(this.styleProperty);
     });
     this.CONSUME(RCurly);
   });
 
   // density: "normal"
-  private configProperty = this.RULE('configProperty', () => {
-    this.CONSUME(Identifier, { LABEL: 'configKey' });
+  private styleProperty = this.RULE('styleProperty', () => {
+    this.CONSUME(Identifier, { LABEL: 'styleKey' });
     this.CONSUME(Colon);
-    this.CONSUME(StringLiteral, { LABEL: 'configValue' });
+    this.CONSUME(StringLiteral, { LABEL: 'styleValue' });
   });
 
   // mocks { status: "A,B,C" ... }
@@ -317,7 +317,7 @@ class WireDSLParser extends CstParser {
 export interface AST {
   type: 'project';
   name: string;
-  config: Record<string, string>;
+  style: Record<string, string>;
   mocks: Record<string, string>;
   colors: Record<string, string>;
   definedComponents: ASTDefinedComponent[];
@@ -391,15 +391,15 @@ class WireDSLVisitor extends BaseCstVisitor {
 
   project(ctx: any): AST {
     const projectName = ctx.projectName[0].image.slice(1, -1); // Remove quotes
-    const config: Record<string, string> = {};
+    const style: Record<string, string> = {};
     const mocks: Record<string, string> = {};
     const colors: Record<string, string> = {};
     const definedComponents: ASTDefinedComponent[] = [];
     const screens: ASTScreen[] = [];
 
-    if (ctx.configDecl && ctx.configDecl.length > 0) {
-      const configBlock = this.visit(ctx.configDecl[0]);
-      Object.assign(config, configBlock);
+    if (ctx.styleDecl && ctx.styleDecl.length > 0) {
+      const styleBlock = this.visit(ctx.styleDecl[0]);
+      Object.assign(style, styleBlock);
     }
 
     if (ctx.mocksDecl && ctx.mocksDecl.length > 0) {
@@ -427,7 +427,7 @@ class WireDSLVisitor extends BaseCstVisitor {
     return {
       type: 'project',
       name: projectName,
-      config,
+      style,
       mocks,
       colors,
       definedComponents,
@@ -435,20 +435,20 @@ class WireDSLVisitor extends BaseCstVisitor {
     };
   }
 
-  configDecl(ctx: any) {
-    const config: Record<string, string> = {};
-    if (ctx.configProperty) {
-      ctx.configProperty.forEach((prop: any) => {
+  styleDecl(ctx: any) {
+    const style: Record<string, string> = {};
+    if (ctx.styleProperty) {
+      ctx.styleProperty.forEach((prop: any) => {
         const { key, value } = this.visit(prop);
-        config[key] = value;
+        style[key] = value;
       });
     }
-    return config;
+    return style;
   }
 
-  configProperty(ctx: any) {
-    const key = ctx.configKey[0].image;
-    const value = ctx.configValue[0].image.slice(1, -1); // Remove quotes
+  styleProperty(ctx: any) {
+    const key = ctx.styleKey[0].image;
+    const value = ctx.styleValue[0].image.slice(1, -1); // Remove quotes
     return { key, value };
   }
 
@@ -679,7 +679,7 @@ class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
 
   project(ctx: any): AST {
     const projectName = ctx.projectName[0].image.slice(1, -1); // Remove quotes
-    const config: Record<string, string> = {};
+    const style: Record<string, string> = {};
     const mocks: Record<string, string> = {};
     const colors: Record<string, string> = {};
     const definedComponents: ASTDefinedComponent[] = [];
@@ -695,7 +695,7 @@ class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
     const ast: AST = {
       type: 'project',
       name: projectName,
-      config: {},
+      style: {},
       mocks: {},
       colors: {},
       definedComponents: [],  // Will be filled after push
@@ -711,14 +711,14 @@ class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
       );
       // Inject nodeId into AST
       ast._meta = { nodeId };
-      // Project is root, so we push it as parent for config/screens/components
+      // Project is root, so we push it as parent for style/screens/components
       this.sourceMapBuilder.pushParent(nodeId);
     }
 
-    // Process config, mocks, colors AFTER pushParent so they have project as parent
-    if (ctx.configDecl && ctx.configDecl.length > 0) {
-      const configBlock = this.visit(ctx.configDecl[0]);
-      Object.assign(ast.config, configBlock);
+    // Process style, mocks, colors AFTER pushParent so they have project as parent
+    if (ctx.styleDecl && ctx.styleDecl.length > 0) {
+      const styleBlock = this.visit(ctx.styleDecl[0]);
+      Object.assign(ast.style, styleBlock);
     }
 
     if (ctx.mocksDecl && ctx.mocksDecl.length > 0) {
@@ -1071,29 +1071,29 @@ class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
     return ast;
   }
 
-  // Override configDecl to capture config block in SourceMap
-  configDecl(ctx: any): Record<string, string> {
-    const config: Record<string, string> = {};
+  // Override styleDecl to capture style block in SourceMap
+  styleDecl(ctx: any): Record<string, string> {
+    const style: Record<string, string> = {};
 
-    // Capture tokens for config block
+    // Capture tokens for style block
     const tokens: CapturedTokens = {
-      keyword: ctx.Config[0],
+      keyword: ctx.Style[0],
       body: ctx.RCurly[0],
     };
 
-    // Add config node to SourceMap
+    // Add style node to SourceMap
     if (this.sourceMapBuilder) {
       const nodeId = this.sourceMapBuilder.addNode(
-        'config',
+        'style',
         tokens,
-        { name: 'config' }
+        { name: 'style' }
       );
 
-      // Process config properties
-      if (ctx.configProperty) {
-        ctx.configProperty.forEach((propCtx: any) => {
+      // Process style properties
+      if (ctx.styleProperty) {
+        ctx.styleProperty.forEach((propCtx: any) => {
           const { key, value } = this.visit(propCtx);
-          config[key] = value;
+          style[key] = value;
 
           // Add property to SourceMap with precise ranges
           this.sourceMapBuilder!.addProperty(
@@ -1101,23 +1101,23 @@ class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
             key,
             value,
             {
-              name: propCtx.children.configKey[0],
-              value: propCtx.children.configValue[0],
+              name: propCtx.children.styleKey[0],
+              value: propCtx.children.styleValue[0],
             }
           );
         });
       }
     } else {
       // No SourceMap builder, just collect properties
-      if (ctx.configProperty) {
-        ctx.configProperty.forEach((prop: any) => {
+      if (ctx.styleProperty) {
+        ctx.styleProperty.forEach((prop: any) => {
           const { key, value } = this.visit(prop);
-          config[key] = value;
+          style[key] = value;
         });
       }
     }
 
-    return config;
+    return style;
   }
 
   // Override mocksDecl to capture mocks block in SourceMap

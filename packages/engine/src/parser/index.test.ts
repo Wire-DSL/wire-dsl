@@ -24,7 +24,7 @@ describe('WireDSL Parser', () => {
   it('should parse config declarations', () => {
     const input = `
       project "Dashboard" {
-        config {
+        style {
           density: "comfortable"
           spacing: "lg"
         }
@@ -39,7 +39,7 @@ describe('WireDSL Parser', () => {
 
     const ast = parseWireDSL(input);
 
-    expect(ast.config).toEqual({
+    expect(ast.style).toEqual({
       density: 'comfortable',
       spacing: 'lg',
     });
@@ -198,7 +198,7 @@ describe('WireDSL Parser', () => {
   it('should parse complete example', () => {
     const input = `
       project "Simple Dashboard" {
-        config {
+        style {
           density: "comfortable"
           spacing: "lg"
         }
@@ -238,7 +238,7 @@ describe('WireDSL Parser', () => {
     const ast = parseWireDSL(input);
 
     expect(ast.name).toBe('Simple Dashboard');
-    expect(ast.config).toEqual({
+    expect(ast.style).toEqual({
       density: 'comfortable',
       spacing: 'lg',
     });

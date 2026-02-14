@@ -46,7 +46,7 @@ export type SourceMapNodeType =
   | 'component'
   | 'component-definition'  // For user-defined components (define Component "Name")
   | 'cell'                  // For grid cells
-  | 'config'                // Config configuration block (renamed from 'theme')
+  | 'style'                 // Style configuration block
   | 'mocks'                 // Mocks data block
   | 'colors';               // Colors palette block
 

@@ -196,7 +196,7 @@ ${components.join('\n')}
     it('should handle typical dashboard (50 components) efficiently', () => {
       const code = `
         project "Dashboard" {
-          config {
+          style {
             density: "normal"
             spacing: "md"
           }

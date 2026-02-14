@@ -235,7 +235,7 @@ describe('Layout Engine', () => {
   it('should respect component density from config', () => {
     const input = `
       project "Density" {
-        config {
+        style {
           density: "comfortable"
         }
         
@@ -318,7 +318,7 @@ describe('Layout Engine', () => {
   it('should handle complete dashboard example', () => {
     const input = `
       project "Dashboard" {
-        config {
+        style {
           spacing: "lg"
         }
         
@@ -369,7 +369,7 @@ describe('Layout Engine', () => {
   it('should layout split layout with sidebar', () => {
     const input = `
       project "SidebarLayout" {
-        config {
+        style {
           spacing: "md"
         }
         
@@ -401,7 +401,7 @@ describe('Layout Engine', () => {
   it('should layout card with padding and border', () => {
     const input = `
       project "CardLayout" {
-        config {
+        style {
           spacing: "lg"
         }
         
@@ -434,7 +434,7 @@ describe('Layout Engine', () => {
   it('should layout form components with proper spacing', () => {
     const input = `
       project "FormLayout" {
-        config {
+        style {
           spacing: "md"
         }
         
@@ -477,7 +477,7 @@ describe('Layout Engine', () => {
   it('should layout grid with stat cards', () => {
     const input = `
       project "Dashboard" {
-        config {
+        style {
           spacing: "lg"
         }
         
@@ -519,7 +519,7 @@ describe('Layout Engine', () => {
   it('should layout sidebar menu with proper dimensions', () => {
     const input = `
       project "AdminApp" {
-        config {
+        style {
           spacing: "md"
         }
         

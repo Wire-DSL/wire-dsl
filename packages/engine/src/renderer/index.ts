@@ -3,7 +3,7 @@ import type { LayoutResult } from '../layout/index';
 import { MockDataGenerator } from './mock-data';
 import { ColorResolver } from './colors';
 import { getIcon } from './icons/iconLibrary';
-import { getStyle, type RenderStyleTokens } from './styles';
+import { resolveTokens, type DesignTokens } from './tokens';
 
 /**
  * SVG Renderer
@@ -19,7 +19,6 @@ export interface SVGRenderOptions {
   width?: number;
   height?: number;
   theme?: 'light' | 'dark';
-  style?: string;  // Render style: 'standard' | 'clean' | custom
   includeLabels?: boolean;
   screenName?: string; // Select specific screen by name
 }
@@ -66,10 +65,10 @@ export class SVGRenderer {
   private ir: IRContract;
   private layout: LayoutResult;
   private options: Required<Omit<SVGRenderOptions, 'screenName'>> & { screenName?: string };
-  private renderTheme: typeof THEMES.light;
-  private styleTokens: RenderStyleTokens;
+  protected renderTheme: typeof THEMES.light;
+  protected tokens: DesignTokens;
   private selectedScreenName?: string;
-  private renderedNodeIds: Set<string> = new Set(); // Track nodes rendered in current pass
+  protected renderedNodeIds: Set<string> = new Set(); // Track nodes rendered in current pass
   private colorResolver: ColorResolver;
 
   constructor(ir: IRContract, layout: LayoutResult, options?: SVGRenderOptions) {
@@ -77,18 +76,16 @@ export class SVGRenderer {
     this.layout = layout;
     this.selectedScreenName = options?.screenName;
 
-    // Resolve color scheme with priority: options.theme > config.theme > 'light'
-    const colorScheme = options?.theme || ir.project.config.theme || 'light';
+    // Resolve color scheme with priority: options.theme > style.theme > 'light'
+    const colorScheme = options?.theme || ir.project.style.theme || 'light';
 
-    // Resolve render style with priority: options.style > config.style > 'standard'
-    const styleName = options?.style || ir.project.config.style || 'standard';
-    this.styleTokens = getStyle(styleName) || getStyle('standard')!;
+    // Resolve design tokens based on style (density-aware)
+    this.tokens = resolveTokens(ir.project.style);
 
     this.options = {
       width: options?.width || 1280,
       height: options?.height || 720,
       theme: colorScheme as 'light' | 'dark',
-      style: styleName,
       includeLabels: options?.includeLabels ?? true,
       screenName: options?.screenName,
     };
@@ -161,13 +158,8 @@ export class SVGRenderer {
       backgroundColor = this.colorResolver.resolveColor(screen.background, this.renderTheme.bg);
     }
 
-    // Include SVG defs if the style provides them (e.g., filters, gradients)
-    const defs = this.styleTokens.svgDefs.trim()
-      ? `  <defs>\n    ${this.styleTokens.svgDefs.trim()}\n  </defs>\n`
-      : '';
-
     return `<svg width="${this.options.width}" height="${svgHeight}" viewBox="0 0 ${this.options.width} ${svgHeight}" xmlns="http://www.w3.org/2000/svg">
-${defs}  <rect width="100%" height="100%" fill="${backgroundColor}"/>
+  <rect width="100%" height="100%" fill="${backgroundColor}"/>
   ${children.join('\n  ')}
 </svg>`;
   }
@@ -189,7 +181,7 @@ ${defs}  <rect width="100%" height="100%" fill="${backgroundColor}"/>
     return Math.max(maxY + 40, this.options.height); // Add 40px padding at bottom
   }
 
-  private renderNode(nodeId: string, output: string[]): void {
+  protected renderNode(nodeId: string, output: string[]): void {
     const node = this.ir.project.nodes[nodeId];
     const pos = this.layout[nodeId];
 
@@ -249,7 +241,7 @@ ${defs}  <rect width="100%" height="100%" fill="${backgroundColor}"/>
     }
   }
 
-  private renderComponent(
+  protected renderComponent(
     node: IRComponentNode,
     pos: { x: number; y: number; width: number; height: number }
   ): string {
@@ -325,89 +317,91 @@ ${defs}  <rect width="100%" height="100%" fill="${backgroundColor}"/>
     }
   }
 
-  private renderHeading(node: IRComponentNode, pos: any): string {
+  protected renderHeading(node: IRComponentNode, pos: any): string {
     const text = String(node.props.text || 'Heading');
+
+    // Use tokens from density configuration
+    const fontSize = this.tokens.heading.fontSize;
+    const fontWeight = this.tokens.heading.fontWeight;
 
     return `<g${this.getDataNodeId(node)}>
     <text x="${pos.x}" y="${pos.y + pos.height / 2 + 6}"
-          font-family="${this.styleTokens.fontFamily}"
-          font-size="${this.styleTokens.headingFontSize}"
-          font-weight="${this.styleTokens.headingFontWeight}"
+          font-family="system-ui, -apple-system, sans-serif"
+          font-size="${fontSize}"
+          font-weight="${fontWeight}"
           fill="${this.renderTheme.text}">${this.escapeXml(text)}</text>
   </g>`;
   }
 
-  private renderButton(node: IRComponentNode, pos: any): string {
+  protected renderButton(node: IRComponentNode, pos: any): string {
     const text = String(node.props.text || 'Button');
     const variant = String(node.props.variant || 'default');
-    const size = String(node.props.size || 'md');
 
-    // Color configuration - use solid or rgba based on style
-    let bgColor: string;
-    let textColor: string;
-    let borderColor: string;
+    // Use tokens from density configuration
+    const radius = this.tokens.button.radius;
+    const fontSize = this.tokens.button.fontSize;
+    const fontWeight = this.tokens.button.fontWeight;
+    const paddingX = this.tokens.button.paddingX;
+    const paddingY = this.tokens.button.paddingY;
 
-    if (this.styleTokens.buttonUseSolidColors) {
-      // Clean style: solid colors
-      bgColor = variant === 'primary' ? '#3B82F6' : '#E2E8F0';
-      textColor = variant === 'primary' ? '#FFFFFF' : '#1E293B';
-      borderColor = variant === 'primary' ? '#3B82F6' : '#64748B';
-    } else {
-      // Standard style: rgba with opacity
-      bgColor = variant === 'primary' ? 'rgba(59, 130, 246, 0.85)' : 'rgba(226, 232, 240, 0.9)';
-      textColor = variant === 'primary' ? '#FFFFFF' : 'rgba(30, 41, 59, 0.85)';
-      borderColor = variant === 'primary' ? 'rgba(59, 130, 246, 0.7)' : 'rgba(100, 116, 139, 0.4)';
-    }
+    // Calculate button dimensions based on text + padding
+    const textWidth = text.length * fontSize * 0.6;  // Approximate character width
+    const buttonWidth = Math.max(textWidth + paddingX * 2, 60);
+    const buttonHeight = fontSize + paddingY * 2;
 
-    // Font size based on size prop
-    const fontSizeMap = { 'sm': 12, 'md': 14, 'lg': 16 };
-    const fontSize = fontSizeMap[size as keyof typeof fontSizeMap] || 14;
-
-    const buttonWidth = Math.max(pos.width, 60);
+    // Color configuration
+    const bgColor = variant === 'primary' ? 'rgba(59, 130, 246, 0.85)' : 'rgba(226, 232, 240, 0.9)';
+    const textColor = variant === 'primary' ? '#FFFFFF' : 'rgba(30, 41, 59, 0.85)';
+    const borderColor = variant === 'primary' ? 'rgba(59, 130, 246, 0.7)' : 'rgba(100, 116, 139, 0.4)';
 
     return `<g${this.getDataNodeId(node)}>
     <rect x="${pos.x}" y="${pos.y}"
-          width="${buttonWidth}" height="${pos.height}"
-          rx="${this.styleTokens.buttonRadius}"
+          width="${buttonWidth}" height="${buttonHeight}"
+          rx="${radius}"
           fill="${bgColor}"
           stroke="${borderColor}"
           stroke-width="1"/>
-    <text x="${pos.x + buttonWidth / 2}" y="${pos.y + pos.height / 2 + 5}"
-          font-family="${this.styleTokens.fontFamily}"
+    <text x="${pos.x + buttonWidth / 2}" y="${pos.y + buttonHeight / 2 + fontSize * 0.35}"
+          font-family="system-ui, -apple-system, sans-serif"
           font-size="${fontSize}"
-          font-weight="${this.styleTokens.buttonFontWeight}"
+          font-weight="${fontWeight}"
           fill="${textColor}"
           text-anchor="middle">${this.escapeXml(text)}</text>
   </g>`;
   }
 
-  private renderInput(node: IRComponentNode, pos: any): string {
+  protected renderInput(node: IRComponentNode, pos: any): string {
     const label = String(node.props.label || '');
     const placeholder = String(node.props.placeholder || '');
+
+    // Use tokens from density configuration
+    const radius = this.tokens.input.radius;
+    const fontSize = this.tokens.input.fontSize;
+    const paddingX = this.tokens.input.paddingX;
 
     return `<g${this.getDataNodeId(node)}>
     ${
       label
-        ? `<text x="${pos.x + 8}" y="${pos.y - 6}"
-          font-family="${this.styleTokens.fontFamily}"
+        ? `<text x="${pos.x + paddingX}" y="${pos.y - 6}"
+          font-family="system-ui, -apple-system, sans-serif"
           font-size="12"
           fill="${this.renderTheme.text}">${this.escapeXml(label)}</text>`
         : ''
     }
     <rect x="${pos.x}" y="${pos.y}"
           width="${pos.width}" height="${pos.height}"
-          rx="${this.styleTokens.inputRadius}"
+          rx="${radius}"
           fill="${this.renderTheme.cardBg}"
           stroke="${this.renderTheme.border}"
           stroke-width="1"/>
-    <text x="${pos.x + 12}" y="${pos.y + pos.height / 2 + 5}"
-          font-family="${this.styleTokens.fontFamily}"
-          font-size="${this.styleTokens.baseFontSize}"
+    <text x="${pos.x + paddingX}" y="${pos.y + pos.height / 2 + 5}"
+          font-family="system-ui, -apple-system, sans-serif"
+          font-size="${fontSize}"
           fill="${this.renderTheme.textMuted}">${this.escapeXml(placeholder)}</text>
   </g>`;
   }
 
-  private renderTopbar(node: IRComponentNode, pos: any): string {
+  protected renderTopbar(node: IRComponentNode, pos: any): string {
     const title = String(node.props.title || 'App');
     const subtitle = String(node.props.subtitle || '');
     const actions = String(node.props.actions || '');
@@ -507,7 +501,7 @@ ${defs}  <rect width="100%" height="100%" fill="${backgroundColor}"/>
     return svg;
   }
 
-  private renderPanelBorder(node: IRNode, pos: any, output: string[]): void {
+  protected renderPanelBorder(node: IRNode, pos: any, output: string[]): void {
     if (node.kind !== 'container') return;
 
     // Resolve background color, defaulting to cardBg (white in light theme)
@@ -528,17 +522,17 @@ ${defs}  <rect width="100%" height="100%" fill="${backgroundColor}"/>
     output.push(svg);
   }
 
-  private renderCardBorder(node: IRNode, pos: any, output: string[]): void {
+  protected renderCardBorder(node: IRNode, pos: any, output: string[]): void {
     if (node.kind !== 'container') return;
 
-    // Use style token for card radius, but allow override from params
+    // Use tokens from density configuration, but allow override from params
     const radiusMap: Record<string, number> = {
       none: 0,
       sm: 4,
-      md: this.styleTokens.cardRadius,
+      md: this.tokens.card.radius,
       lg: 12,
     };
-    const radius = radiusMap[String(node.params.radius) || 'md'] || this.styleTokens.cardRadius;
+    const radius = radiusMap[String(node.params.radius) || 'md'] || this.tokens.card.radius;
 
     // Resolve background color
     let fillColor = this.renderTheme.cardBg;
@@ -549,12 +543,7 @@ ${defs}  <rect width="100%" height="100%" fill="${backgroundColor}"/>
     // Check if border is disabled (default true)
     const borderParam = String(node.params.border || 'true');
     const showBorder = borderParam !== 'false';
-    const strokeWidth = showBorder ? this.styleTokens.cardStrokeWidth : 0;
-
-    // Apply shadow filter if style provides one
-    const filterAttr = this.styleTokens.cardShadowFilter
-      ? ` filter="url(#${this.styleTokens.cardShadowFilter})"`
-      : '';
+    const strokeWidth = showBorder ? this.tokens.card.strokeWidth : 0;
 
     // Render card border as a rectangle with padding, gap support
     const svg = `<g>
@@ -563,12 +552,12 @@ ${defs}  <rect width="100%" height="100%" fill="${backgroundColor}"/>
           rx="${radius}"
           fill="${fillColor}"
           stroke="${this.renderTheme.border}"
-          stroke-width="${strokeWidth}"${filterAttr}/>
+          stroke-width="${strokeWidth}"/>
     </g>`;
     output.push(svg);
   }
 
-  private renderTable(node: IRComponentNode, pos: any): string {
+  protected renderTable(node: IRComponentNode, pos: any): string {
     const title = String(node.props.title || '');
     const columnsStr = String(node.props.columns || 'Col1,Col2,Col3');
     const columns = columnsStr.split(',').map((c) => c.trim());
@@ -729,7 +718,7 @@ ${defs}  <rect width="100%" height="100%" fill="${backgroundColor}"/>
     return svg;
   }
 
-  private renderChartPlaceholder(node: IRComponentNode, pos: any): string {
+  protected renderChartPlaceholder(node: IRComponentNode, pos: any): string {
     const type = String(node.props.type || 'bar');
 
     return `<g${this.getDataNodeId(node)}>
@@ -751,19 +740,22 @@ ${defs}  <rect width="100%" height="100%" fill="${backgroundColor}"/>
   // TEXT/CONTENT COMPONENTS
   // ============================================================================
 
-  private renderText(node: IRComponentNode, pos: any): string {
+  protected renderText(node: IRComponentNode, pos: any): string {
     const text = String(node.props.content || 'Text content');
-    const fontSize = 14;
+
+    // Use tokens from density configuration
+    const fontSize = this.tokens.text.fontSize;
+    const lineHeight = this.tokens.text.lineHeight;
 
     return `<g${this.getDataNodeId(node)}>
-    <text x="${pos.x}" y="${pos.y + 16}" 
-          font-family="system-ui, -apple-system, sans-serif" 
-          font-size="${fontSize}" 
+    <text x="${pos.x}" y="${pos.y + fontSize * lineHeight}"
+          font-family="system-ui, -apple-system, sans-serif"
+          font-size="${fontSize}"
           fill="${this.renderTheme.text}">${this.escapeXml(text)}</text>
   </g>`;
   }
 
-  private renderLabel(node: IRComponentNode, pos: any): string {
+  protected renderLabel(node: IRComponentNode, pos: any): string {
     const text = String(node.props.text || 'Label');
 
     return `<g${this.getDataNodeId(node)}>
@@ -774,7 +766,7 @@ ${defs}  <rect width="100%" height="100%" fill="${backgroundColor}"/>
   </g>`;
   }
 
-  private renderCode(node: IRComponentNode, pos: any): string {
+  protected renderCode(node: IRComponentNode, pos: any): string {
     const code = String(node.props.code || 'const x = 42;');
 
     return `<g${this.getDataNodeId(node)}>
@@ -795,7 +787,7 @@ ${defs}  <rect width="100%" height="100%" fill="${backgroundColor}"/>
   // FORM COMPONENTS
   // ============================================================================
 
-  private renderTextarea(node: IRComponentNode, pos: any): string {
+  protected renderTextarea(node: IRComponentNode, pos: any): string {
     const label = String(node.props.label || '');
     const placeholder = String(node.props.placeholder || 'Enter text...');
 
@@ -821,7 +813,7 @@ ${defs}  <rect width="100%" height="100%" fill="${backgroundColor}"/>
   </g>`;
   }
 
-  private renderSelect(node: IRComponentNode, pos: any): string {
+  protected renderSelect(node: IRComponentNode, pos: any): string {
     const label = String(node.props.label || '');
     const placeholder = String(node.props.placeholder || 'Select...');
 
@@ -851,7 +843,7 @@ ${defs}  <rect width="100%" height="100%" fill="${backgroundColor}"/>
   </g>`;
   }
 
-  private renderCheckbox(node: IRComponentNode, pos: any): string {
+  protected renderCheckbox(node: IRComponentNode, pos: any): string {
     const label = String(node.props.label || 'Checkbox');
     const checked = String(node.props.checked || 'false').toLowerCase() === 'true';
 
@@ -881,7 +873,7 @@ ${defs}  <rect width="100%" height="100%" fill="${backgroundColor}"/>
   </g>`;
   }
 
-  private renderRadio(node: IRComponentNode, pos: any): string {
+  protected renderRadio(node: IRComponentNode, pos: any): string {
     const label = String(node.props.label || 'Radio');
     const checked = String(node.props.checked || 'false').toLowerCase() === 'true';
 
@@ -908,7 +900,7 @@ ${defs}  <rect width="100%" height="100%" fill="${backgroundColor}"/>
   </g>`;
   }
 
-  private renderToggle(node: IRComponentNode, pos: any): string {
+  protected renderToggle(node: IRComponentNode, pos: any): string {
     const label = String(node.props.label || 'Toggle');
     const enabled = String(node.props.enabled || 'false').toLowerCase() === 'true';
 
@@ -936,7 +928,7 @@ ${defs}  <rect width="100%" height="100%" fill="${backgroundColor}"/>
   // LAYOUT/STRUCTURE COMPONENTS
   // ============================================================================
 
-  private renderSidebar(node: IRComponentNode, pos: any): string {
+  protected renderSidebar(node: IRComponentNode, pos: any): string {
     const title = String(node.props.title || 'Sidebar');
     const itemsStr = String(node.props.items || '');
     const activeItem = String(node.props.active || '');
@@ -990,7 +982,7 @@ ${defs}  <rect width="100%" height="100%" fill="${backgroundColor}"/>
     return svg;
   }
 
-  private renderTabs(node: IRComponentNode, pos: any): string {
+  protected renderTabs(node: IRComponentNode, pos: any): string {
     // Read items prop instead of tabs, or fall back to empty
     const itemsStr = String(node.props.items || '');
     const tabs = itemsStr ? itemsStr.split(',').map((t) => t.trim()) : ['Tab 1', 'Tab 2', 'Tab 3'];
@@ -1028,7 +1020,7 @@ ${defs}  <rect width="100%" height="100%" fill="${backgroundColor}"/>
     return svg;
   }
 
-  private renderDivider(node: IRComponentNode, pos: any): string {
+  protected renderDivider(node: IRComponentNode, pos: any): string {
     return `<g${this.getDataNodeId(node)}>
     <line x1="${pos.x}" y1="${pos.y + pos.height / 2}" 
           x2="${pos.x + pos.width}" y2="${pos.y + pos.height / 2}" 
@@ -1041,7 +1033,7 @@ ${defs}  <rect width="100%" height="100%" fill="${backgroundColor}"/>
   // FEEDBACK/ALERT COMPONENTS
   // ============================================================================
 
-  private renderAlert(node: IRComponentNode, pos: any): string {
+  protected renderAlert(node: IRComponentNode, pos: any): string {
     const type = String(node.props.type || 'info');
     const message = String(node.props.message || 'Alert message');
 
@@ -1072,17 +1064,18 @@ ${defs}  <rect width="100%" height="100%" fill="${backgroundColor}"/>
   </g>`;
   }
 
-  private renderBadge(node: IRComponentNode, pos: any): string {
+  protected renderBadge(node: IRComponentNode, pos: any): string {
     const text = String(node.props.text || 'Badge');
     const variant = String(node.props.variant || 'default');
 
     const bgColor = variant === 'primary' ? this.renderTheme.primary : this.renderTheme.border;
     const textColor = variant === 'primary' ? 'white' : this.renderTheme.text;
 
-    // Badge radius: use 'pill' (height/2) or specific number from style
-    const badgeRadius = this.styleTokens.badgeRadius === 'pill'
+    // Use tokens from density configuration
+    const badgeRadius = this.tokens.badge.radius === 'pill'
       ? pos.height / 2
-      : this.styleTokens.badgeRadius;
+      : this.tokens.badge.radius;
+    const fontSize = this.tokens.badge.fontSize;
 
     return `<g${this.getDataNodeId(node)}>
     <rect x="${pos.x}" y="${pos.y}"
@@ -1091,15 +1084,15 @@ ${defs}  <rect width="100%" height="100%" fill="${backgroundColor}"/>
           fill="${bgColor}"
           stroke="none"/>
     <text x="${pos.x + pos.width / 2}" y="${pos.y + pos.height / 2 + 4}"
-          font-family="${this.styleTokens.fontFamily}"
-          font-size="12"
+          font-family="system-ui, -apple-system, sans-serif"
+          font-size="${fontSize}"
           font-weight="600"
           fill="${textColor}"
           text-anchor="middle">${this.escapeXml(text)}</text>
   </g>`;
   }
 
-  private renderModal(node: IRComponentNode, pos: any): string {
+  protected renderModal(node: IRComponentNode, pos: any): string {
     const title = String(node.props.title || 'Modal');
 
     const padding = 16;
@@ -1151,7 +1144,7 @@ ${defs}  <rect width="100%" height="100%" fill="${backgroundColor}"/>
   </g>`;
   }
 
-  private renderList(node: IRComponentNode, pos: any): string {
+  protected renderList(node: IRComponentNode, pos: any): string {
     const title = String(node.props.title || '');
     const itemsStr = String(node.props.items || '');
 
@@ -1208,7 +1201,7 @@ ${defs}  <rect width="100%" height="100%" fill="${backgroundColor}"/>
     return svg;
   }
 
-  private renderGenericComponent(node: IRComponentNode, pos: any): string {
+  protected renderGenericComponent(node: IRComponentNode, pos: any): string {
     return `<g${this.getDataNodeId(node)}>
     <rect x="${pos.x}" y="${pos.y}" 
           width="${pos.width}" height="${pos.height}" 
@@ -1225,7 +1218,7 @@ ${defs}  <rect width="100%" height="100%" fill="${backgroundColor}"/>
   </g>`;
   }
 
-  private renderStatCard(node: IRComponentNode, pos: any): string {
+  protected renderStatCard(node: IRComponentNode, pos: any): string {
     const title = String(node.props.title || 'Metric');
     const value = String(node.props.value || '0');
     const caption = String(node.props.caption || '');
@@ -1287,7 +1280,7 @@ ${defs}  <rect width="100%" height="100%" fill="${backgroundColor}"/>
     return svg;
   }
 
-  private renderImage(node: IRComponentNode, pos: any): string {
+  protected renderImage(node: IRComponentNode, pos: any): string {
     const placeholder = String(node.props.placeholder || 'landscape');
 
     // Determine aspect ratio based on placeholder type
@@ -1402,7 +1395,7 @@ ${defs}  <rect width="100%" height="100%" fill="${backgroundColor}"/>
     return svg;
   }
 
-  private renderBreadcrumbs(node: IRComponentNode, pos: any): string {
+  protected renderBreadcrumbs(node: IRComponentNode, pos: any): string {
     const itemsStr = String(node.props.items || 'Home');
     const items = itemsStr.split(',').map((s) => s.trim());
     const separator = String(node.props.separator || '/');
@@ -1444,7 +1437,7 @@ ${defs}  <rect width="100%" height="100%" fill="${backgroundColor}"/>
     return svg;
   }
 
-  private renderSidebarMenu(node: IRComponentNode, pos: any): string {
+  protected renderSidebarMenu(node: IRComponentNode, pos: any): string {
     const itemsStr = String(node.props.items || 'Item 1,Item 2,Item 3');
     const iconsStr = String(node.props.icons || '');
     const items = itemsStr.split(',').map((s) => s.trim());
@@ -1502,7 +1495,7 @@ ${defs}  <rect width="100%" height="100%" fill="${backgroundColor}"/>
     return svg;
   }
 
-  private renderIcon(node: IRComponentNode, pos: any): string {
+  protected renderIcon(node: IRComponentNode, pos: any): string {
     const iconType = String(node.props.type || 'help-circle');
     const size = String(node.props.size || 'md');
     const iconSvg = getIcon(iconType);
@@ -1533,7 +1526,7 @@ ${defs}  <rect width="100%" height="100%" fill="${backgroundColor}"/>
     return wrappedSvg;
   }
 
-  private renderIconButton(node: IRComponentNode, pos: any): string {
+  protected renderIconButton(node: IRComponentNode, pos: any): string {
     const iconName = String(node.props.icon || 'help-circle');
     const variant = String(node.props.variant || 'default');
     const size = String(node.props.size || 'md');
@@ -1611,7 +1604,7 @@ ${defs}  <rect width="100%" height="100%" fill="${backgroundColor}"/>
       xl: 32,
     };
 
-    if (!spacing) return spacingMap[this.ir.project.config.spacing] || 16;
+    if (!spacing) return spacingMap[this.ir.project.style.spacing] || 16;
     const value = spacingMap[spacing];
     return value !== undefined ? value : spacingMap.md;
   }
@@ -1629,9 +1622,10 @@ ${defs}  <rect width="100%" height="100%" fill="${backgroundColor}"/>
    * Get data-node-id attribute string for SVG elements
    * Enables bidirectional selection between code and canvas
    */
-  private getDataNodeId(node: IRComponentNode | IRContainerNode): string {
+  protected getDataNodeId(node: IRComponentNode | IRContainerNode): string {
     return node.meta.nodeId ? ` data-node-id="${node.meta.nodeId}"` : '';
   }
+
 }
 
 // ============================================================================

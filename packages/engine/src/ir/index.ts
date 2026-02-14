@@ -22,14 +22,14 @@ export interface IRContract {
 export interface IRProject {
   id: string;
   name: string;
-  config: IRConfig;
+  style: IRStyle;
   mocks: Record<string, unknown>;
   colors: Record<string, string>;
   screens: IRScreen[];
   nodes: Record<string, IRNode>;
 }
 
-export interface IRConfig {
+export interface IRStyle {
   density: 'compact' | 'normal' | 'comfortable';
   spacing: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   radius: 'none' | 'sm' | 'md' | 'lg' | 'full';
@@ -37,7 +37,6 @@ export interface IRConfig {
   font: 'sm' | 'base' | 'lg';
   background?: string;
   theme?: string;  // Color scheme: "light" | "dark"
-  style?: string;  // Render style: "standard" | "clean" | custom
 }
 
 export interface IRScreen {
@@ -56,7 +55,7 @@ export interface IRContainerNode {
   containerType: 'stack' | 'grid' | 'split' | 'panel' | 'card';
   params: Record<string, string | number>;
   children: Array<{ ref: string }>;
-  style: IRStyle;
+  style: IRNodeStyle;
   meta: IRMeta;
 }
 
@@ -65,11 +64,11 @@ export interface IRComponentNode {
   kind: 'component';
   componentType: string;
   props: Record<string, string | number>;
-  style: IRStyle;
+  style: IRNodeStyle;
   meta: IRMeta;
 }
 
-export interface IRStyle {
+export interface IRNodeStyle {
   padding?: string;
   gap?: string;
   align?: 'left' | 'center' | 'right' | 'justify';
@@ -83,7 +82,7 @@ export interface IRMeta {
 }
 
 // Zod validation schemas
-const IRConfigSchema = z.object({
+const IRStyleSchema = z.object({
   density: z.enum(['compact', 'normal', 'comfortable']),
   spacing: z.enum(['xs', 'sm', 'md', 'lg', 'xl']),
   radius: z.enum(['none', 'sm', 'md', 'lg', 'full']),
@@ -91,10 +90,9 @@ const IRConfigSchema = z.object({
   font: z.enum(['sm', 'base', 'lg']),
   background: z.string().optional(),
   theme: z.string().optional(),
-  style: z.string().optional(),
 });
 
-const IRStyleSchema = z.object({
+const IRNodeStyleSchema = z.object({
   padding: z.string().optional(),
   gap: z.string().optional(),
   align: z.enum(['left', 'center', 'right', 'justify']).optional(),
@@ -113,7 +111,7 @@ const IRContainerNodeSchema = z.object({
   containerType: z.enum(['stack', 'grid', 'split', 'panel', 'card']),
   params: z.record(z.string(), z.union([z.string(), z.number()])),
   children: z.array(z.object({ ref: z.string() })),
-  style: IRStyleSchema,
+  style: IRNodeStyleSchema,
   meta: IRMetaSchema,
 });
 
@@ -122,7 +120,7 @@ const IRComponentNodeSchema = z.object({
   kind: z.literal('component'),
   componentType: z.string(),
   props: z.record(z.string(), z.union([z.string(), z.number()])),
-  style: IRStyleSchema,
+  style: IRNodeStyleSchema,
   meta: IRMetaSchema,
 });
 
@@ -139,7 +137,7 @@ const IRScreenSchema = z.object({
 const IRProjectSchema = z.object({
   id: z.string(),
   name: z.string(),
-  config: IRConfigSchema,
+  style: IRStyleSchema,
   mocks: z.record(z.string(), z.unknown()),
   colors: z.record(z.string(), z.string()),
   screens: z.array(IRScreenSchema),
@@ -181,7 +179,7 @@ export class IRGenerator {
   private definedComponentIndices: Map<string, number> = new Map();
   private undefinedComponentsUsed: Set<string> = new Set();
   private warnings: Array<{ message: string; type: string }> = [];
-  private config: IRConfig = {
+  private style: IRStyle = {
     density: 'normal',
     spacing: 'md',
     radius: 'md',
@@ -205,8 +203,8 @@ export class IRGenerator {
       });
     }
 
-    // Apply config from AST
-    this.applyConfig(ast.config);
+    // Apply style from AST
+    this.applyStyle(ast.style);
 
     // Convert screens
     const screens: IRScreen[] = ast.screens.map((screen, screenIndex) => 
@@ -225,7 +223,7 @@ export class IRGenerator {
     const project: IRProject = {
       id: this.sanitizeId(ast.name),
       name: ast.name,
-      config: this.config,
+      style: this.style,
       mocks: ast.mocks || {},
       colors: ast.colors || {},
       screens,
@@ -241,30 +239,27 @@ export class IRGenerator {
     return IRContractSchema.parse(ir);
   }
 
-  private applyConfig(astConfig: Record<string, string>): void {
-    if (astConfig.density) {
-      this.config.density = astConfig.density as IRConfig['density'];
+  private applyStyle(astStyle: Record<string, string>): void {
+    if (astStyle.density) {
+      this.style.density = astStyle.density as IRStyle['density'];
     }
-    if (astConfig.spacing) {
-      this.config.spacing = astConfig.spacing as IRConfig['spacing'];
+    if (astStyle.spacing) {
+      this.style.spacing = astStyle.spacing as IRStyle['spacing'];
     }
-    if (astConfig.radius) {
-      this.config.radius = astConfig.radius as IRConfig['radius'];
+    if (astStyle.radius) {
+      this.style.radius = astStyle.radius as IRStyle['radius'];
     }
-    if (astConfig.stroke) {
-      this.config.stroke = astConfig.stroke as IRConfig['stroke'];
+    if (astStyle.stroke) {
+      this.style.stroke = astStyle.stroke as IRStyle['stroke'];
     }
-    if (astConfig.font) {
-      this.config.font = astConfig.font as IRConfig['font'];
+    if (astStyle.font) {
+      this.style.font = astStyle.font as IRStyle['font'];
     }
-    if (astConfig.background) {
-      this.config.background = astConfig.background;
+    if (astStyle.background) {
+      this.style.background = astStyle.background;
     }
-    if (astConfig.theme) {
-      this.config.theme = astConfig.theme;
-    }
-    if (astConfig.style) {
-      this.config.style = astConfig.style;
+    if (astStyle.theme) {
+      this.style.theme = astStyle.theme;
     }
   }
 
@@ -278,11 +273,11 @@ export class IRGenerator {
       root: { ref: rootNodeId },
     };
 
-    // Add background if specified on screen, otherwise use config default
+    // Add background if specified on screen, otherwise use style default
     if (screen.params.background) {
       irScreen.background = String(screen.params.background);
-    } else if (this.config.background) {
-      irScreen.background = this.config.background;
+    } else if (this.style.background) {
+      irScreen.background = this.style.background;
     }
 
     return irScreen;
@@ -400,7 +395,7 @@ export class IRGenerator {
     }
 
     // Extract style properties
-    const style: IRStyle = {};
+    const style: IRNodeStyle = {};
     if (layout.params.padding) {
       style.padding = String(layout.params.padding);
     } else {
@@ -411,7 +406,7 @@ export class IRGenerator {
       style.gap = String(layout.params.gap);
     }
     if (layout.params.align) {
-      style.align = layout.params.align as IRStyle['align'];
+      style.align = layout.params.align as IRNodeStyle['align'];
     }
     if (layout.params.background) {
       style.background = String(layout.params.background);
