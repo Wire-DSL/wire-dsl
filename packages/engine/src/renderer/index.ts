@@ -64,12 +64,13 @@ const THEMES = {
 export class SVGRenderer {
   private ir: IRContract;
   private layout: LayoutResult;
-  private options: Required<Omit<SVGRenderOptions, 'screenName'>> & { screenName?: string };
+  protected options: Required<Omit<SVGRenderOptions, 'screenName'>> & { screenName?: string };
   protected renderTheme: typeof THEMES.light;
   protected tokens: DesignTokens;
   private selectedScreenName?: string;
   protected renderedNodeIds: Set<string> = new Set(); // Track nodes rendered in current pass
-  private colorResolver: ColorResolver;
+  protected colorResolver: ColorResolver;
+  protected fontFamily: string = 'system-ui, -apple-system, sans-serif';
 
   constructor(ir: IRContract, layout: LayoutResult, options?: SVGRenderOptions) {
     this.ir = ir;
@@ -116,7 +117,7 @@ export class SVGRenderer {
   /**
    * Get the currently selected or first screen
    */
-  private getSelectedScreen(): { screen: any; name: string } {
+  protected getSelectedScreen(): { screen: any; name: string } {
     let screen = this.ir.project.screens[0];
     let screenName = screen?.name || 'Unknown';
 
@@ -164,7 +165,7 @@ export class SVGRenderer {
 </svg>`;
   }
 
-  private calculateContentHeight(): number {
+  protected calculateContentHeight(): number {
     let maxY = 0;
 
     // Find the lowest y position + height (only for rendered nodes)
@@ -1588,7 +1589,7 @@ export class SVGRenderer {
    * Extract SVG path/element content from a full SVG string
    * Removes the outer <svg> tag but keeps the content
    */
-  private extractSvgContent(svgString: string): string {
+  protected extractSvgContent(svgString: string): string {
     // Match content between <svg> and </svg> tags
     const match = svgString.match(/<svg[^>]*>([\s\S]*?)<\/svg>/);
     return match ? match[1] : svgString;
@@ -1609,7 +1610,7 @@ export class SVGRenderer {
     return value !== undefined ? value : spacingMap.md;
   }
 
-  private escapeXml(text: string): string {
+  protected escapeXml(text: string): string {
     return text
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
