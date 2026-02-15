@@ -727,6 +727,17 @@ export class LayoutEngine {
       return Math.max(this.getComponentHeight(), wrappedHeight);
     }
 
+    if (node.componentType === 'SidebarMenu') {
+      const itemsStr = String(node.props.items || 'Item 1,Item 2,Item 3');
+      const items = itemsStr
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+      const itemCount = items.length > 0 ? items.length : 3;
+      const itemHeight = 40;
+      return Math.max(this.getComponentHeight(), itemCount * itemHeight);
+    }
+
     // Taller components
     if (node.componentType === 'Textarea') return 100;
     if (node.componentType === 'Modal') return 300;

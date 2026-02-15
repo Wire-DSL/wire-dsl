@@ -554,6 +554,45 @@ describe('Layout Engine', () => {
     });
   });
 
+  it('should allocate SidebarMenu height based on items and avoid overlap', () => {
+    const input = `
+      project "Sidebar Menu Height" {
+        style {
+          spacing: "md"
+        }
+
+        screen Main {
+          layout stack(direction: vertical, gap: md, padding: md) {
+            component SidebarMenu items: "Dashboard,Users,Roles,Settings"
+            component Heading text: "Content"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+
+    const menuEntry = Object.entries(ir.project.nodes).find(
+      ([_, node]) => node.kind === 'component' && node.componentType === 'SidebarMenu'
+    );
+    const headingEntry = Object.entries(ir.project.nodes).find(
+      ([_, node]) => node.kind === 'component' && node.componentType === 'Heading'
+    );
+
+    expect(menuEntry).toBeDefined();
+    expect(headingEntry).toBeDefined();
+
+    const menuPos = layout[menuEntry![0]];
+    const headingPos = layout[headingEntry![0]];
+
+    // 4 items * 40px
+    expect(menuPos.height).toBe(160);
+    // Next component should be below menu + md gap (16px)
+    expect(headingPos.y).toBe(menuPos.y + menuPos.height + 16);
+  });
+
   it('should wrap long Text content and push following components down', () => {
     const input = `
       project "Text Wrap" {
