@@ -231,6 +231,69 @@ describe('IR Generator', () => {
     expect(ir.project.nodes[rootNodeId]).toBeDefined();
   });
 
+  it('should resolve tablet device viewport with min height', () => {
+    const input = `
+      project "Tablet" {
+        style {
+          device: "tablet"
+        }
+
+        screen Main {
+          layout stack {
+            component Heading text: "Tablet viewport"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+
+    expect(ir.project.screens[0].viewport).toEqual({ width: 768, height: 1024 });
+  });
+
+  it('should resolve print device viewport with min height', () => {
+    const input = `
+      project "Print" {
+        style {
+          device: "print"
+        }
+
+        screen Main {
+          layout stack {
+            component Heading text: "Print viewport"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+
+    expect(ir.project.screens[0].viewport).toEqual({ width: 794, height: 1123 });
+  });
+
+  it('should fallback to desktop viewport for unknown device', () => {
+    const input = `
+      project "Unknown Device" {
+        style {
+          device: "smart-fridge"
+        }
+
+        screen Main {
+          layout stack {
+            component Heading text: "Fallback viewport"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+
+    expect(ir.project.screens[0].viewport).toEqual({ width: 1280, height: 720 });
+  });
+
   it('should handle multiple screens', () => {
     const input = `
       project "Multi" {
@@ -823,5 +886,4 @@ describe('IR Generator', () => {
     expect(Object.keys(ir.project.nodes).length).toBeGreaterThan(0);
   });
 });
-
 

@@ -48,14 +48,6 @@ export const DEVICE_PRESETS: Record<string, DevicePreset> = {
     category: 'print',
     description: 'A4 portrait at 96 DPI',
   },
-  // Backward-compatible alias
-  a4: {
-    name: 'Print A4',
-    width: 794,
-    minHeight: 1123,
-    category: 'print',
-    description: 'A4 portrait at 96 DPI',
-  },
 };
 
 /**

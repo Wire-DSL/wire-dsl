@@ -38,7 +38,7 @@ export interface IRStyle {
   font: 'sm' | 'base' | 'lg';
   background?: string;
   theme?: string;  // Color scheme: "light" | "dark"
-  device?: string;  // Device preset: "mobile" | "desktop" | "tablet" | "a4"
+  device?: string;  // Device preset: "mobile" | "tablet" | "desktop" | "print" | "a4"
 }
 
 export interface IRScreen {
@@ -272,17 +272,18 @@ export class IRGenerator {
   private convertScreen(screen: ASTScreen, screenIndex: number): IRScreen {
     const rootNodeId = this.convertLayout(screen.layout);
 
-    // Resolve viewport width from device preset or use default
-    let viewportWidth = 1280; // Desktop default
-    if (this.style.device) {
-      const preset = resolveDevicePreset(this.style.device);
-      viewportWidth = preset.width;
-    }
+    // Resolve viewport dimensions from device preset or use desktop default.
+    const viewport = this.style.device
+      ? resolveDevicePreset(this.style.device)
+      : resolveDevicePreset('desktop');
 
     const irScreen: IRScreen = {
       id: this.sanitizeId(screen.name),
       name: screen.name,
-      viewport: { width: viewportWidth, height: 720 }, // Height is placeholder, calculated dynamically later
+      viewport: {
+        width: viewport.width,
+        height: viewport.minHeight,
+      }, // Height is a minimum baseline; final render height remains dynamic
       root: { ref: rootNodeId },
     };
 
