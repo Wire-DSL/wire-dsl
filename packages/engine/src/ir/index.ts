@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { AST, ASTScreen, ASTLayout, ASTComponent, ASTCell, ASTDefinedComponent } from '../parser/index';
+import { resolveDevicePreset } from './device-presets';
 
 /**
  * Intermediate Representation (IR) Generator
@@ -37,6 +38,7 @@ export interface IRStyle {
   font: 'sm' | 'base' | 'lg';
   background?: string;
   theme?: string;  // Color scheme: "light" | "dark"
+  device?: string;  // Device preset: "mobile" | "desktop" | "tablet" | "a4"
 }
 
 export interface IRScreen {
@@ -90,6 +92,7 @@ const IRStyleSchema = z.object({
   font: z.enum(['sm', 'base', 'lg']),
   background: z.string().optional(),
   theme: z.string().optional(),
+  device: z.string().optional(),
 });
 
 const IRNodeStyleSchema = z.object({
@@ -261,15 +264,25 @@ export class IRGenerator {
     if (astStyle.theme) {
       this.style.theme = astStyle.theme;
     }
+    if (astStyle.device) {
+      this.style.device = astStyle.device;
+    }
   }
 
   private convertScreen(screen: ASTScreen, screenIndex: number): IRScreen {
     const rootNodeId = this.convertLayout(screen.layout);
 
+    // Resolve viewport width from device preset or use default
+    let viewportWidth = 1280; // Desktop default
+    if (this.style.device) {
+      const preset = resolveDevicePreset(this.style.device);
+      viewportWidth = preset.width;
+    }
+
     const irScreen: IRScreen = {
       id: this.sanitizeId(screen.name),
       name: screen.name,
-      viewport: { width: 1280, height: 720 },
+      viewport: { width: viewportWidth, height: 720 }, // Height is placeholder, calculated dynamically later
       root: { ref: rootNodeId },
     };
 
