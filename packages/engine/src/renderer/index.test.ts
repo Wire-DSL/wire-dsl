@@ -87,6 +87,141 @@ describe('SVG Renderer', () => {
     expect(svg).toContain('rgba(59, 130, 246'); // Primary blue color with opacity
   });
 
+  it('should render link component as underlined text without button background', () => {
+    const input = `
+      project "Link" {
+        screen Main {
+          layout stack {
+            component Link text: "Learn more"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    expect(svg).toContain('Learn more');
+    expect(svg).toContain('<line');
+  });
+
+  it('should render link component with variant color', () => {
+    const input = `
+      project "LinkVariant" {
+        screen Main {
+          layout stack {
+            component Link text: "Delete" variant: "danger"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    expect(svg).toContain('Delete');
+    expect(svg).toContain('rgba(239, 68, 68, 0.9)');
+  });
+
+  it('should override built-in and custom variants using colors block', () => {
+    const input = `
+      project "VariantOverrides" {
+        colors {
+          primary: #00FF00
+          error: #FF0000
+        }
+
+        screen Main {
+          layout stack {
+            component Button text: "Save" variant: primary
+            component Button text: "Fail" variant: error
+            component Link text: "Go" variant: error
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    expect(svg).toContain('rgba(0, 255, 0, 0.85)');
+    expect(svg).toContain('rgba(255, 0, 0, 0.85)');
+    expect(svg).toContain('stroke="#FF0000"');
+  });
+
+  it('should render Separate component as invisible spacer (no divider line)', () => {
+    const input = `
+      project "Separate" {
+        screen Main {
+          layout stack {
+            component Heading text: "Above"
+            component Separate
+            component Heading text: "Below"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    expect(svg).toContain('Above');
+    expect(svg).toContain('Below');
+    expect(svg).not.toContain('stroke-width="1"/>');
+  });
+
+  it('should render alert with variant, title and text', () => {
+    const input = `
+      project "AlertNewProps" {
+        screen Main {
+          layout stack {
+            component Alert variant: "warning" title: "Warning" text: "Check this action"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    expect(svg).toContain('Warning');
+    expect(svg).toContain('Check this action');
+    expect(svg).toContain('#F59E0B');
+  });
+
+  it('should wrap alert text into multiple lines when content is long', () => {
+    const input = `
+      project "AlertWrap" {
+        style {
+          device: "mobile"
+        }
+        screen Main {
+          layout stack {
+            component Alert variant: "info" title: "Heads up" text: "This is a long alert message that should wrap to a new line instead of overflowing outside the alert box"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    expect(svg).toContain('Heads up');
+    expect((svg.match(/<tspan/g) || []).length).toBeGreaterThan(2);
+  });
+
   it('should render input component', () => {
     const input = `
       project "Input" {

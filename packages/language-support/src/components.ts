@@ -37,6 +37,7 @@ const orientationEnum: PropertyMetadata = { name: 'orientation', type: 'enum', o
 const alignEnum: PropertyMetadata = { name: 'align', type: 'enum', options: ['justify', 'left', 'center', 'right'] };
 const paddingEnum: PropertyMetadata = { name: 'padding', type: 'enum', options: ['sm', 'md', 'lg'] };
 const gapEnum: PropertyMetadata = { name: 'gap', type: 'enum', options: ['sm', 'md', 'lg'] };
+const spacingSizeEnum: PropertyMetadata = { name: 'size', type: 'enum', options: ['none', 'xs', 'sm', 'md', 'lg', 'xl'] };
 
 export const COMPONENTS: Record<string, ComponentMetadata> = {
   // Text Components
@@ -102,6 +103,14 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     },
     example: 'component Divider orientation: horizontal',
   },
+  Separate: {
+    name: 'Separate',
+    description: 'Adds blank space between elements without drawing a line.',
+    properties: {
+      size: spacingSizeEnum,
+    },
+    example: 'component Separate size: md',
+  },
   // Interactive Components
   Button: {
     name: 'Button',
@@ -119,10 +128,9 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     description: 'A hyperlink.',
     properties: {
       text: { name: 'text', type: 'string' },
-      href: { name: 'href', type: 'string' },
-      target: { name: 'target', type: 'string' },
+      variant: variantEnum,
     },
-    example: 'component Link text: "Go to Google" href: "https://google.com"',
+    example: 'component Link text: "Learn more" variant: primary',
   },
   TextInput: {
     name: 'TextInput',
@@ -165,10 +173,11 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     name: 'Alert',
     description: 'A message box to draw attention.',
     properties: {
-      message: { name: 'message', type: 'string' },
-      type: { name: 'type', type: 'color', options: colorEnum.options },
+      variant: variantEnum,
+      title: { name: 'title', type: 'string' },
+      text: { name: 'text', type: 'string' },
     },
-    example: 'component Alert type: danger message: "An error occurred."',
+    example: 'component Alert variant: danger title: "Error" text: "An error occurred."',
   },
   Table: {
     name: 'Table',
@@ -205,7 +214,7 @@ export const LAYOUTS: Record<string, LayoutMetadata> = {
 };
 
 export const PROPERTY_VALUES: Record<string, string[]> = {
-  size: sizeEnum.options!,
+  size: ['none', 'xs', 'sm', 'md', 'lg', 'xl'],
   color: colorEnum.options!,
   variant: variantEnum.options!,
   orientation: orientationEnum.options!,

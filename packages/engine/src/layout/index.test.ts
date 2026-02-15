@@ -88,6 +88,191 @@ describe('Layout Engine', () => {
     expect(gap).toBe(24);
   });
 
+  it('should calculate intrinsic width for Link based on text length', () => {
+    const input = `
+      project "LinkWidth" {
+        screen Main {
+          layout stack(direction: horizontal, gap: md) {
+            component Link text: "Short"
+            component Link text: "This is a much longer link"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+
+    const links = Object.entries(ir.project.nodes)
+      .filter(([_, node]) => node.kind === 'component' && node.componentType === 'Link')
+      .map(([id]) => layout[id]);
+
+    expect(links).toHaveLength(2);
+    expect(links[1].width).toBeGreaterThan(links[0].width);
+  });
+
+  it('should add extra blank space with Separate in vertical stack', () => {
+    const input = `
+      project "SeparateSpacing" {
+        screen Main {
+          layout stack(direction: vertical, gap: md) {
+            component Heading text: "Top"
+            component Separate
+            component Heading text: "Bottom"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+
+    const components = Object.entries(ir.project.nodes)
+      .filter(([_, node]) => node.kind === 'component')
+      .map(([id, node]) => ({ id, type: node.componentType, pos: layout[id] }));
+
+    const headings = components
+      .filter((c) => c.type === 'Heading')
+      .sort((a, b) => a.pos.y - b.pos.y);
+    const top = headings[0];
+    const separate = components.find((c) => c.type === 'Separate');
+    const bottom = headings[1];
+
+    expect(top).toBeDefined();
+    expect(separate).toBeDefined();
+    expect(bottom).toBeDefined();
+    expect(separate!.pos.height).toBe(16);
+    expect(bottom!.pos.y).toBe(top!.pos.y + top!.pos.height + 16 + 16 + 16);
+  });
+
+  it('should apply Separate size token values', () => {
+    const input = `
+      project "SeparateSizes" {
+        screen Main {
+          layout stack(direction: vertical, gap: md) {
+            component Separate size: sm
+            component Separate size: lg
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+
+    const separates = Object.entries(ir.project.nodes)
+      .filter(([_, node]) => node.kind === 'component' && node.componentType === 'Separate')
+      .map(([id]) => layout[id])
+      .sort((a, b) => a.y - b.y);
+
+    expect(separates).toHaveLength(2);
+    expect(separates[0].height).toBe(8);
+    expect(separates[1].height).toBe(24);
+  });
+
+  it('should scale Separate size with density', () => {
+    const compactInput = `
+      project "SeparateCompact" {
+        style { density: "compact" }
+        screen Main {
+          layout stack {
+            component Separate size: md
+          }
+        }
+      }
+    `;
+    const comfortableInput = `
+      project "SeparateComfortable" {
+        style { density: "comfortable" }
+        screen Main {
+          layout stack {
+            component Separate size: md
+          }
+        }
+      }
+    `;
+
+    const compactLayout = calculateLayout(generateIR(parseWireDSL(compactInput)));
+    const comfortableLayout = calculateLayout(generateIR(parseWireDSL(comfortableInput)));
+
+    const compactAlert = Object.entries(generateIR(parseWireDSL(compactInput)).project.nodes)
+      .find(([_, n]) => n.kind === 'component' && n.componentType === 'Separate');
+    const comfortableAlert = Object.entries(generateIR(parseWireDSL(comfortableInput)).project.nodes)
+      .find(([_, n]) => n.kind === 'component' && n.componentType === 'Separate');
+
+    expect(compactAlert).toBeDefined();
+    expect(comfortableAlert).toBeDefined();
+    expect(compactLayout[compactAlert![0]].height).toBeLessThan(comfortableLayout[comfortableAlert![0]].height);
+  });
+
+  it('should scale IconButton size with density', () => {
+    const compactInput = `
+      project "IconBtnCompact" {
+        style { density: "compact" }
+        screen Main {
+          layout stack {
+            component IconButton icon: "menu" size: md
+          }
+        }
+      }
+    `;
+    const comfortableInput = `
+      project "IconBtnComfortable" {
+        style { density: "comfortable" }
+        screen Main {
+          layout stack {
+            component IconButton icon: "menu" size: md
+          }
+        }
+      }
+    `;
+
+    const compactIr = generateIR(parseWireDSL(compactInput));
+    const comfortableIr = generateIR(parseWireDSL(comfortableInput));
+    const compactLayout = calculateLayout(compactIr);
+    const comfortableLayout = calculateLayout(comfortableIr);
+
+    const compactIconButton = Object.entries(compactIr.project.nodes)
+      .find(([_, n]) => n.kind === 'component' && n.componentType === 'IconButton');
+    const comfortableIconButton = Object.entries(comfortableIr.project.nodes)
+      .find(([_, n]) => n.kind === 'component' && n.componentType === 'IconButton');
+
+    expect(compactIconButton).toBeDefined();
+    expect(comfortableIconButton).toBeDefined();
+    expect(compactLayout[compactIconButton![0]].width).toBeLessThan(
+      comfortableLayout[comfortableIconButton![0]].width
+    );
+  });
+
+  it('should increase Alert height when text wraps', () => {
+    const input = `
+      project "AlertHeight" {
+        style {
+          device: "mobile"
+        }
+        screen Main {
+          layout stack(direction: vertical, gap: md) {
+            component Alert variant: "warning" title: "Warning" text: "This alert contains a very long message that should wrap and therefore increase the intrinsic component height"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+
+    const alertEntry = Object.entries(ir.project.nodes)
+      .find(([_, node]) => node.kind === 'component' && node.componentType === 'Alert');
+    expect(alertEntry).toBeDefined();
+
+    const alertPos = layout[alertEntry![0]];
+    expect(alertPos.height).toBeGreaterThan(40);
+  });
+
   it('should apply padding to containers', () => {
     const input = `
       project "Padding" {

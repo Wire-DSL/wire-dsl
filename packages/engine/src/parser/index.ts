@@ -52,7 +52,7 @@ const ComponentKeyword = createToken({
 const Define = createToken({ name: 'Define', pattern: /define/ });
 const Style = createToken({ name: 'Style', pattern: /style/ });
 const Mocks = createToken({ name: 'Mocks', pattern: /mocks/ });
-const Colors = createToken({ name: 'Colors', pattern: /colors/ });
+const Colors = createToken({ name: 'Colors', pattern: /colors?(?=\s*\{)/ });
 const Cell = createToken({ name: 'Cell', pattern: /cell/ });
 
 // Punctuation

@@ -539,6 +539,52 @@ describe('WireDSL Parser', () => {
     });
   });
 
+  it('should parse color block alias (singular)', () => {
+    const input = `
+      project "ColorAliasProject" {
+        color {
+          primary: #00FF00
+          error: #FF0000
+        }
+
+        screen Main {
+          layout stack {
+            component Button text: "Save" variant: primary
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+
+    expect(ast.colors).toEqual({
+      primary: '#00FF00',
+      error: '#FF0000',
+    });
+  });
+
+  it('should still parse component color property when color block alias exists', () => {
+    const input = `
+      project "ColorProperty" {
+        color {
+          primary: #00FF00
+        }
+
+        screen Main {
+          layout stack {
+            component Icon icon: "home" color: primary
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const component = ast.screens[0].layout.children[0];
+    if (component.type === 'component') {
+      expect(component.props.color).toBe('primary');
+    }
+  });
+
   it('should parse Checkbox and Toggle components', () => {
     const input = `
       project "InputControls" {
@@ -651,4 +697,3 @@ describe('WireDSL Parser', () => {
     }
   });
 });
-

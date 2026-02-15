@@ -95,9 +95,14 @@ export class SketchSVGRenderer extends SVGRenderer {
     const buttonWidth = Math.max(textWidth + paddingX * 2, 60);
     const buttonHeight = fontSize + paddingY * 2;
 
-    // Sketch style: monochrome except for emphasized variants
-    const borderColor = variant === 'primary' ? '#3B82F6' : '#2D3748';
-    const textColor = variant === 'primary' ? '#3B82F6' : '#2D3748';
+    const semanticBase = this.getSemanticVariantColor(variant);
+    const hasExplicitVariantColor =
+      semanticBase !== undefined || this.colorResolver.hasColor(variant);
+    const variantColor = hasExplicitVariantColor
+      ? this.resolveVariantColor(variant, this.renderTheme.primary)
+      : '#2D3748';
+    const borderColor = variantColor;
+    const textColor = variantColor;
     const strokeWidth = 0.5;
 
     return `<g${this.getDataNodeId(node)}>
@@ -123,9 +128,14 @@ export class SketchSVGRenderer extends SVGRenderer {
   protected renderBadge(node: IRComponentNode, pos: any): string {
     const text = String(node.props.text || '');
     const variant = String(node.props.variant || 'default');
-
-    const borderColor = variant === 'primary' ? '#3B82F6' : '#2D3748';
-    const textColor = variant === 'primary' ? '#3B82F6' : '#2D3748';
+    const semanticBase = this.getSemanticVariantColor(variant);
+    const hasExplicitVariantColor =
+      semanticBase !== undefined || this.colorResolver.hasColor(variant);
+    const variantColor = hasExplicitVariantColor
+      ? this.resolveVariantColor(variant, this.renderTheme.primary)
+      : '#2D3748';
+    const borderColor = variantColor;
+    const textColor = variantColor;
     const badgeRadius = this.tokens.badge.radius === 'pill' ? pos.height / 2 : this.tokens.badge.radius;
 
     return `<g${this.getDataNodeId(node)}>
@@ -153,22 +163,15 @@ export class SketchSVGRenderer extends SVGRenderer {
     const variant = String(node.props.variant || 'default');
     const size = String(node.props.size || 'md');
 
-    const borderColorMap = {
-      'primary': '#3B82F6',
-      'danger': '#EF4444',
-      'default': '#2D3748'
-    };
-    const borderColor = borderColorMap[variant as keyof typeof borderColorMap] || borderColorMap['default'];
-
-    const iconColorMap = {
-      'primary': '#3B82F6',
-      'danger': '#EF4444',
-      'default': '#2D3748'
-    };
-    const iconColor = iconColorMap[variant as keyof typeof iconColorMap] || iconColorMap['default'];
-
-    const sizeMap = { 'sm': 28, 'md': 32, 'lg': 40 };
-    const buttonSize = sizeMap[size as keyof typeof sizeMap] || 32;
+    const semanticBase = this.getSemanticVariantColor(variant);
+    const hasExplicitVariantColor =
+      semanticBase !== undefined || this.colorResolver.hasColor(variant);
+    const variantColor = hasExplicitVariantColor
+      ? this.resolveVariantColor(variant, this.renderTheme.primary)
+      : '#2D3748';
+    const borderColor = variantColor;
+    const iconColor = variantColor;
+    const buttonSize = this.getIconButtonSize(size);
     const radius = 6;
 
     // Get icon from parent class
@@ -205,16 +208,32 @@ export class SketchSVGRenderer extends SVGRenderer {
    * Render alert with colored border
    */
   protected renderAlert(node: IRComponentNode, pos: any): string {
-    const message = String(node.props.message || 'Alert message');
-    const type = String(node.props.type || 'info');
-
-    const typeColors: Record<string, string> = {
-      info: '#3B82F6',
-      warning: '#F59E0B',
-      error: '#EF4444',
-      success: '#10B981',
-    };
-    const borderColor = typeColors[type] || typeColors.info;
+    const variant = String(node.props.variant || 'info');
+    const title = String(node.props.title || '');
+    const text = String(node.props.text || 'Alert message');
+    const borderColor = this.resolveVariantColor(variant, this.getSemanticVariantColor(variant) || '#3B82F6');
+    const hasTitle = title.trim().length > 0;
+    const fontSize = 14;
+    const titleLineHeight = Math.ceil(fontSize * 1.25);
+    const textLineHeight = Math.ceil(fontSize * 1.4);
+    const contentX = pos.x + 16;
+    const contentWidth = Math.max(20, pos.width - 24);
+    const titleLines = hasTitle ? this.wrapTextToLines(title, contentWidth, fontSize) : [];
+    const textLines = this.wrapTextToLines(text, contentWidth, fontSize);
+    const titleStartY = pos.y + 12 + fontSize;
+    const textStartY = titleStartY + titleLines.length * titleLineHeight + (hasTitle ? 6 : 0);
+    const titleTspans = titleLines
+      .map(
+        (line, index) =>
+          `<tspan x="${contentX}" dy="${index === 0 ? 0 : titleLineHeight}">${this.escapeXml(line)}</tspan>`
+      )
+      .join('');
+    const textTspans = textLines
+      .map(
+        (line, index) =>
+          `<tspan x="${contentX}" dy="${index === 0 ? 0 : textLineHeight}">${this.escapeXml(line)}</tspan>`
+      )
+      .join('');
 
     return `<g${this.getDataNodeId(node)}>
       <rect x="${pos.x}" y="${pos.y}"
@@ -228,10 +247,19 @@ export class SketchSVGRenderer extends SVGRenderer {
             width="4" height="${pos.height}"
             rx="6"
             fill="${borderColor}"/>
-      <text x="${pos.x + 16}" y="${pos.y + pos.height / 2 + 5}"
+      ${
+        hasTitle
+          ? `<text x="${contentX}" y="${titleStartY}"
             font-family="${this.fontFamily}"
-            font-size="14"
-            fill="${borderColor}">${this.escapeXml(message)}</text>
+            font-size="${fontSize}"
+            font-weight="700"
+            fill="${borderColor}">${titleTspans}</text>`
+          : ''
+      }
+      <text x="${contentX}" y="${textStartY}"
+            font-family="${this.fontFamily}"
+            font-size="${fontSize}"
+            fill="${borderColor}">${textTspans}</text>
     </g>`;
   }
 
@@ -985,8 +1013,7 @@ export class SketchSVGRenderer extends SVGRenderer {
     const caption = String(node.props.caption || '');
 
     // Inline spacing resolution
-    const spacingMap: Record<string, number> = { none: 0, xs: 4, sm: 8, md: 16, lg: 24, xl: 32 };
-    const padding = node.style.padding ? (spacingMap[node.style.padding] || 16) : 16;
+    const padding = this.resolveSpacing(node.style.padding);
     const innerX = pos.x + padding;
     const innerY = pos.y + padding;
 
@@ -1166,8 +1193,7 @@ export class SketchSVGRenderer extends SVGRenderer {
   </g>`;
     }
 
-    const sizeMap = { 'sm': 14, 'md': 18, 'lg': 24 };
-    const iconSize = sizeMap[size as keyof typeof sizeMap] || 18;
+    const iconSize = this.getIconSize(size);
     const iconColor = '#2D3748';
     const offsetX = pos.x + (pos.width - iconSize) / 2;
     const offsetY = pos.y + (pos.height - iconSize) / 2;

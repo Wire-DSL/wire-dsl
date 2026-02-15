@@ -4,6 +4,8 @@ import { MockDataGenerator } from './mock-data';
 import { ColorResolver } from './colors';
 import { getIcon } from './icons/iconLibrary';
 import { resolveTokens, type DesignTokens } from './tokens';
+import { resolveSpacingToken, type DensityLevel } from '../shared/spacing';
+import { resolveIconButtonSize, resolveIconSize } from '../shared/component-sizes';
 
 /**
  * SVG Renderer
@@ -252,6 +254,8 @@ export class SVGRenderer {
         return this.renderHeading(node, pos);
       case 'Button':
         return this.renderButton(node, pos);
+      case 'Link':
+        return this.renderLink(node, pos);
       case 'Input':
         return this.renderInput(node, pos);
       case 'Topbar':
@@ -292,6 +296,8 @@ export class SVGRenderer {
         return this.renderTabs(node, pos);
       case 'Divider':
         return this.renderDivider(node, pos);
+      case 'Separate':
+        return this.renderSeparate(node, pos);
 
       // Feedback/Alert components
       case 'Alert':
@@ -370,10 +376,18 @@ export class SVGRenderer {
     const buttonWidth = Math.max(textWidth + paddingX * 2, 60);
     const buttonHeight = fontSize + paddingY * 2;
 
-    // Color configuration
-    const bgColor = variant === 'primary' ? 'rgba(59, 130, 246, 0.85)' : 'rgba(226, 232, 240, 0.9)';
-    const textColor = variant === 'primary' ? '#FFFFFF' : 'rgba(30, 41, 59, 0.85)';
-    const borderColor = variant === 'primary' ? 'rgba(59, 130, 246, 0.7)' : 'rgba(100, 116, 139, 0.4)';
+    // Color configuration with variant override support from colors block.
+    const semanticBase = this.getSemanticVariantColor(variant);
+    const hasExplicitVariantColor =
+      semanticBase !== undefined || this.colorResolver.hasColor(variant);
+    const resolvedBase = this.resolveVariantColor(variant, this.renderTheme.primary);
+    const bgColor = hasExplicitVariantColor
+      ? this.hexToRgba(resolvedBase, 0.85)
+      : 'rgba(226, 232, 240, 0.9)';
+    const textColor = hasExplicitVariantColor ? '#FFFFFF' : 'rgba(30, 41, 59, 0.85)';
+    const borderColor = hasExplicitVariantColor
+      ? this.hexToRgba(resolvedBase, 0.7)
+      : 'rgba(100, 116, 139, 0.4)';
 
     return `<g${this.getDataNodeId(node)}>
     <rect x="${pos.x}" y="${pos.y}"
@@ -388,6 +402,36 @@ export class SVGRenderer {
           font-weight="${fontWeight}"
           fill="${textColor}"
           text-anchor="middle">${this.escapeXml(text)}</text>
+  </g>`;
+  }
+
+  protected renderLink(node: IRComponentNode, pos: any): string {
+    const text = String(node.props.text || 'Link');
+    const variant = String(node.props.variant || 'primary');
+    const fontSize = this.tokens.button.fontSize;
+    const fontWeight = this.tokens.button.fontWeight;
+    const paddingX = this.tokens.button.paddingX;
+    const paddingY = this.tokens.button.paddingY;
+    const linkColor = this.resolveVariantColor(variant, this.renderTheme.primary);
+
+    // Match Button sizing so Link can align beside regular buttons.
+    const textWidth = text.length * fontSize * 0.6;
+    const linkWidth = Math.max(textWidth + paddingX * 2, 60);
+    const linkHeight = fontSize + paddingY * 2;
+    const centerY = pos.y + linkHeight / 2 + fontSize * 0.35;
+    const underlineY = centerY + 3;
+
+    return `<g${this.getDataNodeId(node)}>
+    <text x="${pos.x + linkWidth / 2}" y="${centerY}"
+          font-family="system-ui, -apple-system, sans-serif"
+          font-size="${fontSize}"
+          font-weight="${fontWeight}"
+          fill="${linkColor}"
+          text-anchor="middle">${this.escapeXml(text)}</text>
+    <line x1="${pos.x + (linkWidth - textWidth) / 2}" y1="${underlineY}"
+          x2="${pos.x + (linkWidth + textWidth) / 2}" y2="${underlineY}"
+          stroke="${linkColor}"
+          stroke-width="1"/>
   </g>`;
   }
 
@@ -1058,22 +1102,42 @@ export class SVGRenderer {
   </g>`;
   }
 
+  protected renderSeparate(node: IRComponentNode, _pos: any): string {
+    // Spacer component: intentionally renders no visible shape.
+    return `<g${this.getDataNodeId(node)}></g>`;
+  }
+
   // ============================================================================
   // FEEDBACK/ALERT COMPONENTS
   // ============================================================================
 
   protected renderAlert(node: IRComponentNode, pos: any): string {
-    const type = String(node.props.type || 'info');
-    const message = String(node.props.message || 'Alert message');
-
-    const typeColors: Record<string, string> = {
-      info: '#3B82F6',
-      warning: '#F59E0B',
-      error: '#EF4444',
-      success: '#10B981',
-    };
-
-    const bgColor = typeColors[type] || typeColors.info;
+    const variant = String(node.props.variant || 'info');
+    const title = String(node.props.title || '');
+    const text = String(node.props.text || 'Alert message');
+    const bgColor = this.resolveVariantColor(variant, this.getSemanticVariantColor(variant) || '#3B82F6');
+    const hasTitle = title.trim().length > 0;
+    const fontSize = 13;
+    const titleLineHeight = Math.ceil(fontSize * 1.25);
+    const textLineHeight = Math.ceil(fontSize * 1.4);
+    const contentX = pos.x + 16;
+    const contentWidth = Math.max(20, pos.width - 24);
+    const titleLines = hasTitle ? this.wrapTextToLines(title, contentWidth, fontSize) : [];
+    const textLines = this.wrapTextToLines(text, contentWidth, fontSize);
+    const titleStartY = pos.y + 12 + fontSize;
+    const textStartY = titleStartY + titleLines.length * titleLineHeight + (hasTitle ? 6 : 0);
+    const titleTspans = titleLines
+      .map(
+        (line, index) =>
+          `<tspan x="${contentX}" dy="${index === 0 ? 0 : titleLineHeight}">${this.escapeXml(line)}</tspan>`
+      )
+      .join('');
+    const textTspans = textLines
+      .map(
+        (line, index) =>
+          `<tspan x="${contentX}" dy="${index === 0 ? 0 : textLineHeight}">${this.escapeXml(line)}</tspan>`
+      )
+      .join('');
 
     return `<g${this.getDataNodeId(node)}>
     <rect x="${pos.x}" y="${pos.y}" 
@@ -1086,19 +1150,32 @@ export class SVGRenderer {
           width="4" height="${pos.height}" 
           rx="6" 
           fill="${bgColor}"/>
-    <text x="${pos.x + 16}" y="${pos.y + pos.height / 2 + 5}" 
+    ${
+      hasTitle
+        ? `<text x="${contentX}" y="${titleStartY}" 
           font-family="system-ui, -apple-system, sans-serif" 
-          font-size="13" 
-          fill="${bgColor}">${this.escapeXml(message)}</text>
+          font-size="${fontSize}" 
+          font-weight="700"
+          fill="${bgColor}">${titleTspans}</text>`
+        : ''
+    }
+    <text x="${contentX}" y="${textStartY}" 
+          font-family="system-ui, -apple-system, sans-serif" 
+          font-size="${fontSize}" 
+          fill="${bgColor}">${textTspans}</text>
   </g>`;
   }
 
   protected renderBadge(node: IRComponentNode, pos: any): string {
     const text = String(node.props.text || 'Badge');
     const variant = String(node.props.variant || 'default');
-
-    const bgColor = variant === 'primary' ? this.renderTheme.primary : this.renderTheme.border;
-    const textColor = variant === 'primary' ? 'white' : this.renderTheme.text;
+    const semanticBase = this.getSemanticVariantColor(variant);
+    const hasExplicitVariantColor =
+      semanticBase !== undefined || this.colorResolver.hasColor(variant);
+    const bgColor = hasExplicitVariantColor
+      ? this.resolveVariantColor(variant, this.renderTheme.primary)
+      : this.renderTheme.border;
+    const textColor = hasExplicitVariantColor ? 'white' : this.renderTheme.text;
 
     // Use tokens from density configuration
     const badgeRadius = this.tokens.badge.radius === 'pill'
@@ -1538,9 +1615,7 @@ export class SVGRenderer {
   </g>`;
     }
 
-    // Size: sm=14px, md=18px, lg=24px
-    const sizeMap = { 'sm': 14, 'md': 18, 'lg': 24 };
-    const iconSize = sizeMap[size as keyof typeof sizeMap] || 18;
+    const iconSize = this.getIconSize(size);
     const iconColor = 'rgba(30, 41, 59, 0.75)';
     const offsetX = pos.x + (pos.width - iconSize) / 2;
     const offsetY = pos.y + (pos.height - iconSize) / 2;
@@ -1561,33 +1636,22 @@ export class SVGRenderer {
     const size = String(node.props.size || 'md');
     const disabled = String(node.props.disabled || 'false') === 'true';
 
-    const bgColorMap = {
-      'primary': 'rgba(59, 130, 246, 0.85)',
-      'danger': 'rgba(239, 68, 68, 0.85)',
-      'default': 'rgba(226, 232, 240, 0.9)'
-    };
-    const bgColor = bgColorMap[variant as keyof typeof bgColorMap] || bgColorMap['default'];
-
-    const iconColorMap = {
-      'primary': '#FFFFFF',
-      'danger': '#FFFFFF',
-      'default': 'rgba(30, 41, 59, 0.75)'
-    };
-    const iconColor = iconColorMap[variant as keyof typeof iconColorMap] || iconColorMap['default'];
-
-    const borderColorMap = {
-      'primary': 'rgba(59, 130, 246, 0.7)',
-      'danger': 'rgba(239, 68, 68, 0.7)',
-      'default': 'rgba(100, 116, 139, 0.4)'
-    };
-    const borderColor = borderColorMap[variant as keyof typeof borderColorMap] || borderColorMap['default'];
+    const semanticBase = this.getSemanticVariantColor(variant);
+    const hasExplicitVariantColor =
+      semanticBase !== undefined || this.colorResolver.hasColor(variant);
+    const resolvedBase = this.resolveVariantColor(variant, this.renderTheme.primary);
+    const bgColor = hasExplicitVariantColor
+      ? this.hexToRgba(resolvedBase, 0.85)
+      : 'rgba(226, 232, 240, 0.9)';
+    const iconColor = hasExplicitVariantColor ? '#FFFFFF' : 'rgba(30, 41, 59, 0.75)';
+    const borderColor = hasExplicitVariantColor
+      ? this.hexToRgba(resolvedBase, 0.7)
+      : 'rgba(100, 116, 139, 0.4)';
 
     const opacity = disabled ? '0.5' : '1';
     const iconSvg = getIcon(iconName);
 
-    // Button size: sm=28px, md=32px, lg=40px
-    const sizeMap = { 'sm': 28, 'md': 32, 'lg': 40 };
-    const buttonSize = sizeMap[size as keyof typeof sizeMap] || 32;
+    const buttonSize = this.getIconButtonSize(size);
     const radius = 6;
 
     let svg = `<g${this.getDataNodeId(node)} opacity="${opacity}">
@@ -1623,19 +1687,48 @@ export class SVGRenderer {
     return match ? match[1] : svgString;
   }
 
-  private resolveSpacing(spacing?: string): number {
-    const spacingMap: Record<string, number> = {
-      none: 0,
-      xs: 4,
-      sm: 8,
-      md: 16,
-      lg: 24,
-      xl: 32,
-    };
+  protected resolveVariantColor(variant: string, fallback: string): string {
+    const semanticFallback = this.getSemanticVariantColor(variant) || fallback;
+    return this.colorResolver.resolveColor(variant, semanticFallback);
+  }
 
-    if (!spacing) return spacingMap[this.ir.project.style.spacing] || 16;
-    const value = spacingMap[spacing];
-    return value !== undefined ? value : spacingMap.md;
+  protected getSemanticVariantColor(variant: string): string | undefined {
+    const semantic: Record<string, string> = {
+      primary: this.renderTheme.primary,
+      secondary: '#64748B',
+      success: '#10B981',
+      warning: '#F59E0B',
+      danger: '#EF4444',
+      error: '#EF4444',
+      info: '#0EA5E9',
+    };
+    return semantic[variant];
+  }
+
+  protected hexToRgba(hex: string, alpha: number): string {
+    const match = /^#([0-9A-Fa-f]{6})$/.exec(hex);
+    if (!match) return hex;
+    const r = parseInt(match[1].slice(0, 2), 16);
+    const g = parseInt(match[1].slice(2, 4), 16);
+    const b = parseInt(match[1].slice(4, 6), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+
+  protected getIconSize(size?: string): number {
+    return resolveIconSize(size, (this.ir.project.style.density || 'normal') as DensityLevel);
+  }
+
+  protected getIconButtonSize(size?: string): number {
+    return resolveIconButtonSize(size, (this.ir.project.style.density || 'normal') as DensityLevel);
+  }
+
+  protected resolveSpacing(spacing?: string): number {
+    return resolveSpacingToken(
+      spacing,
+      this.ir.project.style.spacing || 'md',
+      (this.ir.project.style.density || 'normal') as DensityLevel,
+      false
+    );
   }
 
   protected wrapTextToLines(text: string, maxWidth: number, fontSize: number): string[] {

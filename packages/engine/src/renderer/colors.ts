@@ -47,15 +47,44 @@ export class ColorResolver {
   }
 
   /**
+   * Check if a color key/reference is resolvable.
+   */
+  hasColor(colorRef: string): boolean {
+    if (!colorRef) return false;
+    const sentinel = '__unresolved__';
+    return this.resolveColor(colorRef, sentinel) !== sentinel;
+  }
+
+  /**
    * Resolve a color reference to a hex value
    * Priority: custom colors > named colors > hex validation > default
    */
   resolveColor(colorRef: string, defaultColor: string = '#000000'): string {
+    return this.resolveColorInternal(colorRef, defaultColor, new Set<string>());
+  }
+
+  private resolveColorInternal(
+    colorRef: string,
+    defaultColor: string,
+    visited: Set<string>
+  ): string {
     if (!colorRef) return defaultColor;
+    if (visited.has(colorRef)) return defaultColor;
+    visited.add(colorRef);
 
     // Check custom colors first
     if (this.customColors[colorRef]) {
-      return this.validateHex(this.customColors[colorRef]) || defaultColor;
+      const customValue = this.customColors[colorRef];
+      if (this.isValidHex(customValue)) {
+        return customValue;
+      }
+      if (this.namedColors[customValue]) {
+        return this.namedColors[customValue];
+      }
+      if (this.customColors[customValue]) {
+        return this.resolveColorInternal(customValue, defaultColor, visited);
+      }
+      return defaultColor;
     }
 
     // Check named colors

@@ -1,4 +1,6 @@
 import type { IRContract, IRNode, IRStyle } from '../ir/index';
+import { resolveSpacingToken, type DensityLevel } from '../shared/spacing';
+import { resolveIconButtonSize, resolveIconSize } from '../shared/component-sizes';
 
 /**
  * Layout Engine
@@ -25,15 +27,6 @@ export interface LayoutResult {
 // ============================================================================
 // SPACING TOKENS
 // ============================================================================
-
-const SPACING_VALUES: Record<string, number> = {
-  none: 0,
-  xs: 4,
-  sm: 8,
-  md: 16,
-  lg: 24,
-  xl: 32,
-};
 
 const DENSITY_HEIGHTS: Record<string, number> = {
   compact: 32,
@@ -580,9 +573,28 @@ export class LayoutEngine {
   }
 
   private resolveSpacing(spacing?: string): number {
-    if (!spacing) return SPACING_VALUES[this.style.spacing];
-    const value = SPACING_VALUES[spacing];
-    return value !== undefined ? value : SPACING_VALUES.md;
+    return resolveSpacingToken(
+      spacing,
+      this.style.spacing || 'md',
+      (this.style.density || 'normal') as DensityLevel,
+      false
+    );
+  }
+
+  private getSeparateSize(node: IRNode): number {
+    if (node.kind !== 'component') {
+      return resolveSpacingToken('md', 'md', (this.style.density || 'normal') as DensityLevel, true);
+    }
+    const explicitSize = node.props.size;
+    if (typeof explicitSize === 'number' && !isNaN(explicitSize)) {
+      return explicitSize;
+    }
+    return resolveSpacingToken(
+      explicitSize ? String(explicitSize) : 'md',
+      'md',
+      (this.style.density || 'normal') as DensityLevel,
+      true
+    );
   }
 
   private getComponentHeight(): number {
@@ -727,6 +739,32 @@ export class LayoutEngine {
       return Math.max(this.getComponentHeight(), wrappedHeight);
     }
 
+    if (node.componentType === 'Alert') {
+      const title = String(node.props.title || '');
+      const text = String(node.props.text || 'Alert message');
+      const fontSize = 13;
+      const titleLineHeightPx = Math.ceil(fontSize * 1.25);
+      const textLineHeightPx = Math.ceil(fontSize * 1.4);
+      const maxWidth = Math.max(40, (availableWidth && availableWidth > 0 ? availableWidth : 280) - 24);
+
+      const titleLines = title.trim().length > 0
+        ? this.wrapTextToLines(title, maxWidth, fontSize)
+        : [];
+      const textLines = this.wrapTextToLines(text, maxWidth, fontSize);
+
+      const topPadding = 12;
+      const bottomPadding = 12;
+      const titleGap = titleLines.length > 0 ? 6 : 0;
+      const wrappedHeight =
+        topPadding +
+        titleLines.length * titleLineHeightPx +
+        titleGap +
+        Math.max(1, textLines.length) * textLineHeightPx +
+        bottomPadding;
+
+      return Math.max(this.getComponentHeight(), wrappedHeight);
+    }
+
     if (node.componentType === 'SidebarMenu') {
       const itemsStr = String(node.props.items || 'Item 1,Item 2,Item 3');
       const items = itemsStr
@@ -749,6 +787,7 @@ export class LayoutEngine {
     // Standard height components
     if (node.componentType === 'Topbar') return 56;
     if (node.componentType === 'Divider') return 1;
+    if (node.componentType === 'Separate') return this.getSeparateSize(node);
 
     // Default height
     return this.getComponentHeight();
@@ -763,18 +802,13 @@ export class LayoutEngine {
     // Icon: small fixed width
     if (node.componentType === 'Icon') {
       const size = String(node.props.size || 'md');
-      const sizes: Record<string, number> = {
-        sm: 16,
-        md: 24,
-        lg: 32,
-        xl: 40,
-      };
-      return sizes[size] || 24;
+      return resolveIconSize(size, (this.style.density || 'normal') as DensityLevel);
     }
 
     // IconButton: size + padding
     if (node.componentType === 'IconButton') {
-      return 40;
+      const size = String(node.props.size || 'md');
+      return resolveIconButtonSize(size, (this.style.density || 'normal') as DensityLevel);
     }
 
     // Checkbox, Radio: fixed width
@@ -782,8 +816,11 @@ export class LayoutEngine {
       return 24;
     }
 
-    // Button: text width + padding (estimate)
-    if (node.componentType === 'Button') {
+    // Separate: fixed spacer width (useful in horizontal stacks)
+    if (node.componentType === 'Separate') return this.getSeparateSize(node);
+
+    // Button, Link: text width + padding (estimate)
+    if (node.componentType === 'Button' || node.componentType === 'Link') {
       const text = String(node.props.text || '');
       return Math.max(80, text.length * 8 + 32); // ~8px per char + 32px padding
     }

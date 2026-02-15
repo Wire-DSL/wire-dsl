@@ -35,9 +35,16 @@ export class SkeletonSVGRenderer extends SVGRenderer {
     const buttonWidth = Math.max(textWidth + paddingX * 2, 60);
     const buttonHeight = fontSize + paddingY * 2;
 
-    // Same colors as standard
-    const bgColor = variant === 'primary' ? 'rgba(59, 130, 246, 0.85)' : 'rgba(226, 232, 240, 0.9)';
-    const borderColor = variant === 'primary' ? 'rgba(59, 130, 246, 0.7)' : 'rgba(100, 116, 139, 0.4)';
+    const semanticBase = this.getSemanticVariantColor(variant);
+    const hasExplicitVariantColor =
+      semanticBase !== undefined || this.colorResolver.hasColor(variant);
+    const resolvedBase = this.resolveVariantColor(variant, this.renderTheme.primary);
+    const bgColor = hasExplicitVariantColor
+      ? this.hexToRgba(resolvedBase, 0.85)
+      : 'rgba(226, 232, 240, 0.9)';
+    const borderColor = hasExplicitVariantColor
+      ? this.hexToRgba(resolvedBase, 0.7)
+      : 'rgba(100, 116, 139, 0.4)';
 
     return `<g${this.getDataNodeId(node)}>
       <rect x="${pos.x}" y="${pos.y}"
@@ -75,7 +82,12 @@ export class SkeletonSVGRenderer extends SVGRenderer {
    */
   protected renderBadge(node: IRComponentNode, pos: any): string {
     const variant = String(node.props.variant || 'default');
-    const bgColor = variant === 'primary' ? this.renderTheme.primary : this.renderTheme.border;
+    const semanticBase = this.getSemanticVariantColor(variant);
+    const hasExplicitVariantColor =
+      semanticBase !== undefined || this.colorResolver.hasColor(variant);
+    const bgColor = hasExplicitVariantColor
+      ? this.resolveVariantColor(variant, this.renderTheme.primary)
+      : this.renderTheme.border;
     const badgeRadius = this.tokens.badge.radius === 'pill' ? pos.height / 2 : this.tokens.badge.radius;
 
     return `<g${this.getDataNodeId(node)}>
@@ -91,14 +103,14 @@ export class SkeletonSVGRenderer extends SVGRenderer {
    * Render alert as shape with gray block instead of message
    */
   protected renderAlert(node: IRComponentNode, pos: any): string {
-    const type = String(node.props.type || 'info');
-    const typeColors: Record<string, string> = {
-      info: '#3B82F6',
-      warning: '#F59E0B',
-      error: '#EF4444',
-      success: '#10B981',
-    };
-    const bgColor = typeColors[type] || typeColors.info;
+    const variant = String(node.props.variant || 'info');
+    const title = String(node.props.title || '');
+    const text = String(node.props.text || 'Alert message');
+    const bgColor = this.resolveVariantColor(variant, this.getSemanticVariantColor(variant) || '#3B82F6');
+    const hasTitle = title.trim().length > 0;
+    const contentWidth = Math.max(20, pos.width - 32);
+    const titleLines = hasTitle ? this.wrapTextToLines(title, contentWidth, 12) : [];
+    const textLines = this.wrapTextToLines(text, contentWidth, 12);
 
     return `<g${this.getDataNodeId(node)}>
       <rect x="${pos.x}" y="${pos.y}"
@@ -111,8 +123,16 @@ export class SkeletonSVGRenderer extends SVGRenderer {
             width="4" height="${pos.height}"
             rx="6"
             fill="${bgColor}"/>
-      <rect x="${pos.x + 16}" y="${pos.y + pos.height / 2 - 6}"
-            width="${Math.min(pos.width - 32, 150)}" height="12"
+      ${
+        hasTitle
+          ? `<rect x="${pos.x + 16}" y="${pos.y + 8}"
+            width="${Math.min(pos.width - 32, Math.max(60, titleLines[0]?.length ? titleLines[0].length * 7 : 60))}" height="10"
+            rx="4"
+            fill="${this.renderTheme.border}"/>`
+          : ''
+      }
+      <rect x="${pos.x + 16}" y="${hasTitle ? pos.y + 22 : pos.y + pos.height / 2 - 6}"
+            width="${Math.min(pos.width - 32, Math.max(80, textLines[0]?.length ? textLines[0].length * 7 : 80))}" height="12"
             rx="4"
             fill="${this.renderTheme.border}"/>
     </g>`;
@@ -387,8 +407,7 @@ export class SkeletonSVGRenderer extends SVGRenderer {
    */
   protected renderIcon(node: IRComponentNode, pos: any): string {
     const size = String(node.props.size || 'md');
-    const sizeMap = { xs: 12, sm: 16, md: 20, lg: 24, xl: 32 };
-    const iconSize = sizeMap[size as keyof typeof sizeMap] || 20;
+    const iconSize = this.getIconSize(size);
 
     return `<g${this.getDataNodeId(node)}>
       <rect x="${pos.x}" y="${pos.y + (pos.height - iconSize) / 2}"
@@ -404,23 +423,17 @@ export class SkeletonSVGRenderer extends SVGRenderer {
   protected renderIconButton(node: IRComponentNode, pos: any): string {
     const variant = String(node.props.variant || 'default');
     const size = String(node.props.size || 'md');
-
-    const bgColorMap = {
-      'primary': 'rgba(59, 130, 246, 0.85)',
-      'danger': 'rgba(239, 68, 68, 0.85)',
-      'default': 'rgba(226, 232, 240, 0.9)'
-    };
-    const bgColor = bgColorMap[variant as keyof typeof bgColorMap] || bgColorMap['default'];
-
-    const borderColorMap = {
-      'primary': 'rgba(59, 130, 246, 0.7)',
-      'danger': 'rgba(239, 68, 68, 0.7)',
-      'default': 'rgba(100, 116, 139, 0.4)'
-    };
-    const borderColor = borderColorMap[variant as keyof typeof borderColorMap] || borderColorMap['default'];
-
-    const sizeMap = { 'sm': 28, 'md': 32, 'lg': 40 };
-    const buttonSize = sizeMap[size as keyof typeof sizeMap] || 32;
+    const semanticBase = this.getSemanticVariantColor(variant);
+    const hasExplicitVariantColor =
+      semanticBase !== undefined || this.colorResolver.hasColor(variant);
+    const resolvedBase = this.resolveVariantColor(variant, this.renderTheme.primary);
+    const bgColor = hasExplicitVariantColor
+      ? this.hexToRgba(resolvedBase, 0.85)
+      : 'rgba(226, 232, 240, 0.9)';
+    const borderColor = hasExplicitVariantColor
+      ? this.hexToRgba(resolvedBase, 0.7)
+      : 'rgba(100, 116, 139, 0.4)';
+    const buttonSize = this.getIconButtonSize(size);
 
     return `<g${this.getDataNodeId(node)}>
       <rect x="${pos.x}" y="${pos.y}"

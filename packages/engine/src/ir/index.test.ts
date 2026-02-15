@@ -639,6 +639,8 @@ describe('IR Generator', () => {
         screen Main {
           layout stack {
             component Button text: "Click"
+            component Link text: "More details"
+            component Separate
             component Input placeholder: "Enter"
             component Heading text: "Title"
             component Text content: "Body"
@@ -886,4 +888,3 @@ describe('IR Generator', () => {
     expect(Object.keys(ir.project.nodes).length).toBeGreaterThan(0);
   });
 });
-
