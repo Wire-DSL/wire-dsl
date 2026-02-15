@@ -106,7 +106,6 @@ theme {
 |---|---|---|---|
 | `Heading` | `text` | - | `component Heading text: "Page Title"` |
 | `Text` | `content` | - | `component Text content: "Body text"` |
-| `Paragraph` | `content` | - | `component Paragraph content: "Long multi-line text"` |
 | `Label` | `text` | - | `component Label text: "Field label"` |
 
 ### Input Components Details
@@ -123,7 +122,6 @@ theme {
 | Component | Key Properties | Valid Placeholders | Example |
 |---|---|---|---|
 | `Image` | `placeholder`, `height` | `"landscape"`, `"square"`, `"portrait"` | `component Image placeholder: "square" height: 250` |
-| `Avatar` | `placeholder` | `"avatar"` | `component Avatar placeholder: "avatar"` |
 | `Icon` | `name` | Common icon names (search, settings, menu, etc.) | `component Icon name: "search"` |
 
 ### Navigation Components Details
@@ -143,12 +141,11 @@ theme {
 
 ---
 
-## Available Components (23 Total)
+## Available Components (21 Total)
 
-### Text Components (4)
+### Text Components (3)
 - `Heading` - Large titles
-- `Text` - Small text snippets
-- `Paragraph` - Multi-line text
+- `Text` - Body text (short or multi-line)
 - `Label` - Form labels
 
 ### Input Components (6)
@@ -173,10 +170,9 @@ theme {
 - `Table` - Multi-row tabular data
 - `List` - Item list
 
-### Media Components (3)
+### Media Components (2)
 - `Image` - Static image
 - `Icon` - Scalable icon
-- `Avatar` - User profile image
 
 ### Display Components (4)
 - `Divider` - Visual separator
@@ -443,7 +439,7 @@ layout split(sidebar: 280, gap: md) {
   
   layout stack(direction: vertical, gap: lg, padding: lg) {
     layout card(padding: lg, gap: md, radius: lg, border: true) {
-      component Avatar placeholder: "avatar"
+      component Image placeholder: "square"
       component Heading title: "John Doe"
       component Text content: "john@example.com"
       component Divider
@@ -547,7 +543,7 @@ Before generating output, verify:
 - [ ] All string values are quoted
 - [ ] All layouts have explicit `padding` when needed
 - [ ] Image placeholders use valid values: "landscape", "square", "portrait"
-- [ ] Avatar placeholders use "avatar"
+- [ ] Use `Image` for profile pictures when needed
 - [ ] Grid cells have `span` values between 1-12
 - [ ] Sidebar width is between 200-400 pixels
 - [ ] Card/Panel radius values are: "none", "sm", "md", "lg"

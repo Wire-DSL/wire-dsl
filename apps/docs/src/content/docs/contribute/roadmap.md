@@ -45,13 +45,13 @@ Wire-DSL is actively maintained with a clear evolution path. This roadmap descri
 - ✅ Size mode resolution
 
 **Core Components**
-- ✅ 23 built-in components:
-  - Text: Heading, Text, Paragraph, Label
+- ✅ Built-in components:
+  - Text: Heading, Text, Label
   - Input: Input, Textarea, Select, Checkbox, Radio, Toggle
   - Buttons: Button, IconButton
   - Navigation: Topbar, SidebarMenu, Breadcrumbs, Tabs
   - Data: Table, List
-  - Media: Image, Icon, Avatar
+  - Media: Image, Icon
   - Display: Divider, Badge, Link, Alert
   - Info: StatCard, Code, ChartPlaceholder
   - Feedback: Modal, Spinner
@@ -183,7 +183,7 @@ The following features are planned and will be prioritized based on community fe
 - ✅ SVG/PDF rendering
 - ✅ Component composition (define/reuse)
 - ✅ Theme system with design tokens
-- ✅ 23 built-in components
+- ✅ 21 built-in components
 - ✅ Component validation (cycles, undefined references)
 - ✅ CLI with render/validate commands
 - ✅ VS Code syntax highlighting and live preview

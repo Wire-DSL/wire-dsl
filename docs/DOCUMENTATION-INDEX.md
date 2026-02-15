@@ -9,7 +9,7 @@ Welcome to the comprehensive English documentation for Wire-DSL. This guide cove
 New to Wire-DSL? Start here:
 
 1. **[DSL Syntax Guide](DSL-SYNTAX.md)** - Learn the basic syntax and structure
-2. **[Components Reference](COMPONENTS-REFERENCE.md)** - Explore all 23 available components
+2. **[Components Reference](COMPONENTS-REFERENCE.md)** - Explore all available components
 3. **[Icons Guide](ICONS-GUIDE.md)** - Use Feather Icons in your wireframes
 4. **[Containers Reference](CONTAINERS-REFERENCE.md)** - Understand layout containers
 5. **[Theme Guide](THEME-GUIDE.md)** - Configure visual consistency
@@ -33,13 +33,13 @@ The authoritative reference for Wire-DSL syntax, including:
 ---
 
 ### [Components Reference](COMPONENTS-REFERENCE.md)
-Complete catalog of all 23 component types with:
-- **Text Components**: Heading, Text, Paragraph, Label
+Complete catalog of all component types with:
+- **Text Components**: Heading, Text, Label
 - **Input Components**: Input, Textarea, Select, Checkbox, Radio, Toggle
 - **Button Components**: Button, IconButton
 - **Navigation**: Topbar, SidebarMenu, Breadcrumbs, Tabs
 - **Data Display**: Table, List
-- **Media**: Image, Icon, Avatar
+- **Media**: Image, Icon
 - **Display Elements**: Divider, Badge, Link, Alert
 - **Information**: StatCard, Code, ChartPlaceholder
 - **Modal & Feedback**: Modal, Spinner
@@ -148,17 +148,17 @@ Project
 
 | Category | Components | Use Case |
 |----------|-----------|----------|
-| **Text** | Heading, Text, Paragraph, Label | Content display |
+| **Text** | Heading, Text, Label | Content display |
 | **Input** | Input, Textarea, Select, Checkbox, Radio, Toggle | Form inputs |
 | **Button** | Button, IconButton | Actions |
 | **Navigation** | Topbar, SidebarMenu, Breadcrumbs, Tabs | Navigation |
 | **Data** | Table, List | Data display |
-| **Media** | Image, Icon, Avatar | Visual content |
+| **Media** | Image, Icon | Visual content |
 | **Display** | Divider, Badge, Link, Alert | Visual elements |
 | **Info** | StatCard, Code, ChartPlaceholder | Information |
 | **Feedback** | Modal, Spinner | User feedback |
 
-### Total: 23 Components
+### Total: 21 Components
 
 ---
 
@@ -383,7 +383,7 @@ Key documentation files:
 ```
 docs/
 ├── DSL-SYNTAX.md           # Main syntax reference
-├── COMPONENTS-REFERENCE.md    # All 23 components
+├── COMPONENTS-REFERENCE.md    # All components
 ├── CONTAINERS-REFERENCE.md    # All 5 container types
 ├── THEME-GUIDE.md             # Theme system
 ├── DOCUMENTATION-INDEX.md     # This file

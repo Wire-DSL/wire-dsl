@@ -1,6 +1,6 @@
 ---
 title: Components Reference
-description: Complete reference for all 23 Wire-DSL components
+description: Complete reference for all Wire-DSL components
 ---
 
 Complete reference for all available components with detailed specifications, properties, and examples.

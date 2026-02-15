@@ -468,7 +468,7 @@ layout card(padding: md, gap: md, radius: lg, border: true) {
 **User Profile Card**:
 ```
 layout card(padding: lg, gap: md, radius: md) {
-  component Avatar placeholder: "avatar"
+  component Image placeholder: "square"
   component Heading text: "John Doe"
   component Text content: "Senior Software Engineer"
   component Text content: "john@example.com"

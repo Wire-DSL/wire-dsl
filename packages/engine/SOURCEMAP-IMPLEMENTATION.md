@@ -38,12 +38,12 @@ Complete implementation of bidirectional code↔canvas selection for Wire DSL En
 
 **Deliverables:**
 - `data-node-id` attributes in all rendered SVG elements
-- All 23 component types updated
+- All component types updated
 - Complete nodeId propagation: AST → IR → Renderer
 
 **Files Modified:**
 - `src/ir/index.ts` - Added `nodeId?: string` to `IRMeta`, propagated from AST
-- `src/renderer/index.ts` - Added `getDataNodeId()` helper, updated all 23 render methods
+- `src/renderer/index.ts` - Added `getDataNodeId()` helper, updated all render methods
 - `src/renderer/index.test.ts` - 5 new tests for data-node-id validation
 
 **Component Coverage:**

@@ -34,25 +34,10 @@ Standard body text for content and descriptions.
 ```
 component Text content: "This is body text"
 component Text content: "User profile information goes here"
+component Text content: "Long text also wraps automatically across multiple lines"
 ```
 
 **Rendering**: Regular text at 14-16px font size
-
----
-
-### Paragraph
-
-Multi-line paragraph text with word wrapping.
-
-**Properties**:
-- `content` (string): Paragraph content
-
-**Example**:
-```
-component Paragraph content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-```
-
-**Rendering**: Regular text with automatic line wrapping
 
 ---
 
@@ -391,22 +376,6 @@ component Icon name: "download"
 
 ---
 
-### Avatar
-
-Circular avatar/profile picture placeholder.
-
-**Properties**:
-- `placeholder` (string): Avatar type - `avatar` | `initials` | `color`
-
-**Example**:
-```
-component Avatar placeholder: "avatar"
-component Avatar placeholder: "initials"
-```
-
-**Rendering**: Circular placeholder for profile image
-
----
 
 ## Display Components
 
@@ -659,18 +628,18 @@ layout stack(direction: vertical, gap: lg, padding: lg) {
 
 ## Complete Component List
 
-**Text**: Heading, Text, Paragraph, Label  
+**Text**: Heading, Text, Label  
 **Input**: Input, Textarea, Select, Checkbox, Radio, Toggle  
 **Button**: Button, IconButton  
 **Navigation**: Topbar, SidebarMenu, Breadcrumbs, Tabs  
 **Data**: Table, List  
-**Media**: Image, Icon, Avatar  
+**Media**: Image, Icon  
 **Display**: Divider, Badge, Link, Alert  
 **Info**: StatCard, Code, ChartPlaceholder  
 **Modal**: Modal  
 **Feedback**: Spinner  
 
-**Total: 23 Components**
+**Total: 21 Components**
 
 ---
 

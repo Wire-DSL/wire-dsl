@@ -488,7 +488,7 @@ export class IRGenerator {
       'Button', 'Input', 'Heading', 'Text', 'Label', 'Image', 
       'Card', 'StatCard', 'Topbar', 'Table', 'Chart', 'ChartPlaceholder',
       'Textarea', 'Select', 'Checkbox', 'Toggle', 'Divider', 'Breadcrumbs',
-      'SidebarMenu', 'Radio', 'Icon', 'IconButton', 'Alert', 'Badge', 'Modal', 'List', 'Sidebar', 'Tabs', 'Code', 'Paragraph'
+      'SidebarMenu', 'Radio', 'Icon', 'IconButton', 'Alert', 'Badge', 'Modal', 'List', 'Sidebar', 'Tabs', 'Code'
     ]);
 
     if (!builtInComponents.has(component.componentType)) {

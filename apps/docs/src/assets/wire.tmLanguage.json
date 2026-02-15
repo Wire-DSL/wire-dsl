@@ -71,7 +71,7 @@
       "patterns": [
         {
           "name": "entity.name.class.wire",
-          "match": "\\b(Heading|Text|Paragraph|Label|Button|IconButton|Input|Textarea|Select|Checkbox|CheckboxGroup|Radio|RadioGroup|Toggle|Image|Icon|Divider|Badge|Link|Breadcrumbs|Tabs|SidebarMenu|Topbar|Sidebar|Panel|Card|StatCard|ChartPlaceholder|Table|List|Modal|Alert|Code|Spinner|Avatar)\\b"
+          "match": "\\b(Heading|Text|Label|Button|IconButton|Input|Textarea|Select|Checkbox|CheckboxGroup|Radio|RadioGroup|Toggle|Image|Icon|Divider|Badge|Link|Breadcrumbs|Tabs|SidebarMenu|Topbar|Sidebar|Panel|Card|StatCard|ChartPlaceholder|Table|List|Modal|Alert|Code|Spinner)\\b"
         }
       ]
     },

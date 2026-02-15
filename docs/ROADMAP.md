@@ -36,13 +36,13 @@ This roadmap describes the development phases of Wire-DSL from MVP through advan
 - ✅ Size mode resolution
 
 #### 1.4 Core Components ✅
-- ✅ 23 built-in components including:
-  - Text: Heading, Text, Paragraph, Label
+- ✅ Built-in components including:
+  - Text: Heading, Text, Label
   - Input: Input, Textarea, Select, Checkbox, Radio, Toggle
   - Buttons: Button, IconButton
   - Navigation: Topbar, SidebarMenu, Breadcrumbs, Tabs
   - Data: Table, List
-  - Media: Image, Icon, Avatar
+  - Media: Image, Icon
   - Display: Divider, Badge, Link, Alert
   - Info: StatCard, Code, ChartPlaceholder
   - Feedback: Modal, Spinner

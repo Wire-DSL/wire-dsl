@@ -832,18 +832,7 @@ export class LayoutEngine {
       return 280;
     }
 
-    // Avatar, SidebarMenu: fixed widths
-    if (node.componentType === 'Avatar') {
-      const size = String(node.props.size || 'md');
-      const sizes: Record<string, number> = {
-        sm: 32,
-        md: 40,
-        lg: 56,
-        xl: 72,
-      };
-      return sizes[size] || 40;
-    }
-
+    // SidebarMenu: fixed width
     if (node.componentType === 'SidebarMenu') {
       return 260;
     }

@@ -28,7 +28,7 @@ Explore complete, working Wire-DSL examples. All examples are available in the `
 
 - **[Card & StatCard Demo](../../examples/card-and-stat-card-demo.wire)** - Card container examples
 - **[Component Composition Demo](../../examples/component-composition-demo.wire)** - Custom component usage
-- **[Components Catalog](../../examples/components-catalog.wire)** - All 23 components displayed
+- **[Components Catalog](../../examples/components-catalog.wire)** - All components displayed
 - **[Icon Demo](../../examples/icon-demo-simple.wire)** - Icon and IconButton examples
 - **[Icons Demo](../../examples/icons-demo.wire)** - Extended icon examples
 
@@ -140,7 +140,7 @@ layout grid(columns: 12, gap: lg, padding: lg) {
 2. **First Wireframe**: [Create Your First Wireframe](../getting-started/first-wire.md)
 3. **Explore**: [Web Editor Guide](../getting-started/web-preview.md)
 4. **Learn Syntax**: [DSL Syntax Reference](../language/syntax.md)
-5. **Learn Components**: [All 23 Components](../language/components.md)
+5. **Learn Components**: [All 21 Components](../language/components.md)
 6. **Master Layouts**: [Containers & Layouts](../language/containers.md)
 7. **Study Examples**: The examples in this section
 8. **Build Your Own**: Create your own wireframes

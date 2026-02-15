@@ -138,7 +138,7 @@ Or with errors:
      component BadComponent  ← Unknown component
    }
 
-Suggestion: Use one of the 23 built-in components
+Suggestion: Use one of the built-in components
 ```
 
 ### render

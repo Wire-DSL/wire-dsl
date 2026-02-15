@@ -79,7 +79,7 @@ component Input label: "Email" placeholder: @  // ❌ Invalid character
 
 ### Component Properties
 
-- ✅ Component names must exist in the catalog (23 built-in types)
+- ✅ Component names must exist in the catalog (built-in types)
 - ✅ Property names must be valid for that component
 - ✅ Property values must match expected types
 
@@ -309,7 +309,7 @@ Error: Unknown component "CustomButton"
 Suggestion: Define the component first with:
   define Component "CustomButton" { ... }
 
-Or use one of the 23 built-in components:
+Or use one of the built-in components:
   Heading, Text, Button, Input, ...
 ```
 

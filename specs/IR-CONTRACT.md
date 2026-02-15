@@ -280,7 +280,7 @@ Common fields for all nodes:
 **Properties**:
 - `id`: Unique identifier
 - `kind`: Always `"component"`
-- `componentType`: Component type (from catalog of 23)
+- `componentType`: Component type
 - `props`: Component-specific properties
 
 ---
@@ -340,7 +340,7 @@ Defines dimensions flexibly.
 
 ## Components - Props Reference
 
-### Text Components (4)
+### Text Components (3)
 
 **Heading**
 ```json
@@ -352,9 +352,9 @@ Defines dimensions flexibly.
 { "componentType": "Text", "props": { "text": "Text content" } }
 ```
 
-**Paragraph**
+**Text**
 ```json
-{ "componentType": "Paragraph", "props": { "text": "Multi-line content..." } }
+{ "componentType": "Text", "props": { "text": "Multi-line content..." } }
 ```
 
 **Label**
@@ -554,13 +554,13 @@ Defines dimensions flexibly.
 }
 ```
 
-**Avatar**
+**Profile Image (use `Image`)**
 ```json
 {
-  "componentType": "Avatar",
+  "componentType": "Image",
   "props": {
-    "name": "John Doe",
-    "src": "avatar.png"
+    "src": "profile.png",
+    "alt": "Profile image"
   }
 }
 ```

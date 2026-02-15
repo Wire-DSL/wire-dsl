@@ -1,13 +1,13 @@
 ---
 name: Components Catalog
-description: Complete reference of all 23 Wire DSL components with properties and examples
+description: Complete reference of all 21 Wire DSL components with properties and examples
 ---
 
 # Wire DSL Components Catalog
 
-Wire DSL provides 23 UI components organized into 8 categories. This reference lists all components with their properties and usage examples.
+Wire DSL provides 21 UI components organized into 8 categories. This reference lists all components with their properties and usage examples.
 
-## Text Components (4)
+## Text Components (3)
 
 ### Heading
 Renders a large heading/title text.
@@ -31,21 +31,9 @@ Renders standard body text.
 
 **Example:**
 ```wire
-component Text content: "This is regular paragraph text"
+component Text content: "This is regular Text text"
 component Text content: "Description of the product"
-```
-
----
-
-### Paragraph
-Renders a multi-line paragraph block.
-
-**Properties:**
-- `content` (string, required): The paragraph content
-
-**Example:**
-```wire
-component Paragraph content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+component Text content: "Long text wraps automatically into multiple lines"
 ```
 
 ---
@@ -314,7 +302,7 @@ component List items: "Apple,Banana,Cherry,Date"
 
 ---
 
-## Media Components (3)
+## Media Components (2)
 
 ### Image
 Image placeholder with aspect ratio.
@@ -350,18 +338,6 @@ component Icon name: "alert-triangle"
 
 ---
 
-### Avatar
-User avatar placeholder.
-
-**Properties:**
-- `placeholder` (enum, required): Must be `avatar`
-
-**Example:**
-```wire
-component Avatar placeholder: "avatar"
-```
-
----
 
 ## Display Components (4)
 
@@ -515,16 +491,16 @@ component Spinner
 
 | Category | Components | Count |
 |----------|------------|-------|
-| **Text** | Heading, Text, Paragraph, Label | 4 |
+| **Text** | Heading, Text, Label | 3 |
 | **Input** | Input, Textarea, Select, Checkbox, Radio, Toggle | 6 |
 | **Buttons** | Button, IconButton | 2 |
 | **Navigation** | Topbar, SidebarMenu, Breadcrumbs, Tabs | 4 |
 | **Data** | Table, List | 2 |
-| **Media** | Image, Icon, Avatar | 3 |
+| **Media** | Image, Icon | 2 |
 | **Display** | Divider, Badge, Link, Alert | 4 |
 | **Info** | StatCard, Code, ChartPlaceholder | 3 |
 | **Modal** | Modal, Spinner | 2 |
-| **TOTAL** | | **23** |
+| **TOTAL** | | **21** |
 
 ## Usage Patterns
 

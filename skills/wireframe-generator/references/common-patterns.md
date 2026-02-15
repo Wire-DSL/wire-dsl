@@ -173,7 +173,7 @@ project "Admin Dashboard" {
         component SidebarMenu items: "Dashboard,Users,Products,Orders,Analytics,Settings" active: 0
         component Divider
         layout stack(direction: horizontal, gap: sm, align: left) {
-          component Avatar placeholder: "avatar"
+          component Image placeholder: "square"
           layout stack(direction: vertical, gap: xs) {
             component Text content: "Admin User"
             component Badge text: "Online" variant: success
@@ -480,8 +480,8 @@ project "Product Detail" {
 
       layout panel(padding: lg) {
         layout stack(direction: vertical, gap: md) {
-          component Paragraph content: "These premium wireless headphones deliver exceptional sound quality with deep bass and crystal-clear highs. The active noise cancellation technology blocks out ambient noise, allowing you to focus on your music."
-          component Paragraph content: "Designed for all-day comfort with soft ear cushions and an adjustable headband. The 30-hour battery life ensures you can enjoy your music for days without recharging."
+          component Text content: "These premium wireless headphones deliver exceptional sound quality with deep bass and crystal-clear highs. The active noise cancellation technology blocks out ambient noise, allowing you to focus on your music."
+          component Text content: "Designed for all-day comfort with soft ear cushions and an adjustable headband. The 30-hour battery life ensures you can enjoy your music for days without recharging."
         }
       }
     }
@@ -510,7 +510,7 @@ project "User Profile" {
       // Profile Header
       layout card(padding: lg, gap: md) {
         layout stack(direction: horizontal, gap: lg, align: left) {
-          component Avatar placeholder: "avatar"
+          component Image placeholder: "square"
           layout stack(direction: vertical, gap: sm) {
             component Heading text: "John Doe"
             component Text content: "Senior Developer"
@@ -534,7 +534,7 @@ project "User Profile" {
             layout panel(padding: md) {
               layout stack(direction: vertical, gap: md) {
                 component Heading text: "About"
-                component Paragraph content: "Passionate developer with 10+ years of experience in full-stack development. Specializing in JavaScript, React, and Node.js."
+                component Text content: "Passionate developer with 10+ years of experience in full-stack development. Specializing in JavaScript, React, and Node.js."
               }
             }
 
@@ -609,7 +609,7 @@ project "Settings" {
         layout panel(padding: md) {
           layout stack(direction: vertical, gap: md) {
             component Label text: "Profile Photo"
-            component Avatar placeholder: "avatar"
+            component Image placeholder: "square"
             layout stack(direction: horizontal, gap: sm, align: left) {
               component Button text: "Upload New" variant: primary
               component Button text: "Remove"

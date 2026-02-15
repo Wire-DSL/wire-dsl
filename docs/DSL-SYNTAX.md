@@ -506,7 +506,6 @@ component Button text: "Click me" variant: primary
 |-----------|-----------|---------|
 | `Heading` | `text` (string) | `component Heading text: "Page Title"` |
 | `Text` | `content` (string) | `component Text content: "Body text"` |
-| `Paragraph` | `content` (string) | `component Paragraph content: "Long text"` |
 | `Label` | `text` (string) | `component Label text: "Field label"` |
 
 ### Input Components
@@ -551,7 +550,6 @@ component Button text: "Click me" variant: primary
 |-----------|-----------|---------|
 | `Image` | `placeholder`, `height` | `component Image placeholder: "square" height: 200` |
 | `Icon` | `name` | `component Icon name: "search"` |
-| `Avatar` | `placeholder` | `component Avatar placeholder: "avatar"` |
 
 ### Other Components
 

@@ -86,14 +86,6 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     },
     example: 'component Image src: "/path/to/image.png" alt: "An example image"',
   },
-  Avatar: {
-    name: 'Avatar',
-    description: 'Represents a user with an image or initials.',
-    properties: {
-      // Properties not defined as per user request
-    },
-    example: 'component Avatar src: "/path/to/user.png"',
-  },
   Spinner: {
     name: 'Spinner',
     description: 'Indicates a loading state.',
