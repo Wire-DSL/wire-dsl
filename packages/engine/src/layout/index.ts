@@ -236,7 +236,7 @@ export class LayoutEngine {
           } else if (childNode?.kind === 'container') {
             childHeight = this.calculateContainerHeight(childNode, childWidth);
           } else if (childNode?.kind === 'component') {
-            childHeight = this.getIntrinsicComponentHeight(childNode);
+            childHeight = this.getIntrinsicComponentHeight(childNode, childWidth);
           }
 
           stackHeight = Math.max(stackHeight, childHeight);
@@ -265,7 +265,7 @@ export class LayoutEngine {
           } else if (childNode?.kind === 'container') {
             childHeight = this.calculateContainerHeight(childNode, childWidth);
           } else if (childNode?.kind === 'component') {
-            childHeight = this.getIntrinsicComponentHeight(childNode);
+            childHeight = this.getIntrinsicComponentHeight(childNode, childWidth);
           }
 
           childWidths.push(childWidth);
@@ -328,7 +328,7 @@ export class LayoutEngine {
           if (child.props.height) {
             childHeight = Number(child.props.height);
           } else {
-            childHeight = this.getIntrinsicComponentHeight(child);
+            childHeight = this.getIntrinsicComponentHeight(child, colWidth * span);
           }
         } else if (child?.kind === 'container') {
           childHeight = this.calculateContainerHeight(child, colWidth * span);
@@ -375,7 +375,7 @@ export class LayoutEngine {
           if (child.props.height) {
             childHeight = Number(child.props.height);
           } else {
-            childHeight = this.getIntrinsicComponentHeight(child);
+            childHeight = this.getIntrinsicComponentHeight(child, availableWidth);
           }
         } else if (child?.kind === 'container') {
           childHeight = this.calculateContainerHeight(child, availableWidth);
@@ -397,7 +397,7 @@ export class LayoutEngine {
         if (child.props.height) {
           childHeight = Number(child.props.height);
         } else {
-          childHeight = this.getIntrinsicComponentHeight(child);
+          childHeight = this.getIntrinsicComponentHeight(child, availableWidth);
         }
       } else if (child?.kind === 'container') {
         childHeight = this.calculateContainerHeight(child, availableWidth);
@@ -434,7 +434,7 @@ export class LayoutEngine {
         if (child.props.height) {
           cellHeight = Number(child.props.height);
         } else {
-          cellHeight = this.getIntrinsicComponentHeight(child);
+          cellHeight = this.getIntrinsicComponentHeight(child, colWidth);
         }
       }
 
@@ -589,6 +589,77 @@ export class LayoutEngine {
     return DENSITY_HEIGHTS[this.style.density] || DENSITY_HEIGHTS.normal;
   }
 
+  private getTextMetricsForDensity(): { fontSize: number; lineHeight: number } {
+    switch (this.style.density) {
+      case 'compact':
+        return { fontSize: 12, lineHeight: 1.4 };
+      case 'comfortable':
+        return { fontSize: 16, lineHeight: 1.6 };
+      case 'normal':
+      default:
+        return { fontSize: 14, lineHeight: 1.5 };
+    }
+  }
+
+  private getHeadingMetricsForDensity(): { fontSize: number; lineHeight: number } {
+    switch (this.style.density) {
+      case 'compact':
+        return { fontSize: 16, lineHeight: 1.25 };
+      case 'comfortable':
+        return { fontSize: 24, lineHeight: 1.25 };
+      case 'normal':
+      default:
+        return { fontSize: 20, lineHeight: 1.25 };
+    }
+  }
+
+  private wrapTextToLines(text: string, maxWidth: number, fontSize: number): string[] {
+    const normalized = text.replace(/\r\n/g, '\n');
+    const paragraphs = normalized.split('\n');
+    const charWidth = fontSize * 0.6;
+    const safeWidth = Math.max(maxWidth, charWidth);
+    const maxCharsPerLine = Math.max(1, Math.floor(safeWidth / charWidth));
+    const lines: string[] = [];
+
+    for (const paragraph of paragraphs) {
+      if (!paragraph.trim()) {
+        lines.push('');
+        continue;
+      }
+
+      const words = paragraph.split(/\s+/).filter(Boolean);
+      let currentLine = '';
+
+      for (const word of words) {
+        const candidate = currentLine ? `${currentLine} ${word}` : word;
+        if (candidate.length <= maxCharsPerLine) {
+          currentLine = candidate;
+          continue;
+        }
+
+        if (currentLine) {
+          lines.push(currentLine);
+          currentLine = '';
+        }
+
+        if (word.length <= maxCharsPerLine) {
+          currentLine = word;
+          continue;
+        }
+
+        for (let i = 0; i < word.length; i += maxCharsPerLine) {
+          lines.push(word.slice(i, i + maxCharsPerLine));
+        }
+      }
+
+      if (currentLine) {
+        lines.push(currentLine);
+      }
+    }
+
+    return lines.length > 0 ? lines : [''];
+  }
+
   private getIntrinsicComponentHeight(node: IRNode, availableWidth?: number): number {
     if (node.kind !== 'component') return this.getComponentHeight();
 
@@ -634,6 +705,26 @@ export class LayoutEngine {
       const titleHeight = hasTitle ? 32 : 0;
       const paginationHeight = hasPagination ? 64 : 0; // 16px gap + 32px buttons + 16px bottom margin
       return titleHeight + headerHeight + rowCount * rowHeight + paginationHeight;
+    }
+
+    if (node.componentType === 'Heading') {
+      const text = String(node.props.text || 'Heading');
+      const { fontSize, lineHeight } = this.getHeadingMetricsForDensity();
+      const lineHeightPx = Math.ceil(fontSize * lineHeight);
+      const maxWidth = availableWidth && availableWidth > 0 ? availableWidth : 200;
+      const lines = this.wrapTextToLines(text, maxWidth, fontSize);
+      const wrappedHeight = Math.max(1, lines.length) * lineHeightPx;
+      return Math.max(this.getComponentHeight(), wrappedHeight);
+    }
+
+    if (node.componentType === 'Text') {
+      const content = String(node.props.content || '');
+      const { fontSize, lineHeight } = this.getTextMetricsForDensity();
+      const lineHeightPx = Math.ceil(fontSize * lineHeight);
+      const maxWidth = availableWidth && availableWidth > 0 ? availableWidth : 200;
+      const lines = this.wrapTextToLines(content, maxWidth, fontSize);
+      const wrappedHeight = Math.max(1, lines.length) * lineHeightPx;
+      return Math.max(this.getComponentHeight(), wrappedHeight);
     }
 
     // Taller components

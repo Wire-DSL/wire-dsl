@@ -328,13 +328,33 @@ export class SketchSVGRenderer extends SVGRenderer {
     const text = String(node.props.text || 'Heading');
     const fontSize = this.tokens.heading.fontSize;
     const fontWeight = this.tokens.heading.fontWeight;
+    const lineHeightPx = Math.ceil(fontSize * 1.25);
+    const lines = this.wrapTextToLines(text, pos.width, fontSize);
 
-    return `<g${this.getDataNodeId(node)}>
+    if (lines.length <= 1) {
+      return `<g${this.getDataNodeId(node)}>
     <text x="${pos.x}" y="${pos.y + pos.height / 2 + 6}"
           font-family="${this.fontFamily}"
           font-size="${fontSize}"
           font-weight="${fontWeight}"
           fill="${this.renderTheme.text}">${this.escapeXml(text)}</text>
+  </g>`;
+    }
+
+    const firstLineY = pos.y + fontSize;
+    const tspans = lines
+      .map(
+        (line, index) =>
+          `<tspan x="${pos.x}" dy="${index === 0 ? 0 : lineHeightPx}">${this.escapeXml(line)}</tspan>`
+      )
+      .join('');
+
+    return `<g${this.getDataNodeId(node)}>
+    <text x="${pos.x}" y="${firstLineY}"
+          font-family="${this.fontFamily}"
+          font-size="${fontSize}"
+          font-weight="${fontWeight}"
+          fill="${this.renderTheme.text}">${tspans}</text>
   </g>`;
   }
 
@@ -532,13 +552,21 @@ export class SketchSVGRenderer extends SVGRenderer {
   protected renderText(node: IRComponentNode, pos: any): string {
     const text = String(node.props.content || 'Text content');
     const fontSize = this.tokens.text.fontSize;
-    const lineHeight = this.tokens.text.lineHeight;
+    const lineHeightPx = Math.ceil(fontSize * this.tokens.text.lineHeight);
+    const lines = this.wrapTextToLines(text, pos.width, fontSize);
+    const firstLineY = pos.y + fontSize;
+    const tspans = lines
+      .map(
+        (line, index) =>
+          `<tspan x="${pos.x}" dy="${index === 0 ? 0 : lineHeightPx}">${this.escapeXml(line)}</tspan>`
+      )
+      .join('');
 
     return `<g${this.getDataNodeId(node)}>
-    <text x="${pos.x}" y="${pos.y + fontSize * lineHeight}"
+    <text x="${pos.x}" y="${firstLineY}"
           font-family="${this.fontFamily}"
           font-size="${fontSize}"
-          fill="${this.renderTheme.text}">${this.escapeXml(text)}</text>
+          fill="${this.renderTheme.text}">${tspans}</text>
   </g>`;
   }
 

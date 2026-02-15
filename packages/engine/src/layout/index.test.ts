@@ -553,4 +553,80 @@ describe('Layout Engine', () => {
       expect(pos.height).toBeGreaterThan(0);
     });
   });
+
+  it('should wrap long Text content and push following components down', () => {
+    const input = `
+      project "Text Wrap" {
+        style {
+          spacing: "md"
+        }
+
+        screen Main {
+          layout stack(direction: vertical, gap: md, padding: md) {
+            component Text content: "Este es un texto largo que debe hacer wrap automaticamente para no salirse del viewport ni pisar componentes siguientes en el layout."
+            component Button text: "Siguiente"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+
+    const textEntry = Object.entries(ir.project.nodes).find(
+      ([_, node]) => node.kind === 'component' && node.componentType === 'Text'
+    );
+    const buttonEntry = Object.entries(ir.project.nodes).find(
+      ([_, node]) => node.kind === 'component' && node.componentType === 'Button'
+    );
+
+    expect(textEntry).toBeDefined();
+    expect(buttonEntry).toBeDefined();
+
+    const textPos = layout[textEntry![0]];
+    const buttonPos = layout[buttonEntry![0]];
+
+    // Should grow beyond the default component height (normal density = 40)
+    expect(textPos.height).toBeGreaterThan(40);
+    // Next component should be placed after wrapped text + stack gap (md = 16)
+    expect(buttonPos.y).toBe(textPos.y + textPos.height + 16);
+  });
+
+  it('should wrap long Heading content and push following components down', () => {
+    const input = `
+      project "Heading Wrap" {
+        style {
+          spacing: "md"
+        }
+
+        screen Main {
+          layout stack(direction: vertical, gap: md, padding: md) {
+            component Heading text: "Este heading es suficientemente largo para requerir salto de linea automatico sin desbordar horizontalmente"
+            component Button text: "Siguiente"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+
+    const headingEntry = Object.entries(ir.project.nodes).find(
+      ([_, node]) => node.kind === 'component' && node.componentType === 'Heading'
+    );
+    const buttonEntry = Object.entries(ir.project.nodes).find(
+      ([_, node]) => node.kind === 'component' && node.componentType === 'Button'
+    );
+
+    expect(headingEntry).toBeDefined();
+    expect(buttonEntry).toBeDefined();
+
+    const headingPos = layout[headingEntry![0]];
+    const buttonPos = layout[buttonEntry![0]];
+
+    expect(headingPos.height).toBeGreaterThan(40);
+    expect(buttonPos.y).toBe(headingPos.y + headingPos.height + 16);
+  });
 });

@@ -324,13 +324,33 @@ export class SVGRenderer {
     // Use tokens from density configuration
     const fontSize = this.tokens.heading.fontSize;
     const fontWeight = this.tokens.heading.fontWeight;
+    const lineHeightPx = Math.ceil(fontSize * 1.25);
+    const lines = this.wrapTextToLines(text, pos.width, fontSize);
 
-    return `<g${this.getDataNodeId(node)}>
+    if (lines.length <= 1) {
+      return `<g${this.getDataNodeId(node)}>
     <text x="${pos.x}" y="${pos.y + pos.height / 2 + 6}"
           font-family="system-ui, -apple-system, sans-serif"
           font-size="${fontSize}"
           font-weight="${fontWeight}"
           fill="${this.renderTheme.text}">${this.escapeXml(text)}</text>
+  </g>`;
+    }
+
+    const firstLineY = pos.y + fontSize;
+    const tspans = lines
+      .map(
+        (line, index) =>
+          `<tspan x="${pos.x}" dy="${index === 0 ? 0 : lineHeightPx}">${this.escapeXml(line)}</tspan>`
+      )
+      .join('');
+
+    return `<g${this.getDataNodeId(node)}>
+    <text x="${pos.x}" y="${firstLineY}"
+          font-family="system-ui, -apple-system, sans-serif"
+          font-size="${fontSize}"
+          font-weight="${fontWeight}"
+          fill="${this.renderTheme.text}">${tspans}</text>
   </g>`;
   }
 
@@ -746,13 +766,21 @@ export class SVGRenderer {
 
     // Use tokens from density configuration
     const fontSize = this.tokens.text.fontSize;
-    const lineHeight = this.tokens.text.lineHeight;
+    const lineHeightPx = Math.ceil(fontSize * this.tokens.text.lineHeight);
+    const lines = this.wrapTextToLines(text, pos.width, fontSize);
+    const firstLineY = pos.y + fontSize;
+    const tspans = lines
+      .map(
+        (line, index) =>
+          `<tspan x="${pos.x}" dy="${index === 0 ? 0 : lineHeightPx}">${this.escapeXml(line)}</tspan>`
+      )
+      .join('');
 
     return `<g${this.getDataNodeId(node)}>
-    <text x="${pos.x}" y="${pos.y + fontSize * lineHeight}"
+    <text x="${pos.x}" y="${firstLineY}"
           font-family="system-ui, -apple-system, sans-serif"
           font-size="${fontSize}"
-          fill="${this.renderTheme.text}">${this.escapeXml(text)}</text>
+          fill="${this.renderTheme.text}">${tspans}</text>
   </g>`;
   }
 
@@ -1608,6 +1636,53 @@ export class SVGRenderer {
     if (!spacing) return spacingMap[this.ir.project.style.spacing] || 16;
     const value = spacingMap[spacing];
     return value !== undefined ? value : spacingMap.md;
+  }
+
+  protected wrapTextToLines(text: string, maxWidth: number, fontSize: number): string[] {
+    const normalized = text.replace(/\r\n/g, '\n');
+    const paragraphs = normalized.split('\n');
+    const charWidth = fontSize * 0.6;
+    const safeWidth = Math.max(maxWidth || 0, charWidth);
+    const maxCharsPerLine = Math.max(1, Math.floor(safeWidth / charWidth));
+    const lines: string[] = [];
+
+    for (const paragraph of paragraphs) {
+      if (!paragraph.trim()) {
+        lines.push('');
+        continue;
+      }
+
+      const words = paragraph.split(/\s+/).filter(Boolean);
+      let currentLine = '';
+
+      for (const word of words) {
+        const candidate = currentLine ? `${currentLine} ${word}` : word;
+        if (candidate.length <= maxCharsPerLine) {
+          currentLine = candidate;
+          continue;
+        }
+
+        if (currentLine) {
+          lines.push(currentLine);
+          currentLine = '';
+        }
+
+        if (word.length <= maxCharsPerLine) {
+          currentLine = word;
+          continue;
+        }
+
+        for (let i = 0; i < word.length; i += maxCharsPerLine) {
+          lines.push(word.slice(i, i + maxCharsPerLine));
+        }
+      }
+
+      if (currentLine) {
+        lines.push(currentLine);
+      }
+    }
+
+    return lines.length > 0 ? lines : [''];
   }
 
   protected escapeXml(text: string): string {
