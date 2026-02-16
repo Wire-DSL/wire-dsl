@@ -1,11 +1,17 @@
 project "Wire-DSL Complete Components Catalog" {
   style {
     device: "desktop"
-    density: "comfortable"
+    density: "normal"
     spacing: "md"
     radius: "md"
     stroke: "normal"
     font: "base"
+  }
+
+  colors {
+    accent: #007BFF
+    control: #28A745
+    chart: #17A2B8
   }
 
   screen ComponentsCatalog {
@@ -152,10 +158,10 @@ project "Wire-DSL Complete Components Catalog" {
         component Topbar title: "Admin Panel" user: "john_doe"
 
         component Text content: "With subtitle and user:"
-        component Topbar title: "Project Manager" subtitle: "Dashboard Overview" user: "admin"
+        component Topbar title: "Project Manager" subtitle: "Dashboard Overview" user: "admin" avatar: true icon: "home" variant: danger
 
         component Text content: "With action menu:"
-        component Topbar title: "Wire-DSL Editor" actions: "Help,Settings,Profile,Logout"
+        component Topbar title: "Wire-DSL Editor" actions: "Help,Settings,Profile,Logout" user: "john_doe"
 
         component Divider
 
@@ -260,12 +266,12 @@ project "Wire-DSL Complete Components Catalog" {
           cell span: 1 {
             layout stack(direction: vertical, gap: xs) {
               component Image placeholder: "avatar"
-              component Label text: "Square (1:1)"
+              component Label text: "Avatar (1:1)"
             }
           }
           cell span: 1 {
             layout stack(direction: vertical, gap: xs) {
-              component Image placeholder: "icon"
+              component Image placeholder: "icon" icon: "user"
               component Label text: "Icon (1:1)"
             }
           }
@@ -332,10 +338,10 @@ project "Wire-DSL Complete Components Catalog" {
 
         component Heading text: "Alert Messages (All 4 Types)" level: h3
 
-        component Alert variant: "info" text: "This is an informational message. New updates are available for your review and installation."
-        component Alert variant: "success" text: "Success! Your changes have been saved successfully and are now live in production."
-        component Alert variant: "warning" text: "Warning: This action cannot be undone. Please review carefully before proceeding with this operation."
-        component Alert variant: "danger" text: "Error: Something went wrong during processing. Please try again or contact technical support for assistance."
+        component Alert variant: "info" title: "Information" text: "This is an informational message. New updates are available for your review and installation."
+        component Alert variant: "success" title: "Success" text: "Success! Your changes have been saved successfully and are now live in production."
+        component Alert variant: "warning" title: "Warning" text: "Warning: This action cannot be undone. Please review carefully before proceeding with this operation."
+        component Alert variant: "danger" title: "Error" text: "Error: Something went wrong during processing. Please try again or contact technical support for assistance."
       }
 
       component Divider
@@ -423,18 +429,18 @@ project "Wire-DSL Complete Components Catalog" {
         }
       }
 
-      component Divider
+      // component Divider
 
-      component Heading text: "9. Modal & Loading Components" level: h2
-      component Text content: "Overlay dialogs and loading state indicators."
+      // component Heading text: "9. Modal & Loading Components" level: h2
+      // component Text content: "Overlay dialogs and loading state indicators."
 
-      layout stack(direction: vertical, gap: md, padding: md) {
-        component Heading text: "Modal Dialogs" level: h3
+      // layout stack(direction: vertical, gap: md, padding: md) {
+      //   component Heading text: "Modal Dialogs" level: h3
 
-        // component Modal title: "Confirm Action"
-        // component Modal title: "Delete User"
-        // component Modal title: "Operation Successful"
-      }
+      //   component Modal title: "Confirm Action" visible: false
+      //   component Modal title: "Delete User" visible: true
+      //   component Modal title: "Operation Successful" visible: false
+      // }
 
       component Divider
 
@@ -634,12 +640,20 @@ project "Wire-DSL Complete Components Catalog" {
         layout grid(columns: 3, gap: md) {
           cell span: 1 {
             layout card(padding: xs) {
-              component Heading text: "Card xs" level: h3
-              component Text content: "Extra small padding: 4px"
+              component Image placeholder: "landscape"
+              layout grid(direction: vertical, columns: 24, gap: sm, padding: none) {
+                cell { }
+                cell span: 20 {
+                  component Heading text: "Card xs" level: h3 spacing: none
+                  component Text content: "Extra small padding: 4px"
+                }
+                cell { }
+              }
             }
           }
           cell span: 1 {
             layout card(padding: md) {
+              component Image placeholder: "landscape"
               component Heading text: "Card md" level: h3
               component Text content: "Medium padding: 16px"
             }

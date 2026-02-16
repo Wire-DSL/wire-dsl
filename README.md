@@ -288,8 +288,11 @@ MIT License - Free for personal and commercial use
 This project includes icons from [Feather Icons](https://feathericons.com), created by Cole Bemis and contributors.
 
 - **License**: MIT License
+- **Version**: 4.29.0
+- **Available icons**: 287
 - **Repository**: https://github.com/feathericons/feather
 - **Location in project**: `packages/engine/src/renderer/icons/`
+- **Complete list**: `docs/ICONS-GUIDE.md`
 - **Full details**: See `packages/engine/src/renderer/icons/ICONS-LICENSE.md`
 
 Feather Icons are used under the terms of the MIT License, which is fully compatible with this project's MIT License.

@@ -58,7 +58,7 @@ Each component includes:
 Comprehensive guide to using Feather Icons in Wire-DSL:
 - `Icon` component for displaying icons
 - `IconButton` component for interactive icon buttons
-- Complete list of 50+ available icons
+- Complete list of 287 available icons (Feather Icons v4.29.0)
 - Usage examples and best practices
 - Icon variants and customization
 - Styling and configuration
