@@ -132,7 +132,7 @@ project "Hello" {
 | **Data** | Table, List |
 | **Media** | Image, Icon |
 | **Display** | Divider, Badge, Alert |
-| **Information** | StatCard, Code, ChartPlaceholder |
+| **Information** | StatCard, Code, Chart |
 | **Modal & Overlay** | Modal |
 | **Loading & Feedback** | Spinner |
 

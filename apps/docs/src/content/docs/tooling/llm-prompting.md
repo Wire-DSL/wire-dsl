@@ -158,7 +158,7 @@ component Alert type: "error" message: "Error message"
 ```wire
 component StatCard title: "Users" value: "1,234"
 component Code code: "const x = 10;"
-component ChartPlaceholder type: "bar" height: 300
+component Chart type: "bar" height: 300
 ```
 
 **Chart types**: `bar`, `line`, `pie`, `area`

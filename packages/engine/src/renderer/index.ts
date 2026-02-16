@@ -6,6 +6,7 @@ import { getIcon } from './icons/iconLibrary';
 import { resolveTokens, type DesignTokens } from './tokens';
 import { resolveSpacingToken, type DensityLevel } from '../shared/spacing';
 import { resolveIconButtonSize, resolveIconSize } from '../shared/component-sizes';
+import { resolveHeadingTypography } from '../shared/heading-levels';
 
 /**
  * SVG Renderer
@@ -262,6 +263,7 @@ export class SVGRenderer {
         return this.renderTopbar(node, pos);
       case 'Table':
         return this.renderTable(node, pos);
+      case 'Chart':
       case 'ChartPlaceholder':
         return this.renderChartPlaceholder(node, pos);
       case 'Breadcrumbs':
@@ -327,15 +329,15 @@ export class SVGRenderer {
   protected renderHeading(node: IRComponentNode, pos: any): string {
     const text = String(node.props.text || 'Heading');
 
-    // Use tokens from density configuration
-    const fontSize = this.tokens.heading.fontSize;
-    const fontWeight = this.tokens.heading.fontWeight;
-    const lineHeightPx = Math.ceil(fontSize * 1.25);
+    const headingTypography = this.getHeadingTypography(node);
+    const fontSize = headingTypography.fontSize;
+    const fontWeight = headingTypography.fontWeight;
+    const lineHeightPx = Math.ceil(fontSize * headingTypography.lineHeight);
     const lines = this.wrapTextToLines(text, pos.width, fontSize);
 
     if (lines.length <= 1) {
       return `<g${this.getDataNodeId(node)}>
-    <text x="${pos.x}" y="${pos.y + pos.height / 2 + 6}"
+    <text x="${pos.x}" y="${pos.y + pos.height / 2 + fontSize * 0.3}"
           font-family="system-ui, -apple-system, sans-serif"
           font-size="${fontSize}"
           font-weight="${fontWeight}"
@@ -448,23 +450,26 @@ export class SVGRenderer {
     const radius = this.tokens.input.radius;
     const fontSize = this.tokens.input.fontSize;
     const paddingX = this.tokens.input.paddingX;
+    const labelOffset = this.getControlLabelOffset(label);
+    const controlY = pos.y + labelOffset;
+    const controlHeight = Math.max(16, pos.height - labelOffset);
 
     return `<g${this.getDataNodeId(node)}>
     ${
       label
-        ? `<text x="${pos.x + paddingX}" y="${pos.y - 6}"
+        ? `<text x="${pos.x + paddingX}" y="${this.getControlLabelBaselineY(pos.y)}"
           font-family="system-ui, -apple-system, sans-serif"
           font-size="12"
           fill="${this.renderTheme.text}">${this.escapeXml(label)}</text>`
         : ''
     }
-    <rect x="${pos.x}" y="${pos.y}"
-          width="${pos.width}" height="${pos.height}"
+    <rect x="${pos.x}" y="${controlY}"
+          width="${pos.width}" height="${controlHeight}"
           rx="${radius}"
           fill="${this.renderTheme.cardBg}"
           stroke="${this.renderTheme.border}"
           stroke-width="1"/>
-    <text x="${pos.x + paddingX}" y="${pos.y + pos.height / 2 + 5}"
+    <text x="${pos.x + paddingX}" y="${controlY + controlHeight / 2 + 5}"
           font-family="system-ui, -apple-system, sans-serif"
           font-size="${fontSize}"
           fill="${this.renderTheme.textMuted}">${this.escapeXml(placeholder)}</text>
@@ -631,19 +636,24 @@ export class SVGRenderer {
     const title = String(node.props.title || '');
     const columnsStr = String(node.props.columns || 'Col1,Col2,Col3');
     const columns = columnsStr.split(',').map((c) => c.trim());
-    const rowCount = Number(node.props.rows || 5);
+    const rowCount = Number(node.props.rows || node.props.rowsMock || 5);
     const mockStr = String(node.props.mock || '');
+    const random = this.parseBooleanProp(node.props.random, false);
     const paginationValue = String(node.props.pagination || 'false');
     const pagination = paginationValue === 'true';
     const pageCount = Number(node.props.pages || 5);
     const paginationAlign = String(node.props.paginationAlign || 'right'); // left, center, right
 
-    // Parse mock types, default to "item" if not specified
-    const mockTypes = mockStr ? mockStr.split(',').map((m) => m.trim()) : columns.map(() => 'item');
-
-    // Ensure we have a mock type for each column (pad with 'item' if needed)
+    // Parse mock types by column. If not provided, infer from column names.
+    const mockTypes = mockStr
+      ? mockStr
+          .split(',')
+          .map((m) => m.trim())
+          .filter(Boolean)
+      : [];
     while (mockTypes.length < columns.length) {
-      mockTypes.push('item');
+      const inferred = MockDataGenerator.inferMockTypeFromColumn(columns[mockTypes.length] || 'item');
+      mockTypes.push(inferred);
     }
 
     const headerHeight = 44;
@@ -655,8 +665,9 @@ export class SVGRenderer {
     for (let rowIdx = 0; rowIdx < rowCount; rowIdx++) {
       const row: Record<string, string> = {};
       columns.forEach((col, colIdx) => {
-        const mockType = mockTypes[colIdx] || 'item';
-        row[col] = MockDataGenerator.getMockValue(mockType, rowIdx);
+        const mockType =
+          mockTypes[colIdx] || MockDataGenerator.inferMockTypeFromColumn(col) || 'item';
+        row[col] = MockDataGenerator.getMockValue(mockType, rowIdx, random);
       });
       mockRows.push(row);
     }
@@ -789,21 +800,121 @@ export class SVGRenderer {
   }
 
   protected renderChartPlaceholder(node: IRComponentNode, pos: any): string {
-    const type = String(node.props.type || 'bar');
+    const type = String(node.props.type || 'bar').toLowerCase();
+    const chartHeight = Number(node.props.height);
+    const resolvedHeight = !isNaN(chartHeight) && chartHeight > 0 ? chartHeight : pos.height;
+    const frameHeight = Math.min(pos.height, resolvedHeight);
+    const frameY = pos.y + Math.max(0, (pos.height - frameHeight) / 2);
+    const innerPadding = 16;
+    const innerX = pos.x + innerPadding;
+    const innerY = frameY + innerPadding;
+    const innerWidth = Math.max(20, pos.width - innerPadding * 2);
+    const innerHeight = Math.max(20, frameHeight - innerPadding * 2);
 
-    return `<g${this.getDataNodeId(node)}>
-    <rect x="${pos.x}" y="${pos.y}" 
-          width="${pos.width}" height="${pos.height}" 
+    let svg = `<g${this.getDataNodeId(node)}>
+    <rect x="${pos.x}" y="${frameY}" 
+          width="${pos.width}" height="${frameHeight}" 
           rx="8" 
           fill="${this.renderTheme.cardBg}" 
           stroke="${this.renderTheme.border}" 
-          stroke-width="1"/>
-    <text x="${pos.x + pos.width / 2}" y="${pos.y + pos.height / 2}" 
-          font-family="system-ui, -apple-system, sans-serif" 
-          font-size="14" 
-          fill="${this.renderTheme.textMuted}" 
-          text-anchor="middle">[${this.escapeXml(type.toUpperCase())} CHART]</text>
+          stroke-width="1"/>`;
+
+    if (type === 'pie') {
+      const radius = Math.max(24, Math.min(innerWidth, innerHeight) / 2 - 4);
+      const cx = innerX + innerWidth / 2;
+      const cy = innerY + innerHeight / 2;
+      const parts = [0.18, 0.24, 0.27, 0.31];
+      const colors = [
+        this.hexToRgba(this.renderTheme.primary, 0.9),
+        this.hexToRgba('#10B981', 0.9),
+        this.hexToRgba('#F59E0B', 0.9),
+        this.hexToRgba('#8B5CF6', 0.9),
+      ];
+
+      let startAngle = -Math.PI / 2;
+      parts.forEach((part, index) => {
+        const endAngle = startAngle + part * Math.PI * 2;
+        const x1 = cx + radius * Math.cos(startAngle);
+        const y1 = cy + radius * Math.sin(startAngle);
+        const x2 = cx + radius * Math.cos(endAngle);
+        const y2 = cy + radius * Math.sin(endAngle);
+        const largeArc = part > 0.5 ? 1 : 0;
+        svg += `
+    <path d="M ${cx} ${cy} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z"
+          fill="${colors[index % colors.length]}"
+          stroke="${this.renderTheme.cardBg}"
+          stroke-width="1"/>`;
+        startAngle = endAngle;
+      });
+    } else if (type === 'line' || type === 'area') {
+      const pointCount = Math.max(4, Math.min(7, Math.floor(innerWidth / 56)));
+      const stepX = pointCount > 1 ? innerWidth / (pointCount - 1) : innerWidth;
+      const values = Array.from({ length: pointCount }, (_, i) => 0.18 + i * (0.72 / (pointCount - 1)));
+      const pointsArray = values.map((value, i) => {
+        const x = innerX + i * stepX;
+        const y = innerY + innerHeight - value * innerHeight;
+        return { x, y };
+      });
+      const points = values
+        .map((value, i) => {
+          const x = innerX + i * stepX;
+          const y = innerY + innerHeight - value * innerHeight;
+          return `${x},${y}`;
+        })
+        .join(' ');
+      const lastY = innerY + innerHeight;
+
+      svg += `
+    <line x1="${innerX}" y1="${lastY}" x2="${innerX + innerWidth}" y2="${lastY}"
+          stroke="${this.renderTheme.border}" stroke-width="1"/>`;
+
+      if (type === 'area' && pointsArray.length > 1) {
+        const areaPath = [
+          `M ${pointsArray[0].x} ${lastY}`,
+          ...pointsArray.map((p) => `L ${p.x} ${p.y}`),
+          `L ${pointsArray[pointsArray.length - 1].x} ${lastY}`,
+          'Z',
+        ].join(' ');
+        svg += `
+    <path d="${areaPath}"
+          fill="${this.hexToRgba(this.renderTheme.primary, 0.18)}"
+          stroke="none"/>`;
+      }
+
+      svg += `
+    <polyline points="${points}"
+          fill="none"
+          stroke="${this.renderTheme.primary}"
+          stroke-width="2.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"/>`;
+    } else {
+      // Default and "bar": ascending bars.
+      const barCount = Math.max(4, Math.min(8, Math.floor(innerWidth / 42)));
+      const slotWidth = innerWidth / barCount;
+      const barWidth = Math.max(8, slotWidth * 0.62);
+      const values = Array.from({ length: barCount }, (_, i) => 0.15 + i * (0.75 / (barCount - 1)));
+      const baseY = innerY + innerHeight;
+
+      svg += `
+    <line x1="${innerX}" y1="${baseY}" x2="${innerX + innerWidth}" y2="${baseY}"
+          stroke="${this.renderTheme.border}" stroke-width="1"/>`;
+
+      values.forEach((value, i) => {
+        const height = Math.max(6, value * innerHeight);
+        const barX = innerX + i * slotWidth + (slotWidth - barWidth) / 2;
+        const barY = baseY - height;
+        svg += `
+    <rect x="${barX}" y="${barY}"
+          width="${barWidth}" height="${height}"
+          rx="3"
+          fill="${this.hexToRgba(this.renderTheme.primary, 0.82)}"/>`;
+      });
+    }
+
+    svg += `
   </g>`;
+    return svg;
   }
 
   // ============================================================================
@@ -868,23 +979,26 @@ export class SVGRenderer {
   protected renderTextarea(node: IRComponentNode, pos: any): string {
     const label = String(node.props.label || '');
     const placeholder = String(node.props.placeholder || 'Enter text...');
+    const labelOffset = this.getControlLabelOffset(label);
+    const controlY = pos.y + labelOffset;
+    const controlHeight = Math.max(20, pos.height - labelOffset);
 
     return `<g${this.getDataNodeId(node)}>
     ${
       label
-        ? `<text x="${pos.x}" y="${pos.y - 6}" 
+        ? `<text x="${pos.x}" y="${this.getControlLabelBaselineY(pos.y)}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="12" 
           fill="${this.renderTheme.text}">${this.escapeXml(label)}</text>`
         : ''
     }
-    <rect x="${pos.x}" y="${pos.y}" 
-          width="${pos.width}" height="${pos.height}" 
+    <rect x="${pos.x}" y="${controlY}" 
+          width="${pos.width}" height="${controlHeight}" 
           rx="6" 
           fill="${this.renderTheme.cardBg}" 
           stroke="${this.renderTheme.border}" 
           stroke-width="1"/>
-    <text x="${pos.x + 12}" y="${pos.y + 20}" 
+    <text x="${pos.x + 12}" y="${controlY + 20}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="13" 
           fill="${this.renderTheme.textMuted}">${this.escapeXml(placeholder)}</text>
@@ -894,27 +1008,31 @@ export class SVGRenderer {
   protected renderSelect(node: IRComponentNode, pos: any): string {
     const label = String(node.props.label || '');
     const placeholder = String(node.props.placeholder || 'Select...');
+    const labelOffset = this.getControlLabelOffset(label);
+    const controlY = pos.y + labelOffset;
+    const controlHeight = Math.max(16, pos.height - labelOffset);
+    const centerY = controlY + controlHeight / 2 + 5;
 
     return `<g${this.getDataNodeId(node)}>
     ${
       label
-        ? `<text x="${pos.x}" y="${pos.y - 6}" 
+        ? `<text x="${pos.x}" y="${this.getControlLabelBaselineY(pos.y)}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="12" 
           fill="${this.renderTheme.text}">${this.escapeXml(label)}</text>`
         : ''
     }
-    <rect x="${pos.x}" y="${pos.y}" 
-          width="${pos.width}" height="${pos.height}" 
+    <rect x="${pos.x}" y="${controlY}" 
+          width="${pos.width}" height="${controlHeight}" 
           rx="6" 
           fill="${this.renderTheme.cardBg}" 
           stroke="${this.renderTheme.border}" 
           stroke-width="1"/>
-    <text x="${pos.x + 12}" y="${pos.y + pos.height / 2 + 5}" 
+    <text x="${pos.x + 12}" y="${centerY}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="14" 
           fill="${this.renderTheme.textMuted}">${this.escapeXml(placeholder)}</text>
-    <text x="${pos.x + pos.width - 20}" y="${pos.y + pos.height / 2 + 5}" 
+    <text x="${pos.x + pos.width - 20}" y="${centerY}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="16" 
           fill="${this.renderTheme.textMuted}">▼</text>
@@ -1258,14 +1376,17 @@ export class SVGRenderer {
   protected renderList(node: IRComponentNode, pos: any): string {
     const title = String(node.props.title || '');
     const itemsStr = String(node.props.items || '');
+    const mockType = String(node.props.mock || '').trim();
+    const random = this.parseBooleanProp(node.props.random, false);
 
     let items: string[] = [];
     if (itemsStr) {
       items = itemsStr.split(',').map((i) => i.trim());
     } else {
-      // Generate mock items
+      // Generate mock items from provided mock type or fallback to deterministic names.
       const itemCount = Number(node.props.itemsMock || 4);
-      items = MockDataGenerator.generateMockList('name', itemCount);
+      const resolvedMockType = mockType || 'name';
+      items = MockDataGenerator.generateMockList(resolvedMockType, itemCount, random);
     }
 
     const padding = 12;
@@ -1795,6 +1916,39 @@ export class SVGRenderer {
     if (text.length <= maxChars) return text;
     if (maxChars <= 3) return text.slice(0, maxChars);
     return `${text.slice(0, maxChars - 3)}...`;
+  }
+
+  protected getControlLabelOffset(label: string): number {
+    return label.trim().length > 0 ? 18 : 0;
+  }
+
+  protected getControlLabelBaselineY(y: number): number {
+    return y + 12;
+  }
+
+  protected getHeadingTypography(
+    node: IRComponentNode
+  ): { fontSize: number; fontWeight: number; lineHeight: number } {
+    const typography = resolveHeadingTypography(
+      this.tokens.heading.fontSize,
+      this.tokens.heading.fontWeight,
+      node.props.level
+    );
+    return {
+      fontSize: typography.fontSize,
+      fontWeight: typography.fontWeight,
+      lineHeight: typography.lineHeight,
+    };
+  }
+
+  protected parseBooleanProp(value: unknown, fallback: boolean = false): boolean {
+    if (typeof value === 'boolean') return value;
+    if (typeof value === 'string') {
+      const normalized = value.toLowerCase().trim();
+      if (normalized === 'true') return true;
+      if (normalized === 'false') return false;
+    }
+    return fallback;
   }
 
   protected escapeXml(text: string): string {

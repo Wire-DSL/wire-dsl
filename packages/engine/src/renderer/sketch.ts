@@ -275,20 +275,23 @@ export class SketchSVGRenderer extends SVGRenderer {
     const radius = this.tokens.input.radius;
     const fontSize = this.tokens.input.fontSize;
     const paddingX = this.tokens.input.paddingX;
+    const labelOffset = this.getControlLabelOffset(label);
+    const controlY = pos.y + labelOffset;
+    const controlHeight = Math.max(16, pos.height - labelOffset);
 
     return `<g${this.getDataNodeId(node)}>
-      ${label ? `<text x="${pos.x}" y="${pos.y - 6}"
+      ${label ? `<text x="${pos.x}" y="${this.getControlLabelBaselineY(pos.y)}"
             font-family="${this.fontFamily}"
             font-size="12"
             fill="${this.renderTheme.text}">${this.escapeXml(label)}</text>` : ''}
-      <rect x="${pos.x}" y="${pos.y}"
-            width="${pos.width}" height="${pos.height}"
+      <rect x="${pos.x}" y="${controlY}"
+            width="${pos.width}" height="${controlHeight}"
             rx="${radius}"
             fill="${this.renderTheme.cardBg}"
             stroke="#2D3748"
             stroke-width="0.5"
             filter="url(#sketch-rough)"/>
-      ${placeholder ? `<text x="${pos.x + paddingX}" y="${pos.y + pos.height / 2 + 5}"
+      ${placeholder ? `<text x="${pos.x + paddingX}" y="${controlY + controlHeight / 2 + 5}"
             font-family="${this.fontFamily}"
             font-size="${fontSize}"
             fill="${this.renderTheme.textMuted}">${this.escapeXml(placeholder)}</text>` : ''}
@@ -301,20 +304,23 @@ export class SketchSVGRenderer extends SVGRenderer {
   protected renderTextarea(node: IRComponentNode, pos: any): string {
     const label = String(node.props.label || '');
     const placeholder = String(node.props.placeholder || '');
+    const labelOffset = this.getControlLabelOffset(label);
+    const controlY = pos.y + labelOffset;
+    const controlHeight = Math.max(20, pos.height - labelOffset);
 
     return `<g${this.getDataNodeId(node)}>
-      ${label ? `<text x="${pos.x}" y="${pos.y - 6}"
+      ${label ? `<text x="${pos.x}" y="${this.getControlLabelBaselineY(pos.y)}"
             font-family="${this.fontFamily}"
             font-size="12"
             fill="${this.renderTheme.text}">${this.escapeXml(label)}</text>` : ''}
-      <rect x="${pos.x}" y="${pos.y}"
-            width="${pos.width}" height="${pos.height}"
+      <rect x="${pos.x}" y="${controlY}"
+            width="${pos.width}" height="${controlHeight}"
             rx="6"
             fill="${this.renderTheme.cardBg}"
             stroke="#2D3748"
             stroke-width="0.5"
             filter="url(#sketch-rough)"/>
-      ${placeholder ? `<text x="${pos.x + 12}" y="${pos.y + 20}"
+      ${placeholder ? `<text x="${pos.x + 12}" y="${controlY + 20}"
             font-family="${this.fontFamily}"
             font-size="14"
             fill="${this.renderTheme.textMuted}">${this.escapeXml(placeholder)}</text>` : ''}
@@ -493,15 +499,20 @@ export class SketchSVGRenderer extends SVGRenderer {
     const title = String(node.props.title || '');
     const columnsStr = String(node.props.columns || 'Col1,Col2,Col3');
     const columns = columnsStr.split(',').map((c) => c.trim());
-    const rowCount = Number(node.props.rows || 5);
+    const rowCount = Number(node.props.rows || node.props.rowsMock || 5);
     const mockStr = String(node.props.mock || '');
+    const random = this.parseBooleanProp(node.props.random, false);
 
-    // Parse mock types, default to "item" if not specified
-    const mockTypes = mockStr ? mockStr.split(',').map((m) => m.trim()) : columns.map(() => 'item');
-
-    // Ensure we have a mock type for each column (pad with 'item' if needed)
+    // Parse mock types by column. If not provided, infer from column names.
+    const mockTypes = mockStr
+      ? mockStr
+          .split(',')
+          .map((m) => m.trim())
+          .filter(Boolean)
+      : [];
     while (mockTypes.length < columns.length) {
-      mockTypes.push('item');
+      const inferred = MockDataGenerator.inferMockTypeFromColumn(columns[mockTypes.length] || 'item');
+      mockTypes.push(inferred);
     }
 
     const headerHeight = 44;
@@ -513,8 +524,9 @@ export class SketchSVGRenderer extends SVGRenderer {
     for (let rowIdx = 0; rowIdx < rowCount; rowIdx++) {
       const row: Record<string, string> = {};
       columns.forEach((col, colIdx) => {
-        const mockType = mockTypes[colIdx] || 'item';
-        row[col] = MockDataGenerator.getMockValue(mockType, rowIdx);
+        const mockType =
+          mockTypes[colIdx] || MockDataGenerator.inferMockTypeFromColumn(col) || 'item';
+        row[col] = MockDataGenerator.getMockValue(mockType, rowIdx, random);
       });
       mockRows.push(row);
     }
@@ -641,28 +653,32 @@ export class SketchSVGRenderer extends SVGRenderer {
   protected renderSelect(node: IRComponentNode, pos: any): string {
     const label = String(node.props.label || '');
     const placeholder = String(node.props.placeholder || 'Select...');
+    const labelOffset = this.getControlLabelOffset(label);
+    const controlY = pos.y + labelOffset;
+    const controlHeight = Math.max(16, pos.height - labelOffset);
+    const centerY = controlY + controlHeight / 2 + 5;
 
     return `<g${this.getDataNodeId(node)}>
     ${
       label
-        ? `<text x="${pos.x}" y="${pos.y - 6}"
+        ? `<text x="${pos.x}" y="${this.getControlLabelBaselineY(pos.y)}"
           font-family="${this.fontFamily}"
           font-size="12"
           fill="${this.renderTheme.text}">${this.escapeXml(label)}</text>`
         : ''
     }
-    <rect x="${pos.x}" y="${pos.y}"
-          width="${pos.width}" height="${pos.height}"
+    <rect x="${pos.x}" y="${controlY}"
+          width="${pos.width}" height="${controlHeight}"
           rx="6"
           fill="${this.renderTheme.cardBg}"
           stroke="#2D3748"
           stroke-width="0.5"
           filter="url(#sketch-rough)"/>
-    <text x="${pos.x + 12}" y="${pos.y + pos.height / 2 + 5}"
+    <text x="${pos.x + 12}" y="${centerY}"
           font-family="${this.fontFamily}"
           font-size="14"
           fill="${this.renderTheme.textMuted}">${this.escapeXml(placeholder)}</text>
-    <text x="${pos.x + pos.width - 20}" y="${pos.y + pos.height / 2 + 5}"
+    <text x="${pos.x + pos.width - 20}" y="${centerY}"
           font-family="${this.fontFamily}"
           font-size="16"
           fill="${this.renderTheme.textMuted}">▼</text>
@@ -929,14 +945,17 @@ export class SketchSVGRenderer extends SVGRenderer {
   protected renderList(node: IRComponentNode, pos: any): string {
     const title = String(node.props.title || '');
     const itemsStr = String(node.props.items || '');
+    const mockType = String(node.props.mock || '').trim();
+    const random = this.parseBooleanProp(node.props.random, false);
 
     let items: string[] = [];
     if (itemsStr) {
       items = itemsStr.split(',').map((i) => i.trim());
     } else {
-      // Generate mock items
+      // Generate mock items from provided mock type or fallback to deterministic names.
       const itemCount = Number(node.props.itemsMock || 4);
-      items = MockDataGenerator.generateMockList('name', itemCount);
+      const resolvedMockType = mockType || 'name';
+      items = MockDataGenerator.generateMockList(resolvedMockType, itemCount, random);
     }
 
     const padding = 12;
@@ -1211,22 +1230,8 @@ export class SketchSVGRenderer extends SVGRenderer {
    * Render chart placeholder with sketch filter and Comic Sans
    */
   protected renderChartPlaceholder(node: IRComponentNode, pos: any): string {
-    const type = String(node.props.type || 'bar');
-
-    return `<g${this.getDataNodeId(node)}>
-    <rect x="${pos.x}" y="${pos.y}"
-          width="${pos.width}" height="${pos.height}"
-          rx="8"
-          fill="${this.renderTheme.cardBg}"
-          stroke="#2D3748"
-          stroke-width="0.5"
-          filter="url(#sketch-rough)"/>
-    <text x="${pos.x + pos.width / 2}" y="${pos.y + pos.height / 2}"
-          font-family="${this.fontFamily}"
-          font-size="14"
-          fill="${this.renderTheme.textMuted}"
-          text-anchor="middle">[${this.escapeXml(type.toUpperCase())} CHART]</text>
-  </g>`;
+    // Reuse standard chart geometry for consistency.
+    return super.renderChartPlaceholder(node, pos);
   }
 
   /**

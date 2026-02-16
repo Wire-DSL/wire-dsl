@@ -102,6 +102,49 @@ describe('Layout Engine', () => {
     expect(compactGap).toBeLessThan(comfortableGap);
   });
 
+  it('should scale intrinsic Button width with density in natural horizontal layout', () => {
+    const compactInput = `
+      project "ButtonWidthCompact" {
+        style { density: "compact" }
+        screen Main {
+          layout stack(direction: horizontal, align: left, gap: md) {
+            component Button text: "Notification preferences center"
+            component Button text: "Secondary"
+          }
+        }
+      }
+    `;
+    const comfortableInput = `
+      project "ButtonWidthComfortable" {
+        style { density: "comfortable" }
+        screen Main {
+          layout stack(direction: horizontal, align: left, gap: md) {
+            component Button text: "Notification preferences center"
+            component Button text: "Secondary"
+          }
+        }
+      }
+    `;
+
+    const compactIr = generateIR(parseWireDSL(compactInput));
+    const comfortableIr = generateIR(parseWireDSL(comfortableInput));
+    const compactLayout = calculateLayout(compactIr);
+    const comfortableLayout = calculateLayout(comfortableIr);
+
+    const compactButton = Object.entries(compactIr.project.nodes).find(
+      ([_, n]) => n.kind === 'component' && n.componentType === 'Button'
+    );
+    const comfortableButton = Object.entries(comfortableIr.project.nodes).find(
+      ([_, n]) => n.kind === 'component' && n.componentType === 'Button'
+    );
+
+    expect(compactButton).toBeDefined();
+    expect(comfortableButton).toBeDefined();
+    expect(compactLayout[compactButton![0]].width).toBeLessThan(
+      comfortableLayout[comfortableButton![0]].width
+    );
+  });
+
   it('should stack horizontally with correct spacing', () => {
     const input = `
       project "Horizontal" {
@@ -171,9 +214,9 @@ describe('Layout Engine', () => {
     const ir = generateIR(ast);
     const layout = calculateLayout(ir);
 
-    const components = Object.entries(ir.project.nodes)
-      .filter(([_, node]) => node.kind === 'component')
-      .map(([id, node]) => ({ id, type: node.componentType, pos: layout[id] }));
+    const components = Object.entries(ir.project.nodes).flatMap(([id, node]) =>
+      node.kind === 'component' ? [{ id, type: node.componentType, pos: layout[id] }] : []
+    );
 
     const headings = components
       .filter((c) => c.type === 'Heading')
@@ -509,6 +552,28 @@ describe('Layout Engine', () => {
     expect(chart.width).toBe(600);
   });
 
+  it('should use default intrinsic height for Chart component', () => {
+    const input = `
+      project "ChartDefaultHeight" {
+        screen Main {
+          layout stack {
+            component Chart type: "bar"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+
+    const chart = Object.entries(ir.project.nodes)
+      .filter(([_, n]) => n.kind === 'component' && n.componentType === 'Chart')
+      .map(([id]) => layout[id])[0];
+
+    expect(chart.height).toBe(250);
+  });
+
   it('should calculate split layout', () => {
     const input = `
       project "Split" {
@@ -699,6 +764,32 @@ describe('Layout Engine', () => {
       expect(pos.height).toBeGreaterThan(0);
       expect(pos.width).toBeGreaterThan(0);
     });
+  });
+
+  it('should reserve additional intrinsic height for labeled Input controls', () => {
+    const input = `
+      project "LabeledInputHeight" {
+        screen Main {
+          layout stack(direction: vertical, gap: md) {
+            component Input placeholder: "No label"
+            component Input label: "Email" placeholder: "user@example.com"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+
+    const inputPositions = Object.entries(ir.project.nodes)
+      .filter(([_, node]) => node.kind === 'component' && node.componentType === 'Input')
+      .map(([id]) => layout[id])
+      .sort((a, b) => a.y - b.y);
+
+    expect(inputPositions).toHaveLength(2);
+    expect(inputPositions[1].height).toBeGreaterThan(inputPositions[0].height);
+    expect(inputPositions[1].height - inputPositions[0].height).toBe(18);
   });
 
   it('should layout grid with stat cards', () => {
@@ -894,6 +985,32 @@ describe('Layout Engine', () => {
 
     expect(headingPos.height).toBeGreaterThan(40);
     expect(buttonPos.y).toBe(headingPos.y + headingPos.height + 16);
+  });
+
+  it('should use Heading level to compute larger height for larger titles', () => {
+    const input = `
+      project "Heading Levels Layout" {
+        screen Main {
+          layout stack(direction: vertical, gap: md, padding: md) {
+            component Heading text: "Main title" level: h1
+            component Heading text: "Secondary title" level: h4
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+
+    const headings = Object.entries(ir.project.nodes)
+      .filter(([_, node]) => node.kind === 'component' && node.componentType === 'Heading')
+      .map(([id]) => layout[id])
+      .sort((a, b) => a.y - b.y);
+
+    expect(headings).toHaveLength(2);
+    expect(headings[0].height).toBeGreaterThan(headings[1].height);
+    expect(headings[1].y).toBe(headings[0].y + headings[0].height + 16);
   });
 
   it('should avoid overlap between cards in single-column grid and next stack elements', () => {

@@ -47,6 +47,29 @@ describe('SVG Renderer', () => {
     expect(svg).toContain('<text');
   });
 
+  it('should render Heading levels with different font sizes', () => {
+    const input = `
+      project "HeadingLevels" {
+        screen Main {
+          layout stack {
+            component Heading text: "Main title" level: h1
+            component Heading text: "Section title" level: h3
+            component Heading text: "Small title" level: h6
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    expect(svg).toContain('font-size="28"');
+    expect(svg).toContain('font-size="17"');
+    expect(svg).toContain('font-size="11"');
+  });
+
   it('should render button component', () => {
     const input = `
       project "Button" {
@@ -319,7 +342,140 @@ describe('SVG Renderer', () => {
     const layout = calculateLayout(ir);
     const svg = renderToSVG(ir, layout);
 
-    expect(svg).toContain('[BAR CHART]');
+    expect((svg.match(/<rect/g) || []).length).toBeGreaterThan(2);
+    expect(svg).not.toContain('[BAR CHART]');
+  });
+
+  it('should render Chart component with line/bar/pie variants', () => {
+    const input = `
+      project "ChartVariants" {
+        screen Main {
+          layout stack {
+            component Chart type: "bar" height: 220
+            component Chart type: "line" height: 220
+            component Chart type: "pie" height: 220
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    expect(svg).toContain('<polyline');
+    expect(svg).toContain('<path');
+  });
+
+  it('should infer table mock data from column names when mock is not provided', () => {
+    const input = `
+      project "TableMockInference" {
+        screen Main {
+          layout stack {
+            component Table columns: "User,City,Amount" rows: 3
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    expect(svg).toContain('Juan');
+    expect(svg).toContain('Buenos Aires');
+    expect(svg).toContain('$5,000');
+  });
+
+  it('should use list mock type when items are not provided', () => {
+    const input = `
+      project "ListMock" {
+        screen Main {
+          layout stack {
+            component List title: "Cities" itemsMock: 4 mock: "city"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    expect(svg).toContain('Buenos Aires');
+    expect(svg).toContain('Madrid');
+  });
+
+  it('should support custom mocks in Table and List', () => {
+    const input = `
+      project "CustomMocks" {
+        mocks {
+          city: "Rosario,Cordoba,Mendoza"
+          team: "Falcons,Wolves,Tigers"
+        }
+        screen Main {
+          layout stack {
+            component Table columns: "City,Team" rows: 3 mock: "city,team"
+            component List itemsMock: 3 mock: "team"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    expect(svg).toContain('Rosario');
+    expect(svg).toContain('Cordoba');
+    expect(svg).toContain('Falcons');
+    expect(svg).toContain('Wolves');
+  });
+
+  it('should remain deterministic for Table/List when random is not enabled', () => {
+    const input = `
+      project "DeterministicMocks" {
+        screen Main {
+          layout stack {
+            component Table columns: "User,City,Amount" rows: 4
+            component List itemsMock: 4 mock: "city"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svgA = renderToSVG(ir, layout);
+    const svgB = renderToSVG(ir, layout);
+
+    expect(svgA).toBe(svgB);
+  });
+
+  it('should vary Table/List data when random is true', () => {
+    const input = `
+      project "RandomMocks" {
+        screen Main {
+          layout stack {
+            component Table columns: "User,City,Amount" rows: 6 random: true
+            component List itemsMock: 6 mock: "city" random: true
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const outputs = [renderToSVG(ir, layout), renderToSVG(ir, layout), renderToSVG(ir, layout)];
+    const unique = new Set(outputs);
+
+    expect(unique.size).toBeGreaterThan(1);
   });
 
   it('should render multiple components', () => {
@@ -552,6 +708,43 @@ describe('SVG Renderer', () => {
     expect(svg).toContain('Notifications');
   });
 
+  it('should render Input label inside component vertical bounds', () => {
+    const input = `
+      project "InputLabelBounds" {
+        screen Main {
+          layout stack(direction: vertical, gap: md, padding: md) {
+            component Input label: "Email" placeholder: "user@example.com"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    const inputEntry = Object.entries(ir.project.nodes).find(
+      ([_, node]) => node.kind === 'component' && node.componentType === 'Input'
+    );
+    expect(inputEntry).toBeDefined();
+
+    const inputPos = layout[inputEntry![0]];
+    const labelMatch = svg.match(/<text x="[^"]+" y="([^"]+)"[^>]*>Email<\/text>/);
+    const controlMatch = svg.match(
+      /<text x="[^"]+" y="[^"]+"[^>]*>Email<\/text>\s*<rect x="[^"]+" y="([^"]+)"/
+    );
+
+    expect(labelMatch).toBeTruthy();
+    expect(controlMatch).toBeTruthy();
+
+    const labelY = Number(labelMatch![1]);
+    const controlY = Number(controlMatch![1]);
+
+    expect(labelY).toBeGreaterThanOrEqual(inputPos.y);
+    expect(controlY).toBe(inputPos.y + 18);
+  });
+
   it('should render split layout with sidebar', () => {
     const input = `
       project "Admin" {
@@ -644,6 +837,30 @@ describe('SVG Renderer', () => {
     expect(match).toBeTruthy();
     const renderedWidth = Number(match![1]);
     expect(renderedWidth).toBeLessThanOrEqual(buttonPos.width + 0.01);
+  });
+
+  it('should not truncate Button text in comfortable density when width is unconstrained', () => {
+    const input = `
+      project "ButtonNoTruncateComfortable" {
+        style {
+          density: "comfortable"
+        }
+        screen Main {
+          layout stack(direction: horizontal, align: left, gap: md) {
+            component Button text: "Notification preferences center"
+            component Button text: "Secondary action"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    expect(svg).toContain('Notification preferences center');
+    expect(svg).not.toContain('Notification preferences ce...');
   });
 
   it('should not render Link wider than its layout width in narrow grid cells', () => {

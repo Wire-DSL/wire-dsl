@@ -1,6 +1,7 @@
 import type { IRContract, IRNode, IRStyle } from '../ir/index';
 import { resolveSpacingToken, type DensityLevel } from '../shared/spacing';
 import { resolveIconButtonSize, resolveIconSize } from '../shared/component-sizes';
+import { resolveHeadingTypography } from '../shared/heading-levels';
 
 /**
  * Layout Engine
@@ -649,16 +650,35 @@ export class LayoutEngine {
     }
   }
 
-  private getHeadingMetricsForDensity(): { fontSize: number; lineHeight: number } {
+  private getButtonMetricsForDensity(): { fontSize: number; paddingX: number } {
     switch (this.style.density) {
       case 'compact':
-        return { fontSize: 16, lineHeight: 1.25 };
+        return { fontSize: 12, paddingX: 8 };
       case 'comfortable':
-        return { fontSize: 24, lineHeight: 1.25 };
+        return { fontSize: 16, paddingX: 16 };
       case 'normal':
       default:
-        return { fontSize: 20, lineHeight: 1.25 };
+        return { fontSize: 14, paddingX: 12 };
     }
+  }
+
+  private getHeadingMetricsForDensity(level?: unknown): { fontSize: number; lineHeight: number } {
+    let baseFontSize: number;
+    switch (this.style.density) {
+      case 'compact':
+        baseFontSize = 16;
+        break;
+      case 'comfortable':
+        baseFontSize = 24;
+        break;
+      case 'normal':
+      default:
+        baseFontSize = 20;
+        break;
+    }
+
+    const typography = resolveHeadingTypography(baseFontSize, 600, level);
+    return { fontSize: typography.fontSize, lineHeight: typography.lineHeight };
   }
 
   private wrapTextToLines(text: string, maxWidth: number, fontSize: number): string[] {
@@ -710,6 +730,12 @@ export class LayoutEngine {
 
   private getIntrinsicComponentHeight(node: IRNode, availableWidth?: number): number {
     if (node.kind !== 'component') return this.getComponentHeight();
+    const controlLabelOffset =
+      node.componentType === 'Input' ||
+      node.componentType === 'Textarea' ||
+      node.componentType === 'Select'
+        ? this.getControlLabelOffset(String(node.props.label || ''))
+        : 0;
 
     // Image: calculate height based on aspect ratio and available width
     if (node.componentType === 'Image') {
@@ -745,7 +771,7 @@ export class LayoutEngine {
       if (!isNaN(explicitHeight) && explicitHeight > 0) {
         return explicitHeight;
       }
-      const rowCount = Number(node.props.rows || 5);
+      const rowCount = Number(node.props.rows || node.props.rowsMock || 5);
       const hasTitle = !!node.props.title;
       const hasPagination = String(node.props.pagination) === 'true';
       const headerHeight = 44;
@@ -757,7 +783,7 @@ export class LayoutEngine {
 
     if (node.componentType === 'Heading') {
       const text = String(node.props.text || 'Heading');
-      const { fontSize, lineHeight } = this.getHeadingMetricsForDensity();
+      const { fontSize, lineHeight } = this.getHeadingMetricsForDensity(node.props.level);
       const lineHeightPx = Math.ceil(fontSize * lineHeight);
       const maxWidth = availableWidth && availableWidth > 0 ? availableWidth : 200;
       const lines = this.wrapTextToLines(text, maxWidth, fontSize);
@@ -813,20 +839,27 @@ export class LayoutEngine {
     }
 
     // Taller components
-    if (node.componentType === 'Textarea') return 100;
+    if (node.componentType === 'Textarea') return 100 + controlLabelOffset;
     if (node.componentType === 'Modal') return 300;
     if (node.componentType === 'Card') return 120;
     if (node.componentType === 'StatCard') return 120;
-    if (node.componentType === 'ChartPlaceholder') return 250;
+    if (node.componentType === 'Chart' || node.componentType === 'ChartPlaceholder') return 250;
     if (node.componentType === 'List') return 180;
 
     // Standard height components
     if (node.componentType === 'Topbar') return 56;
     if (node.componentType === 'Divider') return 1;
     if (node.componentType === 'Separate') return this.getSeparateSize(node);
+    if (node.componentType === 'Input' || node.componentType === 'Select') {
+      return this.getComponentHeight() + controlLabelOffset;
+    }
 
     // Default height
     return this.getComponentHeight();
+  }
+
+  private getControlLabelOffset(label: string): number {
+    return label.trim().length > 0 ? 18 : 0;
   }
 
   private getIntrinsicComponentWidth(node: IRNode | undefined): number {
@@ -858,7 +891,9 @@ export class LayoutEngine {
     // Button, Link: text width + padding (estimate)
     if (node.componentType === 'Button' || node.componentType === 'Link') {
       const text = String(node.props.text || '');
-      return Math.max(80, text.length * 8 + 32); // ~8px per char + 32px padding
+      const { fontSize, paddingX } = this.getButtonMetricsForDensity();
+      const charWidth = fontSize * 0.6;
+      return Math.max(60, Math.ceil(text.length * charWidth + paddingX * 2));
     }
 
     // Label, Text: content-based width (estimate)
@@ -870,7 +905,8 @@ export class LayoutEngine {
     // Heading: content-based width
     if (node.componentType === 'Heading') {
       const text = String(node.props.text || '');
-      return Math.max(80, text.length * 12 + 16);
+      const { fontSize } = this.getHeadingMetricsForDensity(node.props.level);
+      return Math.max(80, Math.ceil(text.length * fontSize * 0.6 + 16));
     }
 
     // Input, Select, Textarea: standard widths

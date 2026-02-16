@@ -92,12 +92,13 @@ export class SkeletonSVGRenderer extends SVGRenderer {
    * Render heading as gray block
    */
   protected renderHeading(node: IRComponentNode, pos: any): string {
+    const headingTypography = this.getHeadingTypography(node);
     return this.renderTextBlock(
       node,
       pos,
       String(node.props.text || 'Heading'),
-      this.tokens.heading.fontSize,
-      1.25
+      headingTypography.fontSize,
+      headingTypography.lineHeight
     );
   }
 
@@ -204,19 +205,22 @@ export class SkeletonSVGRenderer extends SVGRenderer {
     const label = String(node.props.label || '');
     const placeholder = String(node.props.placeholder || '');
     const radius = this.tokens.input.radius;
+    const labelOffset = this.getControlLabelOffset(label);
+    const controlY = pos.y + labelOffset;
+    const controlHeight = Math.max(16, pos.height - labelOffset);
 
     // Calculate placeholder block width based on text length
     const placeholderWidth = placeholder ? Math.min(placeholder.length * 7, pos.width - 24) : 80;
 
     return `<g${this.getDataNodeId(node)}>
-      ${label ? `<rect x="${pos.x}" y="${pos.y - 18}" width="60" height="10" rx="4" fill="${this.renderTheme.border}"/>` : ''}
-      <rect x="${pos.x}" y="${pos.y}"
-            width="${pos.width}" height="${pos.height}"
+      ${label ? `<rect x="${pos.x}" y="${pos.y + 2}" width="60" height="10" rx="4" fill="${this.renderTheme.border}"/>` : ''}
+      <rect x="${pos.x}" y="${controlY}"
+            width="${pos.width}" height="${controlHeight}"
             rx="${radius}"
             fill="${this.renderTheme.cardBg}"
             stroke="${this.renderTheme.border}"
             stroke-width="1"/>
-      <rect x="${pos.x + 12}" y="${pos.y + (pos.height - 12) / 2}"
+      <rect x="${pos.x + 12}" y="${controlY + (controlHeight - 12) / 2}"
             width="${placeholderWidth}" height="12"
             rx="4"
             fill="${this.renderTheme.border}"
@@ -230,19 +234,22 @@ export class SkeletonSVGRenderer extends SVGRenderer {
   protected renderTextarea(node: IRComponentNode, pos: any): string {
     const label = String(node.props.label || '');
     const placeholder = String(node.props.placeholder || '');
+    const labelOffset = this.getControlLabelOffset(label);
+    const controlY = pos.y + labelOffset;
+    const controlHeight = Math.max(20, pos.height - labelOffset);
 
     // Calculate placeholder block width based on text length
     const placeholderWidth = placeholder ? Math.min(placeholder.length * 7, pos.width - 24) : 120;
 
     return `<g${this.getDataNodeId(node)}>
-      ${label ? `<rect x="${pos.x}" y="${pos.y - 18}" width="70" height="10" rx="4" fill="${this.renderTheme.border}"/>` : ''}
-      <rect x="${pos.x}" y="${pos.y}"
-            width="${pos.width}" height="${pos.height}"
+      ${label ? `<rect x="${pos.x}" y="${pos.y + 2}" width="70" height="10" rx="4" fill="${this.renderTheme.border}"/>` : ''}
+      <rect x="${pos.x}" y="${controlY}"
+            width="${pos.width}" height="${controlHeight}"
             rx="6"
             fill="${this.renderTheme.cardBg}"
             stroke="${this.renderTheme.border}"
             stroke-width="1"/>
-      <rect x="${pos.x + 12}" y="${pos.y + 12}"
+      <rect x="${pos.x + 12}" y="${controlY + 12}"
             width="${placeholderWidth}" height="12"
             rx="4"
             fill="${this.renderTheme.border}"
@@ -255,16 +262,19 @@ export class SkeletonSVGRenderer extends SVGRenderer {
    */
   protected renderSelect(node: IRComponentNode, pos: any): string {
     const label = String(node.props.label || '');
+    const labelOffset = this.getControlLabelOffset(label);
+    const controlY = pos.y + labelOffset;
+    const controlHeight = Math.max(16, pos.height - labelOffset);
 
     return `<g${this.getDataNodeId(node)}>
-      ${label ? `<rect x="${pos.x}" y="${pos.y - 18}" width="65" height="10" rx="4" fill="${this.renderTheme.border}"/>` : ''}
-      <rect x="${pos.x}" y="${pos.y}"
-            width="${pos.width}" height="${pos.height}"
+      ${label ? `<rect x="${pos.x}" y="${pos.y + 2}" width="65" height="10" rx="4" fill="${this.renderTheme.border}"/>` : ''}
+      <rect x="${pos.x}" y="${controlY}"
+            width="${pos.width}" height="${controlHeight}"
             rx="6"
             fill="${this.renderTheme.cardBg}"
             stroke="${this.renderTheme.border}"
             stroke-width="1"/>
-      <rect x="${pos.x + pos.width - 25}" y="${pos.y + pos.height / 2 - 2}"
+      <rect x="${pos.x + pos.width - 25}" y="${controlY + controlHeight / 2 - 2}"
             width="8" height="4"
             fill="${this.renderTheme.textMuted}"/>
     </g>`;
@@ -364,7 +374,7 @@ export class SkeletonSVGRenderer extends SVGRenderer {
     const title = String(node.props.title || '');
     const columnsStr = String(node.props.columns || 'Col1,Col2,Col3');
     const columns = columnsStr.split(',').map((c) => c.trim());
-    const rowCount = Number(node.props.rows || 5);
+    const rowCount = Number(node.props.rows || node.props.rowsMock || 5);
 
     const headerHeight = 44;
     const rowHeight = 36;
@@ -406,7 +416,8 @@ export class SkeletonSVGRenderer extends SVGRenderer {
                     stroke="${this.renderTheme.border}" stroke-width="0.5"/>`;
 
       columns.forEach((_, colIdx) => {
-        const blockWidth = Math.min(colWidth - 24, 60 + Math.random() * 40);
+        const variance = ((rowIdx * 17 + colIdx * 11) % 5) * 10;
+        const blockWidth = Math.min(colWidth - 24, 60 + variance);
         svg += `<rect x="${pos.x + colIdx * colWidth + 12}" y="${rowY + 12}"
                       width="${blockWidth}" height="10"
                       rx="4"

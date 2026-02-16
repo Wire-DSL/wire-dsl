@@ -38,6 +38,11 @@ const alignEnum: PropertyMetadata = { name: 'align', type: 'enum', options: ['ju
 const paddingEnum: PropertyMetadata = { name: 'padding', type: 'enum', options: ['sm', 'md', 'lg'] };
 const gapEnum: PropertyMetadata = { name: 'gap', type: 'enum', options: ['sm', 'md', 'lg'] };
 const spacingSizeEnum: PropertyMetadata = { name: 'size', type: 'enum', options: ['none', 'xs', 'sm', 'md', 'lg', 'xl'] };
+const headingLevelEnum: PropertyMetadata = {
+  name: 'level',
+  type: 'enum',
+  options: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'],
+};
 
 export const COMPONENTS: Record<string, ComponentMetadata> = {
   // Text Components
@@ -46,8 +51,9 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     description: 'Large heading/title text',
     properties: {
       text: { name: 'text', type: 'string' },
+      level: headingLevelEnum,
     },
-    example: 'component Heading text: "Users"',
+    example: 'component Heading text: "Users" level: h2',
   },
   Text: {
     name: 'Text',
@@ -183,9 +189,34 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     name: 'Table',
     description: 'Displays data in a tabular format.',
     properties: {
-      // Properties not defined as per user request
+      columns: { name: 'columns', type: 'string' },
+      rows: { name: 'rows', type: 'number' },
+      rowsMock: { name: 'rowsMock', type: 'number' },
+      mock: { name: 'mock', type: 'string' },
+      random: { name: 'random', type: 'boolean' },
     },
-    example: 'component Table data: [...] { ... }',
+    example: 'component Table columns: "User,City,Amount" rows: 8 mock: "name,city,amount"',
+  },
+  List: {
+    name: 'List',
+    description: 'Displays a vertical list of items.',
+    properties: {
+      title: { name: 'title', type: 'string' },
+      items: { name: 'items', type: 'string' },
+      itemsMock: { name: 'itemsMock', type: 'number' },
+      mock: { name: 'mock', type: 'string' },
+      random: { name: 'random', type: 'boolean' },
+    },
+    example: 'component List title: "Cities" itemsMock: 6 mock: "city"',
+  },
+  Chart: {
+    name: 'Chart',
+    description: 'Renders a chart with type variants.',
+    properties: {
+      type: { name: 'type', type: 'enum', options: ['bar', 'line', 'pie'] },
+      height: { name: 'height', type: 'number' },
+    },
+    example: 'component Chart type: "bar" height: 240',
   },
 };
 

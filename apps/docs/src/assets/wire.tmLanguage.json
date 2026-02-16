@@ -71,7 +71,7 @@
       "patterns": [
         {
           "name": "entity.name.class.wire",
-          "match": "\\b(Heading|Text|Label|Button|IconButton|Input|Textarea|Select|Checkbox|CheckboxGroup|Radio|RadioGroup|Toggle|Image|Icon|Divider|Separate|Badge|Link|Breadcrumbs|Tabs|SidebarMenu|Topbar|Sidebar|Panel|Card|StatCard|ChartPlaceholder|Table|List|Modal|Alert|Code|Spinner)\\b"
+          "match": "\\b(Heading|Text|Label|Button|IconButton|Input|Textarea|Select|Checkbox|CheckboxGroup|Radio|RadioGroup|Toggle|Image|Icon|Divider|Separate|Badge|Link|Breadcrumbs|Tabs|SidebarMenu|Topbar|Sidebar|Panel|Card|StatCard|Chart|ChartPlaceholder|Table|List|Modal|Alert|Code|Spinner)\\b"
         }
       ]
     },
@@ -79,7 +79,7 @@
       "patterns": [
         {
           "name": "variable.other.property.wire",
-          "match": "\\b(title|subtitle|text|content|label|placeholder|items|active|variant|user|icon|rows|columns|span|sidebar|direction|gap|padding|size|background|color|align|radius|border|mock|density|spacing|stroke|font|disabled|required|readonly|type|value|src|alt|height|itemsMock|dismissible)\\b"
+          "match": "\\b(title|subtitle|text|content|label|placeholder|items|active|variant|user|icon|rows|rowsMock|columns|span|sidebar|direction|gap|padding|size|level|background|color|align|radius|border|mock|random|density|spacing|stroke|font|disabled|required|readonly|type|value|src|alt|height|itemsMock|dismissible)\\b"
         }
       ]
     },

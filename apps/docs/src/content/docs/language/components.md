@@ -15,14 +15,16 @@ Large, bold text for page titles and section headers.
 
 **Properties**:
 - `text` (string): The heading text
+- `level` (enum): Visual heading level - `h1` | `h2` | `h3` | `h4` | `h5` | `h6` (default: `h2`)
 
 **Example**:
 ```wire
-component Heading text: "Dashboard"
-component Heading text: "User Management"
+component Heading text: "Dashboard" level: h1
+component Heading text: "User Management" level: h2
+component Heading text: "Section title" level: h3
 ```
 
-**Rendering**: Bold text at 24-28px font size
+**Rendering**: Bold text with size based on `level`
 
 ---
 
@@ -323,13 +325,18 @@ Data table with rows and columns.
 
 **Properties**:
 - `columns` (string, CSV): Column headers (required)
-- `rows` (number): Number of mock rows to display (default: 5)
+- `rows` (number): Number of rows to display (default: 5)
+- `rowsMock` (number): Alias for `rows`
+- `mock` (string, CSV): Mock type by column position (for example: `"name,city,amount"`)
+- `random` (boolean): If `true`, mock values vary on each render (default: deterministic)
 
 **Example**:
 ```wire
 component Table columns: "Name,Email,Status" rows: 8
 component Table columns: "ID,Name,Email,Role" rows: 10
 component Table columns: "Date,Amount,Status,Notes" rows: 15
+component Table columns: "User,City,Amount" rows: 6 mock: "name,city,amount"
+component Table columns: "User,City,Amount" rows: 6 random: true
 ```
 
 **Rendering**: Grid table with header row and mock data rows
@@ -344,12 +351,16 @@ Simple list of items.
 - `items` (string, CSV): List item labels
 - `title` (string, optional): List title/header
 - `itemsMock` (number, optional): Number of mock items to generate
+- `mock` (string, optional): Mock type used when `items` is not provided
+- `random` (boolean): If `true`, mock values vary on each render (default: deterministic)
 
 **Example**:
 ```wire
 component List items: "JavaScript,TypeScript,Python,Java"
 component List items: "Feature 1,Feature 2,Feature 3,Feature 4"
 component List title: "Recent Activity" items: "Login,Purchase,Invite,Export"
+component List title: "Cities" itemsMock: 5 mock: "city"
+component List title: "Cities" itemsMock: 5 mock: "city" random: true
 ```
 
 **Rendering**: Vertical list with bullet points or numbers
@@ -492,7 +503,7 @@ component Code code: "SELECT * FROM users WHERE active = true;"
 
 ---
 
-### ChartPlaceholder
+### Chart
 
 Placeholder for various chart types.
 
@@ -502,9 +513,9 @@ Placeholder for various chart types.
 
 **Example**:
 ```wire
-component ChartPlaceholder type: "bar" height: 250
-component ChartPlaceholder type: "line" height: 300
-component ChartPlaceholder type: "pie" height: 200
+component Chart type: "bar" height: 250
+component Chart type: "line" height: 300
+component Chart type: "pie" height: 200
 ```
 
 **Rendering**: Chart area with placeholder bars/lines/segments
@@ -578,7 +589,7 @@ component Spinner
 | Alert | Display | Alert message |
 | StatCard | Info | Metric display |
 | Code | Info | Code block |
-| ChartPlaceholder | Info | Chart area |
+| Chart | Info | Chart area |
 | Modal | Overlay | Dialog box |
 | Spinner | Feedback | Loading indicator |
 

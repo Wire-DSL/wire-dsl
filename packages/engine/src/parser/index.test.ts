@@ -136,6 +136,30 @@ describe('WireDSL Parser', () => {
     }
   });
 
+  it('should parse Heading level property', () => {
+    const input = `
+      project "HeadingLevel" {
+        screen Main {
+          layout stack {
+            component Heading text: "Page title" level: h1
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const heading = ast.screens[0].layout.children[0];
+
+    expect(heading.type).toBe('component');
+    if (heading.type === 'component') {
+      expect(heading.componentType).toBe('Heading');
+      expect(heading.props).toEqual({
+        text: 'Page title',
+        level: 'h1',
+      });
+    }
+  });
+
   it('should parse numeric values', () => {
     const input = `
       project "Numbers" {
@@ -157,6 +181,30 @@ describe('WireDSL Parser', () => {
     if (component.type === 'component') {
       expect(component.props.height).toBe(300);
       expect(component.props.width).toBe(600);
+    }
+  });
+
+  it('should parse Chart component with type and height', () => {
+    const input = `
+      project "Chart" {
+        screen Main {
+          layout stack {
+            component Chart type: "pie" height: 240
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const component = ast.screens[0].layout.children[0];
+
+    expect(component.type).toBe('component');
+    if (component.type === 'component') {
+      expect(component.componentType).toBe('Chart');
+      expect(component.props).toEqual({
+        type: 'pie',
+        height: 240,
+      });
     }
   });
 
