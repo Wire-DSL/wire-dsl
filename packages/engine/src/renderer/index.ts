@@ -87,6 +87,8 @@ export class SVGRenderer {
     // Resolve design tokens based on style (density-aware)
     this.tokens = resolveTokens(ir.project.style);
 
+    console.log('Original options:', options);
+    
     this.options = {
       width: options?.width || 1280,
       height: options?.height || 720,
@@ -94,6 +96,8 @@ export class SVGRenderer {
       includeLabels: options?.includeLabels ?? true,
       screenName: options?.screenName,
     };
+    
+    console.log('Final options:', this.options);
     this.renderTheme = THEMES[this.options.theme];
     this.colorResolver = new ColorResolver();
 

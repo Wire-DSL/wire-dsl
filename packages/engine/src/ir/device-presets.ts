@@ -48,12 +48,47 @@ export const DEVICE_PRESETS: Record<string, DevicePreset> = {
     category: 'print',
     description: 'A4 portrait at 96 DPI',
   },
-  a4: {
-    name: 'Print A4',
-    width: 794,
-    minHeight: 1123,
+  'mobile-landscape': {
+    name: 'Mobile Landscape',
+    width: 812,
+    minHeight: 375,
+    category: 'mobile',
+    description: 'Mobile landscape viewport',
+  },
+  'mobile-min': {
+    name: 'Mobile Minimum',
+    width: 375,
+    minHeight: 375,
+    category: 'mobile',
+    description: 'Mobile minimum viewport',
+  },
+  'desktop-min': {
+    name: 'Desktop Minimum',
+    width: 1280,
+    minHeight: 640,
+    category: 'desktop',
+    description: 'Desktop minimum viewport',
+  },
+  'tablet-landscape': {
+    name: 'Tablet Landscape',
+    width: 1024,
+    minHeight: 768,
+    category: 'tablet',
+    description: 'Tablet landscape viewport',
+  },
+  'tablet-min': {
+    name: 'Tablet Minimum',
+    width: 768,
+    minHeight: 384,
+    category: 'tablet',
+    description: 'Tablet minimum viewport',
+  },
+  'print-landscape': {
+    name: 'Print A4 Landscape',
+    width: 1123,
+    minHeight: 794,
     category: 'print',
-    description: 'A4 alias at 96 DPI',
+    description: 'A4 landscape at 96 DPI',
   },
 };
 
