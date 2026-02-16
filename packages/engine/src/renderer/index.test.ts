@@ -963,6 +963,80 @@ describe('Skeleton SVG Renderer', () => {
     expect(svg).toMatch(/<rect[^>]*fill="[^"]*"/);
   });
 
+  it('should render wrapped text as multiple skeleton blocks', () => {
+    const input = `
+      project "Test" {
+        style {
+          device: "mobile"
+        }
+        screen Main {
+          layout stack {
+            component Text content: "This is a very long text content that should wrap into multiple lines in skeleton mode before reaching the viewport edge"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+
+    const renderer = new SkeletonSVGRenderer(ir, layout);
+    const svg = renderer.render();
+
+    expect(svg).not.toContain('This is a very long text content');
+    expect((svg.match(/<rect /g) || []).length).toBeGreaterThan(2);
+  });
+
+  it('should render alert title/text as wrapped skeleton blocks', () => {
+    const input = `
+      project "Test" {
+        style {
+          device: "mobile"
+        }
+        screen Main {
+          layout stack {
+            component Alert variant: "warning" title: "Very important warning title that must wrap" text: "This alert body should also wrap and render multiple placeholder rows in skeleton mode"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+
+    const renderer = new SkeletonSVGRenderer(ir, layout);
+    const svg = renderer.render();
+
+    expect(svg).not.toContain('Very important warning');
+    expect(svg).not.toContain('This alert body should also wrap');
+    expect((svg.match(/<rect /g) || []).length).toBeGreaterThan(4);
+  });
+
+  it('should render link as skeleton placeholder and underline with variant tint', () => {
+    const input = `
+      project "Test" {
+        screen Main {
+          layout stack {
+            component Link text: "Delete account" variant: "danger"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+
+    const renderer = new SkeletonSVGRenderer(ir, layout);
+    const svg = renderer.render();
+
+    expect(svg).not.toContain('>Delete account<');
+    expect(svg).toContain('<line');
+    expect(svg).toContain('rgba(239, 68, 68, 0.55)');
+  });
+
   it('should hide icons', () => {
     const input = `
       project "Test" {

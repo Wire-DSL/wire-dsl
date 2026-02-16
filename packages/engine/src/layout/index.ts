@@ -577,7 +577,7 @@ export class LayoutEngine {
       spacing,
       this.style.spacing || 'md',
       (this.style.density || 'normal') as DensityLevel,
-      false
+      true
     );
   }
 

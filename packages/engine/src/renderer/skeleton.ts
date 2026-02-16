@@ -57,24 +57,68 @@ export class SkeletonSVGRenderer extends SVGRenderer {
   }
 
   /**
+   * Render link as placeholder block + underline (no text)
+   */
+  protected renderLink(node: IRComponentNode, pos: any): string {
+    const text = String(node.props.text || 'Link');
+    const variant = String(node.props.variant || 'primary');
+    const fontSize = this.tokens.button.fontSize;
+    const paddingX = this.tokens.button.paddingX;
+    const paddingY = this.tokens.button.paddingY;
+    const linkColor = this.resolveVariantColor(variant, this.renderTheme.primary);
+
+    const textWidth = text.length * fontSize * 0.6;
+    const linkWidth = Math.max(textWidth + paddingX * 2, 60);
+    const linkHeight = fontSize + paddingY * 2;
+    const blockHeight = Math.max(8, Math.round(fontSize * 0.75));
+    const blockWidth = Math.max(28, Math.min(textWidth, linkWidth - paddingX * 2));
+    const blockX = pos.x + (linkWidth - blockWidth) / 2;
+    const blockY = pos.y + (linkHeight - blockHeight) / 2 - 1;
+    const underlineY = blockY + blockHeight + 4;
+
+    return `<g${this.getDataNodeId(node)}>
+      <rect x="${blockX}" y="${blockY}"
+            width="${blockWidth}" height="${blockHeight}"
+            rx="4"
+            fill="${this.hexToRgba(linkColor, 0.25)}"/>
+      <line x1="${blockX}" y1="${underlineY}"
+            x2="${blockX + blockWidth}" y2="${underlineY}"
+            stroke="${this.hexToRgba(linkColor, 0.55)}"
+            stroke-width="1"/>
+    </g>`;
+  }
+
+  /**
    * Render heading as gray block
    */
   protected renderHeading(node: IRComponentNode, pos: any): string {
-    return this.renderTextBlock(node, pos, String(node.props.text || 'Heading'), this.tokens.heading.fontSize);
+    return this.renderTextBlock(
+      node,
+      pos,
+      String(node.props.text || 'Heading'),
+      this.tokens.heading.fontSize,
+      1.25
+    );
   }
 
   /**
    * Render text as gray block
    */
   protected renderText(node: IRComponentNode, pos: any): string {
-    return this.renderTextBlock(node, pos, String(node.props.content || 'Text content'), this.tokens.text.fontSize);
+    return this.renderTextBlock(
+      node,
+      pos,
+      String(node.props.content || 'Text content'),
+      this.tokens.text.fontSize,
+      this.tokens.text.lineHeight
+    );
   }
 
   /**
    * Render label as gray block
    */
   protected renderLabel(node: IRComponentNode, pos: any): string {
-    return this.renderTextBlock(node, pos, String(node.props.text || 'Label'), 12);
+    return this.renderTextBlock(node, pos, String(node.props.text || 'Label'), 12, 1.2);
   }
 
   /**
@@ -108,9 +152,34 @@ export class SkeletonSVGRenderer extends SVGRenderer {
     const text = String(node.props.text || 'Alert message');
     const bgColor = this.resolveVariantColor(variant, this.getSemanticVariantColor(variant) || '#3B82F6');
     const hasTitle = title.trim().length > 0;
+    const fontSize = 13;
+    const titleLineHeight = Math.ceil(fontSize * 1.25);
+    const textLineHeight = Math.ceil(fontSize * 1.4);
+    const blockHeight = Math.max(8, Math.round(fontSize * 0.75));
+    const contentX = pos.x + 16;
     const contentWidth = Math.max(20, pos.width - 32);
-    const titleLines = hasTitle ? this.wrapTextToLines(title, contentWidth, 12) : [];
-    const textLines = this.wrapTextToLines(text, contentWidth, 12);
+    const titleLines = hasTitle ? this.wrapTextToLines(title, contentWidth, fontSize) : [];
+    const textLines = this.wrapTextToLines(text, contentWidth, fontSize);
+    const titleStartY = pos.y + 8;
+    const textStartY = titleStartY + titleLines.length * titleLineHeight + (hasTitle ? 6 : 0);
+    const titleBlocks = this.renderWrappedLineBlocks(
+      contentX,
+      titleStartY,
+      contentWidth,
+      titleLines,
+      fontSize,
+      titleLineHeight,
+      blockHeight
+    );
+    const textBlocks = this.renderWrappedLineBlocks(
+      contentX,
+      textStartY,
+      contentWidth,
+      textLines,
+      fontSize,
+      textLineHeight,
+      blockHeight
+    );
 
     return `<g${this.getDataNodeId(node)}>
       <rect x="${pos.x}" y="${pos.y}"
@@ -123,18 +192,8 @@ export class SkeletonSVGRenderer extends SVGRenderer {
             width="4" height="${pos.height}"
             rx="6"
             fill="${bgColor}"/>
-      ${
-        hasTitle
-          ? `<rect x="${pos.x + 16}" y="${pos.y + 8}"
-            width="${Math.min(pos.width - 32, Math.max(60, titleLines[0]?.length ? titleLines[0].length * 7 : 60))}" height="10"
-            rx="4"
-            fill="${this.renderTheme.border}"/>`
-          : ''
-      }
-      <rect x="${pos.x + 16}" y="${hasTitle ? pos.y + 22 : pos.y + pos.height / 2 - 6}"
-            width="${Math.min(pos.width - 32, Math.max(80, textLines[0]?.length ? textLines[0].length * 7 : 80))}" height="12"
-            rx="4"
-            fill="${this.renderTheme.border}"/>
+      ${titleBlocks}
+      ${textBlocks}
     </g>`;
   }
 
@@ -535,18 +594,55 @@ export class SkeletonSVGRenderer extends SVGRenderer {
     node: IRComponentNode,
     pos: any,
     text: string,
-    fontSize: number
+    fontSize: number,
+    lineHeightMultiplier: number
   ): string {
-    const charWidth = fontSize * 0.6;
-    const blockWidth = Math.min(text.length * charWidth, pos.width);
-    const blockHeight = fontSize + 4;
+    const lineHeight = Math.ceil(fontSize * lineHeightMultiplier);
+    const blockHeight = Math.max(8, Math.round(fontSize * 0.75));
     const blockColor = this.renderTheme.border;
+    const lines = this.wrapTextToLines(text, pos.width, fontSize);
+    const contentHeight = lines.length * lineHeight;
+    const startY = pos.y + Math.max(0, (pos.height - contentHeight) / 2);
+    const lineBlocks = this.renderWrappedLineBlocks(
+      pos.x,
+      startY,
+      pos.width,
+      lines,
+      fontSize,
+      lineHeight,
+      blockHeight,
+      blockColor
+    );
 
     return `<g${this.getDataNodeId(node)}>
-      <rect x="${pos.x}" y="${pos.y + (pos.height - blockHeight) / 2}"
-            width="${blockWidth}" height="${blockHeight}"
-            rx="4"
-            fill="${blockColor}"/>
+      ${lineBlocks}
     </g>`;
+  }
+
+  private renderWrappedLineBlocks(
+    x: number,
+    startY: number,
+    maxWidth: number,
+    lines: string[],
+    fontSize: number,
+    lineHeight: number,
+    blockHeight: number,
+    color: string = this.renderTheme.border
+  ): string {
+    const charWidth = fontSize * 0.6;
+    const minWidth = Math.max(20, Math.min(maxWidth, fontSize * 2));
+
+    return lines
+      .map((line, index) => {
+        const width = line.trim()
+          ? Math.max(minWidth, Math.min(maxWidth, line.length * charWidth))
+          : minWidth;
+        const y = startY + index * lineHeight + Math.max(0, (lineHeight - blockHeight) / 2);
+        return `<rect x="${x}" y="${y}"
+            width="${width}" height="${blockHeight}"
+            rx="4"
+            fill="${color}"/>`;
+      })
+      .join('\n      ');
   }
 }

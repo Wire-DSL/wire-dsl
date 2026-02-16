@@ -1727,7 +1727,7 @@ export class SVGRenderer {
       spacing,
       this.ir.project.style.spacing || 'md',
       (this.ir.project.style.density || 'normal') as DensityLevel,
-      false
+      true
     );
   }
 

@@ -60,6 +60,48 @@ describe('Layout Engine', () => {
     expect(gap).toBe(16);
   });
 
+  it('should scale stack gap with density for same token', () => {
+    const compactInput = `
+      project "GapCompact" {
+        style { density: "compact" }
+        screen Main {
+          layout stack(direction: vertical, gap: md) {
+            component Button text: "First"
+            component Button text: "Second"
+          }
+        }
+      }
+    `;
+    const comfortableInput = `
+      project "GapComfortable" {
+        style { density: "comfortable" }
+        screen Main {
+          layout stack(direction: vertical, gap: md) {
+            component Button text: "First"
+            component Button text: "Second"
+          }
+        }
+      }
+    `;
+
+    const compactIr = generateIR(parseWireDSL(compactInput));
+    const comfortableIr = generateIR(parseWireDSL(comfortableInput));
+    const compactLayout = calculateLayout(compactIr);
+    const comfortableLayout = calculateLayout(comfortableIr);
+
+    const compactComponents = Object.entries(compactIr.project.nodes)
+      .filter(([_, node]) => node.kind === 'component')
+      .map(([id]) => compactLayout[id]);
+    const comfortableComponents = Object.entries(comfortableIr.project.nodes)
+      .filter(([_, node]) => node.kind === 'component')
+      .map(([id]) => comfortableLayout[id]);
+
+    const compactGap = compactComponents[1].y - (compactComponents[0].y + compactComponents[0].height);
+    const comfortableGap = comfortableComponents[1].y - (comfortableComponents[0].y + comfortableComponents[0].height);
+
+    expect(compactGap).toBeLessThan(comfortableGap);
+  });
+
   it('should stack horizontally with correct spacing', () => {
     const input = `
       project "Horizontal" {
