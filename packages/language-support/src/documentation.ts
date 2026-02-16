@@ -118,7 +118,8 @@ export function getKeywordDocumentation(keyword: string): string | null {
     define: 'Define a reusable custom component (define Component "Name" { ... })',
     Component: 'Keyword for defining custom components',
     style: 'Configure global style tokens (density, spacing, radius, stroke, font, background, theme, device)',
-    colors: 'Define custom color values',
+    colors:
+      'Define project color tokens (e.g. variants `primary`, `danger` and semantic tokens `accent`, `control`, `chart`)',
     mocks: 'Define mock data for components',
     stack: 'Stack layout - arrange items in row or column',
     grid: 'Grid layout - 12-column flexible grid',

@@ -24,6 +24,13 @@ project "MyApp" {
     font: "base"
   }
 
+  colors {
+    primary: #3B82F6
+    accent: #3B82F6
+    control: #3B82F6
+    chart: #3B82F6
+  }
+
   screen Dashboard { ... }
 }
 ```
@@ -39,6 +46,53 @@ Style properties are optional. When provided, values must be quoted strings; omi
 | `radius` | string | `"none"`, `"sm"`, `"md"`, `"lg"`, `"full"` | `"md"` | Border radius on components |
 | `stroke` | string | `"thin"`, `"normal"`, `"thick"` | `"normal"` | Border thickness |
 | `font` | string | `"sm"`, `"base"`, `"lg"` | `"base"` | Typography scale |
+
+---
+
+## Colors Block (Project Level)
+
+Alongside `style`, you can define a `colors` block at project root to customize variants and semantic color tokens used by renderers.
+
+```wire
+project "ThemedApp" {
+  style {
+    density: "normal"
+    spacing: "md"
+    radius: "md"
+    stroke: "normal"
+    font: "base"
+  }
+
+  colors {
+    primary: #2563EB
+    secondary: #64748B
+    success: #10B981
+    warning: #F59E0B
+    danger: #EF4444
+    info: #0EA5E9
+
+    accent: #2563EB
+    control: #16A34A
+    chart: #F97316
+  }
+}
+```
+
+### What `colors` affects
+
+- Variant-driven components (`Button`, `Badge`, `Link`, `Alert`, `IconButton`, etc.) through `primary`, `secondary`, `success`, `warning`, `danger`, `info` (and `error`)
+- Semantic renderer tokens:
+  - `accent`: Topbar icon/actions, active Tabs, StatCard highlighted value/icon, selected SidebarMenu item
+  - `control`: selected/enabled states for Checkbox, Radio, Toggle
+  - `chart`: Chart types line/area/bar
+
+### Value formats
+
+- Hex: `#RRGGBB`
+- Alias to another key: `brand: primary`
+- Named color identifier: `blue`, `red`, `green`, etc.
+
+**Note**: Pie charts use a fixed multi-color palette and do not use `chart` as a single color.
 
 ---
 

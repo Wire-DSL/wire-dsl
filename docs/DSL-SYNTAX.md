@@ -12,6 +12,13 @@ project "Project Name" {
     font: "base"
   }
 
+  colors {
+    primary: #3B82F6
+    accent: #3B82F6
+    control: #3B82F6
+    chart: #3B82F6
+  }
+
   screen ScreenName {
     layout <type> {
       // content
@@ -34,6 +41,13 @@ project "Admin Dashboard" {
     radius: "md"
     stroke: "normal"
     font: "base"
+  }
+
+  colors {
+    primary: #3B82F6
+    accent: #3B82F6
+    control: #3B82F6
+    chart: #3B82F6
   }
 
   screen UsersList { ... }
@@ -90,6 +104,50 @@ project "App" {
 - `"compact"`: Condensed UI
 - `"normal"`: Standard (recommended)
 - `"comfortable"`: Spacious
+
+---
+
+### Colors Block
+
+Defines project-level color tokens.
+
+```wire
+project "App" {
+  colors {
+    primary: #3B82F6
+    danger: #EF4444
+    accent: #2563EB
+    control: #16A34A
+    chart: #F97316
+    brand: primary
+  }
+}
+```
+
+**Rules**:
+
+- Block name is `colors` (plural)
+- Entries are `key: value`
+- `value` can be:
+  - a hex color (`#RRGGBB`)
+  - another color key (alias/chaining), e.g. `brand: primary`
+  - a named color identifier (e.g. `blue`, `red`, `green`)
+
+**Built-in variant keys (for `variant` props)**:
+
+- `primary`, `secondary`, `success`, `warning`, `danger`, `info` (and `error`)
+
+You can override any of them in `colors`.
+
+**Semantic keys**:
+
+- `accent`: used by `Topbar` icon/actions, active `Tabs`, `StatCard` highlighted value/icon, selected `SidebarMenu` item
+- `control`: used by selected/enabled states in `Checkbox`, `Radio`, `Toggle`
+- `chart`: used by `Chart` types `line`, `area`, and `bar`
+
+**Note**:
+
+- `Chart` type `pie` keeps a fixed multi-color palette and does not use `chart` as single fill.
 
 ---
 
