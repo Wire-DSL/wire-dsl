@@ -151,6 +151,13 @@ export const PROPERTY_COMPLETIONS: CompletionItem[] = [
     insertText: 'padding: ${1:none|xs|sm|md|lg|xl}',
   },
   {
+    label: 'spacing',
+    kind: 'Property',
+    detail: 'Spacing token',
+    documentation: 'spacing: sm',
+    insertText: 'spacing: ${1:none|xs|sm|md|lg|xl}',
+  },
+  {
     label: 'color',
     kind: 'Property',
     detail: 'Text color',

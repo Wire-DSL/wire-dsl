@@ -250,11 +250,11 @@ All components validate their specific properties:
 
 | Component | Required Props | Optional Props |
 |-----------|---|---|
-| Heading | `text` | - |
+| Heading | `text` | `level`, `spacing` |
 | Button | `text` | `variant` |
 | Input | `label` | `placeholder` |
 | Table | `columns` | `rows` |
-| Image | `placeholder` | `height` |
+| Image | `placeholder` | `icon`, `height` |
 | Icon | - | `type` |
 | And 17 more... | - | - |
 

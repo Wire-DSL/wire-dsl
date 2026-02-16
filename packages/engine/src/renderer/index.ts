@@ -7,6 +7,7 @@ import { resolveTokens, type DesignTokens } from './tokens';
 import { resolveSpacingToken, type DensityLevel } from '../shared/spacing';
 import { resolveIconButtonSize, resolveIconSize } from '../shared/component-sizes';
 import { resolveHeadingTypography } from '../shared/heading-levels';
+import { resolveHeadingVerticalPadding } from '../shared/heading-spacing';
 
 /**
  * SVG Renderer
@@ -334,10 +335,11 @@ export class SVGRenderer {
     const fontWeight = headingTypography.fontWeight;
     const lineHeightPx = Math.ceil(fontSize * headingTypography.lineHeight);
     const lines = this.wrapTextToLines(text, pos.width, fontSize);
+    const firstLineY = this.getHeadingFirstLineY(node, pos, fontSize, lineHeightPx, lines.length);
 
     if (lines.length <= 1) {
       return `<g${this.getDataNodeId(node)}>
-    <text x="${pos.x}" y="${pos.y + pos.height / 2 + fontSize * 0.3}"
+    <text x="${pos.x}" y="${firstLineY}"
           font-family="system-ui, -apple-system, sans-serif"
           font-size="${fontSize}"
           font-weight="${fontWeight}"
@@ -345,7 +347,6 @@ export class SVGRenderer {
   </g>`;
     }
 
-    const firstLineY = pos.y + fontSize;
     const tspans = lines
       .map(
         (line, index) =>
@@ -484,22 +485,8 @@ export class SVGRenderer {
     const subtitle = String(node.props.subtitle || '');
     const actions = String(node.props.actions || '');
     const user = String(node.props.user || '');
-
-    // Calculate title position: center vertically or padded with subtitle
-    const titleLineHeight = 18;
-    const paddingTop = 24; // adjusted top padding
-
-    let titleY: number;
-    let subtitleY: number = 0; // Initialize to avoid usage before assignment
-
-    if (subtitle) {
-      // Title near top with fixed padding; subtitle below with comfortable gap
-      titleY = pos.y + paddingTop;
-      subtitleY = titleY + 20; // gap between title baseline and subtitle baseline
-    } else {
-      // Center title vertically when no subtitle
-      titleY = pos.y + pos.height / 2 + titleLineHeight / 2 - 4; // centered with slight upward shift
-    }
+    const accentColor = this.resolveAccentColor();
+    const topbar = this.calculateTopbarLayout(node, pos, title, subtitle, actions, user);
 
     let svg = `<g${this.getDataNodeId(node)}>
     <rect x="${pos.x}" y="${pos.y}" 
@@ -509,70 +496,82 @@ export class SVGRenderer {
           stroke-width="1"/>
     
     <!-- Title -->
-    <text x="${pos.x + 16}" y="${titleY}" 
+    <text x="${topbar.textX}" y="${topbar.titleY}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="18" 
           font-weight="600" 
-          fill="${this.renderTheme.text}">${this.escapeXml(title)}</text>`;
+          fill="${this.renderTheme.text}">${this.escapeXml(topbar.visibleTitle)}</text>`;
 
     // Subtitle
-    if (subtitle) {
+    if (topbar.hasSubtitle) {
       svg += `
-    <text x="${pos.x + 16}" y="${subtitleY}" 
+    <text x="${topbar.textX}" y="${topbar.subtitleY}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="13" 
-          fill="${this.renderTheme.textMuted}">${this.escapeXml(subtitle)}</text>`;
+          fill="${this.renderTheme.textMuted}">${this.escapeXml(topbar.visibleSubtitle)}</text>`;
     }
 
-    // User badge (top-right, above actions)
-    if (user) {
-      const badgeHeight = 28;
-      const badgePaddingX = 12;
-      const badgeX = pos.x + pos.width - 16 - badgePaddingX * 2 - user.length * 7.5;
-      const badgeY = pos.y + 12;
-
+    if (topbar.leftIcon) {
       svg += `
-    <!-- User badge -->
-    <rect x="${badgeX}" y="${badgeY}" 
-          width="${badgePaddingX * 2 + user.length * 7.5}" height="${badgeHeight}" 
-          rx="4" 
-          fill="${this.renderTheme.cardBg}" 
-          stroke="${this.renderTheme.border}" 
+    <!-- Left icon -->
+    <rect x="${topbar.leftIcon.badgeX}" y="${topbar.leftIcon.badgeY}"
+          width="${topbar.leftIcon.badgeSize}" height="${topbar.leftIcon.badgeSize}"
+          rx="${topbar.leftIcon.badgeRadius}"
+          fill="${this.hexToRgba(accentColor, 0.12)}"
+          stroke="${this.hexToRgba(accentColor, 0.35)}"
           stroke-width="1"/>
-    <text x="${badgeX + badgePaddingX + user.length * 3.75}" y="${badgeY + badgeHeight / 2 + 4}" 
-          font-family="system-ui, -apple-system, sans-serif" 
-          font-size="12" 
-          fill="${this.renderTheme.text}" 
-          text-anchor="middle">${this.escapeXml(user)}</text>`;
+    <g transform="translate(${topbar.leftIcon.iconX}, ${topbar.leftIcon.iconY})">
+      <svg width="${topbar.leftIcon.iconSize}" height="${topbar.leftIcon.iconSize}" viewBox="0 0 24 24" fill="none" stroke="${accentColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        ${this.extractSvgContent(topbar.leftIcon.iconSvg)}
+      </svg>
+    </g>`;
     }
 
-    // Actions (as buttons on the right)
-    if (actions) {
-      const actionList = actions
-        .split(',')
-        .map((a) => a.trim())
-        .filter(Boolean);
-      const buttonWidth = 100;
-      const buttonHeight = 32;
-      const buttonStartX = pos.x + pos.width - 16 - actionList.length * (buttonWidth + 8);
-      const buttonY = pos.y + (pos.height - buttonHeight) / 2;
-
-      actionList.forEach((action, idx) => {
-        const bx = buttonStartX + idx * (buttonWidth + 8);
-        svg += `
-    <!-- Action button: ${action} -->
-    <rect x="${bx}" y="${buttonY}" 
-          width="${buttonWidth}" height="${buttonHeight}" 
+    // Actions are anchored to the right but shifted left when user/avatar occupy space.
+    topbar.actions.forEach((action) => {
+      svg += `
+    <!-- Action button: ${action.label} -->
+    <rect x="${action.x}" y="${action.y}" 
+          width="${action.width}" height="${action.height}" 
           rx="6" 
-          fill="${this.renderTheme.primary}" 
+          fill="${accentColor}" 
           stroke="none"/>
-    <text x="${bx + buttonWidth / 2}" y="${buttonY + buttonHeight / 2 + 4}" 
+    <text x="${action.x + action.width / 2}" y="${action.y + action.height / 2 + 4}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="12" 
           font-weight="600" 
           fill="white" 
-          text-anchor="middle">${this.escapeXml(action)}</text>`;
-      });
+          text-anchor="middle">${this.escapeXml(action.label)}</text>`;
+    });
+
+    if (topbar.userBadge) {
+      svg += `
+    <!-- User badge -->
+    <rect x="${topbar.userBadge.x}" y="${topbar.userBadge.y}" 
+          width="${topbar.userBadge.width}" height="${topbar.userBadge.height}" 
+          rx="4" 
+          fill="${this.renderTheme.cardBg}" 
+          stroke="${this.renderTheme.border}" 
+          stroke-width="1"/>
+    <text x="${topbar.userBadge.x + topbar.userBadge.width / 2}" y="${topbar.userBadge.y + topbar.userBadge.height / 2 + 4}" 
+          font-family="system-ui, -apple-system, sans-serif" 
+          font-size="12" 
+          fill="${this.renderTheme.text}" 
+          text-anchor="middle">${this.escapeXml(topbar.userBadge.label)}</text>`;
+    }
+
+    if (topbar.avatar) {
+      svg += `
+    <!-- Avatar -->
+    <circle cx="${topbar.avatar.cx}" cy="${topbar.avatar.cy}" r="${topbar.avatar.r}"
+            fill="${this.renderTheme.cardBg}"
+            stroke="${this.renderTheme.border}"
+            stroke-width="1"/>
+    <circle cx="${topbar.avatar.cx}" cy="${topbar.avatar.cy - topbar.avatar.r * 0.22}" r="${topbar.avatar.r * 0.28}"
+            fill="${this.renderTheme.textMuted}" opacity="0.7"/>
+    <rect x="${topbar.avatar.cx - topbar.avatar.r * 0.45}" y="${topbar.avatar.cy + topbar.avatar.r * 0.02}"
+          width="${topbar.avatar.r * 0.9}" height="${topbar.avatar.r * 0.62}" rx="${topbar.avatar.r * 0.3}"
+          fill="${this.renderTheme.textMuted}" opacity="0.7"/>`;
     }
 
     svg += '\n  </g>';
@@ -805,6 +804,7 @@ export class SVGRenderer {
   protected renderChartPlaceholder(node: IRComponentNode, pos: any): string {
     const type = String(node.props.type || 'bar').toLowerCase();
     const chartHeight = Number(node.props.height);
+    const chartColor = this.resolveChartColor();
     const resolvedHeight = !isNaN(chartHeight) && chartHeight > 0 ? chartHeight : pos.height;
     const frameHeight = Math.min(pos.height, resolvedHeight);
     const frameY = pos.y + Math.max(0, (pos.height - frameHeight) / 2);
@@ -880,14 +880,14 @@ export class SVGRenderer {
         ].join(' ');
         svg += `
     <path d="${areaPath}"
-          fill="${this.hexToRgba(this.renderTheme.primary, 0.18)}"
+          fill="${this.hexToRgba(chartColor, 0.18)}"
           stroke="none"/>`;
       }
 
       svg += `
     <polyline points="${points}"
           fill="none"
-          stroke="${this.renderTheme.primary}"
+          stroke="${chartColor}"
           stroke-width="2.5"
           stroke-linecap="round"
           stroke-linejoin="round"/>`;
@@ -911,7 +911,7 @@ export class SVGRenderer {
     <rect x="${barX}" y="${barY}"
           width="${barWidth}" height="${height}"
           rx="3"
-          fill="${this.hexToRgba(this.renderTheme.primary, 0.82)}"/>`;
+          fill="${this.hexToRgba(chartColor, 0.82)}"/>`;
       });
     }
 
@@ -982,9 +982,12 @@ export class SVGRenderer {
   protected renderTextarea(node: IRComponentNode, pos: any): string {
     const label = String(node.props.label || '');
     const placeholder = String(node.props.placeholder || 'Enter text...');
+    const fontSize = this.tokens.input.fontSize;
+    const paddingX = this.tokens.input.paddingX;
     const labelOffset = this.getControlLabelOffset(label);
     const controlY = pos.y + labelOffset;
     const controlHeight = Math.max(20, pos.height - labelOffset);
+    const placeholderY = controlY + fontSize + 6;
 
     return `<g${this.getDataNodeId(node)}>
     ${
@@ -1001,9 +1004,9 @@ export class SVGRenderer {
           fill="${this.renderTheme.cardBg}" 
           stroke="${this.renderTheme.border}" 
           stroke-width="1"/>
-    <text x="${pos.x + 12}" y="${controlY + 20}" 
+    <text x="${pos.x + paddingX}" y="${placeholderY}" 
           font-family="system-ui, -apple-system, sans-serif" 
-          font-size="13" 
+          font-size="${fontSize}" 
           fill="${this.renderTheme.textMuted}">${this.escapeXml(placeholder)}</text>
   </g>`;
   }
@@ -1045,6 +1048,7 @@ export class SVGRenderer {
   protected renderCheckbox(node: IRComponentNode, pos: any): string {
     const label = String(node.props.label || 'Checkbox');
     const checked = String(node.props.checked || 'false').toLowerCase() === 'true';
+    const controlColor = this.resolveControlColor();
 
     const checkboxSize = 18;
     const checkboxY = pos.y + pos.height / 2 - checkboxSize / 2;
@@ -1053,7 +1057,7 @@ export class SVGRenderer {
     <rect x="${pos.x}" y="${checkboxY}" 
           width="${checkboxSize}" height="${checkboxSize}" 
           rx="4" 
-          fill="${checked ? this.renderTheme.primary : this.renderTheme.cardBg}" 
+          fill="${checked ? controlColor : this.renderTheme.cardBg}" 
           stroke="${this.renderTheme.border}" 
           stroke-width="1"/>
     ${
@@ -1075,6 +1079,7 @@ export class SVGRenderer {
   protected renderRadio(node: IRComponentNode, pos: any): string {
     const label = String(node.props.label || 'Radio');
     const checked = String(node.props.checked || 'false').toLowerCase() === 'true';
+    const controlColor = this.resolveControlColor();
 
     const radioSize = 16;
     const radioY = pos.y + pos.height / 2 - radioSize / 2;
@@ -1089,7 +1094,7 @@ export class SVGRenderer {
       checked
         ? `<circle cx="${pos.x + radioSize / 2}" cy="${radioY + radioSize / 2}" 
             r="${radioSize / 3.5}" 
-            fill="${this.renderTheme.primary}"/>`
+            fill="${controlColor}"/>`
         : ''
     }
     <text x="${pos.x + radioSize + 12}" y="${pos.y + pos.height / 2 + 5}" 
@@ -1102,6 +1107,7 @@ export class SVGRenderer {
   protected renderToggle(node: IRComponentNode, pos: any): string {
     const label = String(node.props.label || 'Toggle');
     const enabled = String(node.props.enabled || 'false').toLowerCase() === 'true';
+    const controlColor = this.resolveControlColor();
 
     const toggleWidth = 40;
     const toggleHeight = 20;
@@ -1111,7 +1117,7 @@ export class SVGRenderer {
     <rect x="${pos.x}" y="${toggleY}" 
           width="${toggleWidth}" height="${toggleHeight}" 
           rx="10" 
-          fill="${enabled ? this.renderTheme.primary : this.renderTheme.border}" 
+          fill="${enabled ? controlColor : this.renderTheme.border}" 
           stroke="none"/>
     <circle cx="${pos.x + (enabled ? toggleWidth - 10 : 10)}" cy="${toggleY + toggleHeight / 2}" 
             r="8" 
@@ -1189,6 +1195,7 @@ export class SVGRenderer {
     const activeIndex = Number.isFinite(Number(activeProp))
       ? Math.max(0, Math.floor(Number(activeProp)))
       : 0;
+    const accentColor = this.resolveAccentColor();
     const tabWidth = pos.width / tabs.length;
 
     let svg = `<g${this.getDataNodeId(node)}>
@@ -1201,7 +1208,7 @@ export class SVGRenderer {
       svg += `
     <rect x="${tabX}" y="${pos.y}" 
           width="${tabWidth}" height="44" 
-          fill="${isActive ? this.renderTheme.primary : 'transparent'}" 
+          fill="${isActive ? accentColor : 'transparent'}" 
           stroke="${isActive ? 'none' : this.renderTheme.border}" 
           stroke-width="1"/>
     <text x="${tabX + tabWidth / 2}" y="${pos.y + 28}" 
@@ -1329,6 +1336,11 @@ export class SVGRenderer {
   }
 
   protected renderModal(node: IRComponentNode, pos: any): string {
+    const visible = this.parseBooleanProp(node.props.visible, true);
+    if (!visible) {
+      return '';
+    }
+
     const title = String(node.props.title || 'Modal');
 
     const padding = 16;
@@ -1388,10 +1400,16 @@ export class SVGRenderer {
 
     let items: string[] = [];
     if (itemsStr) {
-      items = itemsStr.split(',').map((i) => i.trim());
+      items = itemsStr
+        .split(',')
+        .map((i) => i.trim())
+        .filter(Boolean);
     } else {
       // Generate mock items from provided mock type or fallback to deterministic names.
-      const itemCount = Number(node.props.itemsMock || 4);
+      const parsedItemsMock = Number(node.props.itemsMock ?? 4);
+      const itemCount = Number.isFinite(parsedItemsMock)
+        ? Math.max(0, Math.floor(parsedItemsMock))
+        : 4;
       const resolvedMockType = mockType || 'name';
       items = MockDataGenerator.generateMockList(resolvedMockType, itemCount, random);
     }
@@ -1423,7 +1441,7 @@ export class SVGRenderer {
     // Items
     items.forEach((item, i) => {
       const itemY = pos.y + titleHeight + i * itemHeight;
-      if (itemY + itemHeight < pos.y + pos.height) {
+      if (itemY + itemHeight <= pos.y + pos.height) {
         svg += `
     <line x1="${pos.x}" y1="${itemY + itemHeight}" 
           x2="${pos.x + pos.width}" y2="${itemY + itemHeight}" 
@@ -1465,6 +1483,7 @@ export class SVGRenderer {
     const hasCaption = caption.trim().length > 0;
     const iconName = String(node.props.icon || '').trim();
     const iconSvg = iconName ? getIcon(iconName) : null;
+    const accentColor = this.resolveAccentColor();
 
     const padding = this.resolveSpacing(node.style.padding) || 16;
     const innerX = pos.x + padding;
@@ -1518,7 +1537,7 @@ export class SVGRenderer {
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="${valueSize}" 
           font-weight="700" 
-          fill="${this.renderTheme.primary}">${this.escapeXml(value)}</text>`;
+          fill="${accentColor}">${this.escapeXml(value)}</text>`;
 
     if (iconSvg) {
       svg += `
@@ -1526,11 +1545,11 @@ export class SVGRenderer {
     <rect x="${iconBadgeX}" y="${iconBadgeY}"
           width="${iconBadgeSize}" height="${iconBadgeSize}"
           rx="6"
-          fill="${this.hexToRgba(this.renderTheme.primary, 0.12)}"
-          stroke="${this.hexToRgba(this.renderTheme.primary, 0.35)}"
+          fill="${this.hexToRgba(accentColor, 0.12)}"
+          stroke="${this.hexToRgba(accentColor, 0.35)}"
           stroke-width="1"/>
     <g transform="translate(${iconBadgeX + (iconBadgeSize - iconSize) / 2}, ${iconBadgeY + (iconBadgeSize - iconSize) / 2})">
-      <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${this.renderTheme.primary}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${accentColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         ${this.extractSvgContent(iconSvg)}
       </svg>
     </g>`;
@@ -1551,7 +1570,10 @@ export class SVGRenderer {
   }
 
   protected renderImage(node: IRComponentNode, pos: any): string {
-    const placeholder = String(node.props.placeholder || 'landscape');
+    const placeholder = String(node.props.placeholder || 'landscape').toLowerCase();
+    const placeholderIcon = String(node.props.icon || '').trim();
+    const placeholderIconSvg =
+      placeholder === 'icon' && placeholderIcon ? getIcon(placeholderIcon) : null;
 
     // Determine aspect ratio based on placeholder type
     const aspectRatios: Record<string, number> = {
@@ -1579,16 +1601,36 @@ export class SVGRenderer {
     const offsetX = pos.x + (pos.width - iconWidth) / 2;
     const offsetY = pos.y + (pos.height - iconHeight) / 2;
 
-    // SVG placeholder sketches
-    let svgContent = '';
-
     // Background
     let svg = `<g${this.getDataNodeId(node)}>
     <!-- Image Background -->
     <rect x="${pos.x}" y="${pos.y}" width="${pos.width}" height="${pos.height}" fill="#E8E8E8"/>`;
 
+    // Custom icon placeholder for "icon" variant when icon prop is provided.
+    if (placeholder === 'icon' && placeholderIconSvg) {
+      const badgeSize = Math.max(24, Math.min(iconWidth, iconHeight) * 0.78);
+      const badgeX = pos.x + (pos.width - badgeSize) / 2;
+      const badgeY = pos.y + (pos.height - badgeSize) / 2;
+      const iconSize = badgeSize * 0.62;
+      const iconOffsetX = badgeX + (badgeSize - iconSize) / 2;
+      const iconOffsetY = badgeY + (badgeSize - iconSize) / 2;
+
+      svg += `
+    <!-- Custom Icon Placeholder -->
+    <rect x="${badgeX}" y="${badgeY}"
+          width="${badgeSize}" height="${badgeSize}"
+          rx="${Math.max(4, badgeSize * 0.2)}"
+          fill="rgba(255, 255, 255, 0.6)"
+          stroke="#888"
+          stroke-width="1"/>
+    <g transform="translate(${iconOffsetX}, ${iconOffsetY})">
+      <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        ${this.extractSvgContent(placeholderIconSvg)}
+      </svg>
+    </g>`;
+    }
     // Camera icon for landscape, portrait, square
-    if (['landscape', 'portrait', 'square'].includes(placeholder)) {
+    else if (['landscape', 'portrait', 'square'].includes(placeholder)) {
       // Modern digital camera design based on contemporary camera icon
       const cameraCx = offsetX + iconWidth / 2;
       const cameraCy = offsetY + iconHeight / 2;
@@ -1638,7 +1680,7 @@ export class SVGRenderer {
             r="${lensRadius * 0.25}" 
             fill="#E0E0E0" opacity="0.6"/>`;
     } 
-    // Person silhouette for avatar and icon
+    // Person silhouette for avatar and icon fallback
     else if (['avatar', 'icon'].includes(placeholder)) {
       const personWidth = iconWidth * 0.5;
       const personHeight = iconHeight * 0.7;
@@ -1716,14 +1758,15 @@ export class SVGRenderer {
     const itemHeight = 40;
     const fontSize = 14;
     const activeIndex = Number(node.props.active || 0);
+    const accentColor = this.resolveAccentColor();
 
     let svg = `<g${this.getDataNodeId(node)}>`;
 
     items.forEach((item, index) => {
       const itemY = pos.y + index * itemHeight;
       const isActive = index === activeIndex;
-      const bgColor = isActive ? 'rgba(59, 130, 246, 0.15)' : 'transparent';
-      const textColor = isActive ? 'rgba(59, 130, 246, 0.9)' : 'rgba(30, 41, 59, 0.75)';
+      const bgColor = isActive ? this.hexToRgba(accentColor, 0.15) : 'transparent';
+      const textColor = isActive ? this.hexToRgba(accentColor, 0.9) : 'rgba(30, 41, 59, 0.75)';
       const fontWeight = isActive ? '500' : '400';
 
       // Item background (only if active)
@@ -1856,6 +1899,18 @@ export class SVGRenderer {
     return this.colorResolver.resolveColor(variant, semanticFallback);
   }
 
+  protected resolveAccentColor(): string {
+    return this.colorResolver.resolveColor('accent', this.renderTheme.primary);
+  }
+
+  protected resolveControlColor(): string {
+    return this.colorResolver.resolveColor('control', this.renderTheme.primary);
+  }
+
+  protected resolveChartColor(): string {
+    return this.colorResolver.resolveColor('chart', this.renderTheme.primary);
+  }
+
   protected getSemanticVariantColor(variant: string): string | undefined {
     const semantic: Record<string, string> = {
       primary: this.renderTheme.primary,
@@ -1985,13 +2040,16 @@ export class SVGRenderer {
     if (count === 1) return [end];
 
     const span = end - start;
+    const pulses = [0, 0.14, -0.09, 0.11, -0.06, 0.08, -0.05];
     const values = Array.from({ length: count }, (_, i) => {
       const progress = i / (count - 1);
-      const base = start + span * progress;
-      const waveA = Math.sin((i + 1) * 1.27) * 0.07;
-      const waveB = Math.cos((i + 2) * 0.83) * 0.035;
-      const zigzag = ((i % 4) - 1.5) * 0.012;
-      return Math.min(0.94, Math.max(0.08, base + waveA + waveB + zigzag));
+      const base = start + span * Math.pow(progress, 0.92);
+      const waveA = Math.sin((i + 1) * 1.19) * 0.08;
+      const waveB = Math.cos((i + 2) * 0.77) * 0.05;
+      const pulse = pulses[i % pulses.length];
+      const edgeDamping = i === 0 || i === count - 1 ? 0 : i === 1 || i === count - 2 ? 0.72 : 1;
+      const volatility = (waveA + waveB + pulse) * edgeDamping;
+      return Math.min(0.95, Math.max(0.08, base + volatility));
     });
 
     values[0] = start;
@@ -2019,6 +2077,197 @@ export class SVGRenderer {
       fontSize: typography.fontSize,
       fontWeight: typography.fontWeight,
       lineHeight: typography.lineHeight,
+    };
+  }
+
+  protected getHeadingFirstLineY(
+    node: IRComponentNode,
+    pos: { y: number; height: number },
+    fontSize: number,
+    lineHeightPx: number,
+    lineCount: number
+  ): number {
+    const headingPadding = resolveHeadingVerticalPadding(
+      node.props.spacing,
+      (this.ir.project.style.density || 'normal') as DensityLevel
+    );
+
+    if (headingPadding === null) {
+      // Keep existing default behavior when spacing is not provided.
+      if (lineCount <= 1) {
+        return pos.y + pos.height / 2 + fontSize * 0.3;
+      }
+      return pos.y + fontSize;
+    }
+
+    const wrappedHeight = Math.max(1, lineCount) * lineHeightPx;
+    const contentTop = pos.y + Math.max(headingPadding, (pos.height - wrappedHeight) / 2);
+    return contentTop + fontSize;
+  }
+
+  protected calculateTopbarLayout(
+    node: IRComponentNode,
+    pos: { x: number; y: number; width: number; height: number },
+    title: string,
+    subtitle: string,
+    actions: string,
+    user: string
+  ): {
+    hasSubtitle: boolean;
+    titleY: number;
+    subtitleY: number;
+    textX: number;
+    titleMaxWidth: number;
+    visibleTitle: string;
+    visibleSubtitle: string;
+    leftIcon: null | {
+      badgeX: number;
+      badgeY: number;
+      badgeSize: number;
+      badgeRadius: number;
+      iconX: number;
+      iconY: number;
+      iconSize: number;
+      iconSvg: string;
+    };
+    actions: Array<{ x: number; y: number; width: number; height: number; label: string }>;
+    userBadge: null | { x: number; y: number; width: number; height: number; label: string };
+    avatar: null | { cx: number; cy: number; r: number };
+  } {
+    const hasSubtitle = subtitle.trim().length > 0;
+    const titleLineHeight = 18;
+    const titleY = hasSubtitle
+      ? pos.y + 24
+      : pos.y + pos.height / 2 + titleLineHeight / 2 - 4;
+    const subtitleY = hasSubtitle ? titleY + 20 : 0;
+
+    const horizontalPadding = 16;
+    let contentLeftX = pos.x + horizontalPadding;
+    let rightCursor = pos.x + pos.width - horizontalPadding;
+
+    const iconType = String(node.props.icon || '').trim();
+    const iconSvg = iconType ? getIcon(iconType) : '';
+    let leftIcon: null | {
+      badgeX: number;
+      badgeY: number;
+      badgeSize: number;
+      badgeRadius: number;
+      iconX: number;
+      iconY: number;
+      iconSize: number;
+      iconSvg: string;
+    } = null;
+
+    if (iconSvg) {
+      const badgeSize = 28;
+      const badgeY = pos.y + (pos.height - badgeSize) / 2;
+      const iconSize = 18;
+      leftIcon = {
+        badgeX: contentLeftX,
+        badgeY,
+        badgeSize,
+        badgeRadius: 6,
+        iconX: contentLeftX + (badgeSize - iconSize) / 2,
+        iconY: badgeY + (badgeSize - iconSize) / 2,
+        iconSize,
+        iconSvg,
+      };
+      contentLeftX += badgeSize + 10;
+    }
+
+    const showAvatar = this.parseBooleanProp(node.props.avatar, false);
+    let avatar: null | { cx: number; cy: number; r: number } = null;
+    if (showAvatar) {
+      const avatarSize = 28;
+      const avatarX = rightCursor - avatarSize;
+      const avatarY = pos.y + (pos.height - avatarSize) / 2;
+      avatar = {
+        cx: avatarX + avatarSize / 2,
+        cy: avatarY + avatarSize / 2,
+        r: avatarSize / 2,
+      };
+      rightCursor = avatarX - 8;
+    }
+
+    let userBadge: null | { x: number; y: number; width: number; height: number; label: string } = null;
+    const userLabel = user.trim();
+    if (userLabel) {
+      const height = 28;
+      const fontSize = 12;
+      const paddingX = 12;
+      const width = Math.max(56, Math.ceil(this.estimateTextWidth(userLabel, fontSize) + paddingX * 2));
+      const x = rightCursor - width;
+      const y = pos.y + (pos.height - height) / 2;
+      userBadge = { x, y, width, height, label: userLabel };
+      rightCursor = x - 8;
+    }
+
+    const actionLabels = actions
+      .split(',')
+      .map((a) => a.trim())
+      .filter(Boolean);
+    const actionHeight = 32;
+    const actionY = pos.y + (pos.height - actionHeight) / 2;
+    const actionGap = 8;
+    const minActionsX = contentLeftX + 80;
+    const availableActionsWidth = Math.max(0, rightCursor - minActionsX);
+    const actionMetrics = actionLabels.map((label) => ({
+      label,
+      width: Math.max(64, Math.min(140, Math.ceil(this.estimateTextWidth(label, 12) + 28))),
+    }));
+
+    const visibleActionMetrics: Array<{ label: string; width: number }> = [];
+    let actionsTotalWidth = 0;
+    for (const metric of actionMetrics) {
+      const nextTotal =
+        actionsTotalWidth + metric.width + (visibleActionMetrics.length > 0 ? actionGap : 0);
+      if (nextTotal > availableActionsWidth) {
+        break;
+      }
+      visibleActionMetrics.push(metric);
+      actionsTotalWidth = nextTotal;
+    }
+
+    const actionsStartX = rightCursor - actionsTotalWidth;
+    let actionCursorX = actionsStartX;
+    const actionButtons = visibleActionMetrics.map((metric) => {
+      const button = {
+        x: actionCursorX,
+        y: actionY,
+        width: metric.width,
+        height: actionHeight,
+        label: metric.label,
+      };
+      actionCursorX += metric.width + actionGap;
+      return button;
+    });
+
+    const firstRightElementX = actionButtons.length > 0
+      ? actionButtons[0].x
+      : userBadge
+        ? userBadge.x
+        : avatar
+          ? avatar.cx - avatar.r
+          : pos.x + pos.width - horizontalPadding;
+
+    const textMaxWidth = Math.max(40, firstRightElementX - contentLeftX - 12);
+    const visibleTitle = this.truncateTextToWidth(title, textMaxWidth, 18);
+    const visibleSubtitle = hasSubtitle
+      ? this.truncateTextToWidth(subtitle, textMaxWidth, 13)
+      : '';
+
+    return {
+      hasSubtitle,
+      titleY,
+      subtitleY,
+      textX: contentLeftX,
+      titleMaxWidth: textMaxWidth,
+      visibleTitle,
+      visibleSubtitle,
+      leftIcon,
+      actions: actionButtons,
+      userBadge,
+      avatar,
     };
   }
 

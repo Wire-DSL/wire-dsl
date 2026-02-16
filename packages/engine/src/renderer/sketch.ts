@@ -304,9 +304,12 @@ export class SketchSVGRenderer extends SVGRenderer {
   protected renderTextarea(node: IRComponentNode, pos: any): string {
     const label = String(node.props.label || '');
     const placeholder = String(node.props.placeholder || '');
+    const fontSize = this.tokens.input.fontSize;
+    const paddingX = this.tokens.input.paddingX;
     const labelOffset = this.getControlLabelOffset(label);
     const controlY = pos.y + labelOffset;
     const controlHeight = Math.max(20, pos.height - labelOffset);
+    const placeholderY = controlY + fontSize + 6;
 
     return `<g${this.getDataNodeId(node)}>
       ${label ? `<text x="${pos.x}" y="${this.getControlLabelBaselineY(pos.y)}"
@@ -320,9 +323,9 @@ export class SketchSVGRenderer extends SVGRenderer {
             stroke="#2D3748"
             stroke-width="0.5"
             filter="url(#sketch-rough)"/>
-      ${placeholder ? `<text x="${pos.x + 12}" y="${controlY + 20}"
+      ${placeholder ? `<text x="${pos.x + paddingX}" y="${placeholderY}"
             font-family="${this.fontFamily}"
-            font-size="14"
+            font-size="${fontSize}"
             fill="${this.renderTheme.textMuted}">${this.escapeXml(placeholder)}</text>` : ''}
     </g>`;
   }
@@ -362,14 +365,16 @@ export class SketchSVGRenderer extends SVGRenderer {
    */
   protected renderHeading(node: IRComponentNode, pos: any): string {
     const text = String(node.props.text || 'Heading');
-    const fontSize = this.tokens.heading.fontSize;
-    const fontWeight = this.tokens.heading.fontWeight;
-    const lineHeightPx = Math.ceil(fontSize * 1.25);
+    const headingTypography = this.getHeadingTypography(node);
+    const fontSize = headingTypography.fontSize;
+    const fontWeight = headingTypography.fontWeight;
+    const lineHeightPx = Math.ceil(fontSize * headingTypography.lineHeight);
     const lines = this.wrapTextToLines(text, pos.width, fontSize);
+    const firstLineY = this.getHeadingFirstLineY(node, pos, fontSize, lineHeightPx, lines.length);
 
     if (lines.length <= 1) {
       return `<g${this.getDataNodeId(node)}>
-    <text x="${pos.x}" y="${pos.y + pos.height / 2 + 6}"
+    <text x="${pos.x}" y="${firstLineY}"
           font-family="${this.fontFamily}"
           font-size="${fontSize}"
           font-weight="${fontWeight}"
@@ -377,7 +382,6 @@ export class SketchSVGRenderer extends SVGRenderer {
   </g>`;
     }
 
-    const firstLineY = pos.y + fontSize;
     const tspans = lines
       .map(
         (line, index) =>
@@ -402,19 +406,8 @@ export class SketchSVGRenderer extends SVGRenderer {
     const subtitle = String(node.props.subtitle || '');
     const actions = String(node.props.actions || '');
     const user = String(node.props.user || '');
-
-    const titleLineHeight = 18;
-    const paddingTop = 24;
-
-    let titleY: number;
-    let subtitleY: number = 0;
-
-    if (subtitle) {
-      titleY = pos.y + paddingTop;
-      subtitleY = titleY + 20;
-    } else {
-      titleY = pos.y + pos.height / 2 + titleLineHeight / 2 - 4;
-    }
+    const accentColor = this.resolveAccentColor();
+    const topbar = this.calculateTopbarLayout(node, pos, title, subtitle, actions, user);
 
     let svg = `<g${this.getDataNodeId(node)}>
     <rect x="${pos.x}" y="${pos.y}"
@@ -425,67 +418,85 @@ export class SketchSVGRenderer extends SVGRenderer {
           filter="url(#sketch-rough)"/>
 
     <!-- Title -->
-    <text x="${pos.x + 16}" y="${titleY}"
+    <text x="${topbar.textX}" y="${topbar.titleY}"
           font-family="${this.fontFamily}"
           font-size="18"
           font-weight="600"
-          fill="${this.renderTheme.text}">${this.escapeXml(title)}</text>`;
+          fill="${this.renderTheme.text}">${this.escapeXml(topbar.visibleTitle)}</text>`;
 
-    if (subtitle) {
+    if (topbar.hasSubtitle) {
       svg += `
-    <text x="${pos.x + 16}" y="${subtitleY}"
+    <text x="${topbar.textX}" y="${topbar.subtitleY}"
           font-family="${this.fontFamily}"
           font-size="13"
-          fill="${this.renderTheme.textMuted}">${this.escapeXml(subtitle)}</text>`;
+          fill="${this.renderTheme.textMuted}">${this.escapeXml(topbar.visibleSubtitle)}</text>`;
     }
 
-    if (user) {
-      const badgeHeight = 28;
-      const badgePaddingX = 12;
-      const badgeX = pos.x + pos.width - 16 - badgePaddingX * 2 - user.length * 7.5;
-      const badgeY = pos.y + 12;
+    if (topbar.leftIcon) {
+      svg += `
+    <!-- Left icon -->
+    <rect x="${topbar.leftIcon.badgeX}" y="${topbar.leftIcon.badgeY}"
+          width="${topbar.leftIcon.badgeSize}" height="${topbar.leftIcon.badgeSize}"
+          rx="${topbar.leftIcon.badgeRadius}"
+          fill="none"
+          stroke="${accentColor}"
+          stroke-width="0.5"
+          filter="url(#sketch-rough)"/>
+    <g transform="translate(${topbar.leftIcon.iconX}, ${topbar.leftIcon.iconY})">
+      <svg width="${topbar.leftIcon.iconSize}" height="${topbar.leftIcon.iconSize}" viewBox="0 0 24 24" fill="none" stroke="${accentColor}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        ${this.extractSvgContent(topbar.leftIcon.iconSvg)}
+      </svg>
+    </g>`;
+    }
 
+    topbar.actions.forEach((action) => {
+      svg += `
+    <!-- Action button: ${action.label} -->
+    <rect x="${action.x}" y="${action.y}"
+          width="${action.width}" height="${action.height}"
+          rx="6"
+          fill="none"
+          stroke="${accentColor}"
+          stroke-width="0.5"
+          filter="url(#sketch-rough)"/>
+    <text x="${action.x + action.width / 2}" y="${action.y + action.height / 2 + 4}"
+          font-family="${this.fontFamily}"
+          font-size="12"
+          font-weight="600"
+          fill="${accentColor}"
+          text-anchor="middle">${this.escapeXml(action.label)}</text>`;
+    });
+
+    if (topbar.userBadge) {
       svg += `
     <!-- User badge -->
-    <rect x="${badgeX}" y="${badgeY}"
-          width="${badgePaddingX * 2 + user.length * 7.5}" height="${badgeHeight}"
+    <rect x="${topbar.userBadge.x}" y="${topbar.userBadge.y}"
+          width="${topbar.userBadge.width}" height="${topbar.userBadge.height}"
           rx="4"
           fill="${this.renderTheme.cardBg}"
           stroke="#2D3748"
           stroke-width="0.5"
           filter="url(#sketch-rough)"/>
-    <text x="${badgeX + badgePaddingX + user.length * 3.75}" y="${badgeY + badgeHeight / 2 + 4}"
+    <text x="${topbar.userBadge.x + topbar.userBadge.width / 2}" y="${topbar.userBadge.y + topbar.userBadge.height / 2 + 4}"
           font-family="${this.fontFamily}"
           font-size="12"
           fill="${this.renderTheme.text}"
-          text-anchor="middle">${this.escapeXml(user)}</text>`;
+          text-anchor="middle">${this.escapeXml(topbar.userBadge.label)}</text>`;
     }
 
-    if (actions) {
-      const actionList = actions.split(',').map((a) => a.trim()).filter(Boolean);
-      const buttonWidth = 100;
-      const buttonHeight = 32;
-      const buttonStartX = pos.x + pos.width - 16 - actionList.length * (buttonWidth + 8);
-      const buttonY = pos.y + (pos.height - buttonHeight) / 2;
-
-      actionList.forEach((action, idx) => {
-        const bx = buttonStartX + idx * (buttonWidth + 8);
-        svg += `
-    <!-- Action button: ${action} -->
-    <rect x="${bx}" y="${buttonY}"
-          width="${buttonWidth}" height="${buttonHeight}"
-          rx="6"
-          fill="none"
-          stroke="#3B82F6"
-          stroke-width="0.5"
-          filter="url(#sketch-rough)"/>
-    <text x="${bx + buttonWidth / 2}" y="${buttonY + buttonHeight / 2 + 4}"
-          font-family="${this.fontFamily}"
-          font-size="12"
-          font-weight="600"
-          fill="#3B82F6"
-          text-anchor="middle">${this.escapeXml(action)}</text>`;
-      });
+    if (topbar.avatar) {
+      svg += `
+    <!-- Avatar -->
+    <circle cx="${topbar.avatar.cx}" cy="${topbar.avatar.cy}" r="${topbar.avatar.r}"
+            fill="${this.renderTheme.cardBg}"
+            stroke="#2D3748"
+            stroke-width="0.5"
+            filter="url(#sketch-rough)"/>
+    <circle cx="${topbar.avatar.cx}" cy="${topbar.avatar.cy - topbar.avatar.r * 0.22}" r="${topbar.avatar.r * 0.28}"
+            fill="#2D3748"/>
+    <rect x="${topbar.avatar.cx - topbar.avatar.r * 0.45}" y="${topbar.avatar.cy + topbar.avatar.r * 0.02}"
+          width="${topbar.avatar.r * 0.9}" height="${topbar.avatar.r * 0.62}" rx="${topbar.avatar.r * 0.3}"
+          fill="#2D3748"/>`;
     }
 
     svg += '\n  </g>';
@@ -691,6 +702,7 @@ export class SketchSVGRenderer extends SVGRenderer {
   protected renderCheckbox(node: IRComponentNode, pos: any): string {
     const label = String(node.props.label || 'Checkbox');
     const checked = String(node.props.checked || 'false').toLowerCase() === 'true';
+    const controlColor = this.resolveControlColor();
 
     const checkboxSize = 18;
     const checkboxY = pos.y + pos.height / 2 - checkboxSize / 2;
@@ -699,7 +711,7 @@ export class SketchSVGRenderer extends SVGRenderer {
     <rect x="${pos.x}" y="${checkboxY}"
           width="${checkboxSize}" height="${checkboxSize}"
           rx="4"
-          fill="${checked ? '#3B82F6' : this.renderTheme.cardBg}"
+          fill="${checked ? controlColor : this.renderTheme.cardBg}"
           stroke="#2D3748"
           stroke-width="0.5"
           filter="url(#sketch-rough)"/>
@@ -725,6 +737,7 @@ export class SketchSVGRenderer extends SVGRenderer {
   protected renderRadio(node: IRComponentNode, pos: any): string {
     const label = String(node.props.label || 'Radio');
     const checked = String(node.props.checked || 'false').toLowerCase() === 'true';
+    const controlColor = this.resolveControlColor();
 
     const radioSize = 16;
     const radioY = pos.y + pos.height / 2 - radioSize / 2;
@@ -740,7 +753,7 @@ export class SketchSVGRenderer extends SVGRenderer {
       checked
         ? `<circle cx="${pos.x + radioSize / 2}" cy="${radioY + radioSize / 2}"
             r="${radioSize / 3.5}"
-            fill="#3B82F6"/>`
+            fill="${controlColor}"/>`
         : ''
     }
     <text x="${pos.x + radioSize + 12}" y="${pos.y + pos.height / 2 + 5}"
@@ -756,6 +769,7 @@ export class SketchSVGRenderer extends SVGRenderer {
   protected renderToggle(node: IRComponentNode, pos: any): string {
     const label = String(node.props.label || 'Toggle');
     const enabled = String(node.props.enabled || 'false').toLowerCase() === 'true';
+    const controlColor = this.resolveControlColor();
 
     const toggleWidth = 40;
     const toggleHeight = 20;
@@ -765,7 +779,7 @@ export class SketchSVGRenderer extends SVGRenderer {
     <rect x="${pos.x}" y="${toggleY}"
           width="${toggleWidth}" height="${toggleHeight}"
           rx="10"
-          fill="${enabled ? '#3B82F6' : '#2D3748'}"
+          fill="${enabled ? controlColor : '#2D3748'}"
           stroke="none"
           filter="url(#sketch-rough)"/>
     <circle cx="${pos.x + (enabled ? toggleWidth - 10 : 10)}" cy="${toggleY + toggleHeight / 2}"
@@ -836,6 +850,7 @@ export class SketchSVGRenderer extends SVGRenderer {
   protected renderTabs(node: IRComponentNode, pos: any): string {
     const itemsStr = String(node.props.items || '');
     const tabs = itemsStr ? itemsStr.split(',').map((t) => t.trim()) : ['Tab 1', 'Tab 2', 'Tab 3'];
+    const accentColor = this.resolveAccentColor();
     const tabWidth = pos.width / tabs.length;
 
     let svg = `<g${this.getDataNodeId(node)}>
@@ -848,8 +863,8 @@ export class SketchSVGRenderer extends SVGRenderer {
       svg += `
     <rect x="${tabX}" y="${pos.y}"
           width="${tabWidth}" height="44"
-          fill="${isActive ? '#3B82F6' : 'transparent'}"
-          stroke="${isActive ? '#3B82F6' : '#2D3748'}"
+          fill="${isActive ? accentColor : 'transparent'}"
+          stroke="${isActive ? accentColor : '#2D3748'}"
           stroke-width="0.5"
           filter="url(#sketch-rough)"/>
     <text x="${tabX + tabWidth / 2}" y="${pos.y + 28}"
@@ -889,6 +904,11 @@ export class SketchSVGRenderer extends SVGRenderer {
    * Render modal with sketch filter and Comic Sans
    */
   protected renderModal(node: IRComponentNode, pos: any): string {
+    const visible = this.parseBooleanProp(node.props.visible, true);
+    if (!visible) {
+      return '';
+    }
+
     const title = String(node.props.title || 'Modal');
     const padding = 16;
     const headerHeight = 48;
@@ -950,10 +970,16 @@ export class SketchSVGRenderer extends SVGRenderer {
 
     let items: string[] = [];
     if (itemsStr) {
-      items = itemsStr.split(',').map((i) => i.trim());
+      items = itemsStr
+        .split(',')
+        .map((i) => i.trim())
+        .filter(Boolean);
     } else {
       // Generate mock items from provided mock type or fallback to deterministic names.
-      const itemCount = Number(node.props.itemsMock || 4);
+      const parsedItemsMock = Number(node.props.itemsMock ?? 4);
+      const itemCount = Number.isFinite(parsedItemsMock)
+        ? Math.max(0, Math.floor(parsedItemsMock))
+        : 4;
       const resolvedMockType = mockType || 'name';
       items = MockDataGenerator.generateMockList(resolvedMockType, itemCount, random);
     }
@@ -1036,6 +1062,7 @@ export class SketchSVGRenderer extends SVGRenderer {
     const hasCaption = caption.trim().length > 0;
     const iconName = String(node.props.icon || '').trim();
     const iconSvg = iconName ? getIcon(iconName) : null;
+    const accentColor = this.resolveAccentColor();
 
     // Inline spacing resolution
     const padding = this.resolveSpacing(node.style.padding);
@@ -1091,7 +1118,7 @@ export class SketchSVGRenderer extends SVGRenderer {
           font-family="${this.fontFamily}"
           font-size="${valueSize}"
           font-weight="700"
-          fill="${this.renderTheme.primary}">${this.escapeXml(value)}</text>`;
+          fill="${accentColor}">${this.escapeXml(value)}</text>`;
 
     if (iconSvg) {
       svg += `
@@ -1104,7 +1131,7 @@ export class SketchSVGRenderer extends SVGRenderer {
           stroke-width="0.5"
           filter="url(#sketch-rough)"/>
     <g transform="translate(${iconBadgeX + (iconBadgeSize - iconSize) / 2}, ${iconBadgeY + (iconBadgeSize - iconSize) / 2})">
-      <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${this.renderTheme.primary}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${accentColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         ${this.extractSvgContent(iconSvg)}
       </svg>
     </g>`;
@@ -1128,6 +1155,45 @@ export class SketchSVGRenderer extends SVGRenderer {
    * Render image with sketch filter
    */
   protected renderImage(node: IRComponentNode, pos: any): string {
+    const placeholder = String(node.props.placeholder || 'landscape').toLowerCase();
+    const iconType = String(node.props.icon || '').trim();
+    const iconSvg =
+      placeholder === 'icon' && iconType.length > 0 ? getIcon(iconType) : null;
+
+    if (iconSvg) {
+      const badgeSize = Math.max(24, Math.min(pos.width, pos.height) * 0.6);
+      const badgeX = pos.x + (pos.width - badgeSize) / 2;
+      const badgeY = pos.y + (pos.height - badgeSize) / 2;
+      const iconSize = badgeSize * 0.62;
+      const iconOffsetX = badgeX + (badgeSize - iconSize) / 2;
+      const iconOffsetY = badgeY + (badgeSize - iconSize) / 2;
+
+      return `<g${this.getDataNodeId(node)}>
+    <!-- Image Background -->
+    <rect x="${pos.x}" y="${pos.y}"
+          width="${pos.width}" height="${pos.height}"
+          fill="#E8E8E8"
+          stroke="#2D3748"
+          stroke-width="0.5"
+          rx="4"
+          filter="url(#sketch-rough)"/>
+
+    <!-- Custom Icon Placeholder -->
+    <rect x="${badgeX}" y="${badgeY}"
+          width="${badgeSize}" height="${badgeSize}"
+          rx="${Math.max(4, badgeSize * 0.2)}"
+          fill="none"
+          stroke="#2D3748"
+          stroke-width="0.5"
+          filter="url(#sketch-rough)"/>
+    <g transform="translate(${iconOffsetX}, ${iconOffsetY})">
+      <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="#2D3748" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        ${this.extractSvgContent(iconSvg)}
+      </svg>
+    </g>
+  </g>`;
+    }
+
     return `<g${this.getDataNodeId(node)}>
     <!-- Image Background -->
     <rect x="${pos.x}" y="${pos.y}"
@@ -1200,14 +1266,15 @@ export class SketchSVGRenderer extends SVGRenderer {
     const itemHeight = 40;
     const fontSize = 14;
     const activeIndex = Number(node.props.active || 0);
+    const accentColor = this.resolveAccentColor();
 
     let svg = `<g${this.getDataNodeId(node)}>`;
 
     items.forEach((item, index) => {
       const itemY = pos.y + index * itemHeight;
       const isActive = index === activeIndex;
-      const bgColor = isActive ? 'rgba(59, 130, 246, 0.15)' : 'transparent';
-      const textColor = isActive ? '#3B82F6' : '#2D3748';
+      const bgColor = isActive ? this.hexToRgba(accentColor, 0.15) : 'transparent';
+      const textColor = isActive ? accentColor : '#2D3748';
       const fontWeight = isActive ? '500' : '400';
 
       if (isActive) {

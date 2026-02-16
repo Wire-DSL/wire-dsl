@@ -592,11 +592,13 @@ Modal dialog box.
 
 **Properties**:
 - `title` (string): Modal title
+- `visible` (boolean): Show/hide modal overlay (default: `true`)
 
 **Example**:
 ```wire
 component Modal title: "Confirm Action"
 component Modal title: "Delete User"
+component Modal title: "Delete User" visible: false
 ```
 
 **Rendering**: Centered overlay dialog with title and generic content placeholder

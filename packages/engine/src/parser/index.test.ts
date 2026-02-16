@@ -160,6 +160,58 @@ describe('WireDSL Parser', () => {
     }
   });
 
+  it('should parse Topbar icon/avatar/user/actions properties', () => {
+    const input = `
+      project "TopbarProps" {
+        screen Main {
+          layout stack {
+            component Topbar title: "Dashboard" subtitle: "Overview" icon: "menu" actions: "Help,Logout" user: "john_doe" avatar: true
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const topbar = ast.screens[0].layout.children[0];
+
+    expect(topbar.type).toBe('component');
+    if (topbar.type === 'component') {
+      expect(topbar.componentType).toBe('Topbar');
+      expect(topbar.props).toEqual({
+        title: 'Dashboard',
+        subtitle: 'Overview',
+        icon: 'menu',
+        actions: 'Help,Logout',
+        user: 'john_doe',
+        avatar: 'true',
+      });
+    }
+  });
+
+  it('should parse Heading spacing property', () => {
+    const input = `
+      project "HeadingSpacing" {
+        screen Main {
+          layout stack {
+            component Heading text: "Card title" spacing: sm
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const heading = ast.screens[0].layout.children[0];
+
+    expect(heading.type).toBe('component');
+    if (heading.type === 'component') {
+      expect(heading.componentType).toBe('Heading');
+      expect(heading.props).toEqual({
+        text: 'Card title',
+        spacing: 'sm',
+      });
+    }
+  });
+
   it('should parse numeric values', () => {
     const input = `
       project "Numbers" {
@@ -685,6 +737,31 @@ describe('WireDSL Parser', () => {
       expect(image.componentType).toBe('Image');
       expect(image.props.placeholder).toBe('square');
       expect(image.props.height).toBe(200);
+    }
+  });
+
+  it('should parse Image icon property when placeholder is icon', () => {
+    const input = `
+      project "IconImage" {
+        screen Main {
+          layout stack {
+            component Image placeholder: "icon" icon: "search" height: 120
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const image = ast.screens[0].layout.children[0];
+
+    expect(image.type).toBe('component');
+    if (image.type === 'component') {
+      expect(image.componentType).toBe('Image');
+      expect(image.props).toEqual({
+        placeholder: 'icon',
+        icon: 'search',
+        height: 120,
+      });
     }
   });
 

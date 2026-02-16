@@ -563,7 +563,7 @@ component Button text: "Click me" variant: primary
 | `StatCard` | `title`, `value`, `caption`, `icon` | `component StatCard title: "Total Users" value: "1,234" icon: "users"` |
 | `Separate` | `size` | `component Separate size: md` |
 | `Code` | `code` | `component Code code: "const x = 10;"` |
-| `Modal` | `title` | `component Modal title: "Confirm?"` |
+| `Modal` | `title`, `visible` | `component Modal title: "Confirm?" visible: false` |
 
 ---
 

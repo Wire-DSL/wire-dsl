@@ -51,6 +51,11 @@ const headingLevelEnum: PropertyMetadata = {
   type: 'enum',
   options: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'],
 };
+const headingSpacingEnum: PropertyMetadata = {
+  name: 'spacing',
+  type: 'enum',
+  options: spacingEnum.options,
+};
 const imagePlaceholderEnum: PropertyMetadata = {
   name: 'placeholder',
   type: 'enum',
@@ -64,8 +69,9 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     properties: {
       text: { name: 'text', type: 'string' },
       level: headingLevelEnum,
+      spacing: headingSpacingEnum,
     },
-    example: 'component Heading text: "Users" level: h2',
+    example: 'component Heading text: "Users" level: h2 spacing: sm',
   },
   Text: {
     name: 'Text',
@@ -163,10 +169,12 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     properties: {
       title: { name: 'title', type: 'string' },
       subtitle: { name: 'subtitle', type: 'string' },
+      icon: { name: 'icon', type: 'string' },
+      avatar: { name: 'avatar', type: 'boolean' },
       actions: { name: 'actions', type: 'string' },
       user: { name: 'user', type: 'string' },
     },
-    example: 'component Topbar title: "Dashboard" subtitle: "Overview"',
+    example: 'component Topbar title: "Dashboard" subtitle: "Overview" icon: "menu" user: "john_doe" avatar: true',
   },
   SidebarMenu: {
     name: 'SidebarMenu',
@@ -286,9 +294,10 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     description: 'Image placeholder block.',
     properties: {
       placeholder: imagePlaceholderEnum,
+      icon: { name: 'icon', type: 'string' },
       height: { name: 'height', type: 'number' },
     },
-    example: 'component Image placeholder: "landscape" height: 220',
+    example: 'component Image placeholder: "icon" icon: "search" height: 220',
   },
   Icon: {
     name: 'Icon',
@@ -348,8 +357,9 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     description: 'Modal overlay container.',
     properties: {
       title: { name: 'title', type: 'string' },
+      visible: { name: 'visible', type: 'boolean', defaultValue: true },
     },
-    example: 'component Modal title: "Confirm action"',
+    example: 'component Modal title: "Confirm action" visible: false',
   },
 };
 
@@ -418,6 +428,7 @@ export const PROPERTY_VALUES: Record<string, string[]> = {
   gap: spacingEnum.options!,
   direction: ['horizontal', 'vertical'],
   level: headingLevelEnum.options!,
+  spacing: spacingEnum.options!,
 };
 
 export const KEYWORDS = {

@@ -950,6 +950,40 @@ describe('Layout Engine', () => {
     expect(buttonPos.y).toBe(textPos.y + textPos.height + 16);
   });
 
+  it('should size List height based on title and item count', () => {
+    const input = `
+      project "List Height" {
+        screen Main {
+          layout stack(direction: vertical, gap: md, padding: md) {
+            component List title: "Technologies" items: "JavaScript,TypeScript,Python,Rust,Go,Swift"
+            component Button text: "Next"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+
+    const listEntry = Object.entries(ir.project.nodes).find(
+      ([_, node]) => node.kind === 'component' && node.componentType === 'List'
+    );
+    const buttonEntry = Object.entries(ir.project.nodes).find(
+      ([_, node]) => node.kind === 'component' && node.componentType === 'Button'
+    );
+
+    expect(listEntry).toBeDefined();
+    expect(buttonEntry).toBeDefined();
+
+    const listPos = layout[listEntry![0]];
+    const buttonPos = layout[buttonEntry![0]];
+
+    // title (40) + 6 items * 36 = 256
+    expect(listPos.height).toBe(256);
+    expect(buttonPos.y).toBe(listPos.y + listPos.height + 16);
+  });
+
   it('should wrap long Heading content and push following components down', () => {
     const input = `
       project "Heading Wrap" {
@@ -1011,6 +1045,42 @@ describe('Layout Engine', () => {
     expect(headings).toHaveLength(2);
     expect(headings[0].height).toBeGreaterThan(headings[1].height);
     expect(headings[1].y).toBe(headings[0].y + headings[0].height + 16);
+  });
+
+  it('should allow Heading spacing override to reduce intrinsic vertical space', () => {
+    const input = `
+      project "Heading Spacing" {
+        screen Main {
+          layout stack(direction: vertical, gap: md) {
+            component Heading text: "Default heading"
+            component Heading text: "Compact heading" spacing: none
+            component Button text: "After heading"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+
+    const headingEntries = Object.entries(ir.project.nodes)
+      .filter(([_, node]) => node.kind === 'component' && node.componentType === 'Heading')
+      .map(([id]) => layout[id])
+      .sort((a, b) => a.y - b.y);
+    const buttonEntry = Object.entries(ir.project.nodes).find(
+      ([_, node]) => node.kind === 'component' && node.componentType === 'Button'
+    );
+
+    expect(headingEntries).toHaveLength(2);
+    expect(buttonEntry).toBeDefined();
+
+    const [defaultHeading, compactHeading] = headingEntries;
+    const buttonPos = layout[buttonEntry![0]];
+
+    expect(defaultHeading.height).toBe(40);
+    expect(compactHeading.height).toBeLessThan(defaultHeading.height);
+    expect(buttonPos.y).toBe(compactHeading.y + compactHeading.height + 16);
   });
 
   it('should avoid overlap between cards in single-column grid and next stack elements', () => {

@@ -285,6 +285,7 @@ export class SkeletonSVGRenderer extends SVGRenderer {
    */
   protected renderCheckbox(node: IRComponentNode, pos: any): string {
     const checked = String(node.props.checked || 'false').toLowerCase() === 'true';
+    const controlColor = this.resolveControlColor();
     const checkboxSize = 18;
     const checkboxY = pos.y + pos.height / 2 - checkboxSize / 2;
 
@@ -292,7 +293,7 @@ export class SkeletonSVGRenderer extends SVGRenderer {
       <rect x="${pos.x}" y="${checkboxY}"
             width="${checkboxSize}" height="${checkboxSize}"
             rx="4"
-            fill="${checked ? this.renderTheme.primary : this.renderTheme.cardBg}"
+            fill="${checked ? controlColor : this.renderTheme.cardBg}"
             stroke="${this.renderTheme.border}"
             stroke-width="1"/>
       <rect x="${pos.x + checkboxSize + 12}" y="${pos.y + pos.height / 2 - 6}"
@@ -307,6 +308,7 @@ export class SkeletonSVGRenderer extends SVGRenderer {
    */
   protected renderRadio(node: IRComponentNode, pos: any): string {
     const checked = String(node.props.checked || 'false').toLowerCase() === 'true';
+    const controlColor = this.resolveControlColor();
     const radioSize = 16;
     const radioY = pos.y + pos.height / 2 - radioSize / 2;
 
@@ -316,7 +318,7 @@ export class SkeletonSVGRenderer extends SVGRenderer {
               fill="${this.renderTheme.cardBg}"
               stroke="${this.renderTheme.border}"
               stroke-width="1"/>
-      ${checked ? `<circle cx="${pos.x + radioSize / 2}" cy="${radioY + radioSize / 2}" r="${radioSize / 3.5}" fill="${this.renderTheme.primary}"/>` : ''}
+      ${checked ? `<circle cx="${pos.x + radioSize / 2}" cy="${radioY + radioSize / 2}" r="${radioSize / 3.5}" fill="${controlColor}"/>` : ''}
       <rect x="${pos.x + radioSize + 12}" y="${pos.y + pos.height / 2 - 6}"
             width="80" height="12"
             rx="4"
@@ -329,6 +331,7 @@ export class SkeletonSVGRenderer extends SVGRenderer {
    */
   protected renderToggle(node: IRComponentNode, pos: any): string {
     const enabled = String(node.props.enabled || 'false').toLowerCase() === 'true';
+    const controlColor = this.resolveControlColor();
     const toggleWidth = 40;
     const toggleHeight = 22;
     const toggleY = pos.y + pos.height / 2 - toggleHeight / 2;
@@ -337,7 +340,7 @@ export class SkeletonSVGRenderer extends SVGRenderer {
       <rect x="${pos.x}" y="${toggleY}"
             width="${toggleWidth}" height="${toggleHeight}"
             rx="${toggleHeight / 2}"
-            fill="${enabled ? this.renderTheme.primary : this.renderTheme.border}"
+            fill="${enabled ? controlColor : this.renderTheme.border}"
             stroke="none"/>
       <circle cx="${pos.x + (enabled ? toggleWidth - 11 : 11)}" cy="${toggleY + toggleHeight / 2}"
               r="8"
@@ -433,17 +436,67 @@ export class SkeletonSVGRenderer extends SVGRenderer {
    * Render topbar with gray blocks instead of text
    */
   protected renderTopbar(node: IRComponentNode, pos: any): string {
-    return `<g${this.getDataNodeId(node)}>
+    const title = String(node.props.title || 'App');
+    const subtitle = String(node.props.subtitle || '');
+    const actions = String(node.props.actions || '');
+    const user = String(node.props.user || '');
+    const topbar = this.calculateTopbarLayout(node, pos, title, subtitle, actions, user);
+    const titleWidth = Math.max(56, Math.min(topbar.titleMaxWidth * 0.55, topbar.titleMaxWidth));
+    const subtitleWidth = Math.max(48, Math.min(topbar.titleMaxWidth * 0.4, topbar.titleMaxWidth));
+
+    let svg = `<g${this.getDataNodeId(node)}>
       <rect x="${pos.x}" y="${pos.y}"
             width="${pos.width}" height="${pos.height}"
             fill="${this.renderTheme.cardBg}"
             stroke="${this.renderTheme.border}"
-            stroke-width="0 0 1 0"/>
-      <rect x="${pos.x + 24}" y="${pos.y + pos.height / 2 - 8}"
-            width="120" height="16"
+            stroke-width="0 0 1 0"/>`;
+
+    if (topbar.leftIcon) {
+      svg += `
+      <rect x="${topbar.leftIcon.badgeX}" y="${topbar.leftIcon.badgeY}"
+            width="${topbar.leftIcon.badgeSize}" height="${topbar.leftIcon.badgeSize}"
+            rx="${topbar.leftIcon.badgeRadius}"
+            fill="${this.renderTheme.border}"/>`;
+    }
+
+    svg += `
+      <rect x="${topbar.textX}" y="${topbar.titleY - 12}"
+            width="${titleWidth}" height="16"
             rx="4"
-            fill="${this.renderTheme.border}"/>
-    </g>`;
+            fill="${this.renderTheme.border}"/>`;
+
+    if (topbar.hasSubtitle) {
+      svg += `
+      <rect x="${topbar.textX}" y="${topbar.subtitleY - 9}"
+            width="${subtitleWidth}" height="12"
+            rx="4"
+            fill="${this.renderTheme.border}"/>`;
+    }
+
+    topbar.actions.forEach((action) => {
+      svg += `
+      <rect x="${action.x}" y="${action.y}"
+            width="${action.width}" height="${action.height}"
+            rx="6"
+            fill="${this.renderTheme.border}"/>`;
+    });
+
+    if (topbar.userBadge) {
+      svg += `
+      <rect x="${topbar.userBadge.x}" y="${topbar.userBadge.y}"
+            width="${topbar.userBadge.width}" height="${topbar.userBadge.height}"
+            rx="4"
+            fill="${this.renderTheme.border}"/>`;
+    }
+
+    if (topbar.avatar) {
+      svg += `
+      <circle cx="${topbar.avatar.cx}" cy="${topbar.avatar.cy}" r="${topbar.avatar.r}"
+              fill="${this.renderTheme.border}"/>`;
+    }
+
+    svg += '\n    </g>';
+    return svg;
   }
 
   /**
@@ -603,13 +656,14 @@ export class SkeletonSVGRenderer extends SVGRenderer {
     const items = itemsStr.split(',').map((s) => s.trim());
     const itemHeight = 40;
     const activeIndex = Number(node.props.active || 0);
+    const accentColor = this.resolveAccentColor();
 
     let svg = `<g${this.getDataNodeId(node)}>`;
 
     items.forEach((_, index) => {
       const itemY = pos.y + index * itemHeight;
       const isActive = index === activeIndex;
-      const bgColor = isActive ? 'rgba(59, 130, 246, 0.15)' : 'transparent';
+      const bgColor = isActive ? this.hexToRgba(accentColor, 0.15) : 'transparent';
 
       // Item background (only if active)
       if (isActive) {

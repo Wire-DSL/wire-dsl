@@ -70,6 +70,47 @@ describe('SVG Renderer', () => {
     expect(svg).toContain('font-size="11"');
   });
 
+  it('should render Heading spacing override with tighter vertical text offset', () => {
+    const input = `
+      project "HeadingSpacingRender" {
+        screen Main {
+          layout stack(direction: vertical, gap: md) {
+            component Heading text: "Default heading"
+            component Heading text: "Compact heading" spacing: none
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    const headingEntries = Object.entries(ir.project.nodes)
+      .flatMap(([id, node]) =>
+        node.kind === 'component' && node.componentType === 'Heading' ? [{ id, node }] : []
+      )
+      .sort((a, b) => layout[a.id].y - layout[b.id].y);
+
+    expect(headingEntries).toHaveLength(2);
+
+    const defaultHeading = headingEntries.find((entry) => entry.node.props.text === 'Default heading');
+    const compactHeading = headingEntries.find((entry) => entry.node.props.text === 'Compact heading');
+    expect(defaultHeading).toBeDefined();
+    expect(compactHeading).toBeDefined();
+
+    const defaultMatch = svg.match(/<text x="[^"]+" y="([^"]+)"[^>]*>Default heading<\/text>/);
+    const compactMatch = svg.match(/<text x="[^"]+" y="([^"]+)"[^>]*>Compact heading<\/text>/);
+    expect(defaultMatch).toBeTruthy();
+    expect(compactMatch).toBeTruthy();
+
+    const defaultBaselineOffset = Number(defaultMatch![1]) - layout[defaultHeading!.id].y;
+    const compactBaselineOffset = Number(compactMatch![1]) - layout[compactHeading!.id].y;
+
+    expect(compactBaselineOffset).toBeLessThan(defaultBaselineOffset);
+  });
+
   it('should render button component', () => {
     const input = `
       project "Button" {
@@ -215,6 +256,44 @@ describe('SVG Renderer', () => {
     expect(svg).toContain('stroke="#FF0000"');
   });
 
+  it('should apply accent, control and chart colors from colors block', () => {
+    const input = `
+      project "SemanticColorOverrides" {
+        colors {
+          accent: #112233
+          control: #225500
+          chart: #AA5500
+        }
+        screen Main {
+          layout stack {
+            component Topbar title: "Dashboard" icon: "menu" actions: "Save"
+            component Tabs items: "Overview,Activity" active: 0
+            component StatCard title: "Users" value: "1,024" icon: "users"
+            component SidebarMenu items: "Users,Settings" active: 0
+            component Checkbox label: "Accept" checked: true
+            component Radio label: "Choice" checked: true
+            component Toggle label: "Enabled" enabled: true
+            component Chart type: "line" height: 220
+            component Chart type: "area" height: 220
+            component Chart type: "bar" height: 220
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    expect(svg).toContain('fill="#112233"');
+    expect(svg).toContain('rgba(17, 34, 51, 0.9)');
+    expect(svg).toContain('fill="#225500"');
+    expect(svg).toContain('stroke="#AA5500"');
+    expect(svg).toContain('rgba(170, 85, 0, 0.18)');
+    expect(svg).toContain('rgba(170, 85, 0, 0.82)');
+  });
+
   it('should render Separate component as invisible spacer (no divider line)', () => {
     const input = `
       project "Separate" {
@@ -302,6 +381,31 @@ describe('SVG Renderer', () => {
     expect(svg).toContain('user@example.com');
   });
 
+  it('should use same placeholder font-size for Input and Textarea', () => {
+    const input = `
+      project "PlaceholderFontSize" {
+        screen Main {
+          layout stack {
+            component Input label: "Email" placeholder: "input-placeholder"
+            component Textarea label: "Bio" placeholder: "textarea-placeholder"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    const inputMatch = svg.match(/font-size="(\d+)"[^>]*>input-placeholder<\/text>/);
+    const textareaMatch = svg.match(/font-size="(\d+)"[^>]*>textarea-placeholder<\/text>/);
+
+    expect(inputMatch).toBeTruthy();
+    expect(textareaMatch).toBeTruthy();
+    expect(inputMatch![1]).toBe(textareaMatch![1]);
+  });
+
   it('should render card component', () => {
     const input = `
       project "Card" {
@@ -323,6 +427,29 @@ describe('SVG Renderer', () => {
     expect(svg).toContain('Total Users');
   });
 
+  it('should not render modal when visible is false', () => {
+    const input = `
+      project "HiddenModal" {
+        screen Main {
+          layout stack {
+            component Heading text: "Dashboard"
+            component Modal title: "Confirm Delete" visible: false
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    expect(svg).toContain('Dashboard');
+    expect(svg).not.toContain('Confirm Delete');
+    expect(svg).not.toContain('Modal backdrop');
+    expect(svg).not.toContain('Modal content');
+  });
+
   it('should render topbar component', () => {
     const input = `
       project "Topbar" {
@@ -340,6 +467,76 @@ describe('SVG Renderer', () => {
     const svg = renderToSVG(ir, layout);
 
     expect(svg).toContain('Dashboard');
+  });
+
+  it('should render Topbar left icon and right avatar when configured', () => {
+    const input = `
+      project "TopbarIconAvatar" {
+        screen Main {
+          layout stack {
+            component Topbar title: "Dashboard" subtitle: "Overview" icon: "menu" user: "john_doe" avatar: true
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    const topbarEntry = Object.entries(ir.project.nodes).find(
+      ([_, node]) => node.kind === 'component' && node.componentType === 'Topbar'
+    );
+    expect(topbarEntry).toBeDefined();
+    const topbarPos = layout[topbarEntry![0]];
+
+    expect(svg).toContain('<!-- Left icon -->');
+    expect(svg).toContain('<!-- Avatar -->');
+    expect(svg).toContain('john_doe');
+
+    const titleMatch = svg.match(/<text x="([^"]+)" y="[^"]+"[\s\S]*?>Dashboard<\/text>/);
+    expect(titleMatch).toBeTruthy();
+    const titleX = Number(titleMatch![1]);
+
+    // Title should shift right when left icon is present.
+    expect(titleX).toBeGreaterThan(topbarPos.x + 16);
+  });
+
+  it('should shift Topbar actions left when user and avatar are present to avoid overlap', () => {
+    const input = `
+      project "TopbarNoOverlap" {
+        screen Main {
+          layout stack {
+            component Topbar title: "Admin" actions: "Help,Logout" user: "john_doe" avatar: true
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    const actionMatches = [...svg.matchAll(/<!-- Action button:[^\n]* -->\s*<rect x="([^"]+)" y="[^"]+"[^>]*width="([^"]+)"/g)];
+    const userBadgeMatch = svg.match(/<!-- User badge -->\s*<rect x="([^"]+)" y="[^"]+"[^>]*width="([^"]+)"/);
+    const avatarMatch = svg.match(/<!-- Avatar -->\s*<circle cx="([^"]+)" cy="[^"]+" r="([^"]+)"/);
+
+    expect(actionMatches.length).toBeGreaterThan(0);
+    expect(userBadgeMatch).toBeTruthy();
+    expect(avatarMatch).toBeTruthy();
+
+    const rightmostAction = Math.max(
+      ...actionMatches.map((match) => Number(match[1]) + Number(match[2]))
+    );
+    const userX = Number(userBadgeMatch![1]);
+    const userWidth = Number(userBadgeMatch![2]);
+    const userRight = userX + userWidth;
+    const avatarLeft = Number(avatarMatch![1]) - Number(avatarMatch![2]);
+
+    expect(rightmostAction).toBeLessThanOrEqual(userX - 4);
+    expect(userRight).toBeLessThanOrEqual(avatarLeft - 4);
   });
 
   it('should render table component', () => {
@@ -476,6 +673,31 @@ describe('SVG Renderer', () => {
 
     expect(svg).toContain('Buenos Aires');
     expect(svg).toContain('Madrid');
+  });
+
+  it('should render all explicit List items when content height fits exactly', () => {
+    const input = `
+      project "ListAllItems" {
+        screen Main {
+          layout stack {
+            component List title: "Technologies" items: "JavaScript,TypeScript,Python,Rust,Go,Swift"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    expect(svg).toContain('Technologies');
+    expect(svg).toContain('JavaScript');
+    expect(svg).toContain('TypeScript');
+    expect(svg).toContain('Python');
+    expect(svg).toContain('Rust');
+    expect(svg).toContain('Go');
+    expect(svg).toContain('Swift');
   });
 
   it('should support custom mocks in Table and List', () => {
@@ -1044,6 +1266,26 @@ describe('SVG Renderer', () => {
 
     expect(svg).toContain('Product A');
     expect(svg).toContain('Product B');
+  });
+
+  it('should render custom icon in Image when placeholder is icon', () => {
+    const input = `
+      project "IconImageRender" {
+        screen Main {
+          layout stack {
+            component Image placeholder: "icon" icon: "search" height: 120
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    expect(svg).toContain('Custom Icon Placeholder');
+    expect(svg).not.toContain('Person Silhouette');
   });
 
   it('should render complete form example', () => {

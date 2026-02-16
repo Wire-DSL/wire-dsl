@@ -87,6 +87,8 @@ export function getPropertyDocumentation(componentName: string, propertyName: st
     label: 'Label text (string)',
     placeholder: 'Placeholder text (string)',
     icon: 'Icon name (string)',
+    avatar: 'Enable avatar display (`true`/`false`)',
+    visible: 'Show/hide component (`true`/`false`)',
     type: 'Type identifier (string)',
     variant: 'Visual variant style',
     size: 'Component size',
@@ -96,6 +98,7 @@ export function getPropertyDocumentation(componentName: string, propertyName: st
     columns: 'Table: CSV column names (string) / Grid: number of columns',
     gap: 'Spacing between items',
     padding: 'Internal padding',
+    spacing: 'Spacing token (`none|xs|sm|md|lg|xl`)',
     value: 'Display value (string/number)',
   };
 

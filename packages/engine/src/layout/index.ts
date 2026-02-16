@@ -2,6 +2,7 @@ import type { IRContract, IRNode, IRStyle } from '../ir/index';
 import { resolveSpacingToken, type DensityLevel } from '../shared/spacing';
 import { resolveIconButtonSize, resolveIconSize } from '../shared/component-sizes';
 import { resolveHeadingTypography } from '../shared/heading-levels';
+import { resolveHeadingVerticalPadding } from '../shared/heading-spacing';
 
 /**
  * Layout Engine
@@ -788,7 +789,13 @@ export class LayoutEngine {
       const maxWidth = availableWidth && availableWidth > 0 ? availableWidth : 200;
       const lines = this.wrapTextToLines(text, maxWidth, fontSize);
       const wrappedHeight = Math.max(1, lines.length) * lineHeightPx;
-      return Math.max(this.getComponentHeight(), wrappedHeight);
+      const density = (this.style.density || 'normal') as DensityLevel;
+      const verticalPadding = resolveHeadingVerticalPadding(node.props.spacing, density);
+      if (verticalPadding === null) {
+        // Keep legacy/default behavior when spacing is not explicitly defined.
+        return Math.max(this.getComponentHeight(), wrappedHeight);
+      }
+      return Math.max(1, Math.ceil(wrappedHeight + verticalPadding * 2));
     }
 
     if (node.componentType === 'Text') {
@@ -844,7 +851,21 @@ export class LayoutEngine {
     if (node.componentType === 'Card') return 120;
     if (node.componentType === 'StatCard') return 120;
     if (node.componentType === 'Chart' || node.componentType === 'ChartPlaceholder') return 250;
-    if (node.componentType === 'List') return 180;
+    if (node.componentType === 'List') {
+      const itemsFromProps = String(node.props.items || '')
+        .split(',')
+        .map((item) => item.trim())
+        .filter(Boolean);
+      const parsedItemsMock = Number(node.props.itemsMock ?? 4);
+      const fallbackCount = Number.isFinite(parsedItemsMock)
+        ? Math.max(0, Math.floor(parsedItemsMock))
+        : 4;
+      const itemCount = itemsFromProps.length > 0 ? itemsFromProps.length : fallbackCount;
+      const titleHeight = String(node.props.title || '').trim().length > 0 ? 40 : 0;
+      const itemHeight = 36;
+      const contentHeight = titleHeight + itemCount * itemHeight;
+      return Math.max(this.getComponentHeight(), contentHeight);
+    }
 
     // Standard height components
     if (node.componentType === 'Topbar') return 56;

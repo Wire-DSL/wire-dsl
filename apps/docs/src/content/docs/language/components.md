@@ -16,12 +16,14 @@ Large, bold text for page titles and section headers.
 **Properties**:
 - `text` (string): The heading text
 - `level` (enum): Visual heading level - `h1` | `h2` | `h3` | `h4` | `h5` | `h6` (default: `h2`)
+- `spacing` (enum): Vertical inner spacing around heading text - `none` | `xs` | `sm` | `md` | `lg` | `xl` (optional)
 
 **Example**:
 ```wire
 component Heading text: "Dashboard" level: h1
 component Heading text: "User Management" level: h2
 component Heading text: "Section title" level: h3
+component Heading text: "Card Title" level: h4 spacing: none
 ```
 
 **Rendering**: Bold text with size based on `level`
@@ -236,6 +238,8 @@ Top navigation bar/header.
 **Properties**:
 - `title` (string): Main title
 - `subtitle` (string, optional): Secondary subtitle
+- `icon` (string, optional): Left icon name (e.g., `menu`, `search`)
+- `avatar` (boolean, optional): Show avatar circle on the right (`true`/`false`)
 - `user` (string, optional): User name or identifier for badge
 - `actions` (string, optional): Action items (comma-separated)
 
@@ -245,9 +249,10 @@ component Topbar title: "Dashboard"
 component Topbar title: "Dashboard" subtitle: "Welcome back"
 component Topbar title: "Settings" user: "john_doe"
 component Topbar title: "Admin" actions: "Help,Logout"
+component Topbar title: "Workspace" subtitle: "Overview" icon: "menu" actions: "Help,Logout" user: "john_doe" avatar: true
 ```
 
-**Rendering**: Horizontal bar at top of screen with logo/title and optional user menu
+**Rendering**: Horizontal bar at top of screen with optional left icon, title/subtitle, right actions, user badge, and avatar. When `user` is present, `actions` are shifted left to avoid overlap.
 
 ---
 
@@ -382,6 +387,7 @@ Placeholder for image content.
 
 **Properties**:
 - `placeholder` (string): Shape - `square` | `landscape` | `portrait` | `avatar` | `icon`
+- `icon` (string, optional): Icon name used when `placeholder: "icon"`
 - `height` (number, optional): Height in pixels (default: 200)
 
 **Example**:
@@ -389,6 +395,7 @@ Placeholder for image content.
 component Image placeholder: "square" height: 250
 component Image placeholder: "landscape" height: 300
 component Image placeholder: "avatar" height: 100
+component Image placeholder: "icon" icon: "search" height: 120
 ```
 
 **Rendering**: Rectangular placeholder image with appropriate aspect ratio
@@ -594,11 +601,13 @@ Modal dialog box.
 
 **Properties**:
 - `title` (string): Modal title
+- `visible` (boolean): Show/hide modal overlay (default: `true`)
 
 **Example**:
 ```wire
 component Modal title: "Confirm Action"
 component Modal title: "Delete User"
+component Modal title: "Delete User" visible: false
 ```
 
 **Rendering**: Centered overlay dialog with title and generic content placeholder
