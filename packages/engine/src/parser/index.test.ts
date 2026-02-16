@@ -136,6 +136,30 @@ describe('WireDSL Parser', () => {
     }
   });
 
+  it('should parse Button block property', () => {
+    const input = `
+      project "ButtonBlock" {
+        screen Main {
+          layout stack {
+            component Button text: "Continue" block: true
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const button = ast.screens[0].layout.children[0];
+
+    expect(button.type).toBe('component');
+    if (button.type === 'component') {
+      expect(button.componentType).toBe('Button');
+      expect(button.props).toEqual({
+        text: 'Continue',
+        block: 'true',
+      });
+    }
+  });
+
   it('should parse Heading level property', () => {
     const input = `
       project "HeadingLevel" {

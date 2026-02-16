@@ -253,6 +253,7 @@ layout card(padding: lg, gap: md, radius: md, border: true) {
 ```wire
 project "Login" {
   style {
+    device: "tablet"
     density: "comfortable"
     spacing: "lg"
     radius: "md"
@@ -381,6 +382,7 @@ Your response:
 ````wire
 project "Login App" {
   style {
+    device: "tablet"
     density: "comfortable"
     spacing: "lg"
     radius: "md"

@@ -245,32 +245,72 @@ export class LayoutEngine {
         });
       } else {
         // Custom alignment: left, center, right with natural widths
-        // Calculate natural widths for all children
+        // Calculate natural widths for all children.
+        // `Button block: true` behaves like a flex item that grows to fill
+        // the remaining horizontal space in non-justify stacks.
         const childWidths: number[] = [];
+        const explicitHeightFlags: boolean[] = [];
+        const blockButtonIndices = new Set<number>();
         let stackHeight = 0;
 
-        children.forEach((childRef) => {
+        children.forEach((childRef, index) => {
           const childNode = this.nodes[childRef.ref];
           let childWidth = this.getIntrinsicComponentWidth(childNode);
           let childHeight = this.getComponentHeight();
+          const hasExplicitHeight = childNode?.kind === 'component' && !!childNode.props.height;
+          const hasExplicitWidth = childNode?.kind === 'component' && !!childNode.props.width;
+          const isBlockButton =
+            childNode?.kind === 'component' &&
+            childNode.componentType === 'Button' &&
+            !hasExplicitWidth &&
+            this.parseBooleanProp(childNode.props.block, false);
 
-          if (childNode?.kind === 'component' && childNode.props.height) {
-            childHeight = Number(childNode.props.height);
-          } else if (childNode?.kind === 'component' && childNode.props.width) {
+          if (isBlockButton) {
+            childWidth = 0;
+            blockButtonIndices.add(index);
+          } else if (hasExplicitWidth) {
             childWidth = Number(childNode.props.width);
+          }
+
+          if (hasExplicitHeight) {
+            childHeight = Number(childNode.props.height);
+          }
+
+          childWidths.push(childWidth);
+          explicitHeightFlags.push(hasExplicitHeight);
+        });
+
+        const totalGapWidth = gap * Math.max(0, children.length - 1);
+        if (blockButtonIndices.size > 0) {
+          const fixedWidth = childWidths.reduce((sum, w, idx) => {
+            return blockButtonIndices.has(idx) ? sum : sum + w;
+          }, 0);
+          const remainingWidth = width - totalGapWidth - fixedWidth;
+          const widthPerBlock = Math.max(1, remainingWidth / blockButtonIndices.size);
+          blockButtonIndices.forEach((index) => {
+            childWidths[index] = widthPerBlock;
+          });
+        }
+
+        // Resolve final heights after widths are finalized.
+        children.forEach((childRef, index) => {
+          const childNode = this.nodes[childRef.ref];
+          let childHeight = this.getComponentHeight();
+          const childWidth = childWidths[index];
+
+          if (explicitHeightFlags[index] && childNode?.kind === 'component') {
+            childHeight = Number(childNode.props.height);
           } else if (childNode?.kind === 'container') {
             childHeight = this.calculateContainerHeight(childNode, childWidth);
           } else if (childNode?.kind === 'component') {
             childHeight = this.getIntrinsicComponentHeight(childNode, childWidth);
           }
 
-          childWidths.push(childWidth);
           stackHeight = Math.max(stackHeight, childHeight);
         });
 
         // Calculate total content width needed
         const totalChildWidth = childWidths.reduce((sum, w) => sum + w, 0);
-        const totalGapWidth = gap * Math.max(0, children.length - 1);
         const totalContentWidth = totalChildWidth + totalGapWidth;
 
         // Calculate starting X based on alignment
@@ -654,12 +694,13 @@ export class LayoutEngine {
   private getButtonMetricsForDensity(): { fontSize: number; paddingX: number } {
     switch (this.style.density) {
       case 'compact':
-        return { fontSize: 12, paddingX: 8 };
-      case 'comfortable':
-        return { fontSize: 16, paddingX: 16 };
+        return { fontSize: 12, paddingX: 12 };
       case 'normal':
+        return { fontSize: 14, paddingX: 18 };
+      case 'comfortable':
+        return { fontSize: 16, paddingX: 24 };
       default:
-        return { fontSize: 14, paddingX: 12 };
+        return { fontSize: 14, paddingX: 18 };
     }
   }
 
@@ -1003,6 +1044,16 @@ export class LayoutEngine {
       }
     }
     return width;
+  }
+
+  private parseBooleanProp(value: unknown, fallback: boolean = false): boolean {
+    if (typeof value === 'boolean') return value;
+    if (typeof value === 'string') {
+      const normalized = value.toLowerCase().trim();
+      if (normalized === 'true') return true;
+      if (normalized === 'false') return false;
+    }
+    return fallback;
   }
 
   private adjustNodeYPositions(nodeId: string, deltaY: number): void {

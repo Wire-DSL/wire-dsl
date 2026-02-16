@@ -173,6 +173,39 @@ describe('Layout Engine', () => {
     expect(gap).toBe(24);
   });
 
+  it('should make block Button consume remaining width in horizontal natural stack', () => {
+    const input = `
+      project "ButtonBlockHorizontal" {
+        screen Main {
+          layout stack(direction: horizontal, align: left, gap: md, padding: md) {
+            component Button text: "Continue" block: true
+            component Button text: "Cancel"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+
+    const stackEntry = Object.entries(ir.project.nodes).find(
+      ([_, node]) => node.kind === 'container' && node.containerType === 'stack'
+    );
+    const buttons = Object.entries(ir.project.nodes)
+      .filter(([_, node]) => node.kind === 'component' && node.componentType === 'Button')
+      .map(([id, node]) => ({ id, node, pos: layout[id] }))
+      .sort((a, b) => a.pos.x - b.pos.x);
+
+    expect(stackEntry).toBeDefined();
+    expect(buttons).toHaveLength(2);
+    expect(buttons[0].pos.width).toBeGreaterThan(buttons[1].pos.width);
+
+    const occupiedWidth = buttons[1].pos.x + buttons[1].pos.width - buttons[0].pos.x;
+    const stackInnerWidth = layout[stackEntry![0]].width - 32; // md padding on both sides
+    expect(occupiedWidth).toBeCloseTo(stackInnerWidth, 5);
+  });
+
   it('should calculate intrinsic width for Link based on text length', () => {
     const input = `
       project "LinkWidth" {

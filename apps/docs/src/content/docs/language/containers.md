@@ -451,8 +451,8 @@ layout card(padding: md, gap: md, radius: lg, border: true) {
   component Heading text: "Premium Laptop"
   component Text content: "High-performance with latest specs"
   component Badge text: "In Stock" variant: success
-  layout stack(direction: horizontal, gap: sm) {
-    component Button text: "Buy" variant: primary
+  layout stack(direction: horizontal, gap: sm, align: justify) {
+    component Button text: "Buy" variant: primary block: true
     component Button text: "Details" variant: secondary
   }
 }
@@ -483,7 +483,7 @@ layout card(padding: md, gap: md, radius: md, border: true) {
   component Heading text: "Getting Started with Wire-DSL"
   component Text content: "Learn how to create interactive wireframes with Wire-DSL in 5 minutes"
   component Badge text: "Tutorial"
-  component Button text: "Read More"
+  component Button text: "Read More" block: true
 }
 ```
 <!-- wire-preview:end -->

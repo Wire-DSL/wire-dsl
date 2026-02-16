@@ -55,6 +55,7 @@ Visit **[https://live.wire-dsl.org](https://live.wire-dsl.org)** to start coding
 ```wire
 project "My Wireframe" {
   style {
+    device: "tablet"
     density: "normal"
     spacing: "md"
     radius: "md"
@@ -189,6 +190,10 @@ Define reusable components:
 <!-- wire-preview:start -->
 ```wire
 project "Component Composition" {
+  style {
+    device: "tablet"
+  }
+  
 	define Component "UserCard" {
 		layout card(padding: md, gap: sm) {
 			component Image placeholder: "avatar" height: 96

@@ -110,8 +110,9 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     properties: {
       text: { name: 'text', type: 'string' },
       variant: variantWithDefaultEnum,
+      block: { name: 'block', type: 'boolean' },
     },
-    example: 'component Button text: "Save" variant: primary',
+    example: 'component Button text: "Save" variant: primary block: true',
   },
   Link: {
     name: 'Link',

@@ -34,7 +34,8 @@ function prepareCodeForRendering(code) {
   if (firstKeyword === 'screen') {
     return `project "Default" {
   style {
-    density: "normal"
+    device: "tablet"
+    density: "comfortable"
     spacing: "md"
     radius: "md"
     stroke: "normal"
@@ -60,7 +61,8 @@ function prepareCodeForRendering(code) {
 
   return `project "Default" {
   style {
-    density: "normal"
+    device: "tablet"
+    density: "comfortable"
     spacing: "md"
     radius: "md"
     stroke: "normal"
@@ -106,7 +108,8 @@ async function renderSVGPreview(code, containerEl) {
     }
     
     const layout = calculateLayout(ir);
-    const svg = renderToSVG(ir, layout);
+    console.log(layout.node_1)
+    const svg = renderToSVG(ir, layout, { width: layout.node_1.width, height: layout.node_1.height });
     if (!svg) {
       throw new Error('renderToSVG retornó null');
     }
@@ -320,7 +323,7 @@ document.addEventListener('astro:after-swap', initializeWirePreviews);
     display: block;
     margin: 1.5rem auto;
     max-width: 100%;
-    max-height: 600px;
+    /*max-height: 600px;*/
     height: auto;
   }
 

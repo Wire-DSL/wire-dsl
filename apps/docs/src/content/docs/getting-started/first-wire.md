@@ -37,6 +37,7 @@ Create a file called `login.wire` and add the following:
 ```wire
 project "Login App" {
   style {
+    device: "tablet"
     density: "comfortable"
     spacing: "lg"
     radius: "md"

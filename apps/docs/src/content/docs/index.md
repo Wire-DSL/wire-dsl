@@ -27,7 +27,10 @@ Instead of dragging components in a design tool, you write clean, readable code:
 <!-- wire-preview:start -->
 ```wire
 project "Login App" {
-  style { density: "comfortable" }
+  style {
+    device: "tablet"
+    density: "comfortable"
+  }
   
   screen LoginScreen {
     layout card(padding: lg, gap: md, radius: md, border: true) {

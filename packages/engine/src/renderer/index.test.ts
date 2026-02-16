@@ -131,6 +131,42 @@ describe('SVG Renderer', () => {
     expect(svg).toContain('<rect');
   });
 
+  it('should render buttons at full width in horizontal justify stack without block flag', () => {
+    const input = `
+      project "ButtonJustifyWidth" {
+        screen Main {
+          layout stack(direction: horizontal, align: justify, gap: md) {
+            component Button text: "Back"
+            component Button text: "Continue"
+          }
+        }
+      }
+    `;
+
+    const { ast } = parseWireDSLWithSourceMap(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    const buttons = Object.entries(ir.project.nodes)
+      .filter(([_, node]) => node.kind === 'component' && node.componentType === 'Button')
+      .map(([id, node]) => ({ id, node }));
+
+    expect(buttons).toHaveLength(2);
+
+    buttons.forEach(({ id, node }) => {
+      const nodeId = node.meta?.nodeId;
+      expect(nodeId).toBeTruthy();
+
+      const match = svg.match(
+        new RegExp(`data-node-id="${nodeId}"[\\s\\S]*?<rect[^>]*?\\swidth="([^"]+)"[^>]*?\\sheight=`)
+      );
+      expect(match).toBeTruthy();
+      const renderedWidth = Number(match![1]);
+      expect(renderedWidth).toBeCloseTo(layout[id].width, 5);
+    });
+  });
+
   it('should render primary button with different style', () => {
     const input = `
       project "Primary" {
@@ -1150,6 +1186,39 @@ describe('SVG Renderer', () => {
     expect(match).toBeTruthy();
     const renderedWidth = Number(match![1]);
     expect(renderedWidth).toBeLessThanOrEqual(buttonPos.width + 0.01);
+  });
+
+  it('should render block Button using full layout width', () => {
+    const input = `
+      project "ButtonBlockRender" {
+        screen Main {
+          layout stack(padding: md) {
+            component Button text: "Continue" block: true
+          }
+        }
+      }
+    `;
+
+    const { ast } = parseWireDSLWithSourceMap(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+    const buttonEntry = Object.entries(ir.project.nodes).find(
+      ([_, node]) => node.kind === 'component' && node.componentType === 'Button'
+    );
+
+    expect(buttonEntry).toBeTruthy();
+    const buttonNode = buttonEntry![1];
+    const buttonPos = layout[buttonEntry![0]];
+    const nodeId = buttonNode.meta?.nodeId;
+    expect(nodeId).toBeTruthy();
+
+    const match = svg.match(
+      new RegExp(`data-node-id="${nodeId}"[\\s\\S]*?<rect[^>]*?\\swidth="([^"]+)"[^>]*?\\sheight=`)
+    );
+    expect(match).toBeTruthy();
+    const renderedWidth = Number(match![1]);
+    expect(renderedWidth).toBeCloseTo(buttonPos.width, 5);
   });
 
   it('should not truncate Button text in comfortable density when width is unconstrained', () => {

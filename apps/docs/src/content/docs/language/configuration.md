@@ -363,6 +363,7 @@ project "EnterpriseApp" {
 ```wire
 project "AdminPortal" {
   style {
+    device: "desktop"
     density: "compact"
     spacing: "md"
     radius: "sm"
@@ -407,6 +408,7 @@ project "AdminPortal" {
 ```wire
 project "ECommerceStore" {
   style {
+    device: "desktop"
     density: "comfortable"
     spacing: "lg"
     radius: "lg"
@@ -424,7 +426,7 @@ project "ECommerceStore" {
             component Image placeholder: "square" height: 250
             component Heading text: "Product 1"
             component Text content: "High quality product"
-            component Button text: "View Details"
+            component Button text: "View Details" block: true
           }
         }
         cell span: 4 {
@@ -432,7 +434,7 @@ project "ECommerceStore" {
             component Image placeholder: "square" height: 250
             component Heading text: "Product 2"
             component Text content: "Best seller"
-            component Button text: "View Details"
+            component Button text: "View Details" block: true
           }
         }
         cell span: 4 {
@@ -440,7 +442,7 @@ project "ECommerceStore" {
             component Image placeholder: "square" height: 250
             component Heading text: "Product 3"
             component Text content: "New arrival"
-            component Button text: "View Details"
+            component Button text: "View Details" block: true
           }
         }
       }

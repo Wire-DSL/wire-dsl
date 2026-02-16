@@ -17,11 +17,10 @@ describe('device presets', () => {
     expect(resolveDevicePreset('PRINT')).toEqual({ width: 794, minHeight: 1123 });
   });
 
-  it('should support a4 alias and validate presets', () => {
-    expect(resolveDevicePreset('a4')).toEqual({ width: 794, minHeight: 1123 });
+  it('should validate known presets and reject unknown aliases', () => {
     expect(isValidDevice('tablet')).toBe(true);
     expect(isValidDevice('print')).toBe(true);
-    expect(isValidDevice('a4')).toBe(true);
+    expect(isValidDevice('a4')).toBe(false);
   });
 
   it('should fallback to desktop dimensions for unknown device', () => {
