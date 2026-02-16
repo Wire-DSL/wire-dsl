@@ -1031,7 +1031,9 @@ export class SketchSVGRenderer extends SVGRenderer {
   protected renderStatCard(node: IRComponentNode, pos: any): string {
     const title = String(node.props.title || 'Metric');
     const value = String(node.props.value || '0');
-    const caption = String(node.props.caption || '');
+    const rawCaption = String(node.props.caption || '');
+    const caption = rawCaption.replace(/\r\n/g, '\n').split('\n')[0] || '';
+    const hasCaption = caption.trim().length > 0;
     const iconName = String(node.props.icon || '').trim();
     const iconSvg = iconName ? getIcon(iconName) : null;
 
@@ -1043,11 +1045,16 @@ export class SketchSVGRenderer extends SVGRenderer {
     const valueSize = 32;
     const titleSize = 14;
     const captionSize = 12;
-    const topGap = 8;
-    const valueGap = 12;
-    const captionGap = 12;
-
-    const titleY = innerY + topGap + titleSize;
+    const valueGap = 10;
+    const captionGap = 8;
+    const contentHeight =
+      titleSize +
+      valueGap +
+      valueSize +
+      (hasCaption ? captionGap + captionSize : 0);
+    const contentAreaHeight = Math.max(0, pos.height - padding * 2);
+    const contentStartY = innerY + Math.max(0, (contentAreaHeight - contentHeight) / 2);
+    const titleY = contentStartY + titleSize;
     const valueY = titleY + valueGap + valueSize;
     const captionY = valueY + captionGap + captionSize;
     const iconSize = 16;
@@ -1058,6 +1065,9 @@ export class SketchSVGRenderer extends SVGRenderer {
       ? Math.max(40, pos.width - padding * 2 - iconBadgeSize - 8)
       : Math.max(40, pos.width - padding * 2);
     const visibleTitle = this.truncateTextToWidth(title, titleMaxWidth, titleSize);
+    const visibleCaption = hasCaption
+      ? this.truncateTextToWidth(caption, Math.max(20, pos.width - padding * 2), captionSize)
+      : '';
 
     let svg = `<g${this.getDataNodeId(node)}>
     <!-- StatCard Background -->
@@ -1100,13 +1110,13 @@ export class SketchSVGRenderer extends SVGRenderer {
     </g>`;
     }
 
-    if (caption) {
+    if (hasCaption) {
       svg += `
     <!-- Caption -->
     <text x="${innerX}" y="${captionY}"
           font-family="${this.fontFamily}"
           font-size="${captionSize}"
-          fill="${this.renderTheme.textMuted}">${this.escapeXml(caption)}</text>`;
+          fill="${this.renderTheme.textMuted}">${this.escapeXml(visibleCaption)}</text>`;
     }
 
     svg += `

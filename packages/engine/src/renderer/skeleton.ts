@@ -451,9 +451,26 @@ export class SkeletonSVGRenderer extends SVGRenderer {
    */
   protected renderStatCard(node: IRComponentNode, pos: any): string {
     const hasIcon = String(node.props.icon || '').trim().length > 0;
+    const hasCaption = String(node.props.caption || '').trim().length > 0;
     const iconSize = 20;
     const iconX = pos.x + pos.width - 16 - iconSize;
     const iconY = pos.y + 14;
+    const padding = 16;
+    const titleBlockHeight = 10;
+    const valueBlockHeight = 20;
+    const captionBlockHeight = 10;
+    const valueGap = 14;
+    const captionGap = 12;
+    const contentHeight =
+      titleBlockHeight +
+      valueGap +
+      valueBlockHeight +
+      (hasCaption ? captionGap + captionBlockHeight : 0);
+    const contentAreaHeight = Math.max(0, pos.height - padding * 2);
+    const contentStartY = pos.y + padding + Math.max(0, (contentAreaHeight - contentHeight) / 2);
+    const titleY = contentStartY;
+    const valueY = titleY + titleBlockHeight + valueGap;
+    const captionY = valueY + valueBlockHeight + captionGap;
 
     return `<g${this.getDataNodeId(node)}>
       <rect x="${pos.x}" y="${pos.y}"
@@ -470,18 +487,22 @@ export class SkeletonSVGRenderer extends SVGRenderer {
             fill="${this.renderTheme.border}"/>`
           : ''
       }
-      <rect x="${pos.x + 16}" y="${pos.y + 16}"
+      <rect x="${pos.x + 16}" y="${titleY}"
             width="80" height="10"
             rx="4"
             fill="${this.renderTheme.border}"/>
-      <rect x="${pos.x + 16}" y="${pos.y + 40}"
+      <rect x="${pos.x + 16}" y="${valueY}"
             width="100" height="20"
             rx="4"
             fill="${this.renderTheme.border}"/>
-      <rect x="${pos.x + 16}" y="${pos.y + 72}"
+      ${
+        hasCaption
+          ? `<rect x="${pos.x + 16}" y="${captionY}"
             width="60" height="10"
             rx="4"
-            fill="${this.renderTheme.border}"/>
+            fill="${this.renderTheme.border}"/>`
+          : ''
+      }
     </g>`;
   }
 
