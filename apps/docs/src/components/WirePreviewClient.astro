@@ -33,7 +33,7 @@ function prepareCodeForRendering(code) {
   if (firstKeyword === 'project') return code;
   if (firstKeyword === 'screen') {
     return `project "Default" {
-  theme {
+  style {
     density: "normal"
     spacing: "md"
     radius: "md"
@@ -45,7 +45,7 @@ function prepareCodeForRendering(code) {
   }
 //   if (firstKeyword === 'layout') {
 //     return `project "Default" {
-//   theme {
+//   style {
 //     density: "normal"
 //     spacing: "md"
 //     radius: "md"
@@ -59,7 +59,7 @@ function prepareCodeForRendering(code) {
 //   }
 
   return `project "Default" {
-  theme {
+  style {
     density: "normal"
     spacing: "md"
     radius: "md"

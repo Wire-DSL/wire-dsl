@@ -101,11 +101,11 @@ Download the final wireframe in SVG or PNG format.
 
 ### Common Errors
 
-**Missing or incomplete theme block** (optional but recommended):
+**Missing or incomplete style block** (optional but recommended):
 ```
-Warning: theme block recommended for consistent styling
+Warning: style block recommended for consistent styling
 ```
-Solution: Add a theme block to define design tokens. If omitted, defaults are applied.
+Solution: Add a style block to define design tokens. If omitted, defaults are applied.
 
 **Invalid component name**:
 ```
@@ -133,7 +133,7 @@ When there are errors, the preview panel shows:
 <!-- wire-preview:start -->
 ```wire
 project "Layout Tests" {
-  theme {
+  style {
     density: "normal"
     spacing: "md"
     radius: "md"

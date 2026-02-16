@@ -1,0 +1,372 @@
+project "Complete Components Catalog" {
+  style {
+    density: "normal"
+    spacing: "md"
+    radius: "md"
+    stroke: "normal"
+    font: "base"
+  }
+
+  screen AllComponents {
+    layout stack(direction: vertical, gap: md, padding: lg) {
+      component Heading text: "Wire-DSL Components Catalog"
+      component Text content: "Complete showcase of all components with property variations"
+      component Divider
+
+      // ============================================================================
+      // TEXT COMPONENTS
+      // ============================================================================
+      
+      component Heading text: "Text Components"
+      component Text content: "Typography elements for displaying text"
+
+      layout stack(direction: vertical, gap: sm, padding: md) {
+        component Text content: "Heading - Large text element"
+        component Heading text: "Page Title Example"
+        component Heading text: "Another Heading Variant"
+      }
+
+      layout stack(direction: vertical, gap: sm, padding: md) {
+        component Text content: "Text - Standard body text"
+        component Text content: "This is a standard text component for displaying regular content"
+      }
+
+      layout stack(direction: vertical, gap: sm, padding: md) {
+        component Text content: "Text - Multi-line text"
+        component Text content: "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+      }
+
+      layout stack(direction: vertical, gap: sm, padding: md) {
+        component Text content: "Label - Form field label"
+        component Label text: "Email Address"
+        component Label text: "Password"
+      }
+
+      component Divider
+
+      // ============================================================================
+      // INPUT COMPONENTS
+      // ============================================================================
+
+      component Heading text: "Input Components"
+      component Text content: "Form elements for user input"
+
+      layout stack(direction: vertical, gap: sm, padding: md) {
+        component Text content: "Input - Single-line text field"
+        component Input label: "Username" placeholder: "Enter username"
+        component Input label: "Email" placeholder: "user@example.com"
+      }
+
+      layout stack(direction: vertical, gap: sm, padding: md) {
+        component Text content: "Textarea - Multi-line text field (rows: 3)"
+        component Textarea label: "Message" placeholder: "Enter your message here..." rows: 3
+      }
+
+      layout stack(direction: vertical, gap: sm, padding: md) {
+        component Text content: "Select - Dropdown menu"
+        component Select label: "Status" items: "Active,Inactive,Pending,Archived"
+      }
+
+      layout stack(direction: vertical, gap: sm, padding: md) {
+        component Text content: "Checkbox - Boolean selection (checked: false/true)"
+        component Checkbox label: "I agree to terms" checked: false
+        component Checkbox label: "Subscribe to newsletter" checked: true
+      }
+
+      layout stack(direction: vertical, gap: sm, padding: md) {
+        component Text content: "Radio - Single selection from group (checked: false/true)"
+        component Radio label: "Option A" checked: false
+        component Radio label: "Option B" checked: true
+      }
+
+      layout stack(direction: vertical, gap: sm, padding: md) {
+        component Text content: "Toggle - Boolean switch (enabled: false/true)"
+        component Toggle label: "Dark Mode" enabled: false
+        component Toggle label: "Notifications" enabled: true
+      }
+
+      component Divider
+
+      // ============================================================================
+      // BUTTON COMPONENTS
+      // ============================================================================
+
+      component Heading text: "Button Components"
+      component Text content: "Interactive action elements"
+
+      layout stack(direction: horizontal, gap: md, padding: md) {
+        component Text content: "Button - Variants:"
+        component Button text: "Primary" variant: primary
+        component Button text: "Secondary" variant: secondary
+        component Button text: "Info" variant: info
+      }
+
+      layout stack(direction: horizontal, gap: md, padding: md) {
+        component Text content: "IconButton - Icon-based buttons:"
+        component IconButton icon: "search"
+        component IconButton icon: "settings"
+        component IconButton icon: "menu"
+        component IconButton icon: "close"
+      }
+
+      component Divider
+
+      // ============================================================================
+      // NAVIGATION COMPONENTS
+      // ============================================================================
+
+      component Heading text: "Navigation Components"
+      component Text content: "Elements for user navigation"
+
+      layout stack(direction: vertical, gap: sm, padding: md) {
+        component Text content: "Topbar - Header bar (basic)"
+        component Topbar title: "Dashboard"
+      }
+
+      layout stack(direction: vertical, gap: sm, padding: md) {
+        component Text content: "Topbar - With subtitle"
+        component Topbar title: "Dashboard" subtitle: "Welcome back, John"
+      }
+
+      layout stack(direction: vertical, gap: sm, padding: md) {
+        component Text content: "Topbar - With user badge"
+        component Topbar title: "Admin Panel" user: "admin_user"
+      }
+
+      layout stack(direction: vertical, gap: sm, padding: md) {
+        component Text content: "Topbar - With actions"
+        component Topbar title: "Settings" actions: "Help,Support,Logout"
+      }
+
+      layout stack(direction: vertical, gap: sm, padding: md) {
+        component Text content: "SidebarMenu - Vertical menu (active: 0)"
+        component SidebarMenu items: "Dashboard,Users,Settings,Reports,Help" active: 0
+      }
+
+      layout stack(direction: vertical, gap: sm, padding: md) {
+        component Text content: "SidebarMenu - Different active item (active: 2)"
+        component SidebarMenu items: "Home,Products,Analytics,Admin,Logout" active: 2
+      }
+
+      layout stack(direction: vertical, gap: sm, padding: md) {
+        component Text content: "Breadcrumbs - Navigation path (default separator: /)"
+        component Breadcrumbs items: "Home,Users,User Detail"
+      }
+
+      layout stack(direction: vertical, gap: sm, padding: md) {
+        component Text content: "Breadcrumbs - Custom separator: >"
+        component Breadcrumbs items: "Dashboard,Products,Electronics,Laptops" separator: ">"
+      }
+
+      layout stack(direction: vertical, gap: sm, padding: md) {
+        component Text content: "Tabs - Tabbed interface (active: 0)"
+        component Tabs items: "Overview,Details,Comments,Settings" active: 0
+      }
+
+      layout stack(direction: vertical, gap: sm, padding: md) {
+        component Text content: "Tabs - Different active tab (active: 2)"
+        component Tabs items: "Profile,Security,Notifications,Privacy" active: 2
+      }
+
+      component Divider
+
+      // ============================================================================
+      // DATA COMPONENTS
+      // ============================================================================
+
+      component Heading text: "Data Components"
+      component Text content: "Elements for displaying data"
+
+      layout stack(direction: vertical, gap: sm, padding: md) {
+        component Text content: "Table - Data grid with 3 columns, 5 rows"
+        component Table columns: "Name,Email,Status" rows: 5
+      }
+
+      layout stack(direction: vertical, gap: sm, padding: md) {
+        component Text content: "Table - With more columns and rows"
+        component Table columns: "ID,User,Department,Email,Status,Role" rows: 8
+      }
+
+      layout stack(direction: vertical, gap: sm, padding: md) {
+        component Text content: "List - Item list"
+        component List items: "Dashboard,Analytics,Reports,Settings,Help"
+      }
+
+      layout stack(direction: vertical, gap: sm, padding: md) {
+        component Text content: "List - With title"
+        component List title: "Recent Activities" items: "User login,File uploaded,Settings changed,Report generated"
+      }
+
+      component Divider
+
+      // ============================================================================
+      // MEDIA COMPONENTS
+      // ============================================================================
+
+      component Heading text: "Media Components"
+      component Text content: "Elements for displaying images and icons"
+
+      layout stack(direction: horizontal, gap: md, padding: md) {
+        component Text content: "Image placeholders:"
+        layout stack(direction: vertical, gap: sm) {
+          component Text content: "square"
+          component Image placeholder: "square" height: 120
+        }
+        layout stack(direction: vertical, gap: sm) {
+          component Text content: "landscape"
+          component Image placeholder: "landscape" height: 120
+        }
+        layout stack(direction: vertical, gap: sm) {
+          component Text content: "portrait"
+          component Image placeholder: "portrait" height: 120
+        }
+        layout stack(direction: vertical, gap: sm) {
+          component Text content: "avatar"
+          component Image placeholder: "avatar" height: 100
+        }
+      }
+
+      layout stack(direction: horizontal, gap: md, padding: md) {
+        component Text content: "Icons:"
+        component Icon type: "search"
+        component Icon type: "settings"
+        component Icon type: "download"
+        component Icon type: "star"
+        component Icon type: "heart"
+      }
+
+      layout stack(direction: vertical, gap: sm, padding: md) {
+        component Text content: "Image - Profile picture placeholder"
+        component Image placeholder: "square"
+      }
+
+      component Divider
+
+      // ============================================================================
+      // DISPLAY COMPONENTS
+      // ============================================================================
+
+      component Heading text: "Display Components"
+      component Text content: "Visual elements for information display"
+
+      layout stack(direction: vertical, gap: sm, padding: md) {
+        component Text content: "Divider - Visual separator line"
+        component Divider
+      }
+
+      layout stack(direction: vertical, gap: sm, padding: md) {
+        component Text content: "Badge - Status labels (variant: primary)"
+        component Badge text: "New" variant: primary
+        component Badge text: "Featured" variant: primary
+      }
+
+      layout stack(direction: vertical, gap: sm, padding: md) {
+        component Text content: "Badge - Variant: secondary"
+        component Badge text: "Inactive" variant: secondary
+        component Badge text: "Draft" variant: secondary
+      }
+
+      layout stack(direction: vertical, gap: sm, padding: md) {
+        component Text content: "Badge - Variant: success"
+        component Badge text: "Active" variant: success
+        component Badge text: "Verified" variant: success
+      }
+
+      layout stack(direction: vertical, gap: sm, padding: md) {
+        component Text content: "Badge - Variant: warning"
+        component Badge text: "Pending" variant: warning
+        component Badge text: "Review" variant: warning
+      }
+
+      layout stack(direction: vertical, gap: sm, padding: md) {
+        component Text content: "Badge - variant: danger"
+        component Badge text: "Failed" variant: danger
+        component Badge text: "Critical" variant: danger
+      }
+
+      layout stack(direction: vertical, gap: sm, padding: md) {
+        component Text content: "Badge - Variant: info"
+        component Badge text: "Information" variant: info
+        component Badge text: "Help" variant: info
+      }
+
+      layout stack(direction: vertical, gap: sm, padding: md) {
+        component Text content: "Link - Hypertext element"
+        component Link text: "Click here to learn more"
+      }
+
+      layout stack(direction: vertical, gap: sm, padding: md) {
+        component Text content: "Alert - Variant: info"
+        component Alert variant: "info" text: "This is an informational message"
+      }
+
+      layout stack(direction: vertical, gap: sm, padding: md) {
+        component Text content: "Alert - Variant: success"
+        component Alert variant: "success" text: "Operation completed successfully"
+      }
+
+      layout stack(direction: vertical, gap: sm, padding: md) {
+        component Text content: "Alert - Variant: warning"
+        component Alert variant: "warning" text: "Please review this action"
+      }
+
+      layout stack(direction: vertical, gap: sm, padding: md) {
+        component Text content: "Alert - variant: danger"
+        component Alert variant: "danger" text: "An error occurred while processing"
+      }
+
+      component Divider
+
+      // ============================================================================
+      // INFORMATION DISPLAY
+      // ============================================================================
+
+      component Heading text: "Information Display"
+      component Text content: "Components for displaying metrics and information"
+
+      layout stack(direction: horizontal, gap: md, padding: md) {
+        component StatCard title: "Total Users" value: "2,543"
+        component StatCard title: "Revenue" value: "$125,680"
+        component StatCard title: "Growth" value: "+23.5%"
+      }
+
+      layout stack(direction: vertical, gap: sm, padding: md) {
+        component Text content: "Code - Code snippet display"
+        component Code code: "const sum = (a, b) => a + b;"
+      }
+
+      layout stack(direction: vertical, gap: sm, padding: md) {
+        component Text content: "Chart - Type: bar"
+        component Chart type: "bar" height: 180
+      }
+
+      layout stack(direction: vertical, gap: sm, padding: md) {
+        component Text content: "Chart - Type: line"
+        component Chart type: "line" height: 180
+      }
+
+      layout stack(direction: vertical, gap: sm, padding: md) {
+        component Text content: "Chart - Type: pie"
+        component Chart type: "pie" height: 180
+      }
+
+      component Divider
+
+      // ============================================================================
+      // FEEDBACK & OVERLAY
+      // ============================================================================
+
+      component Heading text: "Feedback & Overlay Components"
+      component Text content: "Elements for user feedback and modals"
+
+      layout stack(direction: vertical, gap: sm, padding: md) {
+        component Text content: "Modal - Overlay dialog"
+        component Modal title: "Confirm"
+      }
+
+      component Divider
+      component Text content: "End of Components Catalog"
+    }
+  }
+}
+

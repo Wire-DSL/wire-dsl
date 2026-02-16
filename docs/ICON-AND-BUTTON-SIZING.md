@@ -119,7 +119,7 @@ Buttons now also support sizing options:
 ### Properties
 
 - `text` (string, required): Button label
-- `variant` (string, optional): Style - `primary` | `secondary` | `ghost` (default: `secondary`)
+- `variant` (string, optional): Style - `primary` | `secondary` | `success` | `warning` | `danger` | `info` (default: `primary`)
 - `size` (string, optional): Button size - `sm` | `md` | `lg` (default: `md`)
 
 ### Size Reference

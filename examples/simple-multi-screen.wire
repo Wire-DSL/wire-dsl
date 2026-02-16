@@ -1,5 +1,5 @@
 project "Admin Dashboard Simple" {
-  theme {
+  style {
     density: "normal"
     spacing: "md"
     radius: "md"

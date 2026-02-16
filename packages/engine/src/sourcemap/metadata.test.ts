@@ -254,7 +254,7 @@ describe('SourceMap Combined Metadata Support', () => {
   it('should handle all metadata blocks together', () => {
     const code = `
       project "Complete App" {
-        theme {
+        style {
           density: "compact"
           spacing: "md"
         }
@@ -280,11 +280,11 @@ describe('SourceMap Combined Metadata Support', () => {
     const resolver = new SourceMapResolver(sourceMap);
 
     // All metadata blocks should exist
-    const themeNode = resolver.getNodeById('theme');
+    const configNode = resolver.getNodeById('style');
     const mocksNode = resolver.getNodeById('mocks');
     const colorsNode = resolver.getNodeById('colors');
 
-    expect(themeNode).toBeDefined();
+    expect(configNode).toBeDefined();
     expect(mocksNode).toBeDefined();
     expect(colorsNode).toBeDefined();
 
@@ -293,7 +293,7 @@ describe('SourceMap Combined Metadata Support', () => {
     const children = resolver.getChildren(projectNode!.nodeId);
     const childTypes = children.map(c => c.type);
 
-    expect(childTypes).toContain('theme');
+    expect(childTypes).toContain('style');
     expect(childTypes).toContain('mocks');
     expect(childTypes).toContain('colors');
     expect(childTypes).toContain('screen');
@@ -302,7 +302,7 @@ describe('SourceMap Combined Metadata Support', () => {
   it('should include all metadata in statistics', () => {
     const code = `
       project "App" {
-        theme { density: "normal" }
+        style { density: "normal" }
         mocks { status: "A,B" }
         colors { primary: #3B82F6 }
         
@@ -317,7 +317,7 @@ describe('SourceMap Combined Metadata Support', () => {
 
     const stats = resolver.getStats();
     
-    expect(stats.byType.theme).toBe(1);
+    expect(stats.byType.style).toBe(1);
     expect(stats.byType.mocks).toBe(1);
     expect(stats.byType.colors).toBe(1);
     expect(stats.byType.screen).toBe(1);
@@ -326,7 +326,7 @@ describe('SourceMap Combined Metadata Support', () => {
 
   it('should allow jump-to-code for all metadata blocks', () => {
     const code = `project "App" {
-  theme {
+  style {
     density: "compact"
   }
   
@@ -346,12 +346,12 @@ describe('SourceMap Combined Metadata Support', () => {
     const { sourceMap } = parseWireDSLWithSourceMap(code);
     const resolver = new SourceMapResolver(sourceMap);
 
-    const themeNode = resolver.getNodeById('theme');
+    const configNode = resolver.getNodeById('style');
     const mocksNode = resolver.getNodeById('mocks');
     const colorsNode = resolver.getNodeById('colors');
 
     // Each should have a valid range for jump-to-code
-    expect(themeNode?.range.start.line).toBe(2);
+    expect(configNode?.range.start.line).toBe(2);
     expect(mocksNode?.range.start.line).toBe(6);
     expect(colorsNode?.range.start.line).toBe(10);
   });

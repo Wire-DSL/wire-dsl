@@ -16,7 +16,7 @@ import { parseWire, generateIR, computeLayout } from '@wire-dsl/engine';
 // Parse .wire DSL file
 const ast = parseWire(`
   project "MyWireframe" {
-    theme {
+    style {
       density: "normal"
       spacing: "md"
       radius: "md"
@@ -78,7 +78,7 @@ validateIR(ir); // Throws if invalid
 ### Components
 30+ built-in UI components:
 
-**Text**: Heading, Text, Paragraph, Label
+**Text**: Heading, Text, Label
 
 **Input**: Input, Textarea, Select, Checkbox, Radio, Toggle
 
@@ -88,7 +88,7 @@ validateIR(ir); // Throws if invalid
 
 **Data**: Table, List
 
-**Media**: Image, Icon, Avatar
+**Media**: Image, Icon
 
 **Display**: Divider, Badge, Link, Alert
 

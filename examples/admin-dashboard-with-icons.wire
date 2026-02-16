@@ -1,5 +1,5 @@
 project "Admin Dashboard with Icons" {
-  theme {
+  style {
     density: "comfortable"
     spacing: "md"
     radius: "md"

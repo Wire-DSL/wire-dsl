@@ -1,5 +1,5 @@
 project "Form Example" {
-  theme {
+  style {
     density: "normal"
     spacing: "md"
     radius: "md"

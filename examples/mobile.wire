@@ -1,0 +1,36 @@
+project "Demo Mobile" {
+	style {
+		device: "mobile"
+	}
+
+	screen DemoMobile {
+		layout stack(direction: vertical, gap: md, padding: lg) {
+			layout card(direction: vertical, padding: sm, gap: md) {
+				component Heading text: "Welcome to Wire DSL Mobile Demo" size: "xl"
+				component Text content: "This is a simple mobile screen layout created using Wire DSL. It demonstrates the use of stack layout and basic components like Heading and Text."
+				layout stack(direction: vertical, gap: sm) {
+					component Separate size: "none"
+					component Button text: "Get Started" variant: "primary"
+					component Separate size: "sm"
+					component Button text: "Get Started" variant: "secondary"
+					component Separate size: "md"
+					component Button text: "Get Started" variant: "success"
+					component Separate size: "lg"
+					component Button text: "Get Started" variant: "danger"
+					component Button text: "Get Started" variant: "info"
+					component Link text: "Learn more" variant: "primary"
+					component Link text: "Learn more" variant: "secondary"
+					component Link text: "Learn more" variant: "success"
+					component Link text: "Learn more" variant: "danger"
+					component Link text: "Learn more" variant: "info"
+
+					component Alert title: "Learn more" text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit." variant: "primary"
+					component Alert title: "Learn more" text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit." variant: "secondary"
+					component Alert title: "Learn more" text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit." variant: "success"
+					component Alert title: "Learn more" text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit." variant: "danger"
+					component Alert title: "Learn more" text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit." variant: "info"
+				}
+			}
+		}
+	}
+}

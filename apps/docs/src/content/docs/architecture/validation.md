@@ -24,7 +24,7 @@ Performed by the **Parser** during tokenization and parsing.
 
 ### Project Structure
 
-- ✅ A `project` block must have exactly one `theme` block
+- ✅ A `project` block can include one `style` block (optional)
 - ✅ A `project` block must have at least one `screen`
 - ✅ A `screen` block must have exactly one root layout
 - ✅ All layout blocks must be properly closed with braces
@@ -33,15 +33,14 @@ Performed by the **Parser** during tokenization and parsing.
 **Invalid Example**:
 ```wire
 project "App" {
-  // ERROR: no theme block
-  screen Home { layout stack { } }
+  // ERROR: missing screen block
 }
 ```
 
 **Valid Example**:
 ```wire
 project "App" {
-  theme {
+  style {
     density: "normal"
     spacing: "md"
     radius: "md"
@@ -67,7 +66,7 @@ project "App" {
 ```wire
 component Button text: "Click me" variant: primary checked: true
 component Input label: "Email" placeholder: "your@email.com"
-component Spinner
+component Separate size: md
 ```
 
 **Invalid**:
@@ -79,7 +78,7 @@ component Input label: "Email" placeholder: @  // ❌ Invalid character
 
 ### Component Properties
 
-- ✅ Component names must exist in the catalog (23 built-in types)
+- ✅ Component names must exist in the catalog (built-in types)
 - ✅ Property names must be valid for that component
 - ✅ Property values must match expected types
 
@@ -156,7 +155,7 @@ Performed by the **IR Generator** after parsing.
 **Invalid**:
 ```wire
 project "App" {
-  theme { ... }
+  style { ... }
   
   screen Home {
     layout stack {
@@ -169,7 +168,7 @@ project "App" {
 **Valid**:
 ```wire
 project "App" {
-  theme { ... }
+  style { ... }
   
   define Component "CustomButton" {
     layout stack(direction: horizontal, gap: md) {
@@ -186,16 +185,16 @@ project "App" {
 }
 ```
 
-### Theme Properties
+### Style Properties
 
-- ✅ Theme block is optional but highly recommended
-- ✅ When included, theme values must be valid strings with quotes
+- ✅ Style block is optional but highly recommended
+- ✅ When included, style values must be valid strings with quotes
 - ✅ If omitted, sensible defaults are applied
 
-**Minimal (theme optional)**:
+**Minimal (`style` optional)**:
 ```wire
 project "App" {
-  // Theme omitted - defaults will be applied
+  // style omitted - defaults will be applied
   screen Home {
     layout stack {
       component Heading text: "Hello"
@@ -204,10 +203,10 @@ project "App" {
 }
 ```
 
-**With Theme (recommended)**:
+**With `style` (recommended)**:
 ```wire
 project "App" {
-  theme {
+  style {
     density: "normal"
     spacing: "md"
     radius: "md"
@@ -251,11 +250,11 @@ All components validate their specific properties:
 
 | Component | Required Props | Optional Props |
 |-----------|---|---|
-| Heading | `text` | - |
+| Heading | `text` | `level`, `spacing` |
 | Button | `text` | `variant` |
 | Input | `label` | `placeholder` |
 | Table | `columns` | `rows` |
-| Image | `placeholder` | `height` |
+| Image | `placeholder` | `icon`, `height` |
 | Icon | - | `type` |
 | And 17 more... | - | - |
 
@@ -309,7 +308,7 @@ Error: Unknown component "CustomButton"
 Suggestion: Define the component first with:
   define Component "CustomButton" { ... }
 
-Or use one of the 23 built-in components:
+Or use one of the built-in components:
   Heading, Text, Button, Input, ...
 ```
 
@@ -324,7 +323,7 @@ Or use one of the 23 built-in components:
 ✅ Check component property names against reference  
 ✅ Ensure unique screen names  
 ✅ Define custom components before use  
-✅ Use valid theme values  
+✅ Use valid  values  
 
 ### Don'ts
 
@@ -332,7 +331,7 @@ Or use one of the 23 built-in components:
 ❌ Reference undefined components  
 ❌ Use invalid spacing units  
 ❌ Leave containers empty  
-❌ Skip theme block  
+❌ Skip style block  
 ❌ Use duplicate screen names  
 
 ---

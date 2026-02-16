@@ -4,8 +4,12 @@
 
 export * from './parser/index';
 export * from './ir/index';
+export * from './ir/device-presets';
 export * from './layout/index';
 export * from './renderer/index';
+export * from './renderer/skeleton';
+export * from './renderer/sketch';
+export * from './renderer/tokens';
 
 // SourceMap module (experimental)
 export * from './sourcemap/index';

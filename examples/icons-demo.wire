@@ -1,5 +1,5 @@
 project "Icon Demo" {
-  theme {
+  style {
     spacing: "md"
     density: "normal"
     radius: "md"
@@ -159,8 +159,8 @@ project "Icon Demo" {
     // Icon colors example
     layout panel(padding: md) {
       layout stack(direction: vertical, gap: 12) {
-        component Heading text: "Icon Colors (from theme)"
-        component Text content: "Icons use the text color from the current theme"
+        component Heading text: "Icon Colors (from )"
+        component Text content: "Icons use the text color from the current "
         
         layout stack(direction: horizontal, gap: 16) {
           component Icon type: "star"

@@ -138,7 +138,7 @@ layout stack(direction: horizontal, gap: sm, padding: md, align: justify) {
   component IconButton icon: "menu"
   component Input label: "Search" placeholder: "Search..."
   component IconButton icon: "settings"
-  component Avatar placeholder: "avatar"
+  component Image placeholder: "square"
 }
 ```
 
@@ -275,7 +275,7 @@ layout grid(columns: 12, gap: lg) {
   cell span: 8 {
     layout stack(direction: vertical, gap: md) {
       component Heading text: "Main Content"
-      component Paragraph content: "This is the main content area..."
+      component Text content: "This is the main content area..."
       component ChartPlaceholder type: "line" height: 300
     }
   }
@@ -367,7 +367,7 @@ layout split(sidebar: 280, gap: lg) {
   layout stack(direction: vertical, gap: md, padding: xl) {
     component Breadcrumbs items: "Home,Documentation,Components"
     component Heading text: "Components Guide"
-    component Paragraph content: "Learn about all available UI components..."
+    component Text content: "Learn about all available UI components..."
     component Code code: "component Button text: 'Click me'"
   }
 }
@@ -489,7 +489,7 @@ layout card(padding: md, gap: md, radius: lg, border: true) {
 **User Profile Card:**
 ```wire
 layout card(padding: lg, gap: md, radius: md, border: true) {
-  component Avatar placeholder: "avatar"
+  component Image placeholder: "square"
   component Heading text: "John Doe"
   component Text content: "Senior Developer"
   component Divider

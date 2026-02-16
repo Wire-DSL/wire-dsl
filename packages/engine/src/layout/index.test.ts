@@ -60,6 +60,91 @@ describe('Layout Engine', () => {
     expect(gap).toBe(16);
   });
 
+  it('should scale stack gap with density for same token', () => {
+    const compactInput = `
+      project "GapCompact" {
+        style { density: "compact" }
+        screen Main {
+          layout stack(direction: vertical, gap: md) {
+            component Button text: "First"
+            component Button text: "Second"
+          }
+        }
+      }
+    `;
+    const comfortableInput = `
+      project "GapComfortable" {
+        style { density: "comfortable" }
+        screen Main {
+          layout stack(direction: vertical, gap: md) {
+            component Button text: "First"
+            component Button text: "Second"
+          }
+        }
+      }
+    `;
+
+    const compactIr = generateIR(parseWireDSL(compactInput));
+    const comfortableIr = generateIR(parseWireDSL(comfortableInput));
+    const compactLayout = calculateLayout(compactIr);
+    const comfortableLayout = calculateLayout(comfortableIr);
+
+    const compactComponents = Object.entries(compactIr.project.nodes)
+      .filter(([_, node]) => node.kind === 'component')
+      .map(([id]) => compactLayout[id]);
+    const comfortableComponents = Object.entries(comfortableIr.project.nodes)
+      .filter(([_, node]) => node.kind === 'component')
+      .map(([id]) => comfortableLayout[id]);
+
+    const compactGap = compactComponents[1].y - (compactComponents[0].y + compactComponents[0].height);
+    const comfortableGap = comfortableComponents[1].y - (comfortableComponents[0].y + comfortableComponents[0].height);
+
+    expect(compactGap).toBeLessThan(comfortableGap);
+  });
+
+  it('should scale intrinsic Button width with density in natural horizontal layout', () => {
+    const compactInput = `
+      project "ButtonWidthCompact" {
+        style { density: "compact" }
+        screen Main {
+          layout stack(direction: horizontal, align: left, gap: md) {
+            component Button text: "Notification preferences center"
+            component Button text: "Secondary"
+          }
+        }
+      }
+    `;
+    const comfortableInput = `
+      project "ButtonWidthComfortable" {
+        style { density: "comfortable" }
+        screen Main {
+          layout stack(direction: horizontal, align: left, gap: md) {
+            component Button text: "Notification preferences center"
+            component Button text: "Secondary"
+          }
+        }
+      }
+    `;
+
+    const compactIr = generateIR(parseWireDSL(compactInput));
+    const comfortableIr = generateIR(parseWireDSL(comfortableInput));
+    const compactLayout = calculateLayout(compactIr);
+    const comfortableLayout = calculateLayout(comfortableIr);
+
+    const compactButton = Object.entries(compactIr.project.nodes).find(
+      ([_, n]) => n.kind === 'component' && n.componentType === 'Button'
+    );
+    const comfortableButton = Object.entries(comfortableIr.project.nodes).find(
+      ([_, n]) => n.kind === 'component' && n.componentType === 'Button'
+    );
+
+    expect(compactButton).toBeDefined();
+    expect(comfortableButton).toBeDefined();
+    expect(compactLayout[compactButton![0]].width).toBeLessThan(
+      comfortableLayout[comfortableButton![0]].width
+    );
+  });
+
   it('should stack horizontally with correct spacing', () => {
     const input = `
       project "Horizontal" {
@@ -86,6 +171,191 @@ describe('Layout Engine', () => {
     // Gap should be 24 (lg = 24)
     const gap = components[1].x - (components[0].x + components[0].width);
     expect(gap).toBe(24);
+  });
+
+  it('should calculate intrinsic width for Link based on text length', () => {
+    const input = `
+      project "LinkWidth" {
+        screen Main {
+          layout stack(direction: horizontal, align: left, gap: md) {
+            component Link text: "Short"
+            component Link text: "This is a much longer link"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+
+    const links = Object.entries(ir.project.nodes)
+      .filter(([_, node]) => node.kind === 'component' && node.componentType === 'Link')
+      .map(([id]) => layout[id]);
+
+    expect(links).toHaveLength(2);
+    expect(links[1].width).toBeGreaterThan(links[0].width);
+  });
+
+  it('should add extra blank space with Separate in vertical stack', () => {
+    const input = `
+      project "SeparateSpacing" {
+        screen Main {
+          layout stack(direction: vertical, gap: md) {
+            component Heading text: "Top"
+            component Separate
+            component Heading text: "Bottom"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+
+    const components = Object.entries(ir.project.nodes).flatMap(([id, node]) =>
+      node.kind === 'component' ? [{ id, type: node.componentType, pos: layout[id] }] : []
+    );
+
+    const headings = components
+      .filter((c) => c.type === 'Heading')
+      .sort((a, b) => a.pos.y - b.pos.y);
+    const top = headings[0];
+    const separate = components.find((c) => c.type === 'Separate');
+    const bottom = headings[1];
+
+    expect(top).toBeDefined();
+    expect(separate).toBeDefined();
+    expect(bottom).toBeDefined();
+    expect(separate!.pos.height).toBe(16);
+    expect(bottom!.pos.y).toBe(top!.pos.y + top!.pos.height + 16 + 16 + 16);
+  });
+
+  it('should apply Separate size token values', () => {
+    const input = `
+      project "SeparateSizes" {
+        screen Main {
+          layout stack(direction: vertical, gap: md) {
+            component Separate size: sm
+            component Separate size: lg
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+
+    const separates = Object.entries(ir.project.nodes)
+      .filter(([_, node]) => node.kind === 'component' && node.componentType === 'Separate')
+      .map(([id]) => layout[id])
+      .sort((a, b) => a.y - b.y);
+
+    expect(separates).toHaveLength(2);
+    expect(separates[0].height).toBe(8);
+    expect(separates[1].height).toBe(24);
+  });
+
+  it('should scale Separate size with density', () => {
+    const compactInput = `
+      project "SeparateCompact" {
+        style { density: "compact" }
+        screen Main {
+          layout stack {
+            component Separate size: md
+          }
+        }
+      }
+    `;
+    const comfortableInput = `
+      project "SeparateComfortable" {
+        style { density: "comfortable" }
+        screen Main {
+          layout stack {
+            component Separate size: md
+          }
+        }
+      }
+    `;
+
+    const compactLayout = calculateLayout(generateIR(parseWireDSL(compactInput)));
+    const comfortableLayout = calculateLayout(generateIR(parseWireDSL(comfortableInput)));
+
+    const compactAlert = Object.entries(generateIR(parseWireDSL(compactInput)).project.nodes)
+      .find(([_, n]) => n.kind === 'component' && n.componentType === 'Separate');
+    const comfortableAlert = Object.entries(generateIR(parseWireDSL(comfortableInput)).project.nodes)
+      .find(([_, n]) => n.kind === 'component' && n.componentType === 'Separate');
+
+    expect(compactAlert).toBeDefined();
+    expect(comfortableAlert).toBeDefined();
+    expect(compactLayout[compactAlert![0]].height).toBeLessThan(comfortableLayout[comfortableAlert![0]].height);
+  });
+
+  it('should scale IconButton size with density', () => {
+    const compactInput = `
+      project "IconBtnCompact" {
+        style { density: "compact" }
+        screen Main {
+          layout stack(direction: horizontal, align: left) {
+            component IconButton icon: "menu" size: md
+          }
+        }
+      }
+    `;
+    const comfortableInput = `
+      project "IconBtnComfortable" {
+        style { density: "comfortable" }
+        screen Main {
+          layout stack(direction: horizontal, align: left) {
+            component IconButton icon: "menu" size: md
+          }
+        }
+      }
+    `;
+
+    const compactIr = generateIR(parseWireDSL(compactInput));
+    const comfortableIr = generateIR(parseWireDSL(comfortableInput));
+    const compactLayout = calculateLayout(compactIr);
+    const comfortableLayout = calculateLayout(comfortableIr);
+
+    const compactIconButton = Object.entries(compactIr.project.nodes)
+      .find(([_, n]) => n.kind === 'component' && n.componentType === 'IconButton');
+    const comfortableIconButton = Object.entries(comfortableIr.project.nodes)
+      .find(([_, n]) => n.kind === 'component' && n.componentType === 'IconButton');
+
+    expect(compactIconButton).toBeDefined();
+    expect(comfortableIconButton).toBeDefined();
+    expect(compactLayout[compactIconButton![0]].width).toBeLessThan(
+      comfortableLayout[comfortableIconButton![0]].width
+    );
+  });
+
+  it('should increase Alert height when text wraps', () => {
+    const input = `
+      project "AlertHeight" {
+        style {
+          device: "mobile"
+        }
+        screen Main {
+          layout stack(direction: vertical, gap: md) {
+            component Alert variant: "warning" title: "Warning" text: "This alert contains a very long message that should wrap and therefore increase the intrinsic component height"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+
+    const alertEntry = Object.entries(ir.project.nodes)
+      .find(([_, node]) => node.kind === 'component' && node.componentType === 'Alert');
+    expect(alertEntry).toBeDefined();
+
+    const alertPos = layout[alertEntry![0]];
+    expect(alertPos.height).toBeGreaterThan(40);
   });
 
   it('should apply padding to containers', () => {
@@ -232,10 +502,10 @@ describe('Layout Engine', () => {
     expect(grid.y).toBeGreaterThan(heading.y);
   });
 
-  it('should respect component density from theme', () => {
+  it('should respect component density from config', () => {
     const input = `
       project "Density" {
-        theme {
+        style {
           density: "comfortable"
         }
         
@@ -282,6 +552,28 @@ describe('Layout Engine', () => {
     expect(chart.width).toBe(600);
   });
 
+  it('should use default intrinsic height for Chart component', () => {
+    const input = `
+      project "ChartDefaultHeight" {
+        screen Main {
+          layout stack {
+            component Chart type: "bar"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+
+    const chart = Object.entries(ir.project.nodes)
+      .filter(([_, n]) => n.kind === 'component' && n.componentType === 'Chart')
+      .map(([id]) => layout[id])[0];
+
+    expect(chart.height).toBe(250);
+  });
+
   it('should calculate split layout', () => {
     const input = `
       project "Split" {
@@ -318,7 +610,7 @@ describe('Layout Engine', () => {
   it('should handle complete dashboard example', () => {
     const input = `
       project "Dashboard" {
-        theme {
+        style {
           spacing: "lg"
         }
         
@@ -369,7 +661,7 @@ describe('Layout Engine', () => {
   it('should layout split layout with sidebar', () => {
     const input = `
       project "SidebarLayout" {
-        theme {
+        style {
           spacing: "md"
         }
         
@@ -401,7 +693,7 @@ describe('Layout Engine', () => {
   it('should layout card with padding and border', () => {
     const input = `
       project "CardLayout" {
-        theme {
+        style {
           spacing: "lg"
         }
         
@@ -434,7 +726,7 @@ describe('Layout Engine', () => {
   it('should layout form components with proper spacing', () => {
     const input = `
       project "FormLayout" {
-        theme {
+        style {
           spacing: "md"
         }
         
@@ -474,10 +766,36 @@ describe('Layout Engine', () => {
     });
   });
 
+  it('should reserve additional intrinsic height for labeled Input controls', () => {
+    const input = `
+      project "LabeledInputHeight" {
+        screen Main {
+          layout stack(direction: vertical, gap: md) {
+            component Input placeholder: "No label"
+            component Input label: "Email" placeholder: "user@example.com"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+
+    const inputPositions = Object.entries(ir.project.nodes)
+      .filter(([_, node]) => node.kind === 'component' && node.componentType === 'Input')
+      .map(([id]) => layout[id])
+      .sort((a, b) => a.y - b.y);
+
+    expect(inputPositions).toHaveLength(2);
+    expect(inputPositions[1].height).toBeGreaterThan(inputPositions[0].height);
+    expect(inputPositions[1].height - inputPositions[0].height).toBe(18);
+  });
+
   it('should layout grid with stat cards', () => {
     const input = `
       project "Dashboard" {
-        theme {
+        style {
           spacing: "lg"
         }
         
@@ -519,7 +837,7 @@ describe('Layout Engine', () => {
   it('should layout sidebar menu with proper dimensions', () => {
     const input = `
       project "AdminApp" {
-        theme {
+        style {
           spacing: "md"
         }
         
@@ -552,5 +870,290 @@ describe('Layout Engine', () => {
       expect(pos.width).toBeGreaterThan(0);
       expect(pos.height).toBeGreaterThan(0);
     });
+  });
+
+  it('should allocate SidebarMenu height based on items and avoid overlap', () => {
+    const input = `
+      project "Sidebar Menu Height" {
+        style {
+          spacing: "md"
+        }
+
+        screen Main {
+          layout stack(direction: vertical, gap: md, padding: md) {
+            component SidebarMenu items: "Dashboard,Users,Roles,Settings"
+            component Heading text: "Content"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+
+    const menuEntry = Object.entries(ir.project.nodes).find(
+      ([_, node]) => node.kind === 'component' && node.componentType === 'SidebarMenu'
+    );
+    const headingEntry = Object.entries(ir.project.nodes).find(
+      ([_, node]) => node.kind === 'component' && node.componentType === 'Heading'
+    );
+
+    expect(menuEntry).toBeDefined();
+    expect(headingEntry).toBeDefined();
+
+    const menuPos = layout[menuEntry![0]];
+    const headingPos = layout[headingEntry![0]];
+
+    // 4 items * 40px
+    expect(menuPos.height).toBe(160);
+    // Next component should be below menu + md gap (16px)
+    expect(headingPos.y).toBe(menuPos.y + menuPos.height + 16);
+  });
+
+  it('should wrap long Text content and push following components down', () => {
+    const input = `
+      project "Text Wrap" {
+        style {
+          spacing: "md"
+          device: "mobile"
+        }
+
+        screen Main {
+          layout stack(direction: vertical, gap: md, padding: md) {
+            component Text content: "Este es un texto largo que debe hacer wrap automaticamente para no salirse del viewport ni pisar componentes siguientes en el layout."
+            component Button text: "Siguiente"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+
+    const textEntry = Object.entries(ir.project.nodes).find(
+      ([_, node]) => node.kind === 'component' && node.componentType === 'Text'
+    );
+    const buttonEntry = Object.entries(ir.project.nodes).find(
+      ([_, node]) => node.kind === 'component' && node.componentType === 'Button'
+    );
+
+    expect(textEntry).toBeDefined();
+    expect(buttonEntry).toBeDefined();
+
+    const textPos = layout[textEntry![0]];
+    const buttonPos = layout[buttonEntry![0]];
+
+    // Should grow beyond the default component height (normal density = 40)
+    expect(textPos.height).toBeGreaterThan(40);
+    // Next component should be placed after wrapped text + stack gap (md = 16)
+    expect(buttonPos.y).toBe(textPos.y + textPos.height + 16);
+  });
+
+  it('should size List height based on title and item count', () => {
+    const input = `
+      project "List Height" {
+        screen Main {
+          layout stack(direction: vertical, gap: md, padding: md) {
+            component List title: "Technologies" items: "JavaScript,TypeScript,Python,Rust,Go,Swift"
+            component Button text: "Next"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+
+    const listEntry = Object.entries(ir.project.nodes).find(
+      ([_, node]) => node.kind === 'component' && node.componentType === 'List'
+    );
+    const buttonEntry = Object.entries(ir.project.nodes).find(
+      ([_, node]) => node.kind === 'component' && node.componentType === 'Button'
+    );
+
+    expect(listEntry).toBeDefined();
+    expect(buttonEntry).toBeDefined();
+
+    const listPos = layout[listEntry![0]];
+    const buttonPos = layout[buttonEntry![0]];
+
+    // title (40) + 6 items * 36 = 256
+    expect(listPos.height).toBe(256);
+    expect(buttonPos.y).toBe(listPos.y + listPos.height + 16);
+  });
+
+  it('should wrap long Heading content and push following components down', () => {
+    const input = `
+      project "Heading Wrap" {
+        style {
+          spacing: "md"
+        }
+
+        screen Main {
+          layout stack(direction: vertical, gap: md, padding: md) {
+            component Heading text: "Este heading es suficientemente largo para requerir salto de linea automatico sin desbordar horizontalmente"
+            component Button text: "Siguiente"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+
+    const headingEntry = Object.entries(ir.project.nodes).find(
+      ([_, node]) => node.kind === 'component' && node.componentType === 'Heading'
+    );
+    const buttonEntry = Object.entries(ir.project.nodes).find(
+      ([_, node]) => node.kind === 'component' && node.componentType === 'Button'
+    );
+
+    expect(headingEntry).toBeDefined();
+    expect(buttonEntry).toBeDefined();
+
+    const headingPos = layout[headingEntry![0]];
+    const buttonPos = layout[buttonEntry![0]];
+
+    expect(headingPos.height).toBeGreaterThan(40);
+    expect(buttonPos.y).toBe(headingPos.y + headingPos.height + 16);
+  });
+
+  it('should use Heading level to compute larger height for larger titles', () => {
+    const input = `
+      project "Heading Levels Layout" {
+        style {
+          device: "mobile"
+        }
+        screen Main {
+          layout stack(direction: vertical, gap: md, padding: md) {
+            component Heading text: "Main title with enough content to wrap in mobile viewport" level: h1
+            component Heading text: "Main title with enough content to wrap in mobile viewport" level: h4
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+
+    const headings = Object.entries(ir.project.nodes)
+      .filter(([_, node]) => node.kind === 'component' && node.componentType === 'Heading')
+      .map(([id]) => layout[id])
+      .sort((a, b) => a.y - b.y);
+
+    expect(headings).toHaveLength(2);
+    expect(headings[0].height).toBeGreaterThan(headings[1].height);
+    expect(headings[1].y).toBe(headings[0].y + headings[0].height + 16);
+  });
+
+  it('should allow Heading spacing override to reduce intrinsic vertical space', () => {
+    const input = `
+      project "Heading Spacing" {
+        screen Main {
+          layout stack(direction: vertical, gap: md) {
+            component Heading text: "Default heading"
+            component Heading text: "Compact heading" spacing: none
+            component Button text: "After heading"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+
+    const headingEntries = Object.entries(ir.project.nodes)
+      .filter(([_, node]) => node.kind === 'component' && node.componentType === 'Heading')
+      .map(([id]) => layout[id])
+      .sort((a, b) => a.y - b.y);
+    const buttonEntry = Object.entries(ir.project.nodes).find(
+      ([_, node]) => node.kind === 'component' && node.componentType === 'Button'
+    );
+
+    expect(headingEntries).toHaveLength(2);
+    expect(buttonEntry).toBeDefined();
+
+    const [defaultHeading, compactHeading] = headingEntries;
+    const buttonPos = layout[buttonEntry![0]];
+
+    expect(defaultHeading.height).toBe(40);
+    expect(compactHeading.height).toBeLessThan(defaultHeading.height);
+    expect(buttonPos.y).toBe(compactHeading.y + compactHeading.height + 16);
+  });
+
+  it('should avoid overlap between cards in single-column grid and next stack elements', () => {
+    const input = `
+      project "Mobile Grid No Overlap" {
+        style {
+          device: "mobile"
+          density: "comfortable"
+        }
+
+        screen Home {
+          layout stack(direction: vertical, gap: md, padding: md) {
+            component Heading text: "Features"
+
+            layout grid(columns: 1, gap: sm) {
+              layout card(padding: md) {
+                component Heading text: "Fast"
+                component Text content: "Built for speed and performance on mobile devices."
+              }
+
+              layout card(padding: md) {
+                component Heading text: "Simple"
+                component Text content: "Intuitive interface designed for touch interactions."
+              }
+
+              layout card(padding: md) {
+                component Heading text: "Secure"
+                component Text content: "Your data is protected with industry-standard encryption."
+              }
+            }
+
+            component Divider
+            component Text content: "Mobile-optimized wireframe for touch devices"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+
+    const cards = Object.entries(ir.project.nodes)
+      .filter(([_, node]) => node.kind === 'container' && node.containerType === 'card')
+      .map(([id]) => layout[id])
+      .sort((a, b) => a.y - b.y);
+
+    expect(cards).toHaveLength(3);
+
+    // comfortable density + sm gap => 10px effective gap (8 * 1.25).
+    const expectedGridGap = 10;
+    expect(cards[1].y).toBeGreaterThanOrEqual(cards[0].y + cards[0].height + expectedGridGap);
+    expect(cards[2].y).toBeGreaterThanOrEqual(cards[1].y + cards[1].height + expectedGridGap);
+
+    const gridEntry = Object.entries(ir.project.nodes).find(
+      ([_, node]) => node.kind === 'container' && node.containerType === 'grid'
+    );
+    const dividerEntry = Object.entries(ir.project.nodes).find(
+      ([_, node]) => node.kind === 'component' && node.componentType === 'Divider'
+    );
+
+    expect(gridEntry).toBeDefined();
+    expect(dividerEntry).toBeDefined();
+
+    const gridPos = layout[gridEntry![0]];
+    const dividerPos = layout[dividerEntry![0]];
+
+    // comfortable density + md stack gap => 20px effective gap (16 * 1.25).
+    const expectedStackGap = 20;
+    expect(dividerPos.y).toBeGreaterThanOrEqual(gridPos.y + gridPos.height + expectedStackGap);
   });
 });

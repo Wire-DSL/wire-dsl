@@ -342,14 +342,14 @@ screen Home { ... }        // ❌ Duplicate name
 ```
 
 ### Component Names
-- ✅ Must be from the official 23 component catalog
+- ✅ Must be from the official component catalog
 - ✅ Case-sensitive (exact match required)
 
 **Valid**:
 ```wire
 component Button { ... }
 component Table { ... }
-component Avatar { ... }
+component Image { ... }
 ```
 
 **Invalid**:

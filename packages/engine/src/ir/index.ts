@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { AST, ASTScreen, ASTLayout, ASTComponent, ASTCell, ASTDefinedComponent } from '../parser/index';
+import { resolveDevicePreset } from './device-presets';
 
 /**
  * Intermediate Representation (IR) Generator
@@ -22,20 +23,22 @@ export interface IRContract {
 export interface IRProject {
   id: string;
   name: string;
-  theme: IRTheme;
+  style: IRStyle;
   mocks: Record<string, unknown>;
   colors: Record<string, string>;
   screens: IRScreen[];
   nodes: Record<string, IRNode>;
 }
 
-export interface IRTheme {
+export interface IRStyle {
   density: 'compact' | 'normal' | 'comfortable';
   spacing: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   radius: 'none' | 'sm' | 'md' | 'lg' | 'full';
   stroke: 'thin' | 'normal' | 'thick';
   font: 'sm' | 'base' | 'lg';
   background?: string;
+  theme?: string;  // Color scheme: "light" | "dark"
+  device?: string;  // Device preset: "mobile" | "tablet" | "desktop" | "print" | "a4"
 }
 
 export interface IRScreen {
@@ -54,7 +57,7 @@ export interface IRContainerNode {
   containerType: 'stack' | 'grid' | 'split' | 'panel' | 'card';
   params: Record<string, string | number>;
   children: Array<{ ref: string }>;
-  style: IRStyle;
+  style: IRNodeStyle;
   meta: IRMeta;
 }
 
@@ -63,11 +66,11 @@ export interface IRComponentNode {
   kind: 'component';
   componentType: string;
   props: Record<string, string | number>;
-  style: IRStyle;
+  style: IRNodeStyle;
   meta: IRMeta;
 }
 
-export interface IRStyle {
+export interface IRNodeStyle {
   padding?: string;
   gap?: string;
   align?: 'left' | 'center' | 'right' | 'justify';
@@ -81,16 +84,18 @@ export interface IRMeta {
 }
 
 // Zod validation schemas
-const IRThemeSchema = z.object({
+const IRStyleSchema = z.object({
   density: z.enum(['compact', 'normal', 'comfortable']),
   spacing: z.enum(['xs', 'sm', 'md', 'lg', 'xl']),
   radius: z.enum(['none', 'sm', 'md', 'lg', 'full']),
   stroke: z.enum(['thin', 'normal', 'thick']),
   font: z.enum(['sm', 'base', 'lg']),
   background: z.string().optional(),
+  theme: z.string().optional(),
+  device: z.string().optional(),
 });
 
-const IRStyleSchema = z.object({
+const IRNodeStyleSchema = z.object({
   padding: z.string().optional(),
   gap: z.string().optional(),
   align: z.enum(['left', 'center', 'right', 'justify']).optional(),
@@ -109,7 +114,7 @@ const IRContainerNodeSchema = z.object({
   containerType: z.enum(['stack', 'grid', 'split', 'panel', 'card']),
   params: z.record(z.string(), z.union([z.string(), z.number()])),
   children: z.array(z.object({ ref: z.string() })),
-  style: IRStyleSchema,
+  style: IRNodeStyleSchema,
   meta: IRMetaSchema,
 });
 
@@ -118,7 +123,7 @@ const IRComponentNodeSchema = z.object({
   kind: z.literal('component'),
   componentType: z.string(),
   props: z.record(z.string(), z.union([z.string(), z.number()])),
-  style: IRStyleSchema,
+  style: IRNodeStyleSchema,
   meta: IRMetaSchema,
 });
 
@@ -135,7 +140,7 @@ const IRScreenSchema = z.object({
 const IRProjectSchema = z.object({
   id: z.string(),
   name: z.string(),
-  theme: IRThemeSchema,
+  style: IRStyleSchema,
   mocks: z.record(z.string(), z.unknown()),
   colors: z.record(z.string(), z.string()),
   screens: z.array(IRScreenSchema),
@@ -177,7 +182,7 @@ export class IRGenerator {
   private definedComponentIndices: Map<string, number> = new Map();
   private undefinedComponentsUsed: Set<string> = new Set();
   private warnings: Array<{ message: string; type: string }> = [];
-  private theme: IRTheme = {
+  private style: IRStyle = {
     density: 'normal',
     spacing: 'md',
     radius: 'md',
@@ -201,8 +206,8 @@ export class IRGenerator {
       });
     }
 
-    // Apply theme from AST
-    this.applyTheme(ast.theme);
+    // Apply style from AST
+    this.applyStyle(ast.style);
 
     // Convert screens
     const screens: IRScreen[] = ast.screens.map((screen, screenIndex) => 
@@ -221,7 +226,7 @@ export class IRGenerator {
     const project: IRProject = {
       id: this.sanitizeId(ast.name),
       name: ast.name,
-      theme: this.theme,
+      style: this.style,
       mocks: ast.mocks || {},
       colors: ast.colors || {},
       screens,
@@ -237,42 +242,56 @@ export class IRGenerator {
     return IRContractSchema.parse(ir);
   }
 
-  private applyTheme(astTheme: Record<string, string>): void {
-    if (astTheme.density) {
-      this.theme.density = astTheme.density as IRTheme['density'];
+  private applyStyle(astStyle: Record<string, string>): void {
+    if (astStyle.density) {
+      this.style.density = astStyle.density as IRStyle['density'];
     }
-    if (astTheme.spacing) {
-      this.theme.spacing = astTheme.spacing as IRTheme['spacing'];
+    if (astStyle.spacing) {
+      this.style.spacing = astStyle.spacing as IRStyle['spacing'];
     }
-    if (astTheme.radius) {
-      this.theme.radius = astTheme.radius as IRTheme['radius'];
+    if (astStyle.radius) {
+      this.style.radius = astStyle.radius as IRStyle['radius'];
     }
-    if (astTheme.stroke) {
-      this.theme.stroke = astTheme.stroke as IRTheme['stroke'];
+    if (astStyle.stroke) {
+      this.style.stroke = astStyle.stroke as IRStyle['stroke'];
     }
-    if (astTheme.font) {
-      this.theme.font = astTheme.font as IRTheme['font'];
+    if (astStyle.font) {
+      this.style.font = astStyle.font as IRStyle['font'];
     }
-    if (astTheme.background) {
-      this.theme.background = astTheme.background;
+    if (astStyle.background) {
+      this.style.background = astStyle.background;
+    }
+    if (astStyle.theme) {
+      this.style.theme = astStyle.theme;
+    }
+    if (astStyle.device) {
+      this.style.device = astStyle.device;
     }
   }
 
   private convertScreen(screen: ASTScreen, screenIndex: number): IRScreen {
     const rootNodeId = this.convertLayout(screen.layout);
 
+    // Resolve viewport dimensions from device preset or use desktop default.
+    const viewport = this.style.device
+      ? resolveDevicePreset(this.style.device)
+      : resolveDevicePreset('desktop');
+
     const irScreen: IRScreen = {
       id: this.sanitizeId(screen.name),
       name: screen.name,
-      viewport: { width: 1280, height: 720 },
+      viewport: {
+        width: viewport.width,
+        height: viewport.minHeight,
+      }, // Height is a minimum baseline; final render height remains dynamic
       root: { ref: rootNodeId },
     };
 
-    // Add background if specified on screen, otherwise use theme default
+    // Add background if specified on screen, otherwise use style default
     if (screen.params.background) {
       irScreen.background = String(screen.params.background);
-    } else if (this.theme.background) {
-      irScreen.background = this.theme.background;
+    } else if (this.style.background) {
+      irScreen.background = this.style.background;
     }
 
     return irScreen;
@@ -390,7 +409,7 @@ export class IRGenerator {
     }
 
     // Extract style properties
-    const style: IRStyle = {};
+    const style: IRNodeStyle = {};
     if (layout.params.padding) {
       style.padding = String(layout.params.padding);
     } else {
@@ -401,7 +420,7 @@ export class IRGenerator {
       style.gap = String(layout.params.gap);
     }
     if (layout.params.align) {
-      style.align = layout.params.align as IRStyle['align'];
+      style.align = layout.params.align as IRNodeStyle['align'];
     }
     if (layout.params.background) {
       style.background = String(layout.params.background);
@@ -469,7 +488,7 @@ export class IRGenerator {
       'Button', 'Input', 'Heading', 'Text', 'Label', 'Image', 
       'Card', 'StatCard', 'Topbar', 'Table', 'Chart', 'ChartPlaceholder',
       'Textarea', 'Select', 'Checkbox', 'Toggle', 'Divider', 'Breadcrumbs',
-      'SidebarMenu', 'Radio', 'Icon', 'IconButton', 'Alert', 'Badge', 'Modal', 'List', 'Sidebar', 'Tabs', 'Code', 'Paragraph'
+      'SidebarMenu', 'Radio', 'Icon', 'IconButton', 'Alert', 'Badge', 'Modal', 'List', 'Sidebar', 'Tabs', 'Code', 'Link', 'Separate'
     ]);
 
     if (!builtInComponents.has(component.componentType)) {

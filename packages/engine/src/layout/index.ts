@@ -1,4 +1,8 @@
-import type { IRContract, IRNode, IRTheme } from '../ir/index';
+import type { IRContract, IRNode, IRStyle } from '../ir/index';
+import { resolveSpacingToken, type DensityLevel } from '../shared/spacing';
+import { resolveIconButtonSize, resolveIconSize } from '../shared/component-sizes';
+import { resolveHeadingTypography } from '../shared/heading-levels';
+import { resolveHeadingVerticalPadding } from '../shared/heading-spacing';
 
 /**
  * Layout Engine
@@ -26,15 +30,6 @@ export interface LayoutResult {
 // SPACING TOKENS
 // ============================================================================
 
-const SPACING_VALUES: Record<string, number> = {
-  none: 0,
-  xs: 4,
-  sm: 8,
-  md: 16,
-  lg: 24,
-  xl: 32,
-};
-
 const DENSITY_HEIGHTS: Record<string, number> = {
   compact: 32,
   normal: 40,
@@ -47,7 +42,7 @@ const DENSITY_HEIGHTS: Record<string, number> = {
 
 export class LayoutEngine {
   private nodes: Record<string, IRNode>;
-  private theme: IRTheme;
+  private style: IRStyle;
   private result: LayoutResult = {};
   private viewport: { width: number; height: number };
   private ir: IRContract;
@@ -56,7 +51,7 @@ export class LayoutEngine {
   constructor(ir: IRContract) {
     this.ir = ir;
     this.nodes = ir.project.nodes;
-    this.theme = ir.project.theme;
+    this.style = ir.project.style;
     this.viewport = ir.project.screens[0]?.viewport || { width: 1280, height: 720 };
   }
 
@@ -107,8 +102,9 @@ export class LayoutEngine {
   ): void {
     if (node.kind !== 'container') return;
 
-    // Apply padding normally - children handle their own padding
-    const padding = this.resolveSpacing(node.style.padding);
+    // Most containers use inner padding at this level. Card handles its own padding internally.
+    const usesOuterPadding = node.containerType !== 'card';
+    const padding = usesOuterPadding ? this.resolveSpacing(node.style.padding) : 0;
     const innerX = x + padding;
     const innerY = y + padding;
     const innerWidth = width - padding * 2;
@@ -236,7 +232,7 @@ export class LayoutEngine {
           } else if (childNode?.kind === 'container') {
             childHeight = this.calculateContainerHeight(childNode, childWidth);
           } else if (childNode?.kind === 'component') {
-            childHeight = this.getIntrinsicComponentHeight(childNode);
+            childHeight = this.getIntrinsicComponentHeight(childNode, childWidth);
           }
 
           stackHeight = Math.max(stackHeight, childHeight);
@@ -265,7 +261,7 @@ export class LayoutEngine {
           } else if (childNode?.kind === 'container') {
             childHeight = this.calculateContainerHeight(childNode, childWidth);
           } else if (childNode?.kind === 'component') {
-            childHeight = this.getIntrinsicComponentHeight(childNode);
+            childHeight = this.getIntrinsicComponentHeight(childNode, childWidth);
           }
 
           childWidths.push(childWidth);
@@ -307,7 +303,7 @@ export class LayoutEngine {
     // For grids, calculate height based on row layout, not linear sum
     if (node.containerType === 'grid') {
       const columns = Number(node.params.columns) || 12;
-      const colWidth = availableWidth / columns;
+      const colWidth = (availableWidth - gap * (columns - 1)) / columns;
 
       // Calculate row heights
       let currentRow = 0;
@@ -323,15 +319,16 @@ export class LayoutEngine {
         if (child?.kind === 'container' && child.meta?.source === 'cell') {
           span = Number(child.params.span) || 1;
         }
+        const spanWidth = colWidth * span + gap * (span - 1);
 
         if (child?.kind === 'component') {
           if (child.props.height) {
             childHeight = Number(child.props.height);
           } else {
-            childHeight = this.getIntrinsicComponentHeight(child);
+            childHeight = this.getIntrinsicComponentHeight(child, spanWidth);
           }
         } else if (child?.kind === 'container') {
-          childHeight = this.calculateContainerHeight(child, colWidth * span);
+          childHeight = this.calculateContainerHeight(child, spanWidth);
         }
 
         // Check if cell fits in current row
@@ -375,7 +372,7 @@ export class LayoutEngine {
           if (child.props.height) {
             childHeight = Number(child.props.height);
           } else {
-            childHeight = this.getIntrinsicComponentHeight(child);
+            childHeight = this.getIntrinsicComponentHeight(child, availableWidth);
           }
         } else if (child?.kind === 'container') {
           childHeight = this.calculateContainerHeight(child, availableWidth);
@@ -397,7 +394,7 @@ export class LayoutEngine {
         if (child.props.height) {
           childHeight = Number(child.props.height);
         } else {
-          childHeight = this.getIntrinsicComponentHeight(child);
+          childHeight = this.getIntrinsicComponentHeight(child, availableWidth);
         }
       } else if (child?.kind === 'container') {
         childHeight = this.calculateContainerHeight(child, availableWidth);
@@ -427,14 +424,20 @@ export class LayoutEngine {
     node.children.forEach((childRef, cellIndex) => {
       const child = this.nodes[childRef.ref];
       let cellHeight = this.getComponentHeight();
+      let span = 1;
+
+      if (child?.kind === 'container' && child.meta?.source === 'cell') {
+        span = Number(child.params.span) || 1;
+      }
+      const spanWidth = colWidth * span + gap * (span - 1);
 
       if (child?.kind === 'container') {
-        cellHeight = this.calculateContainerHeight(child, colWidth);
+        cellHeight = this.calculateContainerHeight(child, spanWidth);
       } else if (child?.kind === 'component') {
         if (child.props.height) {
           cellHeight = Number(child.props.height);
         } else {
-          cellHeight = this.getIntrinsicComponentHeight(child);
+          cellHeight = this.getIntrinsicComponentHeight(child, spanWidth);
         }
       }
 
@@ -489,6 +492,34 @@ export class LayoutEngine {
       const cellX = x + col * (colWidth + gap);
 
       this.calculateNode(childRef.ref, cellX, cellY, cellWidth, cellHeight, 'grid');
+    });
+
+    // Pass 4: Reflow rows using ACTUAL rendered heights (containers may grow after children layout).
+    // This prevents overlaps when estimated row heights differ from final intrinsic heights.
+    const actualRowHeights = [...rowHeights];
+    node.children.forEach((childRef, cellIndex) => {
+      const { row } = cellPositions[cellIndex];
+      const childPos = this.result[childRef.ref];
+      if (childPos) {
+        actualRowHeights[row] = Math.max(actualRowHeights[row], childPos.height);
+      }
+    });
+
+    const rowOffsets: number[] = [0];
+    for (let r = 1; r < actualRowHeights.length; r++) {
+      rowOffsets[r] = rowOffsets[r - 1] + (actualRowHeights[r - 1] - rowHeights[r - 1]);
+    }
+
+    node.children.forEach((childRef, cellIndex) => {
+      const { row } = cellPositions[cellIndex];
+      const deltaY = rowOffsets[row] || 0;
+      if (deltaY === 0) return;
+
+      const childPos = this.result[childRef.ref];
+      if (!childPos) return;
+
+      childPos.y += deltaY;
+      this.adjustNodeYPositions(childRef.ref, deltaY);
     });
   }
 
@@ -580,17 +611,132 @@ export class LayoutEngine {
   }
 
   private resolveSpacing(spacing?: string): number {
-    if (!spacing) return SPACING_VALUES[this.theme.spacing];
-    const value = SPACING_VALUES[spacing];
-    return value !== undefined ? value : SPACING_VALUES.md;
+    return resolveSpacingToken(
+      spacing,
+      this.style.spacing || 'md',
+      (this.style.density || 'normal') as DensityLevel,
+      true
+    );
+  }
+
+  private getSeparateSize(node: IRNode): number {
+    if (node.kind !== 'component') {
+      return resolveSpacingToken('md', 'md', (this.style.density || 'normal') as DensityLevel, true);
+    }
+    const explicitSize = node.props.size;
+    if (typeof explicitSize === 'number' && !isNaN(explicitSize)) {
+      return explicitSize;
+    }
+    return resolveSpacingToken(
+      explicitSize ? String(explicitSize) : 'md',
+      'md',
+      (this.style.density || 'normal') as DensityLevel,
+      true
+    );
   }
 
   private getComponentHeight(): number {
-    return DENSITY_HEIGHTS[this.theme.density] || DENSITY_HEIGHTS.normal;
+    return DENSITY_HEIGHTS[this.style.density] || DENSITY_HEIGHTS.normal;
+  }
+
+  private getTextMetricsForDensity(): { fontSize: number; lineHeight: number } {
+    switch (this.style.density) {
+      case 'compact':
+        return { fontSize: 12, lineHeight: 1.4 };
+      case 'comfortable':
+        return { fontSize: 16, lineHeight: 1.6 };
+      case 'normal':
+      default:
+        return { fontSize: 14, lineHeight: 1.5 };
+    }
+  }
+
+  private getButtonMetricsForDensity(): { fontSize: number; paddingX: number } {
+    switch (this.style.density) {
+      case 'compact':
+        return { fontSize: 12, paddingX: 8 };
+      case 'comfortable':
+        return { fontSize: 16, paddingX: 16 };
+      case 'normal':
+      default:
+        return { fontSize: 14, paddingX: 12 };
+    }
+  }
+
+  private getHeadingMetricsForDensity(level?: unknown): { fontSize: number; lineHeight: number } {
+    let baseFontSize: number;
+    switch (this.style.density) {
+      case 'compact':
+        baseFontSize = 16;
+        break;
+      case 'comfortable':
+        baseFontSize = 24;
+        break;
+      case 'normal':
+      default:
+        baseFontSize = 20;
+        break;
+    }
+
+    const typography = resolveHeadingTypography(baseFontSize, 600, level);
+    return { fontSize: typography.fontSize, lineHeight: typography.lineHeight };
+  }
+
+  private wrapTextToLines(text: string, maxWidth: number, fontSize: number): string[] {
+    const normalized = text.replace(/\r\n/g, '\n');
+    const paragraphs = normalized.split('\n');
+    const charWidth = fontSize * 0.6;
+    const safeWidth = Math.max(maxWidth, charWidth);
+    const maxCharsPerLine = Math.max(1, Math.floor(safeWidth / charWidth));
+    const lines: string[] = [];
+
+    for (const paragraph of paragraphs) {
+      if (!paragraph.trim()) {
+        lines.push('');
+        continue;
+      }
+
+      const words = paragraph.split(/\s+/).filter(Boolean);
+      let currentLine = '';
+
+      for (const word of words) {
+        const candidate = currentLine ? `${currentLine} ${word}` : word;
+        if (candidate.length <= maxCharsPerLine) {
+          currentLine = candidate;
+          continue;
+        }
+
+        if (currentLine) {
+          lines.push(currentLine);
+          currentLine = '';
+        }
+
+        if (word.length <= maxCharsPerLine) {
+          currentLine = word;
+          continue;
+        }
+
+        for (let i = 0; i < word.length; i += maxCharsPerLine) {
+          lines.push(word.slice(i, i + maxCharsPerLine));
+        }
+      }
+
+      if (currentLine) {
+        lines.push(currentLine);
+      }
+    }
+
+    return lines.length > 0 ? lines : [''];
   }
 
   private getIntrinsicComponentHeight(node: IRNode, availableWidth?: number): number {
     if (node.kind !== 'component') return this.getComponentHeight();
+    const controlLabelOffset =
+      node.componentType === 'Input' ||
+      node.componentType === 'Textarea' ||
+      node.componentType === 'Select'
+        ? this.getControlLabelOffset(String(node.props.label || ''))
+        : 0;
 
     // Image: calculate height based on aspect ratio and available width
     if (node.componentType === 'Image') {
@@ -626,7 +772,7 @@ export class LayoutEngine {
       if (!isNaN(explicitHeight) && explicitHeight > 0) {
         return explicitHeight;
       }
-      const rowCount = Number(node.props.rows || 5);
+      const rowCount = Number(node.props.rows || node.props.rowsMock || 5);
       const hasTitle = !!node.props.title;
       const hasPagination = String(node.props.pagination) === 'true';
       const headerHeight = 44;
@@ -636,20 +782,105 @@ export class LayoutEngine {
       return titleHeight + headerHeight + rowCount * rowHeight + paginationHeight;
     }
 
+    if (node.componentType === 'Heading') {
+      const text = String(node.props.text || 'Heading');
+      const { fontSize, lineHeight } = this.getHeadingMetricsForDensity(node.props.level);
+      const lineHeightPx = Math.ceil(fontSize * lineHeight);
+      const maxWidth = availableWidth && availableWidth > 0 ? availableWidth : 200;
+      const lines = this.wrapTextToLines(text, maxWidth, fontSize);
+      const wrappedHeight = Math.max(1, lines.length) * lineHeightPx;
+      const density = (this.style.density || 'normal') as DensityLevel;
+      const verticalPadding = resolveHeadingVerticalPadding(node.props.spacing, density);
+      if (verticalPadding === null) {
+        // Keep legacy/default behavior when spacing is not explicitly defined.
+        return Math.max(this.getComponentHeight(), wrappedHeight);
+      }
+      return Math.max(1, Math.ceil(wrappedHeight + verticalPadding * 2));
+    }
+
+    if (node.componentType === 'Text') {
+      const content = String(node.props.content || '');
+      const { fontSize, lineHeight } = this.getTextMetricsForDensity();
+      const lineHeightPx = Math.ceil(fontSize * lineHeight);
+      const maxWidth = availableWidth && availableWidth > 0 ? availableWidth : 200;
+      const lines = this.wrapTextToLines(content, maxWidth, fontSize);
+      const wrappedHeight = Math.max(1, lines.length) * lineHeightPx;
+      return Math.max(this.getComponentHeight(), wrappedHeight);
+    }
+
+    if (node.componentType === 'Alert') {
+      const title = String(node.props.title || '');
+      const text = String(node.props.text || 'Alert message');
+      const fontSize = 13;
+      const titleLineHeightPx = Math.ceil(fontSize * 1.25);
+      const textLineHeightPx = Math.ceil(fontSize * 1.4);
+      const maxWidth = Math.max(40, (availableWidth && availableWidth > 0 ? availableWidth : 280) - 24);
+
+      const titleLines = title.trim().length > 0
+        ? this.wrapTextToLines(title, maxWidth, fontSize)
+        : [];
+      const textLines = this.wrapTextToLines(text, maxWidth, fontSize);
+
+      const topPadding = 12;
+      const bottomPadding = 12;
+      const titleGap = titleLines.length > 0 ? 6 : 0;
+      const wrappedHeight =
+        topPadding +
+        titleLines.length * titleLineHeightPx +
+        titleGap +
+        Math.max(1, textLines.length) * textLineHeightPx +
+        bottomPadding;
+
+      return Math.max(this.getComponentHeight(), wrappedHeight);
+    }
+
+    if (node.componentType === 'SidebarMenu') {
+      const itemsStr = String(node.props.items || 'Item 1,Item 2,Item 3');
+      const items = itemsStr
+        .split(',')
+        .map((s) => s.trim())
+        .filter(Boolean);
+      const itemCount = items.length > 0 ? items.length : 3;
+      const itemHeight = 40;
+      return Math.max(this.getComponentHeight(), itemCount * itemHeight);
+    }
+
     // Taller components
-    if (node.componentType === 'Textarea') return 100;
+    if (node.componentType === 'Textarea') return 100 + controlLabelOffset;
     if (node.componentType === 'Modal') return 300;
     if (node.componentType === 'Card') return 120;
     if (node.componentType === 'StatCard') return 120;
-    if (node.componentType === 'ChartPlaceholder') return 250;
-    if (node.componentType === 'List') return 180;
+    if (node.componentType === 'Chart' || node.componentType === 'ChartPlaceholder') return 250;
+    if (node.componentType === 'List') {
+      const itemsFromProps = String(node.props.items || '')
+        .split(',')
+        .map((item) => item.trim())
+        .filter(Boolean);
+      const parsedItemsMock = Number(node.props.itemsMock ?? 4);
+      const fallbackCount = Number.isFinite(parsedItemsMock)
+        ? Math.max(0, Math.floor(parsedItemsMock))
+        : 4;
+      const itemCount = itemsFromProps.length > 0 ? itemsFromProps.length : fallbackCount;
+      const titleHeight = String(node.props.title || '').trim().length > 0 ? 40 : 0;
+      const itemHeight = 36;
+      const contentHeight = titleHeight + itemCount * itemHeight;
+      return Math.max(this.getComponentHeight(), contentHeight);
+    }
 
     // Standard height components
     if (node.componentType === 'Topbar') return 56;
     if (node.componentType === 'Divider') return 1;
+    if (node.componentType === 'Separate') return this.getSeparateSize(node);
+    if (node.componentType === 'Input' || node.componentType === 'Select') {
+      return this.getComponentHeight() + controlLabelOffset;
+    }
 
     // Default height
     return this.getComponentHeight();
+  }
+
+  private getControlLabelOffset(label: string): number {
+    return label.trim().length > 0 ? 18 : 0;
   }
 
   private getIntrinsicComponentWidth(node: IRNode | undefined): number {
@@ -661,18 +892,13 @@ export class LayoutEngine {
     // Icon: small fixed width
     if (node.componentType === 'Icon') {
       const size = String(node.props.size || 'md');
-      const sizes: Record<string, number> = {
-        sm: 16,
-        md: 24,
-        lg: 32,
-        xl: 40,
-      };
-      return sizes[size] || 24;
+      return resolveIconSize(size, (this.style.density || 'normal') as DensityLevel);
     }
 
     // IconButton: size + padding
     if (node.componentType === 'IconButton') {
-      return 40;
+      const size = String(node.props.size || 'md');
+      return resolveIconButtonSize(size, (this.style.density || 'normal') as DensityLevel);
     }
 
     // Checkbox, Radio: fixed width
@@ -680,10 +906,15 @@ export class LayoutEngine {
       return 24;
     }
 
-    // Button: text width + padding (estimate)
-    if (node.componentType === 'Button') {
+    // Separate: fixed spacer width (useful in horizontal stacks)
+    if (node.componentType === 'Separate') return this.getSeparateSize(node);
+
+    // Button, Link: text width + padding (estimate)
+    if (node.componentType === 'Button' || node.componentType === 'Link') {
       const text = String(node.props.text || '');
-      return Math.max(80, text.length * 8 + 32); // ~8px per char + 32px padding
+      const { fontSize, paddingX } = this.getButtonMetricsForDensity();
+      const textWidth = this.estimateTextWidth(text, fontSize);
+      return Math.max(60, Math.ceil(textWidth + paddingX * 2));
     }
 
     // Label, Text: content-based width (estimate)
@@ -695,7 +926,8 @@ export class LayoutEngine {
     // Heading: content-based width
     if (node.componentType === 'Heading') {
       const text = String(node.props.text || '');
-      return Math.max(80, text.length * 12 + 16);
+      const { fontSize } = this.getHeadingMetricsForDensity(node.props.level);
+      return Math.max(80, Math.ceil(text.length * fontSize * 0.6 + 16));
     }
 
     // Input, Select, Textarea: standard widths
@@ -730,18 +962,7 @@ export class LayoutEngine {
       return 280;
     }
 
-    // Avatar, SidebarMenu: fixed widths
-    if (node.componentType === 'Avatar') {
-      const size = String(node.props.size || 'md');
-      const sizes: Record<string, number> = {
-        sm: 32,
-        md: 40,
-        lg: 56,
-        xl: 72,
-      };
-      return sizes[size] || 40;
-    }
-
+    // SidebarMenu: fixed width
     if (node.componentType === 'SidebarMenu') {
       return 260;
     }
@@ -767,6 +988,23 @@ export class LayoutEngine {
     const totalGap = gap * (count - 1);
     return (totalWidth - totalGap) / count;
   }
+
+  private estimateTextWidth(text: string, fontSize: number): number {
+    let width = 0;
+    for (const ch of text) {
+      if (/\s/.test(ch)) {
+        width += fontSize * 0.33;
+      } else if (/[.,:;'"`|!iIl]/.test(ch)) {
+        width += fontSize * 0.32;
+      } else if (/[MW@#%&]/.test(ch)) {
+        width += fontSize * 0.9;
+      } else {
+        width += fontSize * 0.6;
+      }
+    }
+    return width;
+  }
+
   private adjustNodeYPositions(nodeId: string, deltaY: number): void {
     const node = this.nodes[nodeId];
     if (!node) return;

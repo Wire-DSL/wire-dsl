@@ -55,7 +55,7 @@
         },
         {
           "name": "keyword.declaration.wire",
-          "match": "\\b(tokens|colors|mocks)\\b"
+          "match": "\\b(style|colors|mocks)\\b"
         },
         {
           "name": "keyword.control.wire",
@@ -63,7 +63,7 @@
         },
         {
           "name": "keyword.other.wire",
-          "match": "\\b(theme)\\b"
+          "match": "\\b(Component)\\b"
         }
       ]
     },
@@ -71,7 +71,7 @@
       "patterns": [
         {
           "name": "entity.name.class.wire",
-          "match": "\\b(Heading|Text|Paragraph|Label|Button|IconButton|Input|Textarea|Select|Checkbox|CheckboxGroup|Radio|RadioGroup|Toggle|Image|Icon|Divider|Badge|Link|Breadcrumbs|Tabs|SidebarMenu|Topbar|Sidebar|Panel|Card|StatCard|ChartPlaceholder|Table|List|Modal|Alert|Code|Spinner|Avatar)\\b"
+          "match": "\\b(Heading|Text|Label|Button|Link|Input|Textarea|Select|Checkbox|Radio|Toggle|Topbar|SidebarMenu|Sidebar|Breadcrumbs|Tabs|Table|List|StatCard|Card|Chart|ChartPlaceholder|Code|Image|Icon|IconButton|Divider|Separate|Badge|Alert|Modal)\\b"
         }
       ]
     },
@@ -79,7 +79,7 @@
       "patterns": [
         {
           "name": "variable.other.property.wire",
-          "match": "\\b(title|subtitle|text|content|label|placeholder|items|active|variant|user|icon|rows|columns|span|sidebar|direction|gap|padding|background|color|align|radius|border|mock|density|spacing|stroke|font|disabled|required|readonly|type|value|src|alt|height|itemsMock|dismissible)\\b"
+          "match": "\\b(id|width|height|title|subtitle|text|content|code|caption|label|placeholder|items|itemsMock|icons|active|variant|user|icon|rows|rowsMock|columns|separator|actions|checked|enabled|pagination|pages|paginationAlign|mock|random|sidebar|direction|gap|padding|size|level|background|align|radius|border|density|spacing|stroke|font|theme|device|type|value|color)\\b"
         }
       ]
     },

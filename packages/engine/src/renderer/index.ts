@@ -3,6 +3,11 @@ import type { LayoutResult } from '../layout/index';
 import { MockDataGenerator } from './mock-data';
 import { ColorResolver } from './colors';
 import { getIcon } from './icons/iconLibrary';
+import { resolveTokens, type DesignTokens } from './tokens';
+import { resolveSpacingToken, type DensityLevel } from '../shared/spacing';
+import { resolveIconButtonSize, resolveIconSize } from '../shared/component-sizes';
+import { resolveHeadingTypography } from '../shared/heading-levels';
+import { resolveHeadingVerticalPadding } from '../shared/heading-spacing';
 
 /**
  * SVG Renderer
@@ -63,20 +68,29 @@ const THEMES = {
 export class SVGRenderer {
   private ir: IRContract;
   private layout: LayoutResult;
-  private options: Required<Omit<SVGRenderOptions, 'screenName'>> & { screenName?: string };
-  private renderTheme: typeof THEMES.light;
+  protected options: Required<Omit<SVGRenderOptions, 'screenName'>> & { screenName?: string };
+  protected renderTheme: typeof THEMES.light;
+  protected tokens: DesignTokens;
   private selectedScreenName?: string;
-  private renderedNodeIds: Set<string> = new Set(); // Track nodes rendered in current pass
-  private colorResolver: ColorResolver;
+  protected renderedNodeIds: Set<string> = new Set(); // Track nodes rendered in current pass
+  protected colorResolver: ColorResolver;
+  protected fontFamily: string = 'system-ui, -apple-system, sans-serif';
 
   constructor(ir: IRContract, layout: LayoutResult, options?: SVGRenderOptions) {
     this.ir = ir;
     this.layout = layout;
     this.selectedScreenName = options?.screenName;
+
+    // Resolve color scheme with priority: options.theme > style.theme > 'light'
+    const colorScheme = options?.theme || ir.project.style.theme || 'light';
+
+    // Resolve design tokens based on style (density-aware)
+    this.tokens = resolveTokens(ir.project.style);
+
     this.options = {
       width: options?.width || 1280,
       height: options?.height || 720,
-      theme: options?.theme || 'light',
+      theme: colorScheme as 'light' | 'dark',
       includeLabels: options?.includeLabels ?? true,
       screenName: options?.screenName,
     };
@@ -107,7 +121,7 @@ export class SVGRenderer {
   /**
    * Get the currently selected or first screen
    */
-  private getSelectedScreen(): { screen: any; name: string } {
+  protected getSelectedScreen(): { screen: any; name: string } {
     let screen = this.ir.project.screens[0];
     let screenName = screen?.name || 'Unknown';
 
@@ -155,7 +169,7 @@ export class SVGRenderer {
 </svg>`;
   }
 
-  private calculateContentHeight(): number {
+  protected calculateContentHeight(): number {
     let maxY = 0;
 
     // Find the lowest y position + height (only for rendered nodes)
@@ -172,7 +186,7 @@ export class SVGRenderer {
     return Math.max(maxY + 40, this.options.height); // Add 40px padding at bottom
   }
 
-  private renderNode(nodeId: string, output: string[]): void {
+  protected renderNode(nodeId: string, output: string[]): void {
     const node = this.ir.project.nodes[nodeId];
     const pos = this.layout[nodeId];
 
@@ -232,7 +246,7 @@ export class SVGRenderer {
     }
   }
 
-  private renderComponent(
+  protected renderComponent(
     node: IRComponentNode,
     pos: { x: number; y: number; width: number; height: number }
   ): string {
@@ -242,12 +256,15 @@ export class SVGRenderer {
         return this.renderHeading(node, pos);
       case 'Button':
         return this.renderButton(node, pos);
+      case 'Link':
+        return this.renderLink(node, pos);
       case 'Input':
         return this.renderInput(node, pos);
       case 'Topbar':
         return this.renderTopbar(node, pos);
       case 'Table':
         return this.renderTable(node, pos);
+      case 'Chart':
       case 'ChartPlaceholder':
         return this.renderChartPlaceholder(node, pos);
       case 'Breadcrumbs':
@@ -282,6 +299,8 @@ export class SVGRenderer {
         return this.renderTabs(node, pos);
       case 'Divider':
         return this.renderDivider(node, pos);
+      case 'Separate':
+        return this.renderSeparate(node, pos);
 
       // Feedback/Alert components
       case 'Alert':
@@ -308,102 +327,172 @@ export class SVGRenderer {
     }
   }
 
-  private renderHeading(node: IRComponentNode, pos: any): string {
+  protected renderHeading(node: IRComponentNode, pos: any): string {
     const text = String(node.props.text || 'Heading');
-    const fontSize = 20;
 
-    return `<g${this.getDataNodeId(node)}>
-    <text x="${pos.x}" y="${pos.y + pos.height / 2 + 6}" 
-          font-family="system-ui, -apple-system, sans-serif" 
-          font-size="${fontSize}" 
-          font-weight="600" 
+    const headingTypography = this.getHeadingTypography(node);
+    const fontSize = headingTypography.fontSize;
+    const fontWeight = headingTypography.fontWeight;
+    const lineHeightPx = Math.ceil(fontSize * headingTypography.lineHeight);
+    const lines = this.wrapTextToLines(text, pos.width, fontSize);
+    const firstLineY = this.getHeadingFirstLineY(node, pos, fontSize, lineHeightPx, lines.length);
+
+    if (lines.length <= 1) {
+      return `<g${this.getDataNodeId(node)}>
+    <text x="${pos.x}" y="${firstLineY}"
+          font-family="system-ui, -apple-system, sans-serif"
+          font-size="${fontSize}"
+          font-weight="${fontWeight}"
           fill="${this.renderTheme.text}">${this.escapeXml(text)}</text>
   </g>`;
-  }
+    }
 
-  private renderButton(node: IRComponentNode, pos: any): string {
-    const text = String(node.props.text || 'Button');
-    const variant = String(node.props.variant || 'default');
-    const size = String(node.props.size || 'md');
-
-    // Color configuration with reduced opacity/grayed tones
-    const bgColor = variant === 'primary' 
-      ? 'rgba(59, 130, 246, 0.85)'
-      : 'rgba(226, 232, 240, 0.9)';
-    const textColor = variant === 'primary' ? '#FFFFFF' : 'rgba(30, 41, 59, 0.85)';
-    const borderColor = variant === 'primary' 
-      ? 'rgba(59, 130, 246, 0.7)' 
-      : 'rgba(100, 116, 139, 0.4)';
-
-    // Font size based on size prop
-    const fontSizeMap = { 'sm': 12, 'md': 14, 'lg': 16 };
-    const fontSize = fontSizeMap[size as keyof typeof fontSizeMap] || 14;
-
-    const buttonWidth = Math.max(pos.width, 60);
+    const tspans = lines
+      .map(
+        (line, index) =>
+          `<tspan x="${pos.x}" dy="${index === 0 ? 0 : lineHeightPx}">${this.escapeXml(line)}</tspan>`
+      )
+      .join('');
 
     return `<g${this.getDataNodeId(node)}>
-    <rect x="${pos.x}" y="${pos.y}" 
-          width="${buttonWidth}" height="${pos.height}" 
-          rx="6" 
-          fill="${bgColor}" 
-          stroke="${borderColor}" 
-          stroke-width="1"/>
-    <text x="${pos.x + buttonWidth / 2}" y="${pos.y + pos.height / 2 + 5}" 
-          font-family="system-ui, -apple-system, sans-serif" 
-          font-size="${fontSize}" 
-          font-weight="500" 
-          fill="${textColor}" 
-          text-anchor="middle">${this.escapeXml(text)}</text>
+    <text x="${pos.x}" y="${firstLineY}"
+          font-family="system-ui, -apple-system, sans-serif"
+          font-size="${fontSize}"
+          font-weight="${fontWeight}"
+          fill="${this.renderTheme.text}">${tspans}</text>
   </g>`;
   }
 
-  private renderInput(node: IRComponentNode, pos: any): string {
+  protected renderButton(node: IRComponentNode, pos: any): string {
+    const text = String(node.props.text || 'Button');
+    const variant = String(node.props.variant || 'default');
+
+    // Use tokens from density configuration
+    const radius = this.tokens.button.radius;
+    const fontSize = this.tokens.button.fontSize;
+    const fontWeight = this.tokens.button.fontWeight;
+    const paddingX = this.tokens.button.paddingX;
+    const paddingY = this.tokens.button.paddingY;
+
+    // Keep control inside layout bounds; truncate text if needed.
+    const idealTextWidth = this.estimateTextWidth(text, fontSize);
+    const buttonWidth = this.clampControlWidth(
+      Math.max(Math.ceil(idealTextWidth + paddingX * 2), 60),
+      pos.width
+    );
+    const buttonHeight = fontSize + paddingY * 2;
+    const availableTextWidth = Math.max(0, buttonWidth - paddingX * 2);
+    const visibleText = this.truncateTextToWidth(text, availableTextWidth, fontSize);
+
+    // Color configuration with variant override support from colors block.
+    const semanticBase = this.getSemanticVariantColor(variant);
+    const hasExplicitVariantColor =
+      semanticBase !== undefined || this.colorResolver.hasColor(variant);
+    const resolvedBase = this.resolveVariantColor(variant, this.renderTheme.primary);
+    const bgColor = hasExplicitVariantColor
+      ? this.hexToRgba(resolvedBase, 0.85)
+      : 'rgba(226, 232, 240, 0.9)';
+    const textColor = hasExplicitVariantColor ? '#FFFFFF' : 'rgba(30, 41, 59, 0.85)';
+    const borderColor = hasExplicitVariantColor
+      ? this.hexToRgba(resolvedBase, 0.7)
+      : 'rgba(100, 116, 139, 0.4)';
+
+    return `<g${this.getDataNodeId(node)}>
+    <rect x="${pos.x}" y="${pos.y}"
+          width="${buttonWidth}" height="${buttonHeight}"
+          rx="${radius}"
+          fill="${bgColor}"
+          stroke="${borderColor}"
+          stroke-width="1"/>
+    <text x="${pos.x + buttonWidth / 2}" y="${pos.y + buttonHeight / 2 + fontSize * 0.35}"
+          font-family="system-ui, -apple-system, sans-serif"
+          font-size="${fontSize}"
+          font-weight="${fontWeight}"
+          fill="${textColor}"
+          text-anchor="middle">${this.escapeXml(visibleText)}</text>
+  </g>`;
+  }
+
+  protected renderLink(node: IRComponentNode, pos: any): string {
+    const text = String(node.props.text || 'Link');
+    const variant = String(node.props.variant || 'primary');
+    const fontSize = this.tokens.button.fontSize;
+    const fontWeight = this.tokens.button.fontWeight;
+    const paddingX = this.tokens.button.paddingX;
+    const paddingY = this.tokens.button.paddingY;
+    const linkColor = this.resolveVariantColor(variant, this.renderTheme.primary);
+
+    // Match Button sizing so Link can align beside regular buttons.
+    const idealTextWidth = this.estimateTextWidth(text, fontSize);
+    const linkWidth = this.clampControlWidth(
+      Math.max(Math.ceil(idealTextWidth + paddingX * 2), 60),
+      pos.width
+    );
+    const linkHeight = fontSize + paddingY * 2;
+    const availableTextWidth = Math.max(0, linkWidth - paddingX * 2);
+    const visibleText = this.truncateTextToWidth(text, availableTextWidth, fontSize);
+    const visibleTextWidth = Math.min(
+      this.estimateTextWidth(visibleText, fontSize),
+      Math.max(0, availableTextWidth)
+    );
+    const centerY = pos.y + linkHeight / 2 + fontSize * 0.35;
+    const underlineY = centerY + 3;
+
+    return `<g${this.getDataNodeId(node)}>
+    <text x="${pos.x + linkWidth / 2}" y="${centerY}"
+          font-family="system-ui, -apple-system, sans-serif"
+          font-size="${fontSize}"
+          font-weight="${fontWeight}"
+          fill="${linkColor}"
+          text-anchor="middle">${this.escapeXml(visibleText)}</text>
+    <line x1="${pos.x + (linkWidth - visibleTextWidth) / 2}" y1="${underlineY}"
+          x2="${pos.x + (linkWidth + visibleTextWidth) / 2}" y2="${underlineY}"
+          stroke="${linkColor}"
+          stroke-width="1"/>
+  </g>`;
+  }
+
+  protected renderInput(node: IRComponentNode, pos: any): string {
     const label = String(node.props.label || '');
     const placeholder = String(node.props.placeholder || '');
+
+    // Use tokens from density configuration
+    const radius = this.tokens.input.radius;
+    const fontSize = this.tokens.input.fontSize;
+    const paddingX = this.tokens.input.paddingX;
+    const labelOffset = this.getControlLabelOffset(label);
+    const controlY = pos.y + labelOffset;
+    const controlHeight = Math.max(16, pos.height - labelOffset);
 
     return `<g${this.getDataNodeId(node)}>
     ${
       label
-        ? `<text x="${pos.x + 8}" y="${pos.y - 6}" 
-          font-family="system-ui, -apple-system, sans-serif" 
-          font-size="12" 
+        ? `<text x="${pos.x + paddingX}" y="${this.getControlLabelBaselineY(pos.y)}"
+          font-family="system-ui, -apple-system, sans-serif"
+          font-size="12"
           fill="${this.renderTheme.text}">${this.escapeXml(label)}</text>`
         : ''
     }
-    <rect x="${pos.x}" y="${pos.y}" 
-          width="${pos.width}" height="${pos.height}" 
-          rx="6" 
-          fill="${this.renderTheme.cardBg}" 
-          stroke="${this.renderTheme.border}" 
+    <rect x="${pos.x}" y="${controlY}"
+          width="${pos.width}" height="${controlHeight}"
+          rx="${radius}"
+          fill="${this.renderTheme.cardBg}"
+          stroke="${this.renderTheme.border}"
           stroke-width="1"/>
-    <text x="${pos.x + 12}" y="${pos.y + pos.height / 2 + 5}" 
-          font-family="system-ui, -apple-system, sans-serif" 
-          font-size="14" 
+    <text x="${pos.x + paddingX}" y="${controlY + controlHeight / 2 + 5}"
+          font-family="system-ui, -apple-system, sans-serif"
+          font-size="${fontSize}"
           fill="${this.renderTheme.textMuted}">${this.escapeXml(placeholder)}</text>
   </g>`;
   }
 
-  private renderTopbar(node: IRComponentNode, pos: any): string {
+  protected renderTopbar(node: IRComponentNode, pos: any): string {
     const title = String(node.props.title || 'App');
     const subtitle = String(node.props.subtitle || '');
     const actions = String(node.props.actions || '');
     const user = String(node.props.user || '');
-
-    // Calculate title position: center vertically or padded with subtitle
-    const titleLineHeight = 18;
-    const paddingTop = 24; // adjusted top padding
-
-    let titleY: number;
-    let subtitleY: number = 0; // Initialize to avoid usage before assignment
-
-    if (subtitle) {
-      // Title near top with fixed padding; subtitle below with comfortable gap
-      titleY = pos.y + paddingTop;
-      subtitleY = titleY + 20; // gap between title baseline and subtitle baseline
-    } else {
-      // Center title vertically when no subtitle
-      titleY = pos.y + pos.height / 2 + titleLineHeight / 2 - 4; // centered with slight upward shift
-    }
+    const accentColor = this.resolveAccentColor();
+    const topbar = this.calculateTopbarLayout(node, pos, title, subtitle, actions, user);
 
     let svg = `<g${this.getDataNodeId(node)}>
     <rect x="${pos.x}" y="${pos.y}" 
@@ -413,77 +502,89 @@ export class SVGRenderer {
           stroke-width="1"/>
     
     <!-- Title -->
-    <text x="${pos.x + 16}" y="${titleY}" 
+    <text x="${topbar.textX}" y="${topbar.titleY}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="18" 
           font-weight="600" 
-          fill="${this.renderTheme.text}">${this.escapeXml(title)}</text>`;
+          fill="${this.renderTheme.text}">${this.escapeXml(topbar.visibleTitle)}</text>`;
 
     // Subtitle
-    if (subtitle) {
+    if (topbar.hasSubtitle) {
       svg += `
-    <text x="${pos.x + 16}" y="${subtitleY}" 
+    <text x="${topbar.textX}" y="${topbar.subtitleY}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="13" 
-          fill="${this.renderTheme.textMuted}">${this.escapeXml(subtitle)}</text>`;
+          fill="${this.renderTheme.textMuted}">${this.escapeXml(topbar.visibleSubtitle)}</text>`;
     }
 
-    // User badge (top-right, above actions)
-    if (user) {
-      const badgeHeight = 28;
-      const badgePaddingX = 12;
-      const badgeX = pos.x + pos.width - 16 - badgePaddingX * 2 - user.length * 7.5;
-      const badgeY = pos.y + 12;
-
+    if (topbar.leftIcon) {
       svg += `
-    <!-- User badge -->
-    <rect x="${badgeX}" y="${badgeY}" 
-          width="${badgePaddingX * 2 + user.length * 7.5}" height="${badgeHeight}" 
-          rx="4" 
-          fill="${this.renderTheme.cardBg}" 
-          stroke="${this.renderTheme.border}" 
+    <!-- Left icon -->
+    <rect x="${topbar.leftIcon.badgeX}" y="${topbar.leftIcon.badgeY}"
+          width="${topbar.leftIcon.badgeSize}" height="${topbar.leftIcon.badgeSize}"
+          rx="${topbar.leftIcon.badgeRadius}"
+          fill="${this.hexToRgba(accentColor, 0.12)}"
+          stroke="${this.hexToRgba(accentColor, 0.35)}"
           stroke-width="1"/>
-    <text x="${badgeX + badgePaddingX + user.length * 3.75}" y="${badgeY + badgeHeight / 2 + 4}" 
-          font-family="system-ui, -apple-system, sans-serif" 
-          font-size="12" 
-          fill="${this.renderTheme.text}" 
-          text-anchor="middle">${this.escapeXml(user)}</text>`;
+    <g transform="translate(${topbar.leftIcon.iconX}, ${topbar.leftIcon.iconY})">
+      <svg width="${topbar.leftIcon.iconSize}" height="${topbar.leftIcon.iconSize}" viewBox="0 0 24 24" fill="none" stroke="${accentColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        ${this.extractSvgContent(topbar.leftIcon.iconSvg)}
+      </svg>
+    </g>`;
     }
 
-    // Actions (as buttons on the right)
-    if (actions) {
-      const actionList = actions
-        .split(',')
-        .map((a) => a.trim())
-        .filter(Boolean);
-      const buttonWidth = 100;
-      const buttonHeight = 32;
-      const buttonStartX = pos.x + pos.width - 16 - actionList.length * (buttonWidth + 8);
-      const buttonY = pos.y + (pos.height - buttonHeight) / 2;
-
-      actionList.forEach((action, idx) => {
-        const bx = buttonStartX + idx * (buttonWidth + 8);
-        svg += `
-    <!-- Action button: ${action} -->
-    <rect x="${bx}" y="${buttonY}" 
-          width="${buttonWidth}" height="${buttonHeight}" 
+    // Actions are anchored to the right but shifted left when user/avatar occupy space.
+    topbar.actions.forEach((action) => {
+      svg += `
+    <!-- Action button: ${action.label} -->
+    <rect x="${action.x}" y="${action.y}" 
+          width="${action.width}" height="${action.height}" 
           rx="6" 
-          fill="${this.renderTheme.primary}" 
+          fill="${accentColor}" 
           stroke="none"/>
-    <text x="${bx + buttonWidth / 2}" y="${buttonY + buttonHeight / 2 + 4}" 
+    <text x="${action.x + action.width / 2}" y="${action.y + action.height / 2 + 4}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="12" 
           font-weight="600" 
           fill="white" 
-          text-anchor="middle">${this.escapeXml(action)}</text>`;
-      });
+          text-anchor="middle">${this.escapeXml(action.label)}</text>`;
+    });
+
+    if (topbar.userBadge) {
+      svg += `
+    <!-- User badge -->
+    <rect x="${topbar.userBadge.x}" y="${topbar.userBadge.y}" 
+          width="${topbar.userBadge.width}" height="${topbar.userBadge.height}" 
+          rx="4" 
+          fill="${this.renderTheme.cardBg}" 
+          stroke="${this.renderTheme.border}" 
+          stroke-width="1"/>
+    <text x="${topbar.userBadge.x + topbar.userBadge.width / 2}" y="${topbar.userBadge.y + topbar.userBadge.height / 2 + 4}" 
+          font-family="system-ui, -apple-system, sans-serif" 
+          font-size="12" 
+          fill="${this.renderTheme.text}" 
+          text-anchor="middle">${this.escapeXml(topbar.userBadge.label)}</text>`;
+    }
+
+    if (topbar.avatar) {
+      svg += `
+    <!-- Avatar -->
+    <circle cx="${topbar.avatar.cx}" cy="${topbar.avatar.cy}" r="${topbar.avatar.r}"
+            fill="${this.renderTheme.cardBg}"
+            stroke="${this.renderTheme.border}"
+            stroke-width="1"/>
+    <circle cx="${topbar.avatar.cx}" cy="${topbar.avatar.cy - topbar.avatar.r * 0.22}" r="${topbar.avatar.r * 0.28}"
+            fill="${this.renderTheme.textMuted}" opacity="0.7"/>
+    <rect x="${topbar.avatar.cx - topbar.avatar.r * 0.45}" y="${topbar.avatar.cy + topbar.avatar.r * 0.02}"
+          width="${topbar.avatar.r * 0.9}" height="${topbar.avatar.r * 0.62}" rx="${topbar.avatar.r * 0.3}"
+          fill="${this.renderTheme.textMuted}" opacity="0.7"/>`;
     }
 
     svg += '\n  </g>';
     return svg;
   }
 
-  private renderPanelBorder(node: IRNode, pos: any, output: string[]): void {
+  protected renderPanelBorder(node: IRNode, pos: any, output: string[]): void {
     if (node.kind !== 'container') return;
 
     // Resolve background color, defaulting to cardBg (white in light theme)
@@ -504,17 +605,17 @@ export class SVGRenderer {
     output.push(svg);
   }
 
-  private renderCardBorder(node: IRNode, pos: any, output: string[]): void {
+  protected renderCardBorder(node: IRNode, pos: any, output: string[]): void {
     if (node.kind !== 'container') return;
 
-    // Resolve radius parameter
+    // Use tokens from density configuration, but allow override from params
     const radiusMap: Record<string, number> = {
       none: 0,
       sm: 4,
-      md: 8,
+      md: this.tokens.card.radius,
       lg: 12,
     };
-    const radius = radiusMap[String(node.params.radius) || 'md'] || 8;
+    const radius = radiusMap[String(node.params.radius) || 'md'] || this.tokens.card.radius;
 
     // Resolve background color
     let fillColor = this.renderTheme.cardBg;
@@ -525,37 +626,42 @@ export class SVGRenderer {
     // Check if border is disabled (default true)
     const borderParam = String(node.params.border || 'true');
     const showBorder = borderParam !== 'false';
-    const strokeWidth = showBorder ? '1' : '0';
+    const strokeWidth = showBorder ? this.tokens.card.strokeWidth : 0;
 
     // Render card border as a rectangle with padding, gap support
     const svg = `<g>
-    <rect x="${pos.x}" y="${pos.y}" 
-          width="${pos.width}" height="${pos.height}" 
-          rx="${radius}" 
-          fill="${fillColor}" 
-          stroke="${this.renderTheme.border}" 
+    <rect x="${pos.x}" y="${pos.y}"
+          width="${pos.width}" height="${pos.height}"
+          rx="${radius}"
+          fill="${fillColor}"
+          stroke="${this.renderTheme.border}"
           stroke-width="${strokeWidth}"/>
     </g>`;
     output.push(svg);
   }
 
-  private renderTable(node: IRComponentNode, pos: any): string {
+  protected renderTable(node: IRComponentNode, pos: any): string {
     const title = String(node.props.title || '');
     const columnsStr = String(node.props.columns || 'Col1,Col2,Col3');
     const columns = columnsStr.split(',').map((c) => c.trim());
-    const rowCount = Number(node.props.rows || 5);
+    const rowCount = Number(node.props.rows || node.props.rowsMock || 5);
     const mockStr = String(node.props.mock || '');
+    const random = this.parseBooleanProp(node.props.random, false);
     const paginationValue = String(node.props.pagination || 'false');
     const pagination = paginationValue === 'true';
     const pageCount = Number(node.props.pages || 5);
     const paginationAlign = String(node.props.paginationAlign || 'right'); // left, center, right
 
-    // Parse mock types, default to "item" if not specified
-    const mockTypes = mockStr ? mockStr.split(',').map((m) => m.trim()) : columns.map(() => 'item');
-
-    // Ensure we have a mock type for each column (pad with 'item' if needed)
+    // Parse mock types by column. If not provided, infer from column names.
+    const mockTypes = mockStr
+      ? mockStr
+          .split(',')
+          .map((m) => m.trim())
+          .filter(Boolean)
+      : [];
     while (mockTypes.length < columns.length) {
-      mockTypes.push('item');
+      const inferred = MockDataGenerator.inferMockTypeFromColumn(columns[mockTypes.length] || 'item');
+      mockTypes.push(inferred);
     }
 
     const headerHeight = 44;
@@ -567,8 +673,9 @@ export class SVGRenderer {
     for (let rowIdx = 0; rowIdx < rowCount; rowIdx++) {
       const row: Record<string, string> = {};
       columns.forEach((col, colIdx) => {
-        const mockType = mockTypes[colIdx] || 'item';
-        row[col] = MockDataGenerator.getMockValue(mockType, rowIdx);
+        const mockType =
+          mockTypes[colIdx] || MockDataGenerator.inferMockTypeFromColumn(col) || 'item';
+        row[col] = MockDataGenerator.getMockValue(mockType, rowIdx, random);
       });
       mockRows.push(row);
     }
@@ -700,41 +807,153 @@ export class SVGRenderer {
     return svg;
   }
 
-  private renderChartPlaceholder(node: IRComponentNode, pos: any): string {
-    const type = String(node.props.type || 'bar');
+  protected renderChartPlaceholder(node: IRComponentNode, pos: any): string {
+    const type = String(node.props.type || 'bar').toLowerCase();
+    const chartHeight = Number(node.props.height);
+    const chartColor = this.resolveChartColor();
+    const resolvedHeight = !isNaN(chartHeight) && chartHeight > 0 ? chartHeight : pos.height;
+    const frameHeight = Math.min(pos.height, resolvedHeight);
+    const frameY = pos.y + Math.max(0, (pos.height - frameHeight) / 2);
+    const innerPadding = 16;
+    const innerX = pos.x + innerPadding;
+    const innerY = frameY + innerPadding;
+    const innerWidth = Math.max(20, pos.width - innerPadding * 2);
+    const innerHeight = Math.max(20, frameHeight - innerPadding * 2);
 
-    return `<g${this.getDataNodeId(node)}>
-    <rect x="${pos.x}" y="${pos.y}" 
-          width="${pos.width}" height="${pos.height}" 
+    let svg = `<g${this.getDataNodeId(node)}>
+    <rect x="${pos.x}" y="${frameY}" 
+          width="${pos.width}" height="${frameHeight}" 
           rx="8" 
           fill="${this.renderTheme.cardBg}" 
           stroke="${this.renderTheme.border}" 
-          stroke-width="1"/>
-    <text x="${pos.x + pos.width / 2}" y="${pos.y + pos.height / 2}" 
-          font-family="system-ui, -apple-system, sans-serif" 
-          font-size="14" 
-          fill="${this.renderTheme.textMuted}" 
-          text-anchor="middle">[${this.escapeXml(type.toUpperCase())} CHART]</text>
+          stroke-width="1"/>`;
+
+    if (type === 'pie') {
+      const radius = Math.max(24, Math.min(innerWidth, innerHeight) / 2 - 4);
+      const cx = innerX + innerWidth / 2;
+      const cy = innerY + innerHeight / 2;
+      const parts = [0.18, 0.24, 0.27, 0.31];
+      const colors = [
+        this.hexToRgba(this.renderTheme.primary, 0.9),
+        this.hexToRgba('#10B981', 0.9),
+        this.hexToRgba('#F59E0B', 0.9),
+        this.hexToRgba('#8B5CF6', 0.9),
+      ];
+
+      let startAngle = -Math.PI / 2;
+      parts.forEach((part, index) => {
+        const endAngle = startAngle + part * Math.PI * 2;
+        const x1 = cx + radius * Math.cos(startAngle);
+        const y1 = cy + radius * Math.sin(startAngle);
+        const x2 = cx + radius * Math.cos(endAngle);
+        const y2 = cy + radius * Math.sin(endAngle);
+        const largeArc = part > 0.5 ? 1 : 0;
+        svg += `
+    <path d="M ${cx} ${cy} L ${x1} ${y1} A ${radius} ${radius} 0 ${largeArc} 1 ${x2} ${y2} Z"
+          fill="${colors[index % colors.length]}"
+          stroke="${this.renderTheme.cardBg}"
+          stroke-width="1"/>`;
+        startAngle = endAngle;
+      });
+    } else if (type === 'line' || type === 'area') {
+      const pointCount = Math.max(4, Math.min(7, Math.floor(innerWidth / 56)));
+      const stepX = pointCount > 1 ? innerWidth / (pointCount - 1) : innerWidth;
+      const values = this.generateUpwardTrendValues(pointCount, 0.18, 0.88);
+      const pointsArray = values.map((value, i) => {
+        const x = innerX + i * stepX;
+        const y = innerY + innerHeight - value * innerHeight;
+        return { x, y };
+      });
+      const points = values
+        .map((value, i) => {
+          const x = innerX + i * stepX;
+          const y = innerY + innerHeight - value * innerHeight;
+          return `${x},${y}`;
+        })
+        .join(' ');
+      const lastY = innerY + innerHeight;
+
+      svg += `
+    <line x1="${innerX}" y1="${lastY}" x2="${innerX + innerWidth}" y2="${lastY}"
+          stroke="${this.renderTheme.border}" stroke-width="1"/>`;
+
+      if (type === 'area' && pointsArray.length > 1) {
+        const areaPath = [
+          `M ${pointsArray[0].x} ${lastY}`,
+          ...pointsArray.map((p) => `L ${p.x} ${p.y}`),
+          `L ${pointsArray[pointsArray.length - 1].x} ${lastY}`,
+          'Z',
+        ].join(' ');
+        svg += `
+    <path d="${areaPath}"
+          fill="${this.hexToRgba(chartColor, 0.18)}"
+          stroke="none"/>`;
+      }
+
+      svg += `
+    <polyline points="${points}"
+          fill="none"
+          stroke="${chartColor}"
+          stroke-width="2.5"
+          stroke-linecap="round"
+          stroke-linejoin="round"/>`;
+    } else {
+      // Default and "bar": ascending bars.
+      const barCount = Math.max(4, Math.min(8, Math.floor(innerWidth / 42)));
+      const slotWidth = innerWidth / barCount;
+      const barWidth = Math.max(8, slotWidth * 0.62);
+      const values = this.generateUpwardTrendValues(barCount, 0.16, 0.86);
+      const baseY = innerY + innerHeight;
+
+      svg += `
+    <line x1="${innerX}" y1="${baseY}" x2="${innerX + innerWidth}" y2="${baseY}"
+          stroke="${this.renderTheme.border}" stroke-width="1"/>`;
+
+      values.forEach((value, i) => {
+        const height = Math.max(6, value * innerHeight);
+        const barX = innerX + i * slotWidth + (slotWidth - barWidth) / 2;
+        const barY = baseY - height;
+        svg += `
+    <rect x="${barX}" y="${barY}"
+          width="${barWidth}" height="${height}"
+          rx="3"
+          fill="${this.hexToRgba(chartColor, 0.82)}"/>`;
+      });
+    }
+
+    svg += `
   </g>`;
+    return svg;
   }
 
   // ============================================================================
   // TEXT/CONTENT COMPONENTS
   // ============================================================================
 
-  private renderText(node: IRComponentNode, pos: any): string {
+  protected renderText(node: IRComponentNode, pos: any): string {
     const text = String(node.props.content || 'Text content');
-    const fontSize = 14;
+
+    // Use tokens from density configuration
+    const fontSize = this.tokens.text.fontSize;
+    const lineHeightPx = Math.ceil(fontSize * this.tokens.text.lineHeight);
+    const lines = this.wrapTextToLines(text, pos.width, fontSize);
+    const firstLineY = pos.y + fontSize;
+    const tspans = lines
+      .map(
+        (line, index) =>
+          `<tspan x="${pos.x}" dy="${index === 0 ? 0 : lineHeightPx}">${this.escapeXml(line)}</tspan>`
+      )
+      .join('');
 
     return `<g${this.getDataNodeId(node)}>
-    <text x="${pos.x}" y="${pos.y + 16}" 
-          font-family="system-ui, -apple-system, sans-serif" 
-          font-size="${fontSize}" 
-          fill="${this.renderTheme.text}">${this.escapeXml(text)}</text>
+    <text x="${pos.x}" y="${firstLineY}"
+          font-family="system-ui, -apple-system, sans-serif"
+          font-size="${fontSize}"
+          fill="${this.renderTheme.text}">${tspans}</text>
   </g>`;
   }
 
-  private renderLabel(node: IRComponentNode, pos: any): string {
+  protected renderLabel(node: IRComponentNode, pos: any): string {
     const text = String(node.props.text || 'Label');
 
     return `<g${this.getDataNodeId(node)}>
@@ -745,7 +964,7 @@ export class SVGRenderer {
   </g>`;
   }
 
-  private renderCode(node: IRComponentNode, pos: any): string {
+  protected renderCode(node: IRComponentNode, pos: any): string {
     const code = String(node.props.code || 'const x = 42;');
 
     return `<g${this.getDataNodeId(node)}>
@@ -766,65 +985,76 @@ export class SVGRenderer {
   // FORM COMPONENTS
   // ============================================================================
 
-  private renderTextarea(node: IRComponentNode, pos: any): string {
+  protected renderTextarea(node: IRComponentNode, pos: any): string {
     const label = String(node.props.label || '');
     const placeholder = String(node.props.placeholder || 'Enter text...');
+    const fontSize = this.tokens.input.fontSize;
+    const paddingX = this.tokens.input.paddingX;
+    const labelOffset = this.getControlLabelOffset(label);
+    const controlY = pos.y + labelOffset;
+    const controlHeight = Math.max(20, pos.height - labelOffset);
+    const placeholderY = controlY + fontSize + 6;
 
     return `<g${this.getDataNodeId(node)}>
     ${
       label
-        ? `<text x="${pos.x}" y="${pos.y - 6}" 
+        ? `<text x="${pos.x}" y="${this.getControlLabelBaselineY(pos.y)}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="12" 
           fill="${this.renderTheme.text}">${this.escapeXml(label)}</text>`
         : ''
     }
-    <rect x="${pos.x}" y="${pos.y}" 
-          width="${pos.width}" height="${pos.height}" 
+    <rect x="${pos.x}" y="${controlY}" 
+          width="${pos.width}" height="${controlHeight}" 
           rx="6" 
           fill="${this.renderTheme.cardBg}" 
           stroke="${this.renderTheme.border}" 
           stroke-width="1"/>
-    <text x="${pos.x + 12}" y="${pos.y + 20}" 
+    <text x="${pos.x + paddingX}" y="${placeholderY}" 
           font-family="system-ui, -apple-system, sans-serif" 
-          font-size="13" 
+          font-size="${fontSize}" 
           fill="${this.renderTheme.textMuted}">${this.escapeXml(placeholder)}</text>
   </g>`;
   }
 
-  private renderSelect(node: IRComponentNode, pos: any): string {
+  protected renderSelect(node: IRComponentNode, pos: any): string {
     const label = String(node.props.label || '');
     const placeholder = String(node.props.placeholder || 'Select...');
+    const labelOffset = this.getControlLabelOffset(label);
+    const controlY = pos.y + labelOffset;
+    const controlHeight = Math.max(16, pos.height - labelOffset);
+    const centerY = controlY + controlHeight / 2 + 5;
 
     return `<g${this.getDataNodeId(node)}>
     ${
       label
-        ? `<text x="${pos.x}" y="${pos.y - 6}" 
+        ? `<text x="${pos.x}" y="${this.getControlLabelBaselineY(pos.y)}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="12" 
           fill="${this.renderTheme.text}">${this.escapeXml(label)}</text>`
         : ''
     }
-    <rect x="${pos.x}" y="${pos.y}" 
-          width="${pos.width}" height="${pos.height}" 
+    <rect x="${pos.x}" y="${controlY}" 
+          width="${pos.width}" height="${controlHeight}" 
           rx="6" 
           fill="${this.renderTheme.cardBg}" 
           stroke="${this.renderTheme.border}" 
           stroke-width="1"/>
-    <text x="${pos.x + 12}" y="${pos.y + pos.height / 2 + 5}" 
+    <text x="${pos.x + 12}" y="${centerY}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="14" 
           fill="${this.renderTheme.textMuted}">${this.escapeXml(placeholder)}</text>
-    <text x="${pos.x + pos.width - 20}" y="${pos.y + pos.height / 2 + 5}" 
+    <text x="${pos.x + pos.width - 20}" y="${centerY}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="16" 
           fill="${this.renderTheme.textMuted}">▼</text>
   </g>`;
   }
 
-  private renderCheckbox(node: IRComponentNode, pos: any): string {
+  protected renderCheckbox(node: IRComponentNode, pos: any): string {
     const label = String(node.props.label || 'Checkbox');
     const checked = String(node.props.checked || 'false').toLowerCase() === 'true';
+    const controlColor = this.resolveControlColor();
 
     const checkboxSize = 18;
     const checkboxY = pos.y + pos.height / 2 - checkboxSize / 2;
@@ -833,7 +1063,7 @@ export class SVGRenderer {
     <rect x="${pos.x}" y="${checkboxY}" 
           width="${checkboxSize}" height="${checkboxSize}" 
           rx="4" 
-          fill="${checked ? this.renderTheme.primary : this.renderTheme.cardBg}" 
+          fill="${checked ? controlColor : this.renderTheme.cardBg}" 
           stroke="${this.renderTheme.border}" 
           stroke-width="1"/>
     ${
@@ -852,9 +1082,10 @@ export class SVGRenderer {
   </g>`;
   }
 
-  private renderRadio(node: IRComponentNode, pos: any): string {
+  protected renderRadio(node: IRComponentNode, pos: any): string {
     const label = String(node.props.label || 'Radio');
     const checked = String(node.props.checked || 'false').toLowerCase() === 'true';
+    const controlColor = this.resolveControlColor();
 
     const radioSize = 16;
     const radioY = pos.y + pos.height / 2 - radioSize / 2;
@@ -869,7 +1100,7 @@ export class SVGRenderer {
       checked
         ? `<circle cx="${pos.x + radioSize / 2}" cy="${radioY + radioSize / 2}" 
             r="${radioSize / 3.5}" 
-            fill="${this.renderTheme.primary}"/>`
+            fill="${controlColor}"/>`
         : ''
     }
     <text x="${pos.x + radioSize + 12}" y="${pos.y + pos.height / 2 + 5}" 
@@ -879,9 +1110,10 @@ export class SVGRenderer {
   </g>`;
   }
 
-  private renderToggle(node: IRComponentNode, pos: any): string {
+  protected renderToggle(node: IRComponentNode, pos: any): string {
     const label = String(node.props.label || 'Toggle');
     const enabled = String(node.props.enabled || 'false').toLowerCase() === 'true';
+    const controlColor = this.resolveControlColor();
 
     const toggleWidth = 40;
     const toggleHeight = 20;
@@ -891,7 +1123,7 @@ export class SVGRenderer {
     <rect x="${pos.x}" y="${toggleY}" 
           width="${toggleWidth}" height="${toggleHeight}" 
           rx="10" 
-          fill="${enabled ? this.renderTheme.primary : this.renderTheme.border}" 
+          fill="${enabled ? controlColor : this.renderTheme.border}" 
           stroke="none"/>
     <circle cx="${pos.x + (enabled ? toggleWidth - 10 : 10)}" cy="${toggleY + toggleHeight / 2}" 
             r="8" 
@@ -907,7 +1139,7 @@ export class SVGRenderer {
   // LAYOUT/STRUCTURE COMPONENTS
   // ============================================================================
 
-  private renderSidebar(node: IRComponentNode, pos: any): string {
+  protected renderSidebar(node: IRComponentNode, pos: any): string {
     const title = String(node.props.title || 'Sidebar');
     const itemsStr = String(node.props.items || '');
     const activeItem = String(node.props.active || '');
@@ -961,10 +1193,15 @@ export class SVGRenderer {
     return svg;
   }
 
-  private renderTabs(node: IRComponentNode, pos: any): string {
+  protected renderTabs(node: IRComponentNode, pos: any): string {
     // Read items prop instead of tabs, or fall back to empty
     const itemsStr = String(node.props.items || '');
     const tabs = itemsStr ? itemsStr.split(',').map((t) => t.trim()) : ['Tab 1', 'Tab 2', 'Tab 3'];
+    const activeProp = node.props.active ?? 0;
+    const activeIndex = Number.isFinite(Number(activeProp))
+      ? Math.max(0, Math.floor(Number(activeProp)))
+      : 0;
+    const accentColor = this.resolveAccentColor();
     const tabWidth = pos.width / tabs.length;
 
     let svg = `<g${this.getDataNodeId(node)}>
@@ -972,12 +1209,12 @@ export class SVGRenderer {
 
     tabs.forEach((tab, i) => {
       const tabX = pos.x + i * tabWidth;
-      const isActive = i === 0;
+      const isActive = i === activeIndex;
 
       svg += `
     <rect x="${tabX}" y="${pos.y}" 
           width="${tabWidth}" height="44" 
-          fill="${isActive ? this.renderTheme.primary : 'transparent'}" 
+          fill="${isActive ? accentColor : 'transparent'}" 
           stroke="${isActive ? 'none' : this.renderTheme.border}" 
           stroke-width="1"/>
     <text x="${tabX + tabWidth / 2}" y="${pos.y + 28}" 
@@ -999,7 +1236,7 @@ export class SVGRenderer {
     return svg;
   }
 
-  private renderDivider(node: IRComponentNode, pos: any): string {
+  protected renderDivider(node: IRComponentNode, pos: any): string {
     return `<g${this.getDataNodeId(node)}>
     <line x1="${pos.x}" y1="${pos.y + pos.height / 2}" 
           x2="${pos.x + pos.width}" y2="${pos.y + pos.height / 2}" 
@@ -1008,22 +1245,42 @@ export class SVGRenderer {
   </g>`;
   }
 
+  protected renderSeparate(node: IRComponentNode, _pos: any): string {
+    // Spacer component: intentionally renders no visible shape.
+    return `<g${this.getDataNodeId(node)}></g>`;
+  }
+
   // ============================================================================
   // FEEDBACK/ALERT COMPONENTS
   // ============================================================================
 
-  private renderAlert(node: IRComponentNode, pos: any): string {
-    const type = String(node.props.type || 'info');
-    const message = String(node.props.message || 'Alert message');
-
-    const typeColors: Record<string, string> = {
-      info: '#3B82F6',
-      warning: '#F59E0B',
-      error: '#EF4444',
-      success: '#10B981',
-    };
-
-    const bgColor = typeColors[type] || typeColors.info;
+  protected renderAlert(node: IRComponentNode, pos: any): string {
+    const variant = String(node.props.variant || 'info');
+    const title = String(node.props.title || '');
+    const text = String(node.props.text || 'Alert message');
+    const bgColor = this.resolveVariantColor(variant, this.getSemanticVariantColor(variant) || '#3B82F6');
+    const hasTitle = title.trim().length > 0;
+    const fontSize = 13;
+    const titleLineHeight = Math.ceil(fontSize * 1.25);
+    const textLineHeight = Math.ceil(fontSize * 1.4);
+    const contentX = pos.x + 16;
+    const contentWidth = Math.max(20, pos.width - 24);
+    const titleLines = hasTitle ? this.wrapTextToLines(title, contentWidth, fontSize) : [];
+    const textLines = this.wrapTextToLines(text, contentWidth, fontSize);
+    const titleStartY = pos.y + 12 + fontSize;
+    const textStartY = titleStartY + titleLines.length * titleLineHeight + (hasTitle ? 6 : 0);
+    const titleTspans = titleLines
+      .map(
+        (line, index) =>
+          `<tspan x="${contentX}" dy="${index === 0 ? 0 : titleLineHeight}">${this.escapeXml(line)}</tspan>`
+      )
+      .join('');
+    const textTspans = textLines
+      .map(
+        (line, index) =>
+          `<tspan x="${contentX}" dy="${index === 0 ? 0 : textLineHeight}">${this.escapeXml(line)}</tspan>`
+      )
+      .join('');
 
     return `<g${this.getDataNodeId(node)}>
     <rect x="${pos.x}" y="${pos.y}" 
@@ -1036,36 +1293,60 @@ export class SVGRenderer {
           width="4" height="${pos.height}" 
           rx="6" 
           fill="${bgColor}"/>
-    <text x="${pos.x + 16}" y="${pos.y + pos.height / 2 + 5}" 
+    ${
+      hasTitle
+        ? `<text x="${contentX}" y="${titleStartY}" 
           font-family="system-ui, -apple-system, sans-serif" 
-          font-size="13" 
-          fill="${bgColor}">${this.escapeXml(message)}</text>
+          font-size="${fontSize}" 
+          font-weight="700"
+          fill="${bgColor}">${titleTspans}</text>`
+        : ''
+    }
+    <text x="${contentX}" y="${textStartY}" 
+          font-family="system-ui, -apple-system, sans-serif" 
+          font-size="${fontSize}" 
+          fill="${bgColor}">${textTspans}</text>
   </g>`;
   }
 
-  private renderBadge(node: IRComponentNode, pos: any): string {
+  protected renderBadge(node: IRComponentNode, pos: any): string {
     const text = String(node.props.text || 'Badge');
     const variant = String(node.props.variant || 'default');
+    const semanticBase = this.getSemanticVariantColor(variant);
+    const hasExplicitVariantColor =
+      semanticBase !== undefined || this.colorResolver.hasColor(variant);
+    const bgColor = hasExplicitVariantColor
+      ? this.resolveVariantColor(variant, this.renderTheme.primary)
+      : this.renderTheme.border;
+    const textColor = hasExplicitVariantColor ? 'white' : this.renderTheme.text;
 
-    const bgColor = variant === 'primary' ? this.renderTheme.primary : this.renderTheme.border;
-    const textColor = variant === 'primary' ? 'white' : this.renderTheme.text;
+    // Use tokens from density configuration
+    const badgeRadius = this.tokens.badge.radius === 'pill'
+      ? pos.height / 2
+      : this.tokens.badge.radius;
+    const fontSize = this.tokens.badge.fontSize;
 
     return `<g${this.getDataNodeId(node)}>
-    <rect x="${pos.x}" y="${pos.y}" 
-          width="${pos.width}" height="${pos.height}" 
-          rx="${pos.height / 2}" 
-          fill="${bgColor}" 
+    <rect x="${pos.x}" y="${pos.y}"
+          width="${pos.width}" height="${pos.height}"
+          rx="${badgeRadius}"
+          fill="${bgColor}"
           stroke="none"/>
-    <text x="${pos.x + pos.width / 2}" y="${pos.y + pos.height / 2 + 4}" 
-          font-family="system-ui, -apple-system, sans-serif" 
-          font-size="12" 
-          font-weight="600" 
-          fill="${textColor}" 
+    <text x="${pos.x + pos.width / 2}" y="${pos.y + pos.height / 2 + 4}"
+          font-family="system-ui, -apple-system, sans-serif"
+          font-size="${fontSize}"
+          font-weight="600"
+          fill="${textColor}"
           text-anchor="middle">${this.escapeXml(text)}</text>
   </g>`;
   }
 
-  private renderModal(node: IRComponentNode, pos: any): string {
+  protected renderModal(node: IRComponentNode, pos: any): string {
+    const visible = this.parseBooleanProp(node.props.visible, true);
+    if (!visible) {
+      return '';
+    }
+
     const title = String(node.props.title || 'Modal');
 
     const padding = 16;
@@ -1117,17 +1398,26 @@ export class SVGRenderer {
   </g>`;
   }
 
-  private renderList(node: IRComponentNode, pos: any): string {
+  protected renderList(node: IRComponentNode, pos: any): string {
     const title = String(node.props.title || '');
     const itemsStr = String(node.props.items || '');
+    const mockType = String(node.props.mock || '').trim();
+    const random = this.parseBooleanProp(node.props.random, false);
 
     let items: string[] = [];
     if (itemsStr) {
-      items = itemsStr.split(',').map((i) => i.trim());
+      items = itemsStr
+        .split(',')
+        .map((i) => i.trim())
+        .filter(Boolean);
     } else {
-      // Generate mock items
-      const itemCount = Number(node.props.itemsMock || 4);
-      items = MockDataGenerator.generateMockList('name', itemCount);
+      // Generate mock items from provided mock type or fallback to deterministic names.
+      const parsedItemsMock = Number(node.props.itemsMock ?? 4);
+      const itemCount = Number.isFinite(parsedItemsMock)
+        ? Math.max(0, Math.floor(parsedItemsMock))
+        : 4;
+      const resolvedMockType = mockType || 'name';
+      items = MockDataGenerator.generateMockList(resolvedMockType, itemCount, random);
     }
 
     const padding = 12;
@@ -1157,7 +1447,7 @@ export class SVGRenderer {
     // Items
     items.forEach((item, i) => {
       const itemY = pos.y + titleHeight + i * itemHeight;
-      if (itemY + itemHeight < pos.y + pos.height) {
+      if (itemY + itemHeight <= pos.y + pos.height) {
         svg += `
     <line x1="${pos.x}" y1="${itemY + itemHeight}" 
           x2="${pos.x + pos.width}" y2="${itemY + itemHeight}" 
@@ -1174,7 +1464,7 @@ export class SVGRenderer {
     return svg;
   }
 
-  private renderGenericComponent(node: IRComponentNode, pos: any): string {
+  protected renderGenericComponent(node: IRComponentNode, pos: any): string {
     return `<g${this.getDataNodeId(node)}>
     <rect x="${pos.x}" y="${pos.y}" 
           width="${pos.width}" height="${pos.height}" 
@@ -1191,30 +1481,46 @@ export class SVGRenderer {
   </g>`;
   }
 
-  private renderStatCard(node: IRComponentNode, pos: any): string {
+  protected renderStatCard(node: IRComponentNode, pos: any): string {
     const title = String(node.props.title || 'Metric');
     const value = String(node.props.value || '0');
-    const caption = String(node.props.caption || '');
+    const rawCaption = String(node.props.caption || '');
+    const caption = rawCaption.replace(/\r\n/g, '\n').split('\n')[0] || '';
+    const hasCaption = caption.trim().length > 0;
+    const iconName = String(node.props.icon || '').trim();
+    const iconSvg = iconName ? getIcon(iconName) : null;
+    const accentColor = this.resolveAccentColor();
 
     const padding = this.resolveSpacing(node.style.padding) || 16;
     const innerX = pos.x + padding;
     const innerY = pos.y + padding;
     const innerWidth = pos.width - padding * 2;
-    const innerHeight = pos.height - padding * 2;
 
-    // StatCard layout: top-to-bottom flow with natural spacing
+    // StatCard layout: vertically center title/value/caption block (icon stays fixed).
     const valueSize = 32;
     const titleSize = 14;
     const captionSize = 12;
-    const lineHeight = 18;
-    const topGap = 8;      // Space from top
-    const valueGap = 12;   // Space before value
-    const captionGap = 12; // Space before caption
-
-    // Top-to-bottom flow
-    const titleY = innerY + topGap + titleSize;
+    const valueGap = 10;
+    const captionGap = 8;
+    const contentHeight =
+      titleSize +
+      valueGap +
+      valueSize +
+      (hasCaption ? captionGap + captionSize : 0);
+    const contentAreaHeight = Math.max(0, pos.height - padding * 2);
+    const contentStartY = innerY + Math.max(0, (contentAreaHeight - contentHeight) / 2);
+    const titleY = contentStartY + titleSize;
     const valueY = titleY + valueGap + valueSize;
     const captionY = valueY + captionGap + captionSize;
+    const iconSize = 16;
+    const iconBadgeSize = 28;
+    const iconBadgeX = pos.x + pos.width - padding - iconBadgeSize;
+    const iconBadgeY = pos.y + padding;
+    const titleMaxWidth = iconSvg ? Math.max(40, innerWidth - iconBadgeSize - 8) : innerWidth;
+    const visibleTitle = this.truncateTextToWidth(title, titleMaxWidth, titleSize);
+    const visibleCaption = hasCaption
+      ? this.truncateTextToWidth(caption, Math.max(20, innerWidth), captionSize)
+      : '';
 
     let svg = `<g${this.getDataNodeId(node)}>
     <!-- StatCard Background -->
@@ -1230,22 +1536,38 @@ export class SVGRenderer {
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="${titleSize}" 
           font-weight="500" 
-          fill="${this.renderTheme.textMuted}">${this.escapeXml(title)}</text>
+          fill="${this.renderTheme.textMuted}">${this.escapeXml(visibleTitle)}</text>
     
     <!-- Value (Large) -->
     <text x="${innerX}" y="${valueY}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="${valueSize}" 
           font-weight="700" 
-          fill="${this.renderTheme.primary}">${this.escapeXml(value)}</text>`;
+          fill="${accentColor}">${this.escapeXml(value)}</text>`;
 
-    if (caption) {
+    if (iconSvg) {
+      svg += `
+    <!-- Icon -->
+    <rect x="${iconBadgeX}" y="${iconBadgeY}"
+          width="${iconBadgeSize}" height="${iconBadgeSize}"
+          rx="6"
+          fill="${this.hexToRgba(accentColor, 0.12)}"
+          stroke="${this.hexToRgba(accentColor, 0.35)}"
+          stroke-width="1"/>
+    <g transform="translate(${iconBadgeX + (iconBadgeSize - iconSize) / 2}, ${iconBadgeY + (iconBadgeSize - iconSize) / 2})">
+      <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${accentColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        ${this.extractSvgContent(iconSvg)}
+      </svg>
+    </g>`;
+    }
+
+    if (hasCaption) {
       svg += `
     <!-- Caption -->
     <text x="${innerX}" y="${captionY}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="${captionSize}" 
-          fill="${this.renderTheme.textMuted}">${this.escapeXml(caption)}</text>`;
+          fill="${this.renderTheme.textMuted}">${this.escapeXml(visibleCaption)}</text>`;
     }
 
     svg += `
@@ -1253,8 +1575,11 @@ export class SVGRenderer {
     return svg;
   }
 
-  private renderImage(node: IRComponentNode, pos: any): string {
-    const placeholder = String(node.props.placeholder || 'landscape');
+  protected renderImage(node: IRComponentNode, pos: any): string {
+    const placeholder = String(node.props.placeholder || 'landscape').toLowerCase();
+    const placeholderIcon = String(node.props.icon || '').trim();
+    const placeholderIconSvg =
+      placeholder === 'icon' && placeholderIcon ? getIcon(placeholderIcon) : null;
 
     // Determine aspect ratio based on placeholder type
     const aspectRatios: Record<string, number> = {
@@ -1282,16 +1607,36 @@ export class SVGRenderer {
     const offsetX = pos.x + (pos.width - iconWidth) / 2;
     const offsetY = pos.y + (pos.height - iconHeight) / 2;
 
-    // SVG placeholder sketches
-    let svgContent = '';
-
     // Background
     let svg = `<g${this.getDataNodeId(node)}>
     <!-- Image Background -->
     <rect x="${pos.x}" y="${pos.y}" width="${pos.width}" height="${pos.height}" fill="#E8E8E8"/>`;
 
+    // Custom icon placeholder for "icon" variant when icon prop is provided.
+    if (placeholder === 'icon' && placeholderIconSvg) {
+      const badgeSize = Math.max(24, Math.min(iconWidth, iconHeight) * 0.78);
+      const badgeX = pos.x + (pos.width - badgeSize) / 2;
+      const badgeY = pos.y + (pos.height - badgeSize) / 2;
+      const iconSize = badgeSize * 0.62;
+      const iconOffsetX = badgeX + (badgeSize - iconSize) / 2;
+      const iconOffsetY = badgeY + (badgeSize - iconSize) / 2;
+
+      svg += `
+    <!-- Custom Icon Placeholder -->
+    <rect x="${badgeX}" y="${badgeY}"
+          width="${badgeSize}" height="${badgeSize}"
+          rx="${Math.max(4, badgeSize * 0.2)}"
+          fill="rgba(255, 255, 255, 0.6)"
+          stroke="#888"
+          stroke-width="1"/>
+    <g transform="translate(${iconOffsetX}, ${iconOffsetY})">
+      <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        ${this.extractSvgContent(placeholderIconSvg)}
+      </svg>
+    </g>`;
+    }
     // Camera icon for landscape, portrait, square
-    if (['landscape', 'portrait', 'square'].includes(placeholder)) {
+    else if (['landscape', 'portrait', 'square'].includes(placeholder)) {
       // Modern digital camera design based on contemporary camera icon
       const cameraCx = offsetX + iconWidth / 2;
       const cameraCy = offsetY + iconHeight / 2;
@@ -1341,7 +1686,7 @@ export class SVGRenderer {
             r="${lensRadius * 0.25}" 
             fill="#E0E0E0" opacity="0.6"/>`;
     } 
-    // Person silhouette for avatar and icon
+    // Person silhouette for avatar and icon fallback
     else if (['avatar', 'icon'].includes(placeholder)) {
       const personWidth = iconWidth * 0.5;
       const personHeight = iconHeight * 0.7;
@@ -1368,7 +1713,7 @@ export class SVGRenderer {
     return svg;
   }
 
-  private renderBreadcrumbs(node: IRComponentNode, pos: any): string {
+  protected renderBreadcrumbs(node: IRComponentNode, pos: any): string {
     const itemsStr = String(node.props.items || 'Home');
     const items = itemsStr.split(',').map((s) => s.trim());
     const separator = String(node.props.separator || '/');
@@ -1410,7 +1755,7 @@ export class SVGRenderer {
     return svg;
   }
 
-  private renderSidebarMenu(node: IRComponentNode, pos: any): string {
+  protected renderSidebarMenu(node: IRComponentNode, pos: any): string {
     const itemsStr = String(node.props.items || 'Item 1,Item 2,Item 3');
     const iconsStr = String(node.props.icons || '');
     const items = itemsStr.split(',').map((s) => s.trim());
@@ -1419,14 +1764,15 @@ export class SVGRenderer {
     const itemHeight = 40;
     const fontSize = 14;
     const activeIndex = Number(node.props.active || 0);
+    const accentColor = this.resolveAccentColor();
 
     let svg = `<g${this.getDataNodeId(node)}>`;
 
     items.forEach((item, index) => {
       const itemY = pos.y + index * itemHeight;
       const isActive = index === activeIndex;
-      const bgColor = isActive ? 'rgba(59, 130, 246, 0.15)' : 'transparent';
-      const textColor = isActive ? 'rgba(59, 130, 246, 0.9)' : 'rgba(30, 41, 59, 0.75)';
+      const bgColor = isActive ? this.hexToRgba(accentColor, 0.15) : 'transparent';
+      const textColor = isActive ? this.hexToRgba(accentColor, 0.9) : 'rgba(30, 41, 59, 0.75)';
       const fontWeight = isActive ? '500' : '400';
 
       // Item background (only if active)
@@ -1468,7 +1814,7 @@ export class SVGRenderer {
     return svg;
   }
 
-  private renderIcon(node: IRComponentNode, pos: any): string {
+  protected renderIcon(node: IRComponentNode, pos: any): string {
     const iconType = String(node.props.type || 'help-circle');
     const size = String(node.props.size || 'md');
     const iconSvg = getIcon(iconType);
@@ -1482,9 +1828,7 @@ export class SVGRenderer {
   </g>`;
     }
 
-    // Size: sm=14px, md=18px, lg=24px
-    const sizeMap = { 'sm': 14, 'md': 18, 'lg': 24 };
-    const iconSize = sizeMap[size as keyof typeof sizeMap] || 18;
+    const iconSize = this.getIconSize(size);
     const iconColor = 'rgba(30, 41, 59, 0.75)';
     const offsetX = pos.x + (pos.width - iconSize) / 2;
     const offsetY = pos.y + (pos.height - iconSize) / 2;
@@ -1499,39 +1843,28 @@ export class SVGRenderer {
     return wrappedSvg;
   }
 
-  private renderIconButton(node: IRComponentNode, pos: any): string {
+  protected renderIconButton(node: IRComponentNode, pos: any): string {
     const iconName = String(node.props.icon || 'help-circle');
     const variant = String(node.props.variant || 'default');
     const size = String(node.props.size || 'md');
     const disabled = String(node.props.disabled || 'false') === 'true';
 
-    const bgColorMap = {
-      'primary': 'rgba(59, 130, 246, 0.85)',
-      'danger': 'rgba(239, 68, 68, 0.85)',
-      'default': 'rgba(226, 232, 240, 0.9)'
-    };
-    const bgColor = bgColorMap[variant as keyof typeof bgColorMap] || bgColorMap['default'];
-
-    const iconColorMap = {
-      'primary': '#FFFFFF',
-      'danger': '#FFFFFF',
-      'default': 'rgba(30, 41, 59, 0.75)'
-    };
-    const iconColor = iconColorMap[variant as keyof typeof iconColorMap] || iconColorMap['default'];
-
-    const borderColorMap = {
-      'primary': 'rgba(59, 130, 246, 0.7)',
-      'danger': 'rgba(239, 68, 68, 0.7)',
-      'default': 'rgba(100, 116, 139, 0.4)'
-    };
-    const borderColor = borderColorMap[variant as keyof typeof borderColorMap] || borderColorMap['default'];
+    const semanticBase = this.getSemanticVariantColor(variant);
+    const hasExplicitVariantColor =
+      semanticBase !== undefined || this.colorResolver.hasColor(variant);
+    const resolvedBase = this.resolveVariantColor(variant, this.renderTheme.primary);
+    const bgColor = hasExplicitVariantColor
+      ? this.hexToRgba(resolvedBase, 0.85)
+      : 'rgba(226, 232, 240, 0.9)';
+    const iconColor = hasExplicitVariantColor ? '#FFFFFF' : 'rgba(30, 41, 59, 0.75)';
+    const borderColor = hasExplicitVariantColor
+      ? this.hexToRgba(resolvedBase, 0.7)
+      : 'rgba(100, 116, 139, 0.4)';
 
     const opacity = disabled ? '0.5' : '1';
     const iconSvg = getIcon(iconName);
 
-    // Button size: sm=28px, md=32px, lg=40px
-    const sizeMap = { 'sm': 28, 'md': 32, 'lg': 40 };
-    const buttonSize = sizeMap[size as keyof typeof sizeMap] || 32;
+    const buttonSize = this.getIconButtonSize(size);
     const radius = 6;
 
     let svg = `<g${this.getDataNodeId(node)} opacity="${opacity}">
@@ -1561,28 +1894,401 @@ export class SVGRenderer {
    * Extract SVG path/element content from a full SVG string
    * Removes the outer <svg> tag but keeps the content
    */
-  private extractSvgContent(svgString: string): string {
+  protected extractSvgContent(svgString: string): string {
     // Match content between <svg> and </svg> tags
     const match = svgString.match(/<svg[^>]*>([\s\S]*?)<\/svg>/);
     return match ? match[1] : svgString;
   }
 
-  private resolveSpacing(spacing?: string): number {
-    const spacingMap: Record<string, number> = {
-      none: 0,
-      xs: 4,
-      sm: 8,
-      md: 16,
-      lg: 24,
-      xl: 32,
-    };
-
-    if (!spacing) return spacingMap[this.ir.project.theme.spacing] || 16;
-    const value = spacingMap[spacing];
-    return value !== undefined ? value : spacingMap.md;
+  protected resolveVariantColor(variant: string, fallback: string): string {
+    const semanticFallback = this.getSemanticVariantColor(variant) || fallback;
+    return this.colorResolver.resolveColor(variant, semanticFallback);
   }
 
-  private escapeXml(text: string): string {
+  protected resolveAccentColor(): string {
+    return this.colorResolver.resolveColor('accent', this.renderTheme.primary);
+  }
+
+  protected resolveControlColor(): string {
+    return this.colorResolver.resolveColor('control', this.renderTheme.primary);
+  }
+
+  protected resolveChartColor(): string {
+    return this.colorResolver.resolveColor('chart', this.renderTheme.primary);
+  }
+
+  protected getSemanticVariantColor(variant: string): string | undefined {
+    const semantic: Record<string, string> = {
+      primary: this.renderTheme.primary,
+      secondary: '#64748B',
+      success: '#10B981',
+      warning: '#F59E0B',
+      danger: '#EF4444',
+      error: '#EF4444',
+      info: '#0EA5E9',
+    };
+    return semantic[variant];
+  }
+
+  protected hexToRgba(hex: string, alpha: number): string {
+    const match = /^#([0-9A-Fa-f]{6})$/.exec(hex);
+    if (!match) return hex;
+    const r = parseInt(match[1].slice(0, 2), 16);
+    const g = parseInt(match[1].slice(2, 4), 16);
+    const b = parseInt(match[1].slice(4, 6), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+
+  protected getIconSize(size?: string): number {
+    return resolveIconSize(size, (this.ir.project.style.density || 'normal') as DensityLevel);
+  }
+
+  protected getIconButtonSize(size?: string): number {
+    return resolveIconButtonSize(size, (this.ir.project.style.density || 'normal') as DensityLevel);
+  }
+
+  protected resolveSpacing(spacing?: string): number {
+    return resolveSpacingToken(
+      spacing,
+      this.ir.project.style.spacing || 'md',
+      (this.ir.project.style.density || 'normal') as DensityLevel,
+      true
+    );
+  }
+
+  protected wrapTextToLines(text: string, maxWidth: number, fontSize: number): string[] {
+    const normalized = text.replace(/\r\n/g, '\n');
+    const paragraphs = normalized.split('\n');
+    const charWidth = fontSize * 0.6;
+    const safeWidth = Math.max(maxWidth || 0, charWidth);
+    const maxCharsPerLine = Math.max(1, Math.floor(safeWidth / charWidth));
+    const lines: string[] = [];
+
+    for (const paragraph of paragraphs) {
+      if (!paragraph.trim()) {
+        lines.push('');
+        continue;
+      }
+
+      const words = paragraph.split(/\s+/).filter(Boolean);
+      let currentLine = '';
+
+      for (const word of words) {
+        const candidate = currentLine ? `${currentLine} ${word}` : word;
+        if (candidate.length <= maxCharsPerLine) {
+          currentLine = candidate;
+          continue;
+        }
+
+        if (currentLine) {
+          lines.push(currentLine);
+          currentLine = '';
+        }
+
+        if (word.length <= maxCharsPerLine) {
+          currentLine = word;
+          continue;
+        }
+
+        for (let i = 0; i < word.length; i += maxCharsPerLine) {
+          lines.push(word.slice(i, i + maxCharsPerLine));
+        }
+      }
+
+      if (currentLine) {
+        lines.push(currentLine);
+      }
+    }
+
+    return lines.length > 0 ? lines : [''];
+  }
+
+  protected clampControlWidth(idealWidth: number, availableWidth: number): number {
+    const safeAvailable = Math.max(1, availableWidth || 0);
+    return Math.max(1, Math.min(idealWidth, safeAvailable));
+  }
+
+  protected truncateTextToWidth(text: string, maxWidth: number, fontSize: number): string {
+    const epsilon = 0.01;
+    if (maxWidth <= 0) return '';
+    if (this.estimateTextWidth(text, fontSize) <= maxWidth + epsilon) return text;
+
+    const ellipsis = '...';
+    const ellipsisWidth = this.estimateTextWidth(ellipsis, fontSize);
+    if (ellipsisWidth >= maxWidth - epsilon) return '.';
+
+    let result = '';
+    for (const char of text) {
+      const next = `${result}${char}`;
+      if (this.estimateTextWidth(next, fontSize) + ellipsisWidth > maxWidth + epsilon) break;
+      result = next;
+    }
+    return `${result}${ellipsis}`;
+  }
+
+  protected estimateTextWidth(text: string, fontSize: number): number {
+    let width = 0;
+    for (const ch of text) {
+      if (/\s/.test(ch)) {
+        width += fontSize * 0.33;
+      } else if (/[.,:;'"`|!iIl]/.test(ch)) {
+        width += fontSize * 0.32;
+      } else if (/[MW@#%&]/.test(ch)) {
+        width += fontSize * 0.9;
+      } else {
+        width += fontSize * 0.6;
+      }
+    }
+    return width;
+  }
+
+  protected generateUpwardTrendValues(count: number, start: number, end: number): number[] {
+    if (count <= 0) return [];
+    if (count === 1) return [end];
+
+    const span = end - start;
+    const pulses = [0, 0.14, -0.09, 0.11, -0.06, 0.08, -0.05];
+    const values = Array.from({ length: count }, (_, i) => {
+      const progress = i / (count - 1);
+      const base = start + span * Math.pow(progress, 0.92);
+      const waveA = Math.sin((i + 1) * 1.19) * 0.08;
+      const waveB = Math.cos((i + 2) * 0.77) * 0.05;
+      const pulse = pulses[i % pulses.length];
+      const edgeDamping = i === 0 || i === count - 1 ? 0 : i === 1 || i === count - 2 ? 0.72 : 1;
+      const volatility = (waveA + waveB + pulse) * edgeDamping;
+      return Math.min(0.95, Math.max(0.08, base + volatility));
+    });
+
+    values[0] = start;
+    values[values.length - 1] = end;
+    return values;
+  }
+
+  protected getControlLabelOffset(label: string): number {
+    return label.trim().length > 0 ? 18 : 0;
+  }
+
+  protected getControlLabelBaselineY(y: number): number {
+    return y + 12;
+  }
+
+  protected getHeadingTypography(
+    node: IRComponentNode
+  ): { fontSize: number; fontWeight: number; lineHeight: number } {
+    const typography = resolveHeadingTypography(
+      this.tokens.heading.fontSize,
+      this.tokens.heading.fontWeight,
+      node.props.level
+    );
+    return {
+      fontSize: typography.fontSize,
+      fontWeight: typography.fontWeight,
+      lineHeight: typography.lineHeight,
+    };
+  }
+
+  protected getHeadingFirstLineY(
+    node: IRComponentNode,
+    pos: { y: number; height: number },
+    fontSize: number,
+    lineHeightPx: number,
+    lineCount: number
+  ): number {
+    const headingPadding = resolveHeadingVerticalPadding(
+      node.props.spacing,
+      (this.ir.project.style.density || 'normal') as DensityLevel
+    );
+
+    if (headingPadding === null) {
+      // Keep existing default behavior when spacing is not provided.
+      if (lineCount <= 1) {
+        return pos.y + pos.height / 2 + fontSize * 0.3;
+      }
+      return pos.y + fontSize;
+    }
+
+    const wrappedHeight = Math.max(1, lineCount) * lineHeightPx;
+    const contentTop = pos.y + Math.max(headingPadding, (pos.height - wrappedHeight) / 2);
+    return contentTop + fontSize;
+  }
+
+  protected calculateTopbarLayout(
+    node: IRComponentNode,
+    pos: { x: number; y: number; width: number; height: number },
+    title: string,
+    subtitle: string,
+    actions: string,
+    user: string
+  ): {
+    hasSubtitle: boolean;
+    titleY: number;
+    subtitleY: number;
+    textX: number;
+    titleMaxWidth: number;
+    visibleTitle: string;
+    visibleSubtitle: string;
+    leftIcon: null | {
+      badgeX: number;
+      badgeY: number;
+      badgeSize: number;
+      badgeRadius: number;
+      iconX: number;
+      iconY: number;
+      iconSize: number;
+      iconSvg: string;
+    };
+    actions: Array<{ x: number; y: number; width: number; height: number; label: string }>;
+    userBadge: null | { x: number; y: number; width: number; height: number; label: string };
+    avatar: null | { cx: number; cy: number; r: number };
+  } {
+    const hasSubtitle = subtitle.trim().length > 0;
+    const titleLineHeight = 18;
+    const titleY = hasSubtitle
+      ? pos.y + 24
+      : pos.y + pos.height / 2 + titleLineHeight / 2 - 4;
+    const subtitleY = hasSubtitle ? titleY + 20 : 0;
+
+    const horizontalPadding = 16;
+    let contentLeftX = pos.x + horizontalPadding;
+    let rightCursor = pos.x + pos.width - horizontalPadding;
+
+    const iconType = String(node.props.icon || '').trim();
+    const iconSvg = iconType ? getIcon(iconType) : '';
+    let leftIcon: null | {
+      badgeX: number;
+      badgeY: number;
+      badgeSize: number;
+      badgeRadius: number;
+      iconX: number;
+      iconY: number;
+      iconSize: number;
+      iconSvg: string;
+    } = null;
+
+    if (iconSvg) {
+      const badgeSize = 28;
+      const badgeY = pos.y + (pos.height - badgeSize) / 2;
+      const iconSize = 18;
+      leftIcon = {
+        badgeX: contentLeftX,
+        badgeY,
+        badgeSize,
+        badgeRadius: 6,
+        iconX: contentLeftX + (badgeSize - iconSize) / 2,
+        iconY: badgeY + (badgeSize - iconSize) / 2,
+        iconSize,
+        iconSvg,
+      };
+      contentLeftX += badgeSize + 10;
+    }
+
+    const showAvatar = this.parseBooleanProp(node.props.avatar, false);
+    let avatar: null | { cx: number; cy: number; r: number } = null;
+    if (showAvatar) {
+      const avatarSize = 28;
+      const avatarX = rightCursor - avatarSize;
+      const avatarY = pos.y + (pos.height - avatarSize) / 2;
+      avatar = {
+        cx: avatarX + avatarSize / 2,
+        cy: avatarY + avatarSize / 2,
+        r: avatarSize / 2,
+      };
+      rightCursor = avatarX - 8;
+    }
+
+    let userBadge: null | { x: number; y: number; width: number; height: number; label: string } = null;
+    const userLabel = user.trim();
+    if (userLabel) {
+      const height = 28;
+      const fontSize = 12;
+      const paddingX = 12;
+      const width = Math.max(56, Math.ceil(this.estimateTextWidth(userLabel, fontSize) + paddingX * 2));
+      const x = rightCursor - width;
+      const y = pos.y + (pos.height - height) / 2;
+      userBadge = { x, y, width, height, label: userLabel };
+      rightCursor = x - 8;
+    }
+
+    const actionLabels = actions
+      .split(',')
+      .map((a) => a.trim())
+      .filter(Boolean);
+    const actionHeight = 32;
+    const actionY = pos.y + (pos.height - actionHeight) / 2;
+    const actionGap = 8;
+    const minActionsX = contentLeftX + 80;
+    const availableActionsWidth = Math.max(0, rightCursor - minActionsX);
+    const actionMetrics = actionLabels.map((label) => ({
+      label,
+      width: Math.max(64, Math.min(140, Math.ceil(this.estimateTextWidth(label, 12) + 28))),
+    }));
+
+    const visibleActionMetrics: Array<{ label: string; width: number }> = [];
+    let actionsTotalWidth = 0;
+    for (const metric of actionMetrics) {
+      const nextTotal =
+        actionsTotalWidth + metric.width + (visibleActionMetrics.length > 0 ? actionGap : 0);
+      if (nextTotal > availableActionsWidth) {
+        break;
+      }
+      visibleActionMetrics.push(metric);
+      actionsTotalWidth = nextTotal;
+    }
+
+    const actionsStartX = rightCursor - actionsTotalWidth;
+    let actionCursorX = actionsStartX;
+    const actionButtons = visibleActionMetrics.map((metric) => {
+      const button = {
+        x: actionCursorX,
+        y: actionY,
+        width: metric.width,
+        height: actionHeight,
+        label: metric.label,
+      };
+      actionCursorX += metric.width + actionGap;
+      return button;
+    });
+
+    const firstRightElementX = actionButtons.length > 0
+      ? actionButtons[0].x
+      : userBadge
+        ? userBadge.x
+        : avatar
+          ? avatar.cx - avatar.r
+          : pos.x + pos.width - horizontalPadding;
+
+    const textMaxWidth = Math.max(40, firstRightElementX - contentLeftX - 12);
+    const visibleTitle = this.truncateTextToWidth(title, textMaxWidth, 18);
+    const visibleSubtitle = hasSubtitle
+      ? this.truncateTextToWidth(subtitle, textMaxWidth, 13)
+      : '';
+
+    return {
+      hasSubtitle,
+      titleY,
+      subtitleY,
+      textX: contentLeftX,
+      titleMaxWidth: textMaxWidth,
+      visibleTitle,
+      visibleSubtitle,
+      leftIcon,
+      actions: actionButtons,
+      userBadge,
+      avatar,
+    };
+  }
+
+  protected parseBooleanProp(value: unknown, fallback: boolean = false): boolean {
+    if (typeof value === 'boolean') return value;
+    if (typeof value === 'string') {
+      const normalized = value.toLowerCase().trim();
+      if (normalized === 'true') return true;
+      if (normalized === 'false') return false;
+    }
+    return fallback;
+  }
+
+  protected escapeXml(text: string): string {
     return text
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
@@ -1595,9 +2301,10 @@ export class SVGRenderer {
    * Get data-node-id attribute string for SVG elements
    * Enables bidirectional selection between code and canvas
    */
-  private getDataNodeId(node: IRComponentNode | IRContainerNode): string {
+  protected getDataNodeId(node: IRComponentNode | IRContainerNode): string {
     return node.meta.nodeId ? ` data-node-id="${node.meta.nodeId}"` : '';
   }
+
 }
 
 // ============================================================================

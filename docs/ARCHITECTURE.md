@@ -97,7 +97,7 @@ Wire-DSL provides a human-readable, structured format inspired by Mermaid.
 **Example**:
 ```wire
 project "Dashboard" {
-  theme {
+  style {
     density: "normal"
     spacing: "md"
   }
@@ -126,7 +126,7 @@ project "Dashboard" {
 ### Layer C — IR (Normalized Internal Representation)
 
 AST is converted to **stable IR**, applying:
-- Defaults from theme tokens
+- Defaults from style tokens
 - Normalization (spacing, sizing)
 - Semantic validations
 - Schema validation with Zod
@@ -140,7 +140,7 @@ IR is the **technical source of truth** for rendering.
   "project": {
     "id": "proj_dashboard",
     "name": "Dashboard",
-    "theme": { ... },
+    "style": { ... },
     "screens": [ ... ],
     "nodes": { ... }
   }

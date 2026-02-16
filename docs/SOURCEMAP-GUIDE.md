@@ -656,7 +656,7 @@ Expected: Parse ~200ms, Resolve ~10ms, Query < 1ms for 500 components.
 
 - [Architecture Overview](./ARCHITECTURE.md) - System design
 - [DSL Syntax](./DSL-SYNTAX.md) - Wire DSL language guide
-- [Components Reference](./COMPONENTS-REFERENCE.md) - All 23 components
+- [Components Reference](./COMPONENTS-REFERENCE.md) - All components
 - [Containers Reference](./CONTAINERS-REFERENCE.md) - Layout system
 
 ---

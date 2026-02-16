@@ -50,9 +50,9 @@ const ComponentKeyword = createToken({
   pattern: /Component\b/,
 });
 const Define = createToken({ name: 'Define', pattern: /define/ });
-const Theme = createToken({ name: 'Theme', pattern: /theme/ });
+const Style = createToken({ name: 'Style', pattern: /style/ });
 const Mocks = createToken({ name: 'Mocks', pattern: /mocks/ });
-const Colors = createToken({ name: 'Colors', pattern: /colors/ });
+const Colors = createToken({ name: 'Colors', pattern: /colors(?=\s*\{)/ });
 const Cell = createToken({ name: 'Cell', pattern: /cell/ });
 
 // Punctuation
@@ -117,7 +117,7 @@ const allTokens = [
   ComponentKeyword,
   Component,
   Define,
-  Theme,
+  Style,
   Mocks,
   Colors,
   Cell,
@@ -155,7 +155,7 @@ class WireDSLParser extends CstParser {
     this.MANY(() => {
       this.OR([
         { ALT: () => this.SUBRULE(this.definedComponent) },
-        { ALT: () => this.SUBRULE(this.themeDecl) },
+        { ALT: () => this.SUBRULE(this.styleDecl) },
         { ALT: () => this.SUBRULE(this.mocksDecl) },
         { ALT: () => this.SUBRULE(this.colorsDecl) },
         { ALT: () => this.SUBRULE(this.screen) },
@@ -164,21 +164,21 @@ class WireDSLParser extends CstParser {
     this.CONSUME(RCurly);
   });
 
-  // theme { density: "normal" }
-  private themeDecl = this.RULE('themeDecl', () => {
-    this.CONSUME(Theme);
+  // style { density: "normal" }
+  private styleDecl = this.RULE('styleDecl', () => {
+    this.CONSUME(Style);
     this.CONSUME(LCurly);
     this.MANY(() => {
-      this.SUBRULE(this.themeProperty);
+      this.SUBRULE(this.styleProperty);
     });
     this.CONSUME(RCurly);
   });
 
   // density: "normal"
-  private themeProperty = this.RULE('themeProperty', () => {
-    this.CONSUME(Identifier, { LABEL: 'themeKey' });
+  private styleProperty = this.RULE('styleProperty', () => {
+    this.CONSUME(Identifier, { LABEL: 'styleKey' });
     this.CONSUME(Colon);
-    this.CONSUME(StringLiteral, { LABEL: 'themeValue' });
+    this.CONSUME(StringLiteral, { LABEL: 'styleValue' });
   });
 
   // mocks { status: "A,B,C" ... }
@@ -317,7 +317,7 @@ class WireDSLParser extends CstParser {
 export interface AST {
   type: 'project';
   name: string;
-  theme: Record<string, string>;
+  style: Record<string, string>;
   mocks: Record<string, string>;
   colors: Record<string, string>;
   definedComponents: ASTDefinedComponent[];
@@ -391,15 +391,15 @@ class WireDSLVisitor extends BaseCstVisitor {
 
   project(ctx: any): AST {
     const projectName = ctx.projectName[0].image.slice(1, -1); // Remove quotes
-    const theme: Record<string, string> = {};
+    const style: Record<string, string> = {};
     const mocks: Record<string, string> = {};
     const colors: Record<string, string> = {};
     const definedComponents: ASTDefinedComponent[] = [];
     const screens: ASTScreen[] = [];
 
-    if (ctx.themeDecl && ctx.themeDecl.length > 0) {
-      const themeBlock = this.visit(ctx.themeDecl[0]);
-      Object.assign(theme, themeBlock);
+    if (ctx.styleDecl && ctx.styleDecl.length > 0) {
+      const styleBlock = this.visit(ctx.styleDecl[0]);
+      Object.assign(style, styleBlock);
     }
 
     if (ctx.mocksDecl && ctx.mocksDecl.length > 0) {
@@ -427,7 +427,7 @@ class WireDSLVisitor extends BaseCstVisitor {
     return {
       type: 'project',
       name: projectName,
-      theme,
+      style,
       mocks,
       colors,
       definedComponents,
@@ -435,20 +435,20 @@ class WireDSLVisitor extends BaseCstVisitor {
     };
   }
 
-  themeDecl(ctx: any) {
-    const theme: Record<string, string> = {};
-    if (ctx.themeProperty) {
-      ctx.themeProperty.forEach((prop: any) => {
+  styleDecl(ctx: any) {
+    const style: Record<string, string> = {};
+    if (ctx.styleProperty) {
+      ctx.styleProperty.forEach((prop: any) => {
         const { key, value } = this.visit(prop);
-        theme[key] = value;
+        style[key] = value;
       });
     }
-    return theme;
+    return style;
   }
 
-  themeProperty(ctx: any) {
-    const key = ctx.themeKey[0].image;
-    const value = ctx.themeValue[0].image.slice(1, -1); // Remove quotes
+  styleProperty(ctx: any) {
+    const key = ctx.styleKey[0].image;
+    const value = ctx.styleValue[0].image.slice(1, -1); // Remove quotes
     return { key, value };
   }
 
@@ -679,7 +679,7 @@ class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
 
   project(ctx: any): AST {
     const projectName = ctx.projectName[0].image.slice(1, -1); // Remove quotes
-    const theme: Record<string, string> = {};
+    const style: Record<string, string> = {};
     const mocks: Record<string, string> = {};
     const colors: Record<string, string> = {};
     const definedComponents: ASTDefinedComponent[] = [];
@@ -695,7 +695,7 @@ class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
     const ast: AST = {
       type: 'project',
       name: projectName,
-      theme: {},
+      style: {},
       mocks: {},
       colors: {},
       definedComponents: [],  // Will be filled after push
@@ -711,14 +711,14 @@ class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
       );
       // Inject nodeId into AST
       ast._meta = { nodeId };
-      // Project is root, so we push it as parent for theme/screens/components
+      // Project is root, so we push it as parent for style/screens/components
       this.sourceMapBuilder.pushParent(nodeId);
     }
 
-    // Process theme, mocks, colors AFTER pushParent so they have project as parent
-    if (ctx.themeDecl && ctx.themeDecl.length > 0) {
-      const themeBlock = this.visit(ctx.themeDecl[0]);
-      Object.assign(ast.theme, themeBlock);
+    // Process style, mocks, colors AFTER pushParent so they have project as parent
+    if (ctx.styleDecl && ctx.styleDecl.length > 0) {
+      const styleBlock = this.visit(ctx.styleDecl[0]);
+      Object.assign(ast.style, styleBlock);
     }
 
     if (ctx.mocksDecl && ctx.mocksDecl.length > 0) {
@@ -1071,29 +1071,29 @@ class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
     return ast;
   }
 
-  // Override themeDecl to capture theme block in SourceMap
-  themeDecl(ctx: any): Record<string, string> {
-    const theme: Record<string, string> = {};
-    
-    // Capture tokens for theme block
+  // Override styleDecl to capture style block in SourceMap
+  styleDecl(ctx: any): Record<string, string> {
+    const style: Record<string, string> = {};
+
+    // Capture tokens for style block
     const tokens: CapturedTokens = {
-      keyword: ctx.Theme[0],
+      keyword: ctx.Style[0],
       body: ctx.RCurly[0],
     };
 
-    // Add theme node to SourceMap
+    // Add style node to SourceMap
     if (this.sourceMapBuilder) {
       const nodeId = this.sourceMapBuilder.addNode(
-        'theme',
+        'style',
         tokens,
-        { name: 'theme' }
+        { name: 'style' }
       );
 
-      // Process theme properties
-      if (ctx.themeProperty) {
-        ctx.themeProperty.forEach((propCtx: any) => {
+      // Process style properties
+      if (ctx.styleProperty) {
+        ctx.styleProperty.forEach((propCtx: any) => {
           const { key, value } = this.visit(propCtx);
-          theme[key] = value;
+          style[key] = value;
 
           // Add property to SourceMap with precise ranges
           this.sourceMapBuilder!.addProperty(
@@ -1101,23 +1101,23 @@ class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
             key,
             value,
             {
-              name: propCtx.children.themeKey[0],
-              value: propCtx.children.themeValue[0],
+              name: propCtx.children.styleKey[0],
+              value: propCtx.children.styleValue[0],
             }
           );
         });
       }
     } else {
       // No SourceMap builder, just collect properties
-      if (ctx.themeProperty) {
-        ctx.themeProperty.forEach((prop: any) => {
+      if (ctx.styleProperty) {
+        ctx.styleProperty.forEach((prop: any) => {
           const { key, value } = this.visit(prop);
-          theme[key] = value;
+          style[key] = value;
         });
       }
     }
 
-    return theme;
+    return style;
   }
 
   // Override mocksDecl to capture mocks block in SourceMap

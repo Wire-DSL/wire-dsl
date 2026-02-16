@@ -1,5 +1,5 @@
 project "Form Example - Two Columns" {
-  theme {
+  style {
     density: "normal"
     spacing: "md"
     radius: "md"
@@ -9,7 +9,7 @@ project "Form Example - Two Columns" {
 
   screen FormScreen {
     layout stack(direction: vertical, gap: md, padding: lg) {
-      component Heading title: "User Registration"
+      component Heading text: "User Registration"
       
       component Text content: "Please fill in all required fields below"
 
@@ -37,13 +37,13 @@ project "Form Example - Two Columns" {
 
       layout stack(direction: horizontal, gap: lg) {
         layout stack(direction: vertical, gap: sm, padding: md) {
-          component Heading title: "Preferences"
+          component Heading text: "Preferences"
           component Checkbox label: "Subscribe to newsletter"
           component Checkbox label: "Enable notifications"
         }
         
         layout stack(direction: vertical, gap: sm, padding: md) {
-          component Heading title: "Account Type"
+          component Heading text: "Account Type"
           component Radio label: "Personal"
           component Radio label: "Business"
         }

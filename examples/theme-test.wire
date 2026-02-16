@@ -1,5 +1,5 @@
-project "Theme Test" {
-  theme {
+project " Test" {
+  style {
     density: "compact"
     spacing: "lg"
     radius: "md"
@@ -9,8 +9,8 @@ project "Theme Test" {
 
   screen Dashboard {
     layout stack(direction: vertical, gap: md, padding: lg) {
-      component Heading text: "Welcome to Theme Test"
-      component Text content: "This project uses the new theme block syntax"
+      component Heading text: "Welcome to  Test"
+      component Text content: "This project uses the new style block syntax"
       
       layout grid(columns: 12, gap: md) {
         cell span: 4 {

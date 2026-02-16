@@ -76,7 +76,7 @@ import { parseWireDSL, generateIR } from '@wire-dsl/engine';
 
 - **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)** - System design
 - **[docs/DSL-SYNTAX.md](./docs/DSL-SYNTAX.md)** - Language syntax guide
-- **[docs/THEME-GUIDE.md](./docs/THEME-GUIDE.md)** - Theme system documentation
+- **[docs/STYLE-GUIDE.md](./docs/STYLE-GUIDE.md)** - Style system documentation
 - **[docs/LLM-PROMPTING.md](./docs/LLM-PROMPTING.md)** - Guide for AI generation from natural language
 - **[docs/ICONS-GUIDE.md](./docs/ICONS-GUIDE.md)** - Icons library and usage
 - **[docs/ICON-AND-BUTTON-SIZING.md](./docs/ICON-AND-BUTTON-SIZING.md)** - Icon and button sizing guide
@@ -110,7 +110,7 @@ WireDSL is a platform for creating declarative wireframes where:
 
 ```wire
 project "Dashboard" {
-  theme {
+  style {
     density: "normal"
     spacing: "md"
     radius: "md"
@@ -120,7 +120,7 @@ project "Dashboard" {
 
   screen Home {
     layout stack(direction: vertical, gap: md, padding: lg) {
-      component Heading title: "Welcome"
+      component Heading text: "Welcome"
       component Button text: "Get Started"
     }
   }
@@ -144,7 +144,7 @@ project "Dashboard" {
 
 ```wire
 project "Login Form" {
-  theme {
+  style {
     density: "normal"
     spacing: "md"
     radius: "md"
@@ -155,7 +155,7 @@ project "Login Form" {
   screen LoginScreen {
     layout panel(padding: lg, background: "white") {
       layout stack(direction: vertical, gap: md) {
-        component Heading title: "Sign In"
+        component Heading text: "Sign In"
         component Input label: "Email" placeholder: "your@email.com"
         component Input label: "Password" placeholder: "••••••••"
         component Checkbox label: "Remember me"
@@ -288,8 +288,11 @@ MIT License - Free for personal and commercial use
 This project includes icons from [Feather Icons](https://feathericons.com), created by Cole Bemis and contributors.
 
 - **License**: MIT License
+- **Version**: 4.29.0
+- **Available icons**: 287
 - **Repository**: https://github.com/feathericons/feather
 - **Location in project**: `packages/engine/src/renderer/icons/`
+- **Complete list**: `docs/ICONS-GUIDE.md`
 - **Full details**: See `packages/engine/src/renderer/icons/ICONS-LICENSE.md`
 
 Feather Icons are used under the terms of the MIT License, which is fully compatible with this project's MIT License.
@@ -339,7 +342,7 @@ Inspired by:
 
 **Phase 2** ✅ (Completed)
 
-- ✅ Theme system with design tokens
+- ✅ Style system with design tokens
 - ✅ 23+ built-in components
 - ✅ Component composition & validation
 - ✅ Complete documentation
@@ -370,7 +373,7 @@ Inspired by:
 
 ```
 ✅ Phase 1: Core MVP (completed)
-✅ Phase 2: Theme System & Design Tokens (completed)
+✅ Phase 2:  System & Design Tokens (completed)
 ✅ Phase 3: VS Code Extension (completed)
 
 🚀 Phase 4: Source Maps (in progress)

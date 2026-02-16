@@ -23,7 +23,7 @@ import { SourceMapResolver } from '../packages/engine/src/sourcemap/resolver';
 
 const wireCode = `
 project "Interactive Dashboard" {
-  theme {
+  style {
     density: compact
     spacing: md
     radius: lg
@@ -271,7 +271,7 @@ console.log(`   Output: ${sourceMap.length} source-mapped nodes`);
 console.log('\n2️⃣  Generate Intermediate Representation');
 const ir = generateIR(ast);
 console.log(`   Nodes:  ${Object.keys(ir.project.nodes).length} IR nodes`);
-console.log(`   Theme:  ${ir.project.theme.density} density, ${ir.project.theme.radius} radius`);
+console.log(`   :  ${ir.project.style.density} density, ${ir.project.style.radius} radius`);
 
 // 3. Calculate Layout
 console.log('\n3️⃣  Calculate Layout Positions');

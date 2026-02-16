@@ -1,25 +1,22 @@
----
-title: Theme Configuration
-description: Guide to Wire-DSL theme system and design tokens
----
+# Style Configuration Guide
 
-Complete guide to the Wire-DSL theme system for establishing visual consistency across wireframes.
+Complete guide to the Wire-DSL style system for establishing visual consistency across wireframes.
 
 ---
 
-## What is Theme?
+## What is Style?
 
-The theme system defines design tokens that control the visual appearance of your entire project. Instead of hardcoding values, use theme tokens to ensure consistency and make global style changes easily.
+The style system defines design tokens that control the visual appearance of your entire project. Instead of hardcoding values, use style tokens to ensure consistency and make global style changes easily.
 
 ---
 
-## Theme Block Syntax
+## Style Block Syntax
 
-The theme is defined as a block at the project level:
+The `style` block is defined at the project level:
 
-```wire
+```
 project "MyApp" {
-  theme {
+  style {
     density: "normal"
     spacing: "md"
     radius: "md"
@@ -27,21 +24,75 @@ project "MyApp" {
     font: "base"
   }
 
+  colors {
+    primary: #3B82F6
+    accent: #3B82F6
+    control: #3B82F6
+    chart: #3B82F6
+  }
+
   screen Dashboard { ... }
 }
 ```
 
-### Theme Properties
+### Style Properties
 
-When a theme block is included (highly recommended), all theme properties must use **string values with quotes**. If a property is omitted, a sensible default is applied.
+Style properties are optional. When provided, values must be quoted strings; omitted values use engine defaults.
 
 | Property | Type | Options | Default | Impact |
 |----------|------|---------|---------|--------|
 | `density` | string | `"compact"`, `"normal"`, `"comfortable"` | `"normal"` | UI element sizing & spacing |
 | `spacing` | string | `"xs"`, `"sm"`, `"md"`, `"lg"`, `"xl"` | `"md"` | Default gaps in layouts |
-| `radius` | string | `"none"`, `"sm"`, `"md"`, `"lg"` | `"md"` | Border radius on components |
-| `stroke` | string | `"thin"`, `"normal"` | `"normal"` | Border thickness |
-| `font` | string | `"base"`, `"title"`, `"mono"` | `"base"` | Typography style |
+| `radius` | string | `"none"`, `"sm"`, `"md"`, `"lg"`, `"full"` | `"md"` | Border radius on components |
+| `stroke` | string | `"thin"`, `"normal"`, `"thick"` | `"normal"` | Border thickness |
+| `font` | string | `"sm"`, `"base"`, `"lg"` | `"base"` | Typography scale |
+
+---
+
+## Colors Block (Project Level)
+
+Alongside `style`, you can define a `colors` block at project root to customize variants and semantic color tokens used by renderers.
+
+```wire
+project "ThemedApp" {
+  style {
+    density: "normal"
+    spacing: "md"
+    radius: "md"
+    stroke: "normal"
+    font: "base"
+  }
+
+  colors {
+    primary: #2563EB
+    secondary: #64748B
+    success: #10B981
+    warning: #F59E0B
+    danger: #EF4444
+    info: #0EA5E9
+
+    accent: #2563EB
+    control: #16A34A
+    chart: #F97316
+  }
+}
+```
+
+### What `colors` affects
+
+- Variant-driven components (`Button`, `Badge`, `Link`, `Alert`, `IconButton`, etc.) through `primary`, `secondary`, `success`, `warning`, `danger`, `info` (and `error`)
+- Semantic renderer tokens:
+  - `accent`: Topbar icon/actions, active Tabs, StatCard highlighted value/icon, selected SidebarMenu item
+  - `control`: selected/enabled states for Checkbox, Radio, Toggle
+  - `chart`: Chart types line/area/bar
+
+### Value formats
+
+- Hex: `#RRGGBB`
+- Alias to another key: `brand: primary`
+- Named color identifier: `blue`, `red`, `green`, etc.
+
+**Note**: Pie charts use a fixed multi-color palette and do not use `chart` as a single color.
 
 ---
 
@@ -66,23 +117,25 @@ Controls the overall visual compactness of the UI.
 - Generous spacing
 - Best for: Mobile-first, accessibility-focused
 
-### Example
+### Example Impact
 
-```wire
+```
 // Compact version
 project "CompactApp" {
-  theme {
+  style {
     density: "compact"
     spacing: "sm"
+    // UI elements are smaller, tighter
   }
   ...
 }
 
 // Comfortable version
 project "ComfortableApp" {
-  theme {
+  style {
     density: "comfortable"
     spacing: "lg"
+    // UI elements are larger, more spacious
   }
   ...
 }
@@ -104,11 +157,11 @@ Defines the default spacing unit used throughout layouts.
 
 ### How It Works
 
-When you specify `spacing: "md"` in theme, the default gap/padding values in layouts are set to 16px. Containers can override with explicit values:
+When you specify `spacing: "md"` in the `style` block, default gap/padding values are derived from that token. Containers can override with explicit values:
 
-```wire
+```
 project "MyApp" {
-  theme {
+  style {
     spacing: "md"  // Default to 16px gaps
   }
 
@@ -120,6 +173,12 @@ project "MyApp" {
   }
 }
 ```
+
+### Usage Guidelines
+
+- **Tight UI**: Use `"xs"` or `"sm"`
+- **Standard UI**: Use `"md"` (recommended)
+- **Spacious UI**: Use `"lg"` or `"xl"`
 
 ---
 
@@ -134,6 +193,15 @@ Controls the roundness of corners on cards, buttons, and containers.
 - `"md"`: Moderately rounded (4px) (recommended)
 - `"lg"`: Very rounded (8px)
 
+### Visual Effect
+
+```
+"none"  → [Button with sharp corners]
+"sm"    → (Button with slightly rounded corners)
+"md"    → (Button with moderately rounded corners)
+"lg"    → (Button with very rounded corners)
+```
+
 ### Design Implications
 
 - **`"none"`**: Modern, geometric aesthetic
@@ -143,21 +211,23 @@ Controls the roundness of corners on cards, buttons, and containers.
 
 ### Example
 
-```wire
+```
 // Geometric Design
 project "ModernApp" {
-  theme {
+  style {
     radius: "none"
     stroke: "normal"
+    // Sharp, angular appearance
   }
 }
 
 // Friendly Design
 project "FriendlyApp" {
-  theme {
+  style {
     radius: "lg"
     spacing: "lg"
     density: "comfortable"
+    // Warm, accessible appearance
   }
 }
 ```
@@ -180,18 +250,20 @@ Controls the thickness of borders on components and containers.
 
 ### Example
 
-```wire
+```
 // Minimal Design
 project "MinimalApp" {
-  theme {
+  style {
     stroke: "thin"
+    // Subtle borders, high contrast
   }
 }
 
 // Strong Design
 project "StrongApp" {
-  theme {
+  style {
     stroke: "normal"
+    // Clear borders, defined sections
   }
 }
 ```
@@ -204,9 +276,9 @@ Controls the typographic style used throughout.
 
 ### Styles
 
-- `"base"`: Clean, sans-serif system fonts (recommended)
-- `"title"`: Serif fonts for formal contexts
-- `"mono"`: Monospace for code/technical content
+- `"sm"`: Smaller typography scale
+- `"base"`: Default balanced typography scale (recommended)
+- `"lg"`: Larger typography scale
 
 ### Application
 
@@ -217,83 +289,89 @@ Typography affects all text components:
 
 ### Example
 
-```wire
+```
 // Professional Design
 project "LawFirmApp" {
-  theme {
-    font: "title"
+  style {
+    font: "lg"
+    // Larger typography scale
   }
 }
 
 // Technical Design
 project "DeveloperTools" {
-  theme {
-    font: "mono"
+  style {
+    font: "sm"
+    // Smaller typography scale
   }
 }
 ```
 
 ---
 
-## Theme Presets
+## Style Presets
 
-Common theme configurations for different design approaches:
+Common style configurations for different design approaches:
 
-### Modern Minimalist
-```wire
+### Preset: Modern Minimalist
+```
 project "ModernApp" {
-  theme {
+  style {
     density: "normal"
     spacing: "md"
     radius: "none"
     stroke: "thin"
     font: "base"
   }
+  ...
 }
 ```
 
 **Characteristics**: Sharp corners, thin borders, geometric aesthetic
 
-### Friendly & Accessible
-```wire
+### Preset: Friendly & Accessible
+```
 project "FriendlyApp" {
-  theme {
+  style {
     density: "comfortable"
     spacing: "lg"
     radius: "lg"
     stroke: "normal"
     font: "base"
   }
+  ...
 }
 ```
 
 **Characteristics**: Rounded corners, generous spacing, approachable feel
 
-### Data-Intensive Dashboard
-```wire
+### Preset: Data-Intensive Dashboard
+```
 project "DashboardApp" {
-  theme {
+  style {
     density: "compact"
     spacing: "sm"
     radius: "sm"
     stroke: "normal"
     font: "base"
   }
+  ...
 }
 ```
 
 **Characteristics**: Compact layout, efficient spacing, professional look
 
-### Professional Enterprise
-```wire
+### Preset: Professional Enterprise
+```
 project "EnterpriseApp" {
-  theme {
+  style {
     density: "normal"
     spacing: "md"
     radius: "sm"
     stroke: "normal"
-    font: "title"
+    font: "lg"
   }
+  ...
 }
 ```
 
@@ -301,14 +379,27 @@ project "EnterpriseApp" {
 
 ---
 
+## Style Impact Matrix
+
+How each style property affects components:
+
+| Property | Button | Card | Input | Panel | Table |
+|----------|--------|------|-------|-------|-------|
+| `density` | Size | Padding | Height | Content | Row height |
+| `spacing` | Gap | Gap | Margin | Internal | Cell gap |
+| `radius` | Corners | Corners | Corners | Corners | N/A |
+| `stroke` | Border | Border | Border | Border | Separator |
+| `font` | Label | Title | Placeholder | Title | Header |
+
+---
+
 ## Real-World Examples
 
-### Admin Dashboard Theme
+### Admin Dashboard 
 
-<!-- wire-preview:start -->
-```wire
+```
 project "AdminPortal" {
-  theme {
+  style {
     density: "compact"
     spacing: "md"
     radius: "sm"
@@ -345,14 +436,12 @@ project "AdminPortal" {
   }
 }
 ```
-<!-- wire-preview:end -->
 
-### E-Commerce Product Page Theme
+### E-Commerce Product Page 
 
-<!-- wire-preview:start -->
-```wire
+```
 project "ECommerceStore" {
-  theme {
+  style {
     density: "comfortable"
     spacing: "lg"
     radius: "lg"
@@ -394,46 +483,111 @@ project "ECommerceStore" {
   }
 }
 ```
-<!-- wire-preview:end -->
 
 ---
 
 ## Best Practices
 
-### Do's
+### Do's ✅
 
 ✅ Choose one preset that matches your design vision  
-✅ Keep theme consistent throughout entire project  
-✅ Use theme values in all layouts and components  
+✅ Keep style configuration consistent throughout the project  
+✅ Use style token values consistently in layouts and components  
 ✅ Test different density settings with your content  
 ✅ Consider accessibility when choosing spacing  
 
-### Don'ts
+### Don'ts ❌
 
-❌ Don't change theme mid-project (use screens instead)  
-❌ Don't ignore theme values in layouts  
-❌ Don't mix contradictory theme properties  
-❌ Don't use theme values inconsistently  
+❌ Don't change style configuration mid-project (use screens instead)  
+❌ Don't ignore style token values in layouts  
+❌ Don't mix contradictory style properties  
+❌ Don't use style token values inconsistently  
+
+---
+
+## Style Modifications
+
+### Global Changes
+
+Changing the `style` block at project level affects the entire wireframe:
+
+```
+project "MyApp" {
+  style {
+    density: "normal"  // Change this line
+    spacing: "md"
+    radius: "md"
+    stroke: "normal"
+    font: "base"
+  }
+  // All screens automatically updated
+  ...
+}
+```
+
+### Local Overrides
+
+Individual layouts can override style defaults:
+
+```
+layout stack(gap: lg, padding: xl) {  // Explicitly use lg spacing instead of style default
+  component Heading text: "Special Section"
+}
+```
+
+---
+
+## Migration from Old Syntax
+
+### Old Format (Deprecated)
+
+```
+project "App" {
+  tokens density: normal
+  tokens spacing: md
+  tokens radius: md
+  tokens stroke: normal
+  tokens font: base
+}
+```
+
+### New Format (Current)
+
+```
+project "App" {
+  style {
+    density: "normal"
+    spacing: "md"
+    radius: "md"
+    stroke: "normal"
+    font: "base"
+  }
+}
+```
+
+**Key Changes**:
+- Block syntax: `style { ... }` instead of individual `tokens` statements
+- String values: All values use quotes (e.g., `"normal"`)
 
 ---
 
 ## Troubleshooting
 
-### Problem: Theme not applied
+### Problem: style not applied
 
-**Solution**: Ensure theme block is at project root level (not inside screen)
+**Solution**: Ensure style block is at project root level (not inside screen)
 
-```wire
+```
 // ❌ Wrong
 project "App" {
   screen Dashboard {
-    theme { ... }  // Incorrect location
+    style { ... }  // Incorrect location
   }
 }
 
 // ✅ Correct
 project "App" {
-  theme { ... }  // Correct location
+  style { ... }  // Correct location
   screen Dashboard { ... }
 }
 ```
@@ -442,15 +596,37 @@ project "App" {
 
 **Solution**: Use string values with quotes
 
-```wire
+```
 // ❌ Wrong
-theme {
+style {
   density: normal  // Missing quotes
 }
 
 // ✅ Correct
-theme {
+style {
   density: "normal"  // With quotes
+}
+```
+
+### Problem: Spacing not consistent
+
+**Solution**: Don't override with explicit values unless necessary
+
+```
+// ❌ Overriding too much
+layout stack(gap: lg) {
+  layout stack(gap: md) {
+    layout stack(gap: sm) {
+      // Multiple different spacings
+    }
+  }
+}
+
+// ✅ Using style tokens consistently
+layout stack(gap: md) {
+  layout stack(gap: md) {
+    // Consistent spacing throughout
+  }
 }
 ```
 
@@ -458,6 +634,6 @@ theme {
 
 ## Next Steps
 
-- [Containers & Layouts](./containers.md)
-- [All Components](./components.md)
-- [DSL Syntax](./syntax.md)
+- [DSL-SYNTAX.md](DSL-SYNTAX.md) - Complete syntax reference
+- [CONTAINERS-REFERENCE.md](CONTAINERS-REFERENCE.md) - Layout containers
+- [COMPONENTS-REFERENCE.md](COMPONENTS-REFERENCE.md) - Component catalog

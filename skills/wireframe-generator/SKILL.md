@@ -11,7 +11,7 @@ Generate syntactically correct Wire DSL code for creating wireframes and UI prot
 
 This skill enables LLMs to generate valid Wire DSL code by providing:
 - Complete syntax reference and grammar rules
-- Catalog of all 23 available components
+- Catalog of all 21 available components
 - Layout container patterns (Stack, Grid, Split, Panel, Card)
 - Best practices for code generation
 - Common UI patterns and examples
@@ -96,14 +96,14 @@ Select the appropriate layout based on the UI structure:
 
 ### Step 4: Add Components
 
-Choose from 23 available components organized in categories:
+Choose from 21 available components organized in categories:
 
-**Text:** Heading, Text, Paragraph, Label
+**Text:** Heading, Text, Label
 **Input:** Input, Textarea, Select, Checkbox, Radio, Toggle
 **Buttons:** Button, IconButton
 **Navigation:** Topbar, SidebarMenu, Breadcrumbs, Tabs
 **Data:** Table, List
-**Media:** Image, Icon, Avatar
+**Media:** Image, Icon
 **Display:** Divider, Badge, Link, Alert
 **Info:** StatCard, Code, ChartPlaceholder
 **Modal:** Modal, Spinner
@@ -124,7 +124,7 @@ Before outputting, check:
 | File | Purpose |
 |------|---------|
 | [core-syntax.md](references/core-syntax.md) | Complete syntax rules, property formats, naming conventions |
-| [components-catalog.md](references/components-catalog.md) | All 23 components with properties and examples |
+| [components-catalog.md](references/components-catalog.md) | All 21 components with properties and examples |
 | [layouts-guide.md](references/layouts-guide.md) | Layout containers (Stack, Grid, Split, Panel, Card) with patterns |
 | [best-practices.md](references/best-practices.md) | Validation checklist, common mistakes, gotchas |
 | [common-patterns.md](references/common-patterns.md) | Reusable patterns for forms, dashboards, navigation, cards |

@@ -1,5 +1,5 @@
 project "Component Demo" {
-  theme {
+  style {
     density: "normal"
     spacing: "md"
     radius: "md"

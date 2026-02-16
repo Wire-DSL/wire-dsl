@@ -1,5 +1,5 @@
 project "Token Background Demo" {
-  theme {
+  style {
     density: "comfortable"
     spacing: "md"
     radius: "md"

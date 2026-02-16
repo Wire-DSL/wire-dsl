@@ -25,7 +25,7 @@ This guide enables LLMs to generate valid Wire-DSL files from text descriptions 
 Every `.wire` file must have:
 ```wire
 project "ProjectName" {
-  theme {
+  style {
     density: "normal"
     spacing: "md"
     radius: "md"
@@ -74,17 +74,17 @@ Valid values: `none`, `xs`, `sm`, `md`, `lg`, `xl`
 
 ---
 
-## Theme Properties
+## Style Properties
 
 These define visual consistency across the entire wireframe.
 
 ```wire
-theme {
+style {
   density: "normal"        // compact | normal | comfortable
   spacing: "md"            // xs | sm | md | lg | xl
-  radius: "md"             // none | sm | md | lg
-  stroke: "normal"         // thin | normal
-  font: "base"             // base | title | mono
+  radius: "md"             // none | sm | md | lg | full
+  stroke: "normal"         // thin | normal | thick
+  font: "base"             // sm | base | lg
 }
 ```
 
@@ -106,7 +106,6 @@ theme {
 |---|---|---|---|
 | `Heading` | `text` | - | `component Heading text: "Page Title"` |
 | `Text` | `content` | - | `component Text content: "Body text"` |
-| `Paragraph` | `content` | - | `component Paragraph content: "Long multi-line text"` |
 | `Label` | `text` | - | `component Label text: "Field label"` |
 
 ### Input Components Details
@@ -122,15 +121,14 @@ theme {
 ### Media Components Details
 | Component | Key Properties | Valid Placeholders | Example |
 |---|---|---|---|
-| `Image` | `placeholder`, `height` | `"landscape"`, `"square"`, `"portrait"` | `component Image placeholder: "square" height: 250` |
-| `Avatar` | `placeholder` | `"avatar"` | `component Avatar placeholder: "avatar"` |
-| `Icon` | `name` | Common icon names (search, settings, menu, etc.) | `component Icon name: "search"` |
+| `Image` | `placeholder`, `height` | `"landscape"`, `"square"`, `"portrait"`, `"avatar"`, `"icon"` | `component Image placeholder: "square" height: 250` |
+| `Icon` | `type` | Common icon names (search, settings, menu, etc.) | `component Icon type: "search"` |
 
 ### Navigation Components Details
 | Component | Key Properties | Example |
 |---|---|---|
 | `SidebarMenu` | `items`, `active` | `component SidebarMenu items: "Home,Users,Settings" active: 0` |
-| `Tabs` | `items`, `activeIndex` | `component Tabs items: "Profile,Settings,Activity" activeIndex: 0` |
+| `Tabs` | `items`, `active` | `component Tabs items: "Profile,Settings,Activity" active: 0` |
 | `Breadcrumbs` | `items` | `component Breadcrumbs items: "Home,Users,Detail"` |
 | `Topbar` | `title`, `subtitle` | `component Topbar title: "Dashboard" subtitle: "Analytics"` |
 
@@ -143,12 +141,11 @@ theme {
 
 ---
 
-## Available Components (23 Total)
+## Available Components (30 Total)
 
-### Text Components (4)
+### Text Components (3)
 - `Heading` - Large titles
-- `Text` - Small text snippets
-- `Paragraph` - Multi-line text
+- `Text` - Body text (short or multi-line)
 - `Label` - Form labels
 
 ### Input Components (6)
@@ -163,9 +160,10 @@ theme {
 - `Button` - Primary action button
 - `IconButton` - Icon-based button
 
-### Navigation Components (4)
+### Navigation Components (5)
 - `Topbar` - Top navigation bar
 - `SidebarMenu` - Vertical navigation sidebar
+- `Sidebar` - Side navigation panel
 - `Breadcrumbs` - Navigation path display
 - `Tabs` - Tabbed content switching
 
@@ -173,25 +171,25 @@ theme {
 - `Table` - Multi-row tabular data
 - `List` - Item list
 
-### Media Components (3)
+### Media Components (2)
 - `Image` - Static image
 - `Icon` - Scalable icon
-- `Avatar` - User profile image
 
-### Display Components (4)
+### Display Components (5)
 - `Divider` - Visual separator
+- `Separate` - Invisible spacer
 - `Badge` - Status indicator
 - `Link` - Hypertext link
 - `Alert` - Information message
 
-### Information Components (3)
+### Information Components (4)
 - `StatCard` - Metric display
+- `Card` - Generic content card
 - `Code` - Code snippet
-- `ChartPlaceholder` - Chart area
+- `Chart` - Chart area
 
-### Feedback Components (2)
+### Feedback Components (1)
 - `Modal` - Dialog overlay
-- `Spinner` - Loading indicator
 
 ---
 
@@ -201,7 +199,7 @@ theme {
 ```wire
 component Button 
   text: "Click me"              // Display text
-  variant: "primary"            // Visual variant (primary | secondary | ghost)
+  variant: "primary"            // Visual variant (default | primary | secondary | success | warning | danger | info)
   size: "medium"                // Size (small | medium | large)
 ```
 
@@ -258,7 +256,7 @@ layout split(
 
 ```wire
 project "Admin Dashboard" {
-  theme {
+  style {
     density: "normal"
     spacing: "md"
     radius: "md"
@@ -269,7 +267,7 @@ project "Admin Dashboard" {
   screen Dashboard {
     layout split(sidebar: 260, gap: md) {
       layout stack(direction: vertical, gap: md, padding: md) {
-        component Heading title: "Menu"
+        component Heading text: "Menu"
         component SidebarMenu items: ["Dashboard", "Users", "Settings"]
       }
       
@@ -277,26 +275,26 @@ project "Admin Dashboard" {
         layout grid(columns: 12, gap: md) {
           cell span: 4 {
             layout card(padding: md, gap: md) {
-              component Heading title: "Total Users"
+              component Heading text: "Total Users"
               component StatCard value: "1,234"
             }
           }
           cell span: 4 {
             layout card(padding: md, gap: md) {
-              component Heading title: "Revenue"
+              component Heading text: "Revenue"
               component StatCard value: "$45.2K"
             }
           }
           cell span: 4 {
             layout card(padding: md, gap: md) {
-              component Heading title: "Growth"
+              component Heading text: "Growth"
               component StatCard value: "12%"
             }
           }
         }
         
         layout card(padding: lg, gap: md) {
-          component Heading title: "Recent Activity"
+          component Heading text: "Recent Activity"
           component Table 
             columns: "User,Action,Date"
             rows: 5
@@ -368,7 +366,7 @@ project "Admin Dashboard" {
 ```wire
 layout card(padding: lg, gap: md, radius: lg, border: true) {
   component Image placeholder: "square" height: 250
-  component Heading title: "Product Title"
+  component Heading text: "Product Title"
   component Text content: "Product description"
   layout stack(direction: horizontal, gap: md) {
     component Button text: "View Details" variant: primary
@@ -380,25 +378,25 @@ layout card(padding: lg, gap: md, radius: lg, border: true) {
 ### Grid within Stack (Dashboard Cards)
 ```wire
 layout stack(direction: vertical, gap: md, padding: lg) {
-  component Heading title: "Dashboard Overview"
+  component Heading text: "Dashboard Overview"
   
   layout grid(columns: 12, gap: md) {
     cell span: 4 {
       layout card(padding: md, gap: md) {
-        component Heading title: "Users"
-        component StatCard label: "Total" value: "1,234"
+        component Heading text: "Users"
+        component StatCard title: "Total" value: "1,234"
       }
     }
     cell span: 4 {
       layout card(padding: md, gap: md) {
-        component Heading title: "Revenue"
-        component StatCard label: "Monthly" value: "$45.2K"
+        component Heading text: "Revenue"
+        component StatCard title: "Monthly" value: "$45.2K"
       }
     }
     cell span: 4 {
       layout card(padding: md, gap: md) {
-        component Heading title: "Growth"
-        component StatCard label: "YoY" value: "12%"
+        component Heading text: "Growth"
+        component StatCard title: "YoY" value: "12%"
       }
     }
   }
@@ -409,20 +407,20 @@ layout stack(direction: vertical, gap: md, padding: lg) {
 ```wire
 layout split(sidebar: 260, gap: md) {
   layout stack(direction: vertical, gap: md, padding: md) {
-    component Heading title: "Menu"
+    component Heading text: "Menu"
     component SidebarMenu items: "Dashboard,Users,Settings"
   }
   
   layout grid(columns: 12, gap: md, padding: lg) {
     cell span: 8 {
-      component Heading title: "Main Content"
+      component Heading text: "Main Content"
       component Table columns: "Name,Email,Status" rows: 5
     }
     
     cell span: 4 {
       layout panel(padding: md, background: "white") {
         layout stack(direction: vertical, gap: md) {
-          component Heading title: "Filters"
+          component Heading text: "Filters"
           component Input label: "Search" placeholder: "Filter..."
           component Select label: "Status" items: "Active,Inactive"
           component Button text: "Apply" variant: primary
@@ -437,14 +435,14 @@ layout split(sidebar: 260, gap: md) {
 ```wire
 layout split(sidebar: 280, gap: md) {
   layout stack(direction: vertical, gap: md, padding: lg) {
-    component Heading title: "Profile"
+    component Heading text: "Profile"
     component SidebarMenu items: "General,Security,Privacy" active: 0
   }
   
   layout stack(direction: vertical, gap: lg, padding: lg) {
     layout card(padding: lg, gap: md, radius: lg, border: true) {
-      component Avatar placeholder: "avatar"
-      component Heading title: "John Doe"
+      component Image placeholder: "square"
+      component Heading text: "John Doe"
       component Text content: "john@example.com"
       component Divider
       component Text content: "Senior Software Engineer"
@@ -465,7 +463,7 @@ layout split(sidebar: 280, gap: md) {
 ```wire
 layout panel(padding: lg, background: "white") {
   layout stack(direction: vertical, gap: md) {
-    component Heading title: "Contact Form"
+    component Heading text: "Contact Form"
     component Input label: "Name" placeholder: "Full name"
     component Input label: "Email" placeholder: "email@example.com"
     component Textarea label: "Message" rows: 4 placeholder: "Your message..."
@@ -484,18 +482,18 @@ layout grid(columns: 12, gap: md, padding: lg) {
   cell span: 6 {
     layout card(padding: md, gap: md, radius: lg, border: true) {
       component Image placeholder: "square" height: 200
-      component Heading title: "Premium Item"
+      component Heading text: "Premium Item"
       component Text content: "High-quality product"
-      component StatCard label: "Price" value: "$99.99"
+      component StatCard title: "Price" value: "$99.99"
       component Button text: "Add to Cart" variant: primary
     }
   }
   cell span: 6 {
     layout card(padding: md, gap: md, radius: lg, border: true) {
       component Image placeholder: "square" height: 200
-      component Heading title: "Standard Item"
+      component Heading text: "Standard Item"
       component Text content: "Good value option"
-      component StatCard label: "Price" value: "$49.99"
+      component StatCard title: "Price" value: "$49.99"
       component Button text: "Add to Cart" variant: primary
     }
   }
@@ -515,12 +513,12 @@ layout split(sidebar: 280, gap: md) {
   }
   
   layout stack(direction: vertical, gap: md, padding: lg) {
-    component Heading title: "Dashboard"
+    component Heading text: "Dashboard"
     component Breadcrumbs items: "Home,Dashboard"
     layout grid(columns: 12, gap: md) {
       cell span: 12 {
         layout card(padding: lg, gap: md) {
-          component Heading title: "Recent Activity"
+          component Heading text: "Recent Activity"
           component Table columns: "User,Action,Timestamp" rows: 5
         }
       }
@@ -541,17 +539,17 @@ Before generating output, verify:
 - [ ] No invalid property names
 - [ ] Proper nesting of layouts
 - [ ] At least one screen defined
-- [ ] Theme block is present
+- [ ] Style block is present
 - [ ] No syntax errors (braces, quotes, colons)
 - [ ] Component names match exactly (case-sensitive)
 - [ ] All string values are quoted
 - [ ] All layouts have explicit `padding` when needed
 - [ ] Image placeholders use valid values: "landscape", "square", "portrait"
-- [ ] Avatar placeholders use "avatar"
+- [ ] Use `Image` for profile pictures when needed
 - [ ] Grid cells have `span` values between 1-12
 - [ ] Sidebar width is between 200-400 pixels
 - [ ] Card/Panel radius values are: "none", "sm", "md", "lg"
-- [ ] Button variants are: "primary", "secondary", "ghost"
+- [ ] Button variants are: "default", "primary", "secondary", "success", "warning", "danger", "info"
 - [ ] Nested layouts are properly closed with braces
 
 ---
@@ -559,7 +557,7 @@ Before generating output, verify:
 ## Error Handling
 
 ### If LLM Receives Ambiguous Input:
-- Use sensible defaults (see Theme section)
+- Use sensible defaults (see  section)
 - Prefer common patterns (dashboard, form, card grid)
 - When in doubt, choose `normal` density and `md` spacing
 - Use `stack` layout for linear content, `grid` for multi-column

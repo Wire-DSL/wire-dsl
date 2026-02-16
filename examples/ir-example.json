@@ -152,7 +152,7 @@
         "id": "cmp_tabs",
         "kind": "component",
         "componentType": "Tabs",
-        "props": { "items": ["Permissions", "Sessions", "Audit log"], "activeIndex": 0 }
+        "props": { "items": ["Permissions", "Sessions", "Audit log"], "active": 0 }
       },
       "cmp_panel_content": {
         "id": "cmp_panel_content",
@@ -185,3 +185,5 @@
     }
   }
 }
+
+

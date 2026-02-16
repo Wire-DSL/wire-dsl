@@ -37,7 +37,7 @@ describe('IR Generator', () => {
     const ast = parseWireDSL(input);
     const ir = generateIR(ast);
 
-    expect(ir.project.theme).toEqual({
+    expect(ir.project.style).toEqual({
       density: 'normal',
       spacing: 'md',
       radius: 'md',
@@ -49,7 +49,7 @@ describe('IR Generator', () => {
   it('should apply custom theme', () => {
     const input = `
       project "Custom" {
-        theme {
+        style {
           density: "comfortable"
           spacing: "lg"
         }
@@ -65,9 +65,9 @@ describe('IR Generator', () => {
     const ast = parseWireDSL(input);
     const ir = generateIR(ast);
 
-    expect(ir.project.theme.density).toBe('comfortable');
-    expect(ir.project.theme.spacing).toBe('lg');
-    expect(ir.project.theme.radius).toBe('md'); // default
+    expect(ir.project.style.density).toBe('comfortable');
+    expect(ir.project.style.spacing).toBe('lg');
+    expect(ir.project.style.radius).toBe('md'); // default
   });
 
   it('should generate unique node IDs', () => {
@@ -231,6 +231,69 @@ describe('IR Generator', () => {
     expect(ir.project.nodes[rootNodeId]).toBeDefined();
   });
 
+  it('should resolve tablet device viewport with min height', () => {
+    const input = `
+      project "Tablet" {
+        style {
+          device: "tablet"
+        }
+
+        screen Main {
+          layout stack {
+            component Heading text: "Tablet viewport"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+
+    expect(ir.project.screens[0].viewport).toEqual({ width: 768, height: 1024 });
+  });
+
+  it('should resolve print device viewport with min height', () => {
+    const input = `
+      project "Print" {
+        style {
+          device: "print"
+        }
+
+        screen Main {
+          layout stack {
+            component Heading text: "Print viewport"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+
+    expect(ir.project.screens[0].viewport).toEqual({ width: 794, height: 1123 });
+  });
+
+  it('should fallback to desktop viewport for unknown device', () => {
+    const input = `
+      project "Unknown Device" {
+        style {
+          device: "smart-fridge"
+        }
+
+        screen Main {
+          layout stack {
+            component Heading text: "Fallback viewport"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+
+    expect(ir.project.screens[0].viewport).toEqual({ width: 1280, height: 720 });
+  });
+
   it('should handle multiple screens', () => {
     const input = `
       project "Multi" {
@@ -304,7 +367,7 @@ describe('IR Generator', () => {
   it('should handle complete example', () => {
     const input = `
       project "Complete Dashboard" {
-        theme {
+        style {
           density: "comfortable"
           spacing: "lg"
         }
@@ -341,7 +404,7 @@ describe('IR Generator', () => {
     const ir = generateIR(ast);
 
     expect(ir.project.name).toBe('Complete Dashboard');
-    expect(ir.project.theme.density).toBe('comfortable');
+    expect(ir.project.style.density).toBe('comfortable');
     expect(ir.project.screens).toHaveLength(1);
     expect(Object.keys(ir.project.nodes).length).toBeGreaterThan(5);
 
@@ -576,6 +639,8 @@ describe('IR Generator', () => {
         screen Main {
           layout stack {
             component Button text: "Click"
+            component Link text: "More details"
+            component Separate
             component Input placeholder: "Enter"
             component Heading text: "Title"
             component Text content: "Body"
@@ -594,7 +659,7 @@ describe('IR Generator', () => {
   it('should expand StatCard with default styling', () => {
     const input = `
       project "Dashboard" {
-        theme {
+        style {
           density: "comfortable"
         }
         
@@ -823,5 +888,3 @@ describe('IR Generator', () => {
     expect(Object.keys(ir.project.nodes).length).toBeGreaterThan(0);
   });
 });
-
-

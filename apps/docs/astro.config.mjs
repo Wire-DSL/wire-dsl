@@ -44,7 +44,7 @@ export default defineConfig({
 						{ label: 'Syntax', slug: 'language/syntax' },
 						{ label: 'Components', slug: 'language/components' },
 						{ label: 'Containers', slug: 'language/containers' },
-						{ label: 'Theming', slug: 'language/theming' },
+						{ label: 'Configuration', slug: 'language/configuration' },
 						{ label: 'Icons', slug: 'language/icons' },
 					],
 				},

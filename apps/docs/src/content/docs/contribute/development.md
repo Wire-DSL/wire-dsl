@@ -139,7 +139,7 @@ Opens at `http://localhost:5173`
 **Features:**
 - Monaco code editor on left
 - Live preview on right
-- Theme/component reference on top right
+- /component reference on top right
 - Keyboard shortcuts (`Ctrl+Enter` to preview)
 
 ### CLI (@wire-dsl/cli)

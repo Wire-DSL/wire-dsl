@@ -1,5 +1,5 @@
 project "Card & StatCard Demo" {
-  theme {
+  style {
     spacing: "md"
     density: "normal"
     radius: "md"
@@ -49,22 +49,22 @@ project "Card & StatCard Demo" {
 
         cell span: 2 {
           layout card(padding: md, gap: sm) {
-            component Heading title: "Avg Order"
-            component StatCard label: "Last quarter" value: "$1,825"
+            component Heading text: "Avg Order"
+            component StatCard title: "Last quarter" value: "$1,825"
           }
         }
       }
 
       layout card(padding: lg, gap: md, radius: md, border: true) {
         component Image placeholder: "landscape" height: 250
-        component Heading title: "Product Showcase"
+        component Heading text: "Product Showcase"
         component Text content: "Explore our latest features and improvements"
         component Button text: "Learn More" variant: primary
       }
 
       layout card(padding: md, gap: sm) {
         component Image placeholder: "portrait" height: 250
-        component Heading title: "Beautiful Villa"
+        component Heading text: "Beautiful Villa"
         component Text content: "3 bedrooms, 2 bathrooms, Downtown area"
         layout stack(direction: horizontal, gap: md) {
           component Button text: "Schedule"
@@ -76,13 +76,13 @@ project "Card & StatCard Demo" {
 
   screen Products {
     layout stack(direction: vertical, gap: lg, padding: xl) {
-      component Heading title: "Featured Products"
+      component Heading text: "Featured Products"
 
       layout grid(columns: 12, gap: md) {
         cell span: 6 {
           layout card(padding: md, gap: md, radius: lg, border: true) {
             component Image placeholder: "square" height: 250
-            component Heading title: "Product One"
+            component Heading text: "Product One"
             component Text content: "High-quality product with premium features"
             layout stack(direction: horizontal, gap: sm) {
               component Button text: "View Details"
@@ -94,7 +94,7 @@ project "Card & StatCard Demo" {
         cell span: 6 {
           layout card(padding: md, gap: md, radius: lg, border: true) {
             component Image placeholder: "square" height: 250
-            component Heading title: "Product Two"
+            component Heading text: "Product Two"
             component Text content: "Best-selling item with excellent reviews"
             layout stack(direction: horizontal, gap: sm) {
               component Button text: "View Details"
@@ -108,13 +108,13 @@ project "Card & StatCard Demo" {
 
   screen Profile {
     layout stack(direction: vertical, gap: lg, padding: xl) {
-      component Heading title: "User Profile"
+      component Heading text: "User Profile"
 
       layout card(padding: xl, gap: lg, radius: md) {
         layout stack(direction: horizontal, gap: lg) {
           component Image placeholder: "avatar" height: 120
           layout stack(direction: vertical, gap: sm) {
-            component Heading title: "John Smith"
+            component Heading text: "John Smith"
             component Text content: "john@example.com"
             component Text content: "Joined 6 months ago"
           }

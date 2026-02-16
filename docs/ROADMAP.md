@@ -36,16 +36,16 @@ This roadmap describes the development phases of Wire-DSL from MVP through advan
 - ✅ Size mode resolution
 
 #### 1.4 Core Components ✅
-- ✅ 23 built-in components including:
-  - Text: Heading, Text, Paragraph, Label
+- ✅ Built-in components including:
+  - Text: Heading, Text, Label
   - Input: Input, Textarea, Select, Checkbox, Radio, Toggle
   - Buttons: Button, IconButton
   - Navigation: Topbar, SidebarMenu, Breadcrumbs, Tabs
   - Data: Table, List
-  - Media: Image, Icon, Avatar
-  - Display: Divider, Badge, Link, Alert
-  - Info: StatCard, Code, ChartPlaceholder
-  - Feedback: Modal, Spinner
+  - Media: Image, Icon
+  - Display: Divider, Separate, Badge, Link, Alert
+  - Info: StatCard, Card, Code, Chart
+  - Overlay: Modal
 
 #### 1.5 Renderer ✅
 - ✅ SVG/PDF rendering
@@ -85,19 +85,19 @@ This roadmap describes the development phases of Wire-DSL from MVP through advan
 
 ---
 
-## Phase 2: Theme System & Design Tokens ✅ COMPLETE
+## Phase 2:  System & Design Tokens ✅ COMPLETE
 
-**Goal**: Implement theme tokens for visual consistency across wireframes.
+**Goal**: Implement style tokens for visual consistency across wireframes.
 
 **Status**: Fully implemented and integrated.
 
 ### Deliverables ✅
 
-#### 2.1 Theme System ✅
-- ✅ Theme block configuration
-- ✅ Theme properties: density, spacing, radius, stroke, font
-- ✅ Component styling based on theme
-- ✅ Theme inheritance and defaults
+#### 2.1  System ✅
+- ✅ Style block configuration
+- ✅  properties: density, spacing, radius, stroke, font
+- ✅ Component styling based on 
+- ✅  inheritance and defaults
 
 #### 2.2 Design System Presets ✅
 - ✅ Modern Minimalist
@@ -106,7 +106,7 @@ This roadmap describes the development phases of Wire-DSL from MVP through advan
 - ✅ Professional Enterprise
 
 #### 2.3 Documentation & Examples ✅
-- ✅ Theme configuration guide
+- ✅ Style configuration guide
 - ✅ Complete component library reference
 - ✅ 18+ example wireframes
 - ✅ Component catalog showcase
@@ -125,7 +125,7 @@ This roadmap describes the development phases of Wire-DSL from MVP through advan
 - ✅ Real-time error detection and diagnostics
 - ✅ Component intellisense and autocomplete
 - ✅ Document formatting
-- ✅ File icons and theme support
+- ✅ File icons and  support
 - ✅ Go-to-definition navigation
 - ✅ Code snippet library
 - ✅ Live preview pane (functional)
@@ -170,7 +170,7 @@ This roadmap describes the development phases of Wire-DSL from MVP through advan
 - ✅ Layout calculations (stack, grid, split, panel, card)
 - ✅ SVG/PDF rendering
 - ✅ Component composition (define/reuse)
-- ✅ Theme system with design tokens
+- ✅ Style system with design tokens
 - ✅ 23+ built-in components
 - ✅ Component validation (cycles, undefined references)
 - ✅ CLI with render/validate commands

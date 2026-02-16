@@ -45,16 +45,16 @@ Wire-DSL is actively maintained with a clear evolution path. This roadmap descri
 - ✅ Size mode resolution
 
 **Core Components**
-- ✅ 23 built-in components:
-  - Text: Heading, Text, Paragraph, Label
+- ✅ Built-in components:
+  - Text: Heading, Text, Label
   - Input: Input, Textarea, Select, Checkbox, Radio, Toggle
   - Buttons: Button, IconButton
   - Navigation: Topbar, SidebarMenu, Breadcrumbs, Tabs
   - Data: Table, List
-  - Media: Image, Icon, Avatar
-  - Display: Divider, Badge, Link, Alert
-  - Info: StatCard, Code, ChartPlaceholder
-  - Feedback: Modal, Spinner
+  - Media: Image, Icon
+  - Display: Divider, Separate, Badge, Link, Alert
+  - Info: StatCard, Card, Code, Chart
+  - Overlay: Modal
 
 **Renderer**
 - ✅ SVG/PDF rendering
@@ -78,21 +78,21 @@ Wire-DSL is actively maintained with a clear evolution path. This roadmap descri
 
 ---
 
-## Phase 2: Theme System & Design Tokens
+## Phase 2:  System & Design Tokens
 
 **Status**: Completed ✅
 
-**Goal**: Implement theme tokens for visual consistency.
+**Goal**: Implement style tokens for visual consistency.
 
 **Status**: Fully implemented and integrated.
 
 ### Deliverables
 
-**Theme System**
-- ✅ Theme block configuration
-- ✅ Theme properties: density, spacing, radius, stroke, font
-- ✅ Component styling based on theme
-- ✅ Theme inheritance and defaults
+** System**
+- ✅ Style block configuration
+- ✅  properties: density, spacing, radius, stroke, font
+- ✅ Component styling based on 
+- ✅  inheritance and defaults
 
 **Design System Presets**
 - ✅ Modern Minimalist
@@ -101,7 +101,7 @@ Wire-DSL is actively maintained with a clear evolution path. This roadmap descri
 - ✅ Professional Enterprise
 
 **Documentation & Examples**
-- ✅ Theme configuration guide
+- ✅ Style configuration guide
 - ✅ Complete component library reference
 - ✅ 18+ example wireframes
 - ✅ Component catalog showcase
@@ -182,8 +182,8 @@ The following features are planned and will be prioritized based on community fe
 - ✅ Layout calculations (stack, grid, split, panel, card)
 - ✅ SVG/PDF rendering
 - ✅ Component composition (define/reuse)
-- ✅ Theme system with design tokens
-- ✅ 23 built-in components
+- ✅ Style system with design tokens
+- ✅ 21 built-in components
 - ✅ Component validation (cycles, undefined references)
 - ✅ CLI with render/validate commands
 - ✅ VS Code syntax highlighting and live preview

@@ -1,5 +1,5 @@
 project "Auth Platform" {
-  theme {
+  style {
     density: "normal"
     spacing: "md"
     radius: "md"
@@ -11,7 +11,7 @@ project "Auth Platform" {
     layout split(sidebar: 260, gap: md) {
       layout stack(direction: vertical, gap: lg, padding: lg) {
         layout stack(direction: vertical, gap: sm, padding: md) {
-          component Heading title: "Auth Platform"
+          component Heading text: "Auth Platform"
           component Text content: "Admin console"
         }
         component SidebarMenu items: "User List,Permissions,Settings" active: 0
@@ -21,7 +21,7 @@ project "Auth Platform" {
         component Breadcrumbs items: "Home,Users"
 
         layout stack(direction: vertical, gap: sm) {
-          component Heading title: "User List"
+          component Heading text: "User List"
           component Text content: "Manage users and permissions"
         }
 

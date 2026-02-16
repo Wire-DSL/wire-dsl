@@ -9,10 +9,10 @@ Welcome to the comprehensive English documentation for Wire-DSL. This guide cove
 New to Wire-DSL? Start here:
 
 1. **[DSL Syntax Guide](DSL-SYNTAX.md)** - Learn the basic syntax and structure
-2. **[Components Reference](COMPONENTS-REFERENCE.md)** - Explore all 23 available components
+2. **[Components Reference](COMPONENTS-REFERENCE.md)** - Explore all available components
 3. **[Icons Guide](ICONS-GUIDE.md)** - Use Feather Icons in your wireframes
 4. **[Containers Reference](CONTAINERS-REFERENCE.md)** - Understand layout containers
-5. **[Theme Guide](THEME-GUIDE.md)** - Configure visual consistency
+5. **[Config Guide](CONFIG-GUIDE.md)** - Configure visual consistency
 
 ---
 
@@ -24,7 +24,7 @@ The authoritative reference for Wire-DSL syntax, including:
 - Screen definition
 - Layout syntax
 - Component declarations
-- Theme configuration
+- Style configuration
 - Complete examples
 - Validation rules
 
@@ -33,16 +33,16 @@ The authoritative reference for Wire-DSL syntax, including:
 ---
 
 ### [Components Reference](COMPONENTS-REFERENCE.md)
-Complete catalog of all 23 component types with:
-- **Text Components**: Heading, Text, Paragraph, Label
+Complete catalog of all component types with:
+- **Text Components**: Heading, Text, Label
 - **Input Components**: Input, Textarea, Select, Checkbox, Radio, Toggle
 - **Button Components**: Button, IconButton
-- **Navigation**: Topbar, SidebarMenu, Breadcrumbs, Tabs
+- **Navigation**: Topbar, SidebarMenu, Sidebar, Breadcrumbs, Tabs
 - **Data Display**: Table, List
-- **Media**: Image, Icon, Avatar
-- **Display Elements**: Divider, Badge, Link, Alert
-- **Information**: StatCard, Code, ChartPlaceholder
-- **Modal & Feedback**: Modal, Spinner
+- **Media**: Image, Icon
+- **Display Elements**: Divider, Separate, Badge, Link, Alert
+- **Information**: StatCard, Card, Code, Chart
+- **Overlay**: Modal
 
 Each component includes:
 - Property definitions
@@ -58,10 +58,10 @@ Each component includes:
 Comprehensive guide to using Feather Icons in Wire-DSL:
 - `Icon` component for displaying icons
 - `IconButton` component for interactive icon buttons
-- Complete list of 50+ available icons
+- Complete list of 287 available icons (Feather Icons v4.29.0)
 - Usage examples and best practices
 - Icon variants and customization
-- Styling and theming
+- Styling and configuration
 
 **Best for**: Integrating professional icons and creating icon-based UI
 
@@ -86,10 +86,10 @@ Each container type includes:
 
 ---
 
-### [Theme Guide](THEME-GUIDE.md)
-Complete theme system documentation:
-- Theme block syntax
-- Theme properties (density, spacing, radius, stroke, font)
+### [Config Guide](CONFIG-GUIDE.md)
+Complete style system documentation:
+- Style block syntax
+- Style properties (density, spacing, radius, stroke, font)
 - Impact on components
 - Design presets
 - Real-world examples
@@ -122,7 +122,7 @@ Complete guide to the SourceMap system for bidirectional code↔canvas selection
 ### Project Structure
 ```
 project "Name" {
-  theme { ... }          // Visual consistency tokens
+  style { ... }          // Visual consistency tokens
   
   screen Screen1 { ... } // Page/view definition
   screen Screen2 { ... }
@@ -132,7 +132,7 @@ project "Name" {
 ### Layout Hierarchy
 ```
 Project
-├── Theme (global design tokens)
+├── Style block (global design tokens)
 └── Screens
     ├── Stack/Grid/Split/Panel/Card
     │   ├── Components
@@ -148,17 +148,17 @@ Project
 
 | Category | Components | Use Case |
 |----------|-----------|----------|
-| **Text** | Heading, Text, Paragraph, Label | Content display |
+| **Text** | Heading, Text, Label | Content display |
 | **Input** | Input, Textarea, Select, Checkbox, Radio, Toggle | Form inputs |
 | **Button** | Button, IconButton | Actions |
-| **Navigation** | Topbar, SidebarMenu, Breadcrumbs, Tabs | Navigation |
+| **Navigation** | Topbar, SidebarMenu, Sidebar, Breadcrumbs, Tabs | Navigation |
 | **Data** | Table, List | Data display |
-| **Media** | Image, Icon, Avatar | Visual content |
-| **Display** | Divider, Badge, Link, Alert | Visual elements |
-| **Info** | StatCard, Code, ChartPlaceholder | Information |
-| **Feedback** | Modal, Spinner | User feedback |
+| **Media** | Image, Icon | Visual content |
+| **Display** | Divider, Separate, Badge, Link, Alert | Visual elements |
+| **Overlay** | Modal | Dialog overlays |
+| **Info** | StatCard, Card, Code, Chart | Information placeholders |
 
-### Total: 23 Components
+### Total: 30 Components
 
 ---
 
@@ -176,13 +176,13 @@ Project
 
 ## Key Concepts
 
-### Theme System
+### Style System
 Defines visual consistency through tokens:
 - `density`: UI compactness (compact, normal, comfortable)
 - `spacing`: Default gaps (xs, sm, md, lg, xl)
-- `radius`: Border roundness (none, sm, md, lg)
-- `stroke`: Border width (thin, normal)
-- `font`: Typography (base, title, mono)
+- `radius`: Border roundness (none, sm, md, lg, full)
+- `stroke`: Border width (thin, normal, thick)
+- `font`: Typography scale (sm, base, lg)
 
 ### Component Properties
 Standard property types:
@@ -206,7 +206,7 @@ Common properties across containers:
 ### Project Definition
 ```
 project "Name" {
-  theme {
+  style {
     density: "normal"
     spacing: "md"
     radius: "md"
@@ -240,7 +240,7 @@ component Table columns: "Name,Email,Status" rows: 8
 ### Form Layout
 ```
 layout stack(direction: vertical, gap: md, padding: lg) {
-  component Heading title: "Form Title"
+  component Heading text: "Form Title"
   component Input label: "Field 1"
   component Input label: "Field 2"
   layout stack(direction: horizontal, gap: md) {
@@ -284,7 +284,7 @@ Focus on structure and layout, not aesthetic details.
 Build complex interfaces from simple, reusable elements.
 
 ### 3. Consistency
-Use theme tokens to ensure visual consistency across the project.
+Use style tokens to ensure visual consistency across the project.
 
 ### 4. Simplicity
 Minimal syntax with maximum expressiveness.
@@ -299,7 +299,7 @@ Property names match common UI terminology.
 **Required Elements**:
 - Every project must have at least one screen
 - Every screen must have exactly one root layout
-- Theme block is required at project level
+- Style block is optional at project level (defaults are applied when omitted)
 
 **Layout Rules**:
 - Stack: Multiple children
@@ -336,7 +336,7 @@ See [COMPONENTS-REFERENCE.md - Usage Patterns](COMPONENTS-REFERENCE.md#usage-pat
 
 **Property**: Configuration attribute of a component or container
 
-**Theme**: Collection of design tokens defining visual consistency
+**Style block**: Collection of design tokens defining visual consistency
 
 **Screen**: Complete page/view in the wireframe
 
@@ -365,14 +365,14 @@ A: Every screen must have exactly one root layout. Check nesting.
 
 ### Styling Issues
 
-**Q: Theme not being applied?**  
-A: Ensure theme block is at project level, not inside a screen.
+**Q: Style block not being applied?**  
+A: Ensure style block is at project level, not inside a screen.
 
 **Q: Spacing looks wrong?**  
-A: Theme defines default spacing. Explicit layout properties override it.
+A: `style.spacing` defines default spacing. Explicit layout properties override it.
 
 **Q: Colors not showing?**  
-A: Wire-DSL uses standard color tokens. See [Theme Guide](THEME-GUIDE.md).
+A: Wire-DSL uses standard color tokens. See [Config Guide](CONFIG-GUIDE.md).
 
 ---
 
@@ -383,9 +383,9 @@ Key documentation files:
 ```
 docs/
 ├── DSL-SYNTAX.md           # Main syntax reference
-├── COMPONENTS-REFERENCE.md    # All 23 components
+├── COMPONENTS-REFERENCE.md    # All components
 ├── CONTAINERS-REFERENCE.md    # All 5 container types
-├── THEME-GUIDE.md             # Theme system
+├── CONFIG-GUIDE.md       # Style system
 ├── DOCUMENTATION-INDEX.md     # This file
 └── examples/                  # Example files
     └── *.wire                 # Sample wireframes
@@ -398,7 +398,7 @@ docs/
 1. **Read** [DSL-SYNTAX.md](DSL-SYNTAX.md) for language syntax
 2. **Explore** [COMPONENTS-REFERENCE.md](COMPONENTS-REFERENCE.md) for available components
 3. **Learn** [CONTAINERS-REFERENCE.md](CONTAINERS-REFERENCE.md) for layout patterns
-4. **Discover** [THEME-GUIDE.md](THEME-GUIDE.md) for design consistency
+4. **Discover** [CONFIG-GUIDE.md](CONFIG-GUIDE.md) for design consistency
 5. **Create** your own wireframes!
 
 ---

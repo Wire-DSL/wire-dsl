@@ -123,9 +123,9 @@ export class SourceMapBuilder {
         // Only one project per file
         return 'project';
         
-      case 'theme':
-        // Only one theme per project
-        return 'theme';
+      case 'style':
+        // Only one style per project
+        return 'style';
         
       case 'mocks':
         // Only one mocks block per project

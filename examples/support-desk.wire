@@ -1,5 +1,5 @@
 project "Support Desk" {
-  theme {
+  style {
     density: "normal"
     spacing: "md"
     radius: "md"
@@ -19,25 +19,25 @@ project "Support Desk" {
           component Select label: "Agent" items: "All agents,John,Jane,Bob"
           component Divider
           component Badge text: "SLA 92%" variant: primary
-          component Alert type: "warning" message: "3 tickets near breach"
+          component Alert variant: "warning" text: "3 tickets near breach"
           component Checkbox label: "Only escalated"
         }
 
         layout stack(direction: vertical, gap: lg, padding: lg) {
-          component Tabs items: "Open,Pending,Closed" activeIndex: 0
+          component Tabs items: "Open,Pending,Closed" active: 0
 
-          component Alert type: "error" message: "SLA risk in EU region"
+          component Alert variant: "danger" text: "SLA risk in EU region"
 
           component Table columns: "ID,Subject,Requester,Priority,Updated" rows: 8
 
           layout stack(direction: vertical, gap: md) {
             component Divider
-            component Heading title: "Ticket activity"
+            component Heading text: "Ticket activity"
             component List items: "Assignment changed,Priority raised,Agent replied,Customer responded"
           }
 
           layout stack(direction: vertical, gap: sm, padding: md) {
-            component Heading title: "Reply"
+            component Heading text: "Reply"
             component Textarea label: "Response" placeholder: "Type an update for the customer..." rows: 4
             layout stack(direction: horizontal, gap: md) {
               component Button text: "Save draft"
@@ -49,3 +49,4 @@ project "Support Desk" {
     }
   }
 }
+

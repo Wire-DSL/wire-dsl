@@ -21,10 +21,10 @@ describe('WireDSL Parser', () => {
     expect(ast.screens[0].name).toBe('Main');
   });
 
-  it('should parse theme declarations', () => {
+  it('should parse config declarations', () => {
     const input = `
       project "Dashboard" {
-        theme {
+        style {
           density: "comfortable"
           spacing: "lg"
         }
@@ -39,7 +39,7 @@ describe('WireDSL Parser', () => {
 
     const ast = parseWireDSL(input);
 
-    expect(ast.theme).toEqual({
+    expect(ast.style).toEqual({
       density: 'comfortable',
       spacing: 'lg',
     });
@@ -136,6 +136,82 @@ describe('WireDSL Parser', () => {
     }
   });
 
+  it('should parse Heading level property', () => {
+    const input = `
+      project "HeadingLevel" {
+        screen Main {
+          layout stack {
+            component Heading text: "Page title" level: h1
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const heading = ast.screens[0].layout.children[0];
+
+    expect(heading.type).toBe('component');
+    if (heading.type === 'component') {
+      expect(heading.componentType).toBe('Heading');
+      expect(heading.props).toEqual({
+        text: 'Page title',
+        level: 'h1',
+      });
+    }
+  });
+
+  it('should parse Topbar icon/avatar/user/actions properties', () => {
+    const input = `
+      project "TopbarProps" {
+        screen Main {
+          layout stack {
+            component Topbar title: "Dashboard" subtitle: "Overview" icon: "menu" actions: "Help,Logout" user: "john_doe" avatar: true
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const topbar = ast.screens[0].layout.children[0];
+
+    expect(topbar.type).toBe('component');
+    if (topbar.type === 'component') {
+      expect(topbar.componentType).toBe('Topbar');
+      expect(topbar.props).toEqual({
+        title: 'Dashboard',
+        subtitle: 'Overview',
+        icon: 'menu',
+        actions: 'Help,Logout',
+        user: 'john_doe',
+        avatar: 'true',
+      });
+    }
+  });
+
+  it('should parse Heading spacing property', () => {
+    const input = `
+      project "HeadingSpacing" {
+        screen Main {
+          layout stack {
+            component Heading text: "Card title" spacing: sm
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const heading = ast.screens[0].layout.children[0];
+
+    expect(heading.type).toBe('component');
+    if (heading.type === 'component') {
+      expect(heading.componentType).toBe('Heading');
+      expect(heading.props).toEqual({
+        text: 'Card title',
+        spacing: 'sm',
+      });
+    }
+  });
+
   it('should parse numeric values', () => {
     const input = `
       project "Numbers" {
@@ -157,6 +233,30 @@ describe('WireDSL Parser', () => {
     if (component.type === 'component') {
       expect(component.props.height).toBe(300);
       expect(component.props.width).toBe(600);
+    }
+  });
+
+  it('should parse Chart component with type and height', () => {
+    const input = `
+      project "Chart" {
+        screen Main {
+          layout stack {
+            component Chart type: "pie" height: 240
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const component = ast.screens[0].layout.children[0];
+
+    expect(component.type).toBe('component');
+    if (component.type === 'component') {
+      expect(component.componentType).toBe('Chart');
+      expect(component.props).toEqual({
+        type: 'pie',
+        height: 240,
+      });
     }
   });
 
@@ -198,7 +298,7 @@ describe('WireDSL Parser', () => {
   it('should parse complete example', () => {
     const input = `
       project "Simple Dashboard" {
-        theme {
+        style {
           density: "comfortable"
           spacing: "lg"
         }
@@ -238,7 +338,7 @@ describe('WireDSL Parser', () => {
     const ast = parseWireDSL(input);
 
     expect(ast.name).toBe('Simple Dashboard');
-    expect(ast.theme).toEqual({
+    expect(ast.style).toEqual({
       density: 'comfortable',
       spacing: 'lg',
     });
@@ -539,6 +639,24 @@ describe('WireDSL Parser', () => {
     });
   });
 
+  it('should reject singular color block alias', () => {
+    const input = `
+      project "ColorAliasProject" {
+        color {
+          primary: #00FF00
+        }
+
+        screen Main {
+          layout stack {
+            component Button text: "Save" variant: primary
+          }
+        }
+      }
+    `;
+
+    expect(() => parseWireDSL(input)).toThrow();
+  });
+
   it('should parse Checkbox and Toggle components', () => {
     const input = `
       project "InputControls" {
@@ -622,6 +740,31 @@ describe('WireDSL Parser', () => {
     }
   });
 
+  it('should parse Image icon property when placeholder is icon', () => {
+    const input = `
+      project "IconImage" {
+        screen Main {
+          layout stack {
+            component Image placeholder: "icon" icon: "search" height: 120
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const image = ast.screens[0].layout.children[0];
+
+    expect(image.type).toBe('component');
+    if (image.type === 'component') {
+      expect(image.componentType).toBe('Image');
+      expect(image.props).toEqual({
+        placeholder: 'icon',
+        icon: 'search',
+        height: 120,
+      });
+    }
+  });
+
   it('should parse panel layout', () => {
     const input = `
       project "Panels" {
@@ -651,4 +794,3 @@ describe('WireDSL Parser', () => {
     }
   });
 });
-
