@@ -16,7 +16,7 @@ project "Mobile Wireframe Demo" {
       component Button text: "Get Started" variant: primary
       component Button text: "Learn More" variant: secondary
 
-      component Image src: "hero.jpg" aspectRatio: landscape
+      component Image placeholder: "landscape"
 
       component Heading text: "Features" level: h2
 
@@ -46,7 +46,7 @@ project "Mobile Wireframe Demo" {
   screen Details {
     layout stack(direction: vertical, gap: md, padding: md) {
       component Heading text: "Product Details"
-      component Image src: "product.jpg" aspectRatio: square
+      component Image placeholder: "square"
       component Heading text: "Description" level: h2
       component Text content: "This is a detailed view optimized for mobile screens. All content flows naturally in a single column."
       component Button text: "Add to Cart" variant: primary
@@ -54,3 +54,4 @@ project "Mobile Wireframe Demo" {
     }
   }
 }
+

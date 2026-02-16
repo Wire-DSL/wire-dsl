@@ -189,9 +189,9 @@ project "Wire-DSL Complete Components Catalog" {
         component Heading text: "Tabs Interface" level: h3
         component Text content: "Tabbed content panels with active tab highlighting"
 
-        component Tabs items: "Overview,Details,Comments,History" activeIndex: 0
-        component Tabs items: "Profile,Settings,Privacy,Security,Notifications" activeIndex: 2
-        component Tabs items: "Dashboard,Analytics,Reports" activeIndex: 1
+        component Tabs items: "Overview,Details,Comments,History" active: 0
+        component Tabs items: "Profile,Settings,Privacy,Security,Notifications" active: 2
+        component Tabs items: "Dashboard,Analytics,Reports" active: 1
       }
 
       component Divider
@@ -241,31 +241,31 @@ project "Wire-DSL Complete Components Catalog" {
         layout grid(columns: 5, gap: md) {
           cell span: 1 {
             layout stack(direction: vertical, gap: xs) {
-              component Image src: "square.jpg" aspectRatio: square
+              component Image placeholder: "square"
               component Label text: "Square (1:1)"
             }
           }
           cell span: 1 {
             layout stack(direction: vertical, gap: xs) {
-              component Image src: "landscape.jpg" aspectRatio: landscape
+              component Image placeholder: "landscape"
               component Label text: "Landscape (16:9)"
             }
           }
           cell span: 1 {
             layout stack(direction: vertical, gap: xs) {
-              component Image src: "portrait.jpg" aspectRatio: portrait
+              component Image placeholder: "portrait"
               component Label text: "Portrait (2:3)"
             }
           }
           cell span: 1 {
             layout stack(direction: vertical, gap: xs) {
-              component Image src: "avatar.jpg" aspectRatio: avatar
-              component Label text: "Avatar (1:1)"
+              component Image placeholder: "avatar"
+              component Label text: "Square (1:1)"
             }
           }
           cell span: 1 {
             layout stack(direction: vertical, gap: xs) {
-              component Image src: "icon.jpg" aspectRatio: icon
+              component Image placeholder: "icon"
               component Label text: "Icon (1:1)"
             }
           }
@@ -277,16 +277,16 @@ project "Wire-DSL Complete Components Catalog" {
         component Text content: "Inline icon glyphs for UI elements"
 
         layout stack(direction: horizontal, gap: md, justify: left) {
-          component Icon name: "search"
-          component Icon name: "settings"
-          component Icon name: "user"
-          component Icon name: "heart"
-          component Icon name: "star"
-          component Icon name: "bell"
-          component Icon name: "mail"
-          component Icon name: "calendar"
-          component Icon name: "download"
-          component Icon name: "upload"
+          component Icon type: "search"
+          component Icon type: "settings"
+          component Icon type: "user"
+          component Icon type: "heart"
+          component Icon type: "star"
+          component Icon type: "bell"
+          component Icon type: "mail"
+          component Icon type: "calendar"
+          component Icon type: "download"
+          component Icon type: "upload"
         }
       }
 
@@ -349,7 +349,11 @@ project "Wire-DSL Complete Components Catalog" {
 
         layout grid(columns: 4, gap: md) {
           cell span: 1 {
-            component StatCard title: "Total Users" value: "12,345"
+            component StatCard
+              title: "Total Users"
+              value: "12,345"
+              caption: "Active in last 30 days"
+              icon: "user"
           }
           cell span: 1 {
             component StatCard title: "Revenue (MTD)" value: "$89,012"
@@ -427,9 +431,9 @@ project "Wire-DSL Complete Components Catalog" {
       layout stack(direction: vertical, gap: md, padding: md) {
         component Heading text: "Modal Dialogs" level: h3
 
-        // component Modal title: "Confirm Action" content: "Are you sure you want to proceed with this action? This operation will affect multiple records."
-        // component Modal title: "Delete User" content: "This action cannot be undone. The user account and all associated data will be permanently deleted from the system."
-        // component Modal title: "Operation Successful" content: "Your changes have been saved successfully and are now active in the production environment."
+        // component Modal title: "Confirm Action"
+        // component Modal title: "Delete User"
+        // component Modal title: "Operation Successful"
       }
 
       component Divider
@@ -767,3 +771,4 @@ project "Wire-DSL Complete Components Catalog" {
     }
   }
 }
+

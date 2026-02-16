@@ -53,7 +53,7 @@ Transforms raw `.wire` text into an Abstract Syntax Tree (AST).
 Converts AST to an Intermediate Representation (IR) - the normalized, validated format.
 
 **Responsibilities**:
-- Apply theme tokens and defaults
+- Apply style tokens and defaults
 - Semantic validation using Zod schemas
 - Component composition expansion
 - Cycle detection in custom components
@@ -66,7 +66,7 @@ Converts AST to an Intermediate Representation (IR) - the normalized, validated 
 - Stable, version-controlled schema
 - Complete information for rendering
 - Validation errors with helpful messages
-- Theme values applied throughout
+-  values applied throughout
 
 ---
 
@@ -197,7 +197,7 @@ Here's how a simple login form flows through the system:
 ### 1. Input DSL
 ```wire
 project "Login" {
-  config { density: "normal", spacing: "md", ... }
+  style { density: "normal", spacing: "md", ... }
   screen LoginScreen {
     layout stack(direction: vertical, gap: md) {
       component Heading text: "Sign In"
@@ -213,7 +213,7 @@ project "Login" {
 {
   type: "Project",
   name: "Login",
-  theme: { density: "normal", ... },
+  style: { density: "normal", ... },
   screens: [{
     type: "Screen",
     name: "LoginScreen",
@@ -238,7 +238,7 @@ project "Login" {
   "project": {
     "id": "proj_login",
     "name": "Login",
-    "theme": {
+    "style": {
       "density": "normal",
       "spacing": 16,
       "radius": 4,

@@ -11,7 +11,7 @@ Every `.wire` file has this basic structure:
 
 ```wire
 project "Project Name" {
-  config {
+  style {
     density: "normal"
     spacing: "md"
     radius: "md"
@@ -35,7 +35,7 @@ Defines the complete wireframe project.
 
 ```wire
 project "Admin Dashboard" {
-  config { ... }
+  style { ... }
   screen UsersList { ... }
   screen UserDetail { ... }
 }
@@ -43,17 +43,17 @@ project "Admin Dashboard" {
 
 **Properties**:
 - `name`: Project name (string, required)
-- `theme`: Design tokens configuration (highly recommended)
+- `style`: Design tokens configuration (highly recommended)
 
 ---
 
-### Theme Block
+### Style Block
 
 Configures design tokens for visual consistency across the entire project.
 
 ```wire
 project "App" {
-  config {
+  style {
     density: "normal"
     spacing: "md"
     radius: "md"
@@ -64,15 +64,15 @@ project "App" {
 }
 ```
 
-**Theme Properties**:
+**Style Properties**:
 
 | Property | Options | Default | Impact |
 |----------|---------|---------|--------|
 | `density` | `"compact"`, `"normal"`, `"comfortable"` | `"normal"` | UI element sizing |
 | `spacing` | `"xs"`, `"sm"`, `"md"`, `"lg"`, `"xl"` | `"md"` | Default layout gaps |
-| `radius` | `"none"`, `"sm"`, `"md"`, `"lg"` | `"md"` | Border radius |
-| `stroke` | `"thin"`, `"normal"` | `"normal"` | Border width |
-| `font` | `"base"`, `"title"`, `"mono"` | `"base"` | Typography style |
+| `radius` | `"none"`, `"sm"`, `"md"`, `"lg"`, `"full"` | `"md"` | Border radius |
+| `stroke` | `"thin"`, `"normal"`, `"thick"` | `"normal"` | Border width |
+| `font` | `"sm"`, `"base"`, `"lg"` | `"base"` | Typography scale |
 
 **Spacing Values**:
 - `"xs"`: 4px
@@ -157,7 +157,7 @@ layout stack(direction: horizontal, gap: md, align: "right") {
 ```
 <!-- wire-preview:end -->
 
-⚠️ **Note**: Layouts without explicit padding default to **0px** (no inheritance from project theme).
+⚠️ **Note**: Layouts without explicit padding default to **0px** (no inheritance from project style).
 
 ---
 
@@ -255,7 +255,7 @@ Wire-DSL supports two types of comments:
 // This is a line comment
 project "My App" {
   // Comments can appear anywhere
-  config { ... }
+  style { ... }
 }
 ```
 
@@ -366,7 +366,7 @@ Properties use `key: value` syntax:
 <!-- wire-preview:start -->
 ```wire
 project "Admin Dashboard" {
-  config {
+  style {
     density: "normal"
     spacing: "md"
     radius: "md"
@@ -420,7 +420,7 @@ project "Admin Dashboard" {
         }
       }
 
-      component Tabs items: "Permissions,Sessions,Activity" activeIndex: 0
+      component Tabs items: "Permissions,Sessions,Activity" active: 0
     }
   }
 }
@@ -446,7 +446,7 @@ project "Admin Dashboard" {
 
 1. **Wireframing First**: Focus on structure and layout, not aesthetics
 2. **Composability**: Build complex layouts from simple, reusable containers
-3. **Consistency**: Use theme tokens for unified appearance
+3. **Consistency**: Use style tokens for unified appearance
 4. **Simplicity**: Minimal syntax with maximum expressiveness
 5. **Clarity**: Property names match common UI terminology
 
@@ -456,4 +456,4 @@ project "Admin Dashboard" {
 
 - [All Component Types](./components.md)
 - [Containers & Layouts](./containers.md)
-- [Theme Configuration](./theming.md)
+- [Configuration](./configuration.md)

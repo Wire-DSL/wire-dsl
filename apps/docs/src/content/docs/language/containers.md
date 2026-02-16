@@ -129,7 +129,7 @@ The `align` property controls how children are distributed horizontally in `dire
 
 ### Important Notes
 
-⚠️ **Padding Inheritance**: Stacks without explicit padding have **0px padding by default** (no inheritance from project theme)
+⚠️ **Padding Inheritance**: Stacks without explicit padding have **0px padding by default** (no inheritance from project style)
 
 ⚠️ **Align in Horizontal Stacks Only**: The `align` property only affects `direction: horizontal` stacks.
 
@@ -508,7 +508,7 @@ layout card(padding: md, gap: md, radius: md, border: true) {
 ✅ Use Panel for grouped content sections  
 ✅ Use Card for self-contained items  
 ✅ Limit nesting depth to 3-4 levels  
-✅ Use consistent spacing with theme tokens  
+✅ Use consistent spacing with style tokens  
 
 ### Don'ts
 
@@ -523,5 +523,5 @@ layout card(padding: md, gap: md, radius: md, border: true) {
 ## Next Steps
 
 - [All Components](./components.md)
-- [Theme Configuration](./theming.md)
+- [Configuration](./configuration.md)
 - [DSL Syntax](./syntax.md)

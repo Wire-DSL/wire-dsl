@@ -27,7 +27,7 @@ Instead of dragging components in a design tool, you write clean, readable code:
 <!-- wire-preview:start -->
 ```wire
 project "Login App" {
-  config { density: "comfortable" }
+  style { density: "comfortable" }
   
   screen LoginScreen {
     layout card(padding: lg, gap: md, radius: md, border: true) {
@@ -68,7 +68,7 @@ wire render myfile.wire output.svg
 ### Your First Wireframe
 ```wire
 project "Hello" {
-  config { density: "normal" spacing: "md" }
+  style { density: "normal" spacing: "md" }
   
   screen Home {
     layout stack(padding: lg) {
@@ -94,7 +94,7 @@ project "Hello" {
 - Complete DSL syntax
 - All components
 - Layout containers
-- Theme system
+- Style system
 - Icons & styling
 
 ### 🏗️ [Architecture](./architecture/overview)
@@ -132,9 +132,8 @@ project "Hello" {
 | **Data** | Table, List |
 | **Media** | Image, Icon |
 | **Display** | Divider, Separate, Badge, Link, Alert |
-| **Information** | StatCard, Code, Chart |
+| **Information** | StatCard, Card, Code, Chart |
 | **Modal & Overlay** | Modal |
-| **Loading & Feedback** | Spinner |
 
 ---
 
@@ -171,7 +170,7 @@ layout card(padding: lg, gap: md, radius: md, border: true) {
 
 ### 🎨 Design Systems
 ```wire
-config {
+style {
   density: "comfortable"
   spacing: "lg"
   radius: "lg"
@@ -187,7 +186,7 @@ config {
 ### Web Editor
 - Live preview while coding
 - Component reference
-- Theme editor
+-  editor
 - No installation needed
 
 ### CLI
@@ -244,7 +243,7 @@ screens/
 ### Intermediate (2-3 hours)
 1. [Components Reference](./language/components) – 1 hour
 2. [Containers Guide](./language/containers) – 45 min
-3. [Theming](./language/theming) – 45 min
+3. [Configuration](./language/configuration) – 45 min
 4. [Examples](./examples) – 1 hour
 
 ### Advanced (3-5 hours)
@@ -293,7 +292,7 @@ screens/
 Wire-DSL is actively developed. Current status:
 
 - ✅ Phase 1: Core DSL and rendering (complete)
-- ✅ Phase 2: Theme system and design tokens (complete)
+- ✅ Phase 2: Style system and design tokens (complete)
 - ✅ Phase 3: VS Code Extension (complete)
 - 🚀 Phase 4: Source Maps & Debugging (in progress)
 

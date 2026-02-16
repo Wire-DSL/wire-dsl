@@ -54,7 +54,7 @@ Visit **[https://live.wire-dsl.org](https://live.wire-dsl.org)** to start coding
 <!-- wire-preview:start -->
 ```wire
 project "My Wireframe" {
-  config {
+  style {
     density: "normal"
     spacing: "md"
     radius: "md"
@@ -87,11 +87,11 @@ project "My Wireframe" {
 - If there are errors, they appear in the preview area with details
 - Use the screens dropdown to navigate between multiple screens
 
-### 4. Adjust Theme & Layout
+### 4. Adjust  & Layout
 
-**Change Theme**:
+**Change **:
 ```wire
-config {
+style {
   density: "comfortable"     // Options: compact, normal, comfortable
   spacing: "lg"              // Options: xs, sm, md, lg, xl
   radius: "lg"               // Options: none, sm, md, lg
@@ -151,7 +151,7 @@ Create complex projects with multiple screens:
 
 ```wire
 project "Multi-Screen App" {
-  config { ... }
+  style { ... }
   
   screen LoginScreen {
     layout card { ... }
@@ -175,9 +175,9 @@ Quickly test design variations:
 
 ```wire
 // Test with different density levels
-config { density: "compact" }   // Tight layout
-config { density: "normal" }    // Balanced (default)
-config { density: "comfortable" }  // Spacious
+style { density: "compact" }   // Tight layout
+style { density: "normal" }    // Balanced (default)
+style { density: "comfortable" }  // Spacious
 ```
 
 Just change and watch the preview update.
@@ -191,7 +191,7 @@ Define reusable components:
 project "Component Composition" {
 	define Component "UserCard" {
 		layout card(padding: md, gap: sm) {
-			component Image image: "user.png"
+			component Image placeholder: "avatar" height: 96
 			component Heading text: "User Name"
 			component Text content: "user@example.com"
 		}
@@ -299,11 +299,11 @@ Error: Button requires property "text"
 ```
 Solution: Add all required properties. Check [Components Reference](../language/components.md) for requirements.
 
-**Invalid theme value**:
+**Invalid  value**:
 ```
 Error: density must be "compact", "normal", or "comfortable"
 ```
-Solution: Use only valid theme values.
+Solution: Use only valid  values.
 
 **Mismatched brackets**:
 ```
@@ -335,7 +335,7 @@ Solution: Count opening and closing braces `{` `}`.
 2. **Use Grid instead of Stack** – For responsive multi-column layouts
 3. **Reuse components** – Define once, use many times with `component YourCustomComponent`
 4. **Keep files focused** – One major feature per file
-5. **Use consistent theme** – Define once at project level
+5. **Use consistent ** – Define once at project level
 
 ## Keyboard Shortcuts
 

@@ -14,7 +14,7 @@ The `Icon` component renders a simple icon display.
 | Property | Type | Default | Description |
 |----------|------|---------|-------------|
 | `type` | string | `help-circle` | Icon name from Feather Icons library |
-| `color` | string | (theme text color) | SVG stroke color |
+| `color` | string | ( text color) | SVG stroke color |
 
 ### Usage
 
@@ -122,7 +122,7 @@ For a full reference of all available icons, visit the [Feather Icons Gallery](h
 <!-- wire-preview:start -->
 ```wire
 project "Icon Gallery" {
-  config {
+  style {
     density: "normal"
     spacing: "md"
     radius: "md"
@@ -555,7 +555,7 @@ project "Icon Gallery" {
 - **Icons** scale to fit their container while maintaining aspect ratio
 - **IconButtons** are square buttons (equal width and height)
 - Colors are determined by:
-  - For `Icon`: the theme's text color (or explicit `color` property)
+  - For `Icon`: the 's text color (or explicit `color` property)
   - For `IconButton`: the variant selected (default/primary/danger)
 - **Disabled** state reduces opacity to 0.5 (visual feedback)
 

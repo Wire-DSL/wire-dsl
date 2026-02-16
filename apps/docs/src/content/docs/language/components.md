@@ -184,9 +184,10 @@ Clickable action button.
 
 **Properties**:
 - `text` (string): Button label
-- `variant` (string): Visual style - `primary` | `secondary` | `success` | `warning` | `danger` | `info` (default: `primary`)
+- `variant` (string): Visual style - `default` | `primary` | `secondary` | `success` | `warning` | `danger` | `info` (default: `default`)
 
 **Variants**:
+- `default`: Neutral button style
 - `primary`: Prominent filled button (usually blue)
 - `secondary`: Neutral action
 - `success`: Positive action
@@ -211,12 +212,15 @@ Button with icon instead of text.
 
 **Properties**:
 - `icon` (string): Icon name (e.g., "search", "menu", "close")
+- `size` (enum): `sm` | `md` | `lg` (default: `md`)
+- `variant` (enum): `default` | `primary` | `secondary` | `success` | `warning` | `danger` | `info`
+- `disabled` (boolean): disabled state (`true` | `false`, default: `false`)
 
 **Example**:
 ```wire
-component IconButton icon: "search"
-component IconButton icon: "menu"
-component IconButton icon: "settings"
+component IconButton icon: "search" size: sm variant: default
+component IconButton icon: "menu" size: md variant: primary
+component IconButton icon: "settings" size: lg variant: info disabled: true
 ```
 
 **Rendering**: Square button containing icon symbol
@@ -308,12 +312,12 @@ Tabbed interface with multiple panels.
 
 **Properties**:
 - `items` (string, CSV): Tab labels
-- `activeIndex` (number): Index of active tab (default: 0)
+- `active` (number): Index of active tab (default: 0)
 
 **Example**:
 ```wire
-component Tabs items: "Overview,Details,Comments" activeIndex: 0
-component Tabs items: "Profile,Settings,Privacy,Security" activeIndex: 1
+component Tabs items: "Overview,Details,Comments" active: 0
+component Tabs items: "Profile,Settings,Privacy,Security" active: 1
 ```
 
 **Rendering**: Horizontal tabs with one highlighted as active
@@ -377,9 +381,8 @@ component List title: "Cities" itemsMock: 5 mock: "city" random: true
 Placeholder for image content.
 
 **Properties**:
-- `placeholder` (string): Shape - `square` | `landscape` | `portrait` | `avatar` | `circle`
+- `placeholder` (string): Shape - `square` | `landscape` | `portrait` | `avatar` | `icon`
 - `height` (number, optional): Height in pixels (default: 200)
-- `src` (string, optional): Image source URL
 
 **Example**:
 ```wire
@@ -397,13 +400,14 @@ component Image placeholder: "avatar" height: 100
 Icon symbol.
 
 **Properties**:
-- `name` (string): Icon identifier (e.g., "search", "star", "heart")
+- `type` (string): Icon identifier (e.g., "search", "star", "heart")
+- `size` (enum): `sm` | `md` | `lg` (default: `md`)
 
 **Example**:
 ```wire
-component Icon name: "search"
-component Icon name: "settings"
-component Icon name: "download"
+component Icon type: "search"
+component Icon type: "settings"
+component Icon type: "download"
 ```
 
 **Rendering**: Small icon symbol inline with text
@@ -451,7 +455,7 @@ Small label/tag for status or categorization.
 
 **Properties**:
 - `text` (string): Badge label
-- `variant` (string): Style - `primary` | `secondary` | `success` | `warning` | `danger` | `info` (default: `primary`)
+- `variant` (string): Style - `default` | `primary` | `secondary` | `success` | `warning` | `danger` | `info` (default: `default`)
 
 **Example**:
 ```wire
@@ -526,6 +530,24 @@ component StatCard title: "Growth" value: "+12.5%" icon: "trending-up"
 
 ---
 
+### Card
+
+Generic content card placeholder component.
+
+**Properties**:
+- `title` (string): Card title
+- `text` (string): Card text content
+
+**Example**:
+```wire
+component Card title: "Plan" text: "Summary details"
+component Card title: "Profile" text: "Account information"
+```
+
+**Rendering**: Generic bordered placeholder block
+
+---
+
 ### Code
 
 Code block display.
@@ -551,6 +573,7 @@ Placeholder for various chart types.
 **Properties**:
 - `type` (string): Chart type - `bar` | `line` | `pie` | `area` (default: `bar`)
 - `height` (number): Height in pixels (default: 200)
+- `ChartPlaceholder`: backward-compatible alias of `Chart`
 
 **Example**:
 ```wire
@@ -571,33 +594,14 @@ Modal dialog box.
 
 **Properties**:
 - `title` (string): Modal title
-- `content` (string): Modal content
 
 **Example**:
 ```wire
-component Modal title: "Confirm Action" content: "Are you sure you want to continue?"
-component Modal title: "Delete User" content: "This action cannot be undone"
+component Modal title: "Confirm Action"
+component Modal title: "Delete User"
 ```
 
-**Rendering**: Centered overlay dialog with title and content
-
----
-
-## Loading & Feedback
-
-### Spinner
-
-Loading spinner animation.
-
-**Properties**:
-- None required
-
-**Example**:
-```wire
-component Spinner
-```
-
-**Rendering**: Animated circular loading indicator
+**Rendering**: Centered overlay dialog with title and generic content placeholder
 
 ---
 
@@ -631,10 +635,10 @@ component Spinner
 | Link | Display | Underlined action |
 | Alert | Display | Alert message |
 | StatCard | Info | Metric display |
+| Card | Info | Generic content card |
 | Code | Info | Code block |
 | Chart | Info | Chart area |
 | Modal | Overlay | Dialog box |
-| Spinner | Feedback | Loading indicator |
 
 **Total: 30 Components**
 
@@ -643,5 +647,5 @@ component Spinner
 ## Next Steps
 
 - [Containers & Layouts](./containers.md)
-- [Theme Configuration](./theming.md)
+- [Configuration](./configuration.md)
 - [DSL Syntax](./syntax.md)

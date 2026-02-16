@@ -159,13 +159,13 @@ project "Complete Components Catalog" {
       }
 
       layout stack(direction: vertical, gap: sm, padding: md) {
-        component Text content: "Tabs - Tabbed interface (activeIndex: 0)"
-        component Tabs items: "Overview,Details,Comments,Settings" activeIndex: 0
+        component Text content: "Tabs - Tabbed interface (active: 0)"
+        component Tabs items: "Overview,Details,Comments,Settings" active: 0
       }
 
       layout stack(direction: vertical, gap: sm, padding: md) {
-        component Text content: "Tabs - Different active tab (activeIndex: 2)"
-        component Tabs items: "Profile,Security,Notifications,Privacy" activeIndex: 2
+        component Text content: "Tabs - Different active tab (active: 2)"
+        component Tabs items: "Profile,Security,Notifications,Privacy" active: 2
       }
 
       component Divider
@@ -228,11 +228,11 @@ project "Complete Components Catalog" {
 
       layout stack(direction: horizontal, gap: md, padding: md) {
         component Text content: "Icons:"
-        component Icon name: "search"
-        component Icon name: "settings"
-        component Icon name: "download"
-        component Icon name: "star"
-        component Icon name: "heart"
+        component Icon type: "search"
+        component Icon type: "settings"
+        component Icon type: "download"
+        component Icon type: "star"
+        component Icon type: "heart"
       }
 
       layout stack(direction: vertical, gap: sm, padding: md) {
@@ -360,8 +360,8 @@ project "Complete Components Catalog" {
       component Text content: "Elements for user feedback and modals"
 
       layout stack(direction: vertical, gap: sm, padding: md) {
-        component Text content: "Spinner - Loading indicator"
-        // component Spinner
+        component Text content: "Modal - Overlay dialog"
+        component Modal title: "Confirm"
       }
 
       component Divider
@@ -369,3 +369,4 @@ project "Complete Components Catalog" {
     }
   }
 }
+

@@ -13,7 +13,7 @@ Every `.wire` file has this structure:
 
 ```wire
 project "ProjectName" {
-  config {
+  style {
     density: "normal"
     spacing: "md"
     radius: "md"
@@ -36,7 +36,7 @@ Create a file called `login.wire` and add the following:
 <!-- wire-preview:start -->
 ```wire
 project "Login App" {
-  config {
+  style {
     density: "comfortable"
     spacing: "lg"
     radius: "md"
@@ -95,10 +95,10 @@ project "Login App" { ... }
 
 Defines the wireframe name. This is required and appears in the output.
 
-### 2. Theme Block
+### 2.  Block
 
 ```wire
-config {
+style {
   density: "comfortable"
   spacing: "lg"
   radius: "md"

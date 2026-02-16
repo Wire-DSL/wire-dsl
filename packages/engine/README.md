@@ -16,7 +16,7 @@ import { parseWire, generateIR, computeLayout } from '@wire-dsl/engine';
 // Parse .wire DSL file
 const ast = parseWire(`
   project "MyWireframe" {
-    theme {
+    style {
       density: "normal"
       spacing: "md"
       radius: "md"

@@ -53,8 +53,8 @@ Wire-DSL is actively maintained with a clear evolution path. This roadmap descri
   - Data: Table, List
   - Media: Image, Icon
   - Display: Divider, Separate, Badge, Link, Alert
-  - Info: StatCard, Code, Chart
-  - Feedback: Modal, Spinner
+  - Info: StatCard, Card, Code, Chart
+  - Overlay: Modal
 
 **Renderer**
 - ✅ SVG/PDF rendering
@@ -78,21 +78,21 @@ Wire-DSL is actively maintained with a clear evolution path. This roadmap descri
 
 ---
 
-## Phase 2: Theme System & Design Tokens
+## Phase 2:  System & Design Tokens
 
 **Status**: Completed ✅
 
-**Goal**: Implement theme tokens for visual consistency.
+**Goal**: Implement style tokens for visual consistency.
 
 **Status**: Fully implemented and integrated.
 
 ### Deliverables
 
-**Theme System**
-- ✅ Theme block configuration
-- ✅ Theme properties: density, spacing, radius, stroke, font
-- ✅ Component styling based on theme
-- ✅ Theme inheritance and defaults
+** System**
+- ✅ Style block configuration
+- ✅  properties: density, spacing, radius, stroke, font
+- ✅ Component styling based on 
+- ✅  inheritance and defaults
 
 **Design System Presets**
 - ✅ Modern Minimalist
@@ -101,7 +101,7 @@ Wire-DSL is actively maintained with a clear evolution path. This roadmap descri
 - ✅ Professional Enterprise
 
 **Documentation & Examples**
-- ✅ Theme configuration guide
+- ✅ Style configuration guide
 - ✅ Complete component library reference
 - ✅ 18+ example wireframes
 - ✅ Component catalog showcase
@@ -182,7 +182,7 @@ The following features are planned and will be prioritized based on community fe
 - ✅ Layout calculations (stack, grid, split, panel, card)
 - ✅ SVG/PDF rendering
 - ✅ Component composition (define/reuse)
-- ✅ Theme system with design tokens
+- ✅ Style system with design tokens
 - ✅ 21 built-in components
 - ✅ Component validation (cycles, undefined references)
 - ✅ CLI with render/validate commands

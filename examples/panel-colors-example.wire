@@ -1,5 +1,5 @@
 project "Panel with Colors" {
-  config {
+  style {
     density: "comfortable"
     spacing: "md"
     radius: "md"
@@ -41,7 +41,7 @@ project "Panel with Colors" {
 
       layout panel(padding: md, background: "white") {
         layout card(padding: md, gap: md) {
-          component Heading title: "Another Card"
+          component Heading text: "Another Card"
           component Text content: "More content"
         }
       }
@@ -50,13 +50,13 @@ project "Panel with Colors" {
         layout grid(columns: 12, gap: md) {
           cell span: 6 {
             layout card(padding: md, gap: md) {
-              component Heading title: "Left Column"
+              component Heading text: "Left Column"
               component Text content: "Left content"
             }
           }
           cell span: 6 {
             layout card(padding: md, gap: md) {
-              component Heading title: "Right Column"
+              component Heading text: "Right Column"
               component Text content: "Right content"
             }
           }

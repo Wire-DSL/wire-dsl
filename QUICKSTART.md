@@ -93,7 +93,7 @@ wire-dsl/
 │   ├── cli/           # Command-line tool
 │   └── web/           # React + Monaco live editor
 │
-├── docs/              # Documentation (architecture, syntax, theme, etc.)
+├── docs/              # Documentation (architecture, syntax, style, etc.)
 ├── specs/             # Technical specifications (IR, layout, validation)
 ├── examples/          # Example .wire files
 ├── .github/

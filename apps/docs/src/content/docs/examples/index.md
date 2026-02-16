@@ -40,9 +40,9 @@ Explore complete, working Wire-DSL examples. All examples are available in the `
 
 ### Themes
 
-- **[Theme Test](../../examples/theme-test.wire)** - Theme token variations
+- **[ Test](../../examples/-test.wire)** -  token variations
 - **[Topbar Test](../../examples/topbar-test.wire)** - Topbar component styling
-- **[Token Background Demo](../../examples/token-background-demo.wire)** - Theme token effects
+- **[Token Background Demo](../../examples/token-background-demo.wire)** -  token effects
 - **[Screen Background Demo](../../examples/screen-background-demo.wire)** - Background styling
 
 ### Advanced
@@ -165,7 +165,7 @@ All examples follow this structure:
 
 ```wire
 project "Example Name" {
-  config {
+  style {
     density: "normal"
     spacing: "md"
     radius: "md"
@@ -183,7 +183,7 @@ project "Example Name" {
 
 This ensures:
 - ✅ Valid Wire-DSL syntax
-- ✅ Complete theme configuration
+- ✅ Complete style configuration
 - ✅ Clear, readable code
 - ✅ Useful patterns and practices
 
@@ -193,7 +193,7 @@ This ensures:
 
 - **Copy & Customize**: Take an example and modify it
 - **Mix & Match**: Combine patterns from different examples
-- **Theme Variations**: Try different theme values
+- ** Variations**: Try different  values
 - **Test Layouts**: Experiment with different layout types
 - **Learn Components**: See how components are used in context
 
@@ -203,5 +203,5 @@ This ensures:
 
 - [Components Reference](../language/components.md)
 - [Containers & Layouts](../language/containers.md)
-- [Theme Configuration](../language/theming.md)
+- [Configuration](../language/configuration.md)
 - [Web Editor Guide](../getting-started/web-preview.md)

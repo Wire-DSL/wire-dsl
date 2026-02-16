@@ -149,7 +149,7 @@ The `align` property controls how children are distributed horizontally in `dire
 
 ### Important Notes
 
-⚠️ **Padding Inheritance**: Stacks without explicit padding have **0px padding by default** (no inheritance from project theme)
+⚠️ **Padding Inheritance**: Stacks without explicit padding have **0px padding by default** (no inheritance from project style)
 
 ⚠️ **Align in Horizontal Stacks Only**: The `align` property only affects `direction: horizontal` stacks. For vertical stacks, use nested centered containers if needed.
 
@@ -494,7 +494,7 @@ layout card(padding: md, gap: md, radius: md, border: true) {
 **Feature Showcase**:
 ```
 layout card(padding: lg, gap: lg, radius: lg, border: false) {
-  component Icon name: "star"
+  component Icon type: "star"
   component Heading text: "Premium Features"
   component Text content: "Access all premium features with unlimited usage"
   component List items: "Unlimited projects,Team collaboration,Advanced exports,Priority support"
@@ -578,7 +578,7 @@ layout panel(padding: lg) {
 ✅ Use Panel for grouped content sections  
 ✅ Use Card for self-contained items  
 ✅ Limit nesting depth to 3-4 levels  
-✅ Use consistent spacing with theme tokens  
+✅ Use consistent spacing with style tokens  
 
 ### Don'ts ❌
 
@@ -635,4 +635,4 @@ layout split(sidebar: 260, gap: md)
 
 - [DSL-SYNTAX.md](DSL-SYNTAX.md) - Complete syntax reference
 - [COMPONENTS-REFERENCE.md](COMPONENTS-REFERENCE.md) - All component types
-- [THEME-GUIDE.md](THEME-GUIDE.md) - Theme configuration
+- [CONFIG-GUIDE.md](CONFIG-GUIDE.md) - Style configuration

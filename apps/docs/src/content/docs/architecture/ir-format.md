@@ -10,7 +10,7 @@ The **IR (Intermediate Representation)** is a stable, versioned JSON format that
 The IR transforms raw DSL into an unambiguous, renderable format:
 
 - **Input**: Parsed `.wire` file (AST)
-- **Processing**: Apply theme defaults, validate components, normalize values
+- **Processing**: Apply style defaults, validate components, normalize values
 - **Output**: Complete IR document ready for layout and rendering
 
 ## Key Characteristics
@@ -29,11 +29,11 @@ The IR transforms raw DSL into an unambiguous, renderable format:
   "project": {
     "id": "proj_dashboard",
     "name": "Admin Dashboard",
-    "theme": {
+    "style": {
       "density": "normal",
-      "spacing": 16,
-      "radius": 4,
-      "stroke": 2,
+      "spacing": "md",
+      "radius": "md",
+      "stroke": "normal",
       "font": "base"
     },
     "screens": [
@@ -64,19 +64,19 @@ The IR transforms raw DSL into an unambiguous, renderable format:
 |-------|------|----------|-------------|
 | `id` | string | Yes | Unique project identifier |
 | `name` | string | Yes | Human-readable name |
-| `theme` | object | No | Theme tokens (defaults applied if omitted) |
+| `style` | object | No | Style tokens (engine defaults applied if omitted) |
 | `screens` | array | Yes | Screen definitions (at least 1) |
 | `nodes` | object | Yes | All nodes referenced by screens |
 
-### Theme Object
+### Style Object
 
 | Field | Type | Values | Description |
 |-------|------|--------|-------------|
 | `density` | string | `compact`, `normal`, `comfortable` | UI compactness |
-| `spacing` | number | 4, 8, 16, 24, 32 | Base spacing in pixels |
-| `radius` | number | 0, 2, 4, 8 | Border radius in pixels |
-| `stroke` | number | 1, 2 | Border width in pixels |
-| `font` | string | `base`, `title`, `mono` | Typography family |
+| `spacing` | string | `xs`, `sm`, `md`, `lg`, `xl` | Base spacing token |
+| `radius` | string | `none`, `sm`, `md`, `lg`, `full` | Border radius token |
+| `stroke` | string | `thin`, `normal`, `thick` | Border width token |
+| `font` | string | `sm`, `base`, `lg` | Typography scale token |
 
 ### Screen Object
 
@@ -203,7 +203,7 @@ The IR transforms raw DSL into an unambiguous, renderable format:
   "properties": {
     "padding": 16,
     "gap": 16,
-    "radius": 4,
+    "radius": "md",
     "border": true
   },
   "children": [ ... ]
@@ -236,11 +236,11 @@ See [Components Reference](../language/components.md) for all property options.
   "project": {
     "id": "proj_login",
     "name": "Login",
-    "theme": {
+    "style": {
       "density": "normal",
-      "spacing": 16,
-      "radius": 4,
-      "stroke": 2,
+      "spacing": "md",
+      "radius": "md",
+      "stroke": "normal",
       "font": "base"
     },
     "screens": [{
@@ -308,7 +308,7 @@ See [Components Reference](../language/components.md) for all property options.
 
 All IR documents are validated against a Zod schema:
 
-- Theme properties must exist and have valid values
+-  properties must exist and have valid values
 - Screen viewports must be positive integers
 - All node references must exist in the nodes dictionary
 - All component properties must be valid for that component type

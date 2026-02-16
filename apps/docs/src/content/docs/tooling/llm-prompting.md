@@ -28,7 +28,7 @@ Every `.wire` file MUST have:
 
 ```wire
 project "ProjectName" {
-  config {
+  style {
     density: "normal"
     spacing: "md"
     radius: "md"
@@ -120,7 +120,7 @@ component Button text: "Click" variant: primary
 component IconButton icon: "search"
 ```
 
-**Button variants**: `primary`, `secondary`, `success`, `warning`, `danger`, `info`
+**Button variants**: `default`, `primary`, `secondary`, `success`, `warning`, `danger`, `info`
 
 ### Navigation (5)
 ```wire
@@ -128,7 +128,7 @@ component Topbar title: "Dashboard" subtitle: "Admin"
 component SidebarMenu items: "Home,Users,Settings" active: 0
 component Sidebar title: "Navigation" items: "Home,Profile,Settings"
 component Breadcrumbs items: "Home,Users,Detail"
-component Tabs items: "Profile,Settings,Privacy" activeIndex: 0
+component Tabs items: "Profile,Settings,Privacy" active: 0
 ```
 
 ### Data (2)
@@ -140,10 +140,10 @@ component List items: "Item 1,Item 2,Item 3"
 ### Media (2)
 ```wire
 component Image placeholder: "square" height: 250
-component Icon name: "search"
+component Icon type: "search"
 ```
 
-**Image placeholders**: `square`, `landscape`, `portrait`, `avatar`, `circle`
+**Image placeholders**: `square`, `landscape`, `portrait`, `avatar`, `icon`
 
 ### Display (5)
 ```wire
@@ -156,9 +156,10 @@ component Alert variant: "danger" title: "Error" text: "Error message"
 
 **Alert variants**: `primary`, `secondary`, `success`, `warning`, `danger`, `info`
 
-### Information (3)
+### Information (4)
 ```wire
 component StatCard title: "Users" value: "1,234"
+component Card title: "Plan" text: "Summary details"
 component Code code: "const x = 10;"
 component Chart type: "bar" height: 300
 ```
@@ -167,12 +168,7 @@ component Chart type: "bar" height: 300
 
 ### Modal & Overlay (1)
 ```wire
-component Modal title: "Confirm" content: "Are you sure?"
-```
-
-### Loading & Feedback (1)
-```wire
-component Spinner
+component Modal title: "Confirm"
 ```
 
 ---
@@ -256,7 +252,7 @@ layout card(padding: lg, gap: md, radius: md, border: true) {
 <!-- wire-preview:start -->
 ```wire
 project "Login" {
-  config {
+  style {
     density: "comfortable"
     spacing: "lg"
     radius: "md"
@@ -318,11 +314,11 @@ layout grid(columns: 12, gap: lg) {
 
 ---
 
-## Theme Presets
+## Style Presets
 
 ### Compact (Data-Dense)
 ```wire
-config {
+style {
   density: "compact"
   spacing: "sm"
   radius: "sm"
@@ -333,7 +329,7 @@ config {
 
 ### Normal (Balanced) – Most Common
 ```wire
-config {
+style {
   density: "normal"
   spacing: "md"
   radius: "md"
@@ -344,7 +340,7 @@ config {
 
 ### Comfortable (Accessible)
 ```wire
-config {
+style {
   density: "comfortable"
   spacing: "lg"
   radius: "lg"
@@ -360,8 +356,8 @@ config {
 Before returning generated code, verify:
 
 - ✅ Exactly one `project` block
-- ✅ Project has exactly one `theme` block with all 5 properties
-- ✅ All theme values are quoted strings
+- ✅ Use at most one `style` block at project level; omitted fields use defaults
+- ✅ All style token values are quoted strings
 - ✅ At least one `screen` defined
 - ✅ Each screen has exactly ONE root `layout`
 - ✅ All `screen` names are in `CamelCase`
@@ -384,7 +380,7 @@ Your response:
 <!-- wire-preview:start -->
 ````wire
 project "Login App" {
-  config {
+  style {
     density: "comfortable"
     spacing: "lg"
     radius: "md"

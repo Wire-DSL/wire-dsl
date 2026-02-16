@@ -4,7 +4,7 @@
 
 ```
 project "Project Name" {
-  config {
+  style {
     density: "normal"
     spacing: "md"
     radius: "md"
@@ -28,7 +28,7 @@ Defines the complete project.
 
 ```
 project "Admin Dashboard" {
-  config {
+  style {
     density: "normal"
     spacing: "md"
     radius: "md"
@@ -44,7 +44,7 @@ project "Admin Dashboard" {
 **Properties**:
 
 - `name`: Project name (string, required)
-- `theme`: Design tokens configuration (required)
+- `style`: Design tokens configuration (highly recommended)
 
 ---
 
@@ -54,7 +54,7 @@ Configures design tokens for visual consistency across the entire project.
 
 ```
 project "App" {
-  config {
+  style {
     density: "normal"
     spacing: "md"
     radius: "md"
@@ -65,13 +65,13 @@ project "App" {
 }
 ```
 
-**Theme Properties**:
+**Style Properties**:
 
 - `density`: Visual compactness (`"compact"` | `"normal"` | `"comfortable"`)
 - `spacing`: Default spacing unit (`"xs"` | `"sm"` | `"md"` | `"lg"` | `"xl"`)
-- `radius`: Border radius default (`"none"` | `"sm"` | `"md"` | `"lg"`)
-- `stroke`: Border width (`"thin"` | `"normal"`)
-- `font`: Typography base (`"base"` | `"title"` | `"mono"`)
+- `radius`: Border radius default (`"none"` | `"sm"` | `"md"` | `"lg"` | `"full"`)
+- `stroke`: Border width (`"thin"` | `"normal"` | `"thick"`)
+- `font`: Typography scale (`"sm"` | `"base"` | `"lg"`)
 
 **Spacing Values**:
 - `"xs"`: 4px
@@ -123,7 +123,7 @@ Stacks elements vertically or horizontally with configurable spacing and alignme
 
 ```
 layout stack(direction: vertical, gap: md, padding: lg) {
-  component Heading title: "Title"
+  component Heading text: "Title"
   component Button text: "Action"
 }
 ```
@@ -166,7 +166,7 @@ layout stack(direction: horizontal, gap: md, align: "center") {
 }
 ```
 
-**⚠️ Important**: Layouts without explicit padding default to **0px** (no inheritance from project theme).
+**⚠️ Important**: Layouts without explicit padding default to **0px** (no inheritance from project style).
 
 ---
 
@@ -233,7 +233,7 @@ Or with nested stack:
 ```
 layout panel(padding: lg) {
   layout stack(gap: md) {
-    component Heading title: "Panel Title"
+    component Heading text: "Panel Title"
     component Text content: "Panel body"
   }
 }
@@ -258,7 +258,7 @@ Flexible vertical container for grouping related content.
 ```
 layout card(padding: lg, gap: md, radius: md, border: true) {
   component Image placeholder: "landscape"
-  component Heading title: "Product Title"
+  component Heading text: "Product Title"
   component Text content: "Product description"
   component Button text: "Learn More"
 }
@@ -283,7 +283,7 @@ layout card(padding: lg, gap: md, radius: md, border: true) {
 ```
 layout card(padding: md, gap: md, radius: lg, border: true) {
   component Image placeholder: "square" height: 250
-  component Heading title: "Premium Item"
+  component Heading text: "Premium Item"
   component Text content: "High-quality product with excellent reviews"
   layout stack(direction: horizontal, gap: sm) {
     component Button text: "View Details"
@@ -297,7 +297,7 @@ layout card(padding: md, gap: md, radius: lg, border: true) {
 ```
 layout card(padding: lg, gap: md) {
   component Image placeholder: "avatar" height: 120
-  component Heading title: "John Doe"
+  component Heading text: "John Doe"
   component Text content: "john@example.com"
   component Divider
   component Text content: "Senior Software Engineer"
@@ -319,7 +319,7 @@ Wire DSL supports two types of comments:
 // This is a line comment
 project "My App" {
   // Comments can appear anywhere
-  config { ... }
+  style { ... }
 }
 ```
 
@@ -402,7 +402,7 @@ define Component "ButtonGroup" {
 }
 
 project "Form App" {
-  config { ... }
+  style { ... }
 
   screen LoginScreen {
     layout stack(direction: vertical, gap: lg, padding: xl) {
@@ -526,7 +526,7 @@ component Button text: "Click me" variant: primary
 | `Button` | `text`, `variant` | `component Button text: "Save" variant: primary` |
 | `IconButton` | `icon` | `component IconButton icon: "search"` |
 
-**Button Variants**: `primary` | `secondary` | `success` | `warning` | `danger` | `info`
+**Button Variants**: `default` | `primary` | `secondary` | `success` | `warning` | `danger` | `info`
 
 ### Navigation Components
 
@@ -535,7 +535,7 @@ component Button text: "Click me" variant: primary
 | `Topbar` | `title`, `subtitle` | `component Topbar title: "Dashboard"` |
 | `SidebarMenu` | `items`, `active` | `component SidebarMenu items: "Home,Users,Settings" active: 0` |
 | `Breadcrumbs` | `items` | `component Breadcrumbs items: "Home,Users,Detail"` |
-| `Tabs` | `items`, `activeIndex` | `component Tabs items: "Profile,Settings" activeIndex: 0` |
+| `Tabs` | `items`, `active` | `component Tabs items: "Profile,Settings" active: 0` |
 
 ### Data Components
 
@@ -549,7 +549,7 @@ component Button text: "Click me" variant: primary
 | Component | Properties | Example |
 |-----------|-----------|---------|
 | `Image` | `placeholder`, `height` | `component Image placeholder: "square" height: 200` |
-| `Icon` | `name` | `component Icon name: "search"` |
+| `Icon` | `type` | `component Icon type: "search"` |
 
 ### Other Components
 
@@ -562,9 +562,8 @@ component Button text: "Click me" variant: primary
 | `Alert` | `variant`, `title`, `text` | `component Alert variant: "danger" title: "Error" text: "Something went wrong"` |
 | `StatCard` | `title`, `value`, `caption`, `icon` | `component StatCard title: "Total Users" value: "1,234" icon: "users"` |
 | `Separate` | `size` | `component Separate size: md` |
-| `Code` | `content` | `component Code content: "const x = 10;"` |
-| `Spinner` | - | `component Spinner` |
-| `Modal` | `title`, `content` | `component Modal title: "Confirm?" content: "Are you sure?"` |
+| `Code` | `code` | `component Code code: "const x = 10;"` |
+| `Modal` | `title` | `component Modal title: "Confirm?"` |
 
 ---
 
@@ -572,7 +571,7 @@ component Button text: "Click me" variant: primary
 
 ```
 project "Admin Dashboard" {
-  config {
+  style {
     density: "normal"
     spacing: "md"
     radius: "md"
@@ -588,7 +587,7 @@ project "Admin Dashboard" {
       }
 
       layout stack(gap: md, padding: lg) {
-        component Heading title: "Users"
+        component Heading text: "Users"
 
         layout grid(columns: 12, gap: md) {
           cell span: 8 {
@@ -611,7 +610,7 @@ project "Admin Dashboard" {
       layout grid(columns: 12, gap: md) {
         cell span: 8 {
           layout card(padding: lg, gap: md) {
-            component Heading title: "User Profile"
+            component Heading text: "User Profile"
             component Text content: "Name: John Doe"
             component Text content: "Email: john@example.com"
             component Text content: "Role: Administrator"
@@ -619,7 +618,7 @@ project "Admin Dashboard" {
         }
         cell span: 4 {
           layout panel(padding: lg) {
-            component Heading title: "Actions"
+            component Heading text: "Actions"
             component Button text: "Edit" variant: primary
             component Button text: "Delete" variant: secondary
             component Button text: "Deactivate" variant: danger
@@ -627,7 +626,7 @@ project "Admin Dashboard" {
         }
       }
 
-      component Tabs items: "Permissions,Sessions,Activity" activeIndex: 0
+      component Tabs items: "Permissions,Sessions,Activity" active: 0
     }
   }
 }
@@ -652,6 +651,6 @@ project "Admin Dashboard" {
 
 1. **Wireframing First**: Focus on structure and layout, not aesthetics
 2. **Composability**: Build complex layouts from simple, reusable containers
-3. **Consistency**: Use theme tokens for unified appearance
+3. **Consistency**: Use style tokens for unified appearance
 4. **Simplicity**: Minimal syntax with maximum expressiveness
 5. **Clarity**: Property names match common UI terminology

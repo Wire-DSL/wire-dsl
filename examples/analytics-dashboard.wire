@@ -38,7 +38,7 @@ project "Analytics Dashboard" {
             }
           }
 
-          component Tabs items: "Overview,Traffic,Revenue,Engagement" activeIndex: 0
+          component Tabs items: "Overview,Traffic,Revenue,Engagement" active: 0
 
           layout grid(columns: 12, gap: md) {
             cell span: 6 {
@@ -69,3 +69,4 @@ project "Analytics Dashboard" {
     }
   }
 }
+

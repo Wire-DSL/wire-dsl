@@ -1,5 +1,5 @@
 project "CRM Dashboard" {
-  config {
+  style {
     density: "normal"
     spacing: "md"
     radius: "md"
@@ -13,12 +13,12 @@ project "CRM Dashboard" {
 
       layout split(sidebar: 240, gap: lg) {
         layout stack(direction: vertical, gap: md, padding: md) {
-          component Heading title: "Navigation"
+          component Heading text: "Navigation"
           component SidebarMenu items: "Dashboard,Contacts,Deals,Tasks,Reports,Settings" active: 0
         }
 
         layout stack(direction: vertical, gap: lg, padding: lg) {
-          component Tabs items: "Overview,Pipeline,Activity" activeIndex: 0
+          component Tabs items: "Overview,Pipeline,Activity" active: 0
 
           layout grid(columns: 12, gap: md) {
             cell span: 3 {
@@ -52,7 +52,7 @@ project "CRM Dashboard" {
           component Table columns: "ID,Account,Stage,Owner,Amount" rows: 10
 
           layout stack(direction: vertical, gap: md, padding: md) {
-            component Heading title: "Notes"
+            component Heading text: "Notes"
             component Textarea label: "Add note" placeholder: "Log a quick update..." rows: 3
             layout stack(direction: horizontal, gap: md) {
               component Button text: "Save"
@@ -64,3 +64,4 @@ project "CRM Dashboard" {
     }
   }
 }
+

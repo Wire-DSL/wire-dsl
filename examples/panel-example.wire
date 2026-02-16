@@ -1,5 +1,5 @@
 project "Panel Example" {
-  config {
+  style {
     density: "comfortable"
     spacing: "md"
     radius: "md"

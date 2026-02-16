@@ -8,7 +8,7 @@ The **Layout Engine** is responsible for calculating final positions (`x`, `y`) 
 ## Input and Output
 
 **Input**:
-- IR document (with theme tokens)
+- IR document (with style tokens)
 - Screen viewport dimensions
 - Root layout node
 
@@ -111,7 +111,7 @@ Two-panel layout with fixed sidebar and flexible main.
 
 **Algorithm**:
 1. Sidebar width: Fixed (specified in IR)
-2. Gap: Specified (default: theme spacing)
+2. Gap: Specified (default:  spacing)
 3. Main content width: `containerWidth - sidebarWidth - gap`
 4. Position:
    - Sidebar: x=0
@@ -158,9 +158,9 @@ Multi-child vertical container with gap and padding.
 - Used for specific sizing requirements
 - Value in pixels
 
-## Theme Token Application
+## Style Token Application
 
-Layout engine applies theme tokens as defaults:
+Layout engine applies style tokens as defaults:
 
 | Token | Default Value | Affects |
 |-------|---------------|---------|
