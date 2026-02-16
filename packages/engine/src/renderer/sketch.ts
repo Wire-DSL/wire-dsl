@@ -82,6 +82,7 @@ export class SketchSVGRenderer extends SVGRenderer {
   protected renderButton(node: IRComponentNode, pos: any): string {
     const text = String(node.props.text || 'Button');
     const variant = String(node.props.variant || 'default');
+    const fullWidth = this.shouldButtonFillAvailableWidth(node);
 
     // Use same tokens as standard renderer
     const radius = this.tokens.button.radius;
@@ -92,7 +93,9 @@ export class SketchSVGRenderer extends SVGRenderer {
 
     // Keep control inside layout bounds; truncate text if needed.
     const idealTextWidth = text.length * fontSize * 0.6;
-    const buttonWidth = this.clampControlWidth(Math.max(idealTextWidth + paddingX * 2, 60), pos.width);
+    const buttonWidth = fullWidth
+      ? Math.max(1, pos.width)
+      : this.clampControlWidth(Math.max(idealTextWidth + paddingX * 2, 60), pos.width);
     const buttonHeight = fontSize + paddingY * 2;
     const availableTextWidth = Math.max(0, buttonWidth - paddingX * 2);
     const visibleText = this.truncateTextToWidth(text, availableTextWidth, fontSize);

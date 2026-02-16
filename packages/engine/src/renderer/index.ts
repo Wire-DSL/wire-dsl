@@ -75,6 +75,7 @@ export class SVGRenderer {
   protected renderedNodeIds: Set<string> = new Set(); // Track nodes rendered in current pass
   protected colorResolver: ColorResolver;
   protected fontFamily: string = 'system-ui, -apple-system, sans-serif';
+  private parentContainerByChildId: Map<string, IRContainerNode> = new Map();
 
   constructor(ir: IRContract, layout: LayoutResult, options?: SVGRenderOptions) {
     this.ir = ir;
@@ -100,6 +101,7 @@ export class SVGRenderer {
     console.log('Final options:', this.options);
     this.renderTheme = THEMES[this.options.theme];
     this.colorResolver = new ColorResolver();
+    this.buildParentContainerIndex();
 
     // Initialize MockDataGenerator with custom mocks from project metadata
     if (ir.project.mocks && Object.keys(ir.project.mocks).length > 0) {
@@ -370,6 +372,7 @@ export class SVGRenderer {
   protected renderButton(node: IRComponentNode, pos: any): string {
     const text = String(node.props.text || 'Button');
     const variant = String(node.props.variant || 'default');
+    const fullWidth = this.shouldButtonFillAvailableWidth(node);
 
     // Use tokens from density configuration
     const radius = this.tokens.button.radius;
@@ -380,10 +383,9 @@ export class SVGRenderer {
 
     // Keep control inside layout bounds; truncate text if needed.
     const idealTextWidth = this.estimateTextWidth(text, fontSize);
-    const buttonWidth = this.clampControlWidth(
-      Math.max(Math.ceil(idealTextWidth + paddingX * 2), 60),
-      pos.width
-    );
+    const buttonWidth = fullWidth
+      ? Math.max(1, pos.width)
+      : this.clampControlWidth(Math.max(Math.ceil(idealTextWidth + paddingX * 2), 60), pos.width);
     const buttonHeight = fontSize + paddingY * 2;
     const availableTextWidth = Math.max(0, buttonWidth - paddingX * 2);
     const visibleText = this.truncateTextToWidth(text, availableTextWidth, fontSize);
@@ -2290,6 +2292,31 @@ export class SVGRenderer {
       if (normalized === 'false') return false;
     }
     return fallback;
+  }
+
+  protected shouldButtonFillAvailableWidth(node: IRComponentNode): boolean {
+    if (this.parseBooleanProp(node.props.block, false)) {
+      return true;
+    }
+
+    const parent = this.parentContainerByChildId.get(node.id);
+    if (!parent || parent.containerType !== 'stack') {
+      return false;
+    }
+
+    const direction = String(parent.params.direction || 'vertical');
+    const align = parent.style.align || 'justify';
+    return direction === 'horizontal' && align === 'justify';
+  }
+
+  private buildParentContainerIndex(): void {
+    this.parentContainerByChildId.clear();
+    Object.values(this.ir.project.nodes).forEach((node) => {
+      if (node.kind !== 'container') return;
+      node.children.forEach((childRef) => {
+        this.parentContainerByChildId.set(childRef.ref, node);
+      });
+    });
   }
 
   protected escapeXml(text: string): string {
