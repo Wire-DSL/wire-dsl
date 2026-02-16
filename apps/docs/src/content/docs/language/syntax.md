@@ -354,6 +354,10 @@ define Component "ButtonGroup" {
 <!-- wire-preview:start -->
 ```wire
 project "Form App" {
+  style {
+    device: "mobile-min"
+  }
+
   define Component "ButtonGroup" {
     layout stack(direction: horizontal, gap: md) {
       component Button text: "OK" variant: primary
@@ -415,6 +419,7 @@ Properties use `key: value` syntax:
 ```wire
 project "Admin Dashboard" {
   style {
+    device: "desktop"
     density: "normal"
     spacing: "md"
     radius: "md"

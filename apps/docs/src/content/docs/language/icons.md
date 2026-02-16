@@ -385,6 +385,7 @@ zoom-out
 ```wire
 project "Icon Gallery" {
   style {
+    device: "tablet"
     density: "normal"
     spacing: "md"
     radius: "md"

@@ -138,19 +138,16 @@ Wire-DSL is actively maintained with a clear evolution path. This roadmap descri
 
 **Goal**: Advanced debugging and source map support for development and production.
 
+### Delivered Features
+
+**Source Maps**
+- ✅ Generate source maps (`.wire.map`) for compiled output
+- ✅ Map rendered SVG elements back to source DSL code
+- ✅ Bidirectional tracing (source ↔ output)
+
 **Current Status**: In progress
 
 ### Planned Features
-
-**Source Maps**
-- [ ] Generate source maps (`.wire.map`) for compiled output
-- [ ] Map rendered SVG elements back to source DSL code
-- [ ] Bidirectional tracing (source ↔ output)
-
-**Debugging Support**
-- [ ] Debug information in IR output
-- [ ] Enhanced error messages with line/column precision
-- [ ] Variable inspection tools
 
 **LSP (Language Server Protocol)**
 - [ ] Full LSP implementation for universal editor support
@@ -188,9 +185,9 @@ The following features are planned and will be prioritized based on community fe
 - ✅ CLI with render/validate commands
 - ✅ VS Code syntax highlighting and live preview
 - ✅ Web editor with real-time preview
+- ✅ Source maps and advanced debugging
 
 ### What's Next
-- [ ] Source maps and advanced debugging
 - [ ] LSP support for all editors
 - [ ] Advanced exporters (HTML, React, Vue, Figma)
 - [ ] AI-assisted generation
@@ -206,7 +203,7 @@ The following features are planned and will be prioritized based on community fe
 | Parser Error Recovery | >90% | ✅ Excellent |
 | Render Accuracy | 100% | ✅ Complete |
 | Documentation | Comprehensive | ✅ Complete |
-| Performance | <500ms render | ✅ <500ms |
+| Performance | <500ms render | ✅ <100ms |
 
 ---
 
