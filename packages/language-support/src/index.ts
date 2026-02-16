@@ -13,6 +13,7 @@ export {
   PROPERTY_VALUES,
   KEYWORDS,
   type ComponentMetadata,
+  type ComponentCategory,
   type LayoutMetadata,
   type PropertyMetadata,
 } from './components';

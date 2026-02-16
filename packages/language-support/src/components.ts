@@ -17,6 +17,7 @@ export interface PropertyMetadata {
 export interface ComponentMetadata {
   name: string;
   description: string;
+  category: ComponentCategory;
   properties: Record<string, PropertyMetadata>;
   example: string;
 }
@@ -28,6 +29,16 @@ export interface LayoutMetadata {
   example: string;
   requiredProperties?: string[];
 }
+
+export type ComponentCategory =
+  | 'Text'
+  | 'Action'
+  | 'Input'
+  | 'Navigation'
+  | 'Data'
+  | 'Media'
+  | 'Layout'
+  | 'Feedback';
 
 // Reusable Enum Definitions
 const sizeEnum: PropertyMetadata = { name: 'size', type: 'enum', options: ['sm', 'md', 'lg'] };
@@ -66,6 +77,7 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
   Heading: {
     name: 'Heading',
     description: 'Large heading text with level-based typography.',
+    category: 'Text',
     properties: {
       text: { name: 'text', type: 'string' },
       level: headingLevelEnum,
@@ -76,6 +88,7 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
   Text: {
     name: 'Text',
     description: 'Body text content.',
+    category: 'Text',
     properties: {
       content: { name: 'content', type: 'string' },
     },
@@ -84,6 +97,7 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
   Label: {
     name: 'Label',
     description: 'Small label text.',
+    category: 'Text',
     properties: {
       text: { name: 'text', type: 'string' },
     },
@@ -92,6 +106,7 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
   Button: {
     name: 'Button',
     description: 'Clickable action button.',
+    category: 'Action',
     properties: {
       text: { name: 'text', type: 'string' },
       variant: variantWithDefaultEnum,
@@ -101,6 +116,7 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
   Link: {
     name: 'Link',
     description: 'Underlined text action without button background.',
+    category: 'Action',
     properties: {
       text: { name: 'text', type: 'string' },
       variant: variantEnum,
@@ -110,6 +126,7 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
   Input: {
     name: 'Input',
     description: 'Single-line input field.',
+    category: 'Input',
     properties: {
       label: { name: 'label', type: 'string' },
       placeholder: { name: 'placeholder', type: 'string' },
@@ -119,6 +136,7 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
   Textarea: {
     name: 'Textarea',
     description: 'Multi-line input field.',
+    category: 'Input',
     properties: {
       label: { name: 'label', type: 'string' },
       placeholder: { name: 'placeholder', type: 'string' },
@@ -129,6 +147,7 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
   Select: {
     name: 'Select',
     description: 'Select-style input control.',
+    category: 'Input',
     properties: {
       label: { name: 'label', type: 'string' },
       placeholder: { name: 'placeholder', type: 'string' },
@@ -139,6 +158,7 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
   Checkbox: {
     name: 'Checkbox',
     description: 'Checkbox control.',
+    category: 'Input',
     properties: {
       label: { name: 'label', type: 'string' },
       checked: { name: 'checked', type: 'boolean' },
@@ -148,6 +168,7 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
   Radio: {
     name: 'Radio',
     description: 'Radio control.',
+    category: 'Input',
     properties: {
       label: { name: 'label', type: 'string' },
       checked: { name: 'checked', type: 'boolean' },
@@ -157,6 +178,7 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
   Toggle: {
     name: 'Toggle',
     description: 'Toggle switch control.',
+    category: 'Input',
     properties: {
       label: { name: 'label', type: 'string' },
       enabled: { name: 'enabled', type: 'boolean' },
@@ -166,6 +188,7 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
   Topbar: {
     name: 'Topbar',
     description: 'Top navigation/header bar.',
+    category: 'Navigation',
     properties: {
       title: { name: 'title', type: 'string' },
       subtitle: { name: 'subtitle', type: 'string' },
@@ -179,6 +202,7 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
   SidebarMenu: {
     name: 'SidebarMenu',
     description: 'Vertical menu list.',
+    category: 'Navigation',
     properties: {
       items: { name: 'items', type: 'string' },
       icons: { name: 'icons', type: 'string' },
@@ -189,6 +213,7 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
   Sidebar: {
     name: 'Sidebar',
     description: 'Sidebar panel with title and items.',
+    category: 'Navigation',
     properties: {
       title: { name: 'title', type: 'string' },
       items: { name: 'items', type: 'string' },
@@ -200,6 +225,7 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
   Breadcrumbs: {
     name: 'Breadcrumbs',
     description: 'Navigation path component.',
+    category: 'Navigation',
     properties: {
       items: { name: 'items', type: 'string' },
       separator: { name: 'separator', type: 'string' },
@@ -209,6 +235,7 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
   Tabs: {
     name: 'Tabs',
     description: 'Tabbed navigation component.',
+    category: 'Navigation',
     properties: {
       items: { name: 'items', type: 'string' },
       active: { name: 'active', type: 'number' },
@@ -218,6 +245,7 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
   Table: {
     name: 'Table',
     description: 'Tabular data placeholder.',
+    category: 'Data',
     properties: {
       title: { name: 'title', type: 'string' },
       columns: { name: 'columns', type: 'string' },
@@ -234,6 +262,7 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
   List: {
     name: 'List',
     description: 'Vertical list component.',
+    category: 'Data',
     properties: {
       title: { name: 'title', type: 'string' },
       items: { name: 'items', type: 'string' },
@@ -246,6 +275,7 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
   StatCard: {
     name: 'StatCard',
     description: 'Metric card with optional caption and icon.',
+    category: 'Data',
     properties: {
       title: { name: 'title', type: 'string' },
       value: { name: 'value', type: 'string' },
@@ -257,6 +287,7 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
   Card: {
     name: 'Card',
     description: 'Generic content card placeholder.',
+    category: 'Layout',
     properties: {
       title: { name: 'title', type: 'string' },
       text: { name: 'text', type: 'string' },
@@ -266,6 +297,7 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
   Chart: {
     name: 'Chart',
     description: 'Chart placeholder with deterministic trend data.',
+    category: 'Data',
     properties: {
       type: { name: 'type', type: 'enum', options: ['bar', 'line', 'pie', 'area'] },
       height: { name: 'height', type: 'number' },
@@ -275,6 +307,7 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
   ChartPlaceholder: {
     name: 'ChartPlaceholder',
     description: 'Backward-compatible alias of Chart.',
+    category: 'Data',
     properties: {
       type: { name: 'type', type: 'enum', options: ['bar', 'line', 'pie', 'area'] },
       height: { name: 'height', type: 'number' },
@@ -284,6 +317,7 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
   Code: {
     name: 'Code',
     description: 'Code snippet display.',
+    category: 'Text',
     properties: {
       code: { name: 'code', type: 'string' },
     },
@@ -292,6 +326,7 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
   Image: {
     name: 'Image',
     description: 'Image placeholder block.',
+    category: 'Media',
     properties: {
       placeholder: imagePlaceholderEnum,
       icon: { name: 'icon', type: 'string' },
@@ -302,6 +337,7 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
   Icon: {
     name: 'Icon',
     description: 'Standalone icon component.',
+    category: 'Media',
     properties: {
       type: { name: 'type', type: 'string' },
       size: sizeEnum,
@@ -311,6 +347,7 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
   IconButton: {
     name: 'IconButton',
     description: 'Button that renders an icon.',
+    category: 'Action',
     properties: {
       icon: { name: 'icon', type: 'string' },
       size: sizeEnum,
@@ -322,12 +359,14 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
   Divider: {
     name: 'Divider',
     description: 'Horizontal separator line.',
+    category: 'Layout',
     properties: {},
     example: 'component Divider',
   },
   Separate: {
     name: 'Separate',
     description: 'Invisible spacing separator.',
+    category: 'Layout',
     properties: {
       size: { name: 'size', type: 'enum', options: ['none', 'xs', 'sm', 'md', 'lg', 'xl'] },
     },
@@ -336,6 +375,7 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
   Badge: {
     name: 'Badge',
     description: 'Small status label.',
+    category: 'Feedback',
     properties: {
       text: { name: 'text', type: 'string' },
       variant: variantWithDefaultEnum,
@@ -345,6 +385,7 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
   Alert: {
     name: 'Alert',
     description: 'Alert/message box.',
+    category: 'Feedback',
     properties: {
       variant: variantEnum,
       title: { name: 'title', type: 'string' },
@@ -355,6 +396,7 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
   Modal: {
     name: 'Modal',
     description: 'Modal overlay container.',
+    category: 'Feedback',
     properties: {
       title: { name: 'title', type: 'string' },
       visible: { name: 'visible', type: 'boolean', defaultValue: true },
