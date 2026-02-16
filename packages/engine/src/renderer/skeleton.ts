@@ -32,7 +32,7 @@ export class SkeletonSVGRenderer extends SVGRenderer {
 
     // Calculate same dimensions as standard
     const textWidth = text.length * fontSize * 0.6;
-    const buttonWidth = Math.max(textWidth + paddingX * 2, 60);
+    const buttonWidth = this.clampControlWidth(Math.max(textWidth + paddingX * 2, 60), pos.width);
     const buttonHeight = fontSize + paddingY * 2;
 
     const semanticBase = this.getSemanticVariantColor(variant);
@@ -68,7 +68,7 @@ export class SkeletonSVGRenderer extends SVGRenderer {
     const linkColor = this.resolveVariantColor(variant, this.renderTheme.primary);
 
     const textWidth = text.length * fontSize * 0.6;
-    const linkWidth = Math.max(textWidth + paddingX * 2, 60);
+    const linkWidth = this.clampControlWidth(Math.max(textWidth + paddingX * 2, 60), pos.width);
     const linkHeight = fontSize + paddingY * 2;
     const blockHeight = Math.max(8, Math.round(fontSize * 0.75));
     const blockWidth = Math.max(28, Math.min(textWidth, linkWidth - paddingX * 2));

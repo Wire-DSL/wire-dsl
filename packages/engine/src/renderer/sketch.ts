@@ -90,10 +90,12 @@ export class SketchSVGRenderer extends SVGRenderer {
     const paddingX = this.tokens.button.paddingX;
     const paddingY = this.tokens.button.paddingY;
 
-    // Calculate same dimensions as standard
-    const textWidth = text.length * fontSize * 0.6;
-    const buttonWidth = Math.max(textWidth + paddingX * 2, 60);
+    // Keep control inside layout bounds; truncate text if needed.
+    const idealTextWidth = text.length * fontSize * 0.6;
+    const buttonWidth = this.clampControlWidth(Math.max(idealTextWidth + paddingX * 2, 60), pos.width);
     const buttonHeight = fontSize + paddingY * 2;
+    const availableTextWidth = Math.max(0, buttonWidth - paddingX * 2);
+    const visibleText = this.truncateTextToWidth(text, availableTextWidth, fontSize);
 
     const semanticBase = this.getSemanticVariantColor(variant);
     const hasExplicitVariantColor =
@@ -118,7 +120,7 @@ export class SketchSVGRenderer extends SVGRenderer {
             font-size="${fontSize}"
             font-weight="${fontWeight}"
             fill="${textColor}"
-            text-anchor="middle">${this.escapeXml(text)}</text>
+            text-anchor="middle">${this.escapeXml(visibleText)}</text>
     </g>`;
   }
 

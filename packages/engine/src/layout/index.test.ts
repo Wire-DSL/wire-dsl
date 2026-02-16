@@ -895,4 +895,74 @@ describe('Layout Engine', () => {
     expect(headingPos.height).toBeGreaterThan(40);
     expect(buttonPos.y).toBe(headingPos.y + headingPos.height + 16);
   });
+
+  it('should avoid overlap between cards in single-column grid and next stack elements', () => {
+    const input = `
+      project "Mobile Grid No Overlap" {
+        style {
+          device: "mobile"
+          density: "comfortable"
+        }
+
+        screen Home {
+          layout stack(direction: vertical, gap: md, padding: md) {
+            component Heading text: "Features"
+
+            layout grid(columns: 1, gap: sm) {
+              layout card(padding: md) {
+                component Heading text: "Fast"
+                component Text content: "Built for speed and performance on mobile devices."
+              }
+
+              layout card(padding: md) {
+                component Heading text: "Simple"
+                component Text content: "Intuitive interface designed for touch interactions."
+              }
+
+              layout card(padding: md) {
+                component Heading text: "Secure"
+                component Text content: "Your data is protected with industry-standard encryption."
+              }
+            }
+
+            component Divider
+            component Text content: "Mobile-optimized wireframe for touch devices"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+
+    const cards = Object.entries(ir.project.nodes)
+      .filter(([_, node]) => node.kind === 'container' && node.containerType === 'card')
+      .map(([id]) => layout[id])
+      .sort((a, b) => a.y - b.y);
+
+    expect(cards).toHaveLength(3);
+
+    // comfortable density + sm gap => 10px effective gap (8 * 1.25).
+    const expectedGridGap = 10;
+    expect(cards[1].y).toBeGreaterThanOrEqual(cards[0].y + cards[0].height + expectedGridGap);
+    expect(cards[2].y).toBeGreaterThanOrEqual(cards[1].y + cards[1].height + expectedGridGap);
+
+    const gridEntry = Object.entries(ir.project.nodes).find(
+      ([_, node]) => node.kind === 'container' && node.containerType === 'grid'
+    );
+    const dividerEntry = Object.entries(ir.project.nodes).find(
+      ([_, node]) => node.kind === 'component' && node.componentType === 'Divider'
+    );
+
+    expect(gridEntry).toBeDefined();
+    expect(dividerEntry).toBeDefined();
+
+    const gridPos = layout[gridEntry![0]];
+    const dividerPos = layout[dividerEntry![0]];
+
+    // comfortable density + md stack gap => 20px effective gap (16 * 1.25).
+    const expectedStackGap = 20;
+    expect(dividerPos.y).toBeGreaterThanOrEqual(gridPos.y + gridPos.height + expectedStackGap);
+  });
 });

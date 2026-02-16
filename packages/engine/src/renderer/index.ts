@@ -371,10 +371,12 @@ export class SVGRenderer {
     const paddingX = this.tokens.button.paddingX;
     const paddingY = this.tokens.button.paddingY;
 
-    // Calculate button dimensions based on text + padding
-    const textWidth = text.length * fontSize * 0.6;  // Approximate character width
-    const buttonWidth = Math.max(textWidth + paddingX * 2, 60);
+    // Keep control inside layout bounds; truncate text if needed.
+    const idealTextWidth = text.length * fontSize * 0.6;  // Approximate character width
+    const buttonWidth = this.clampControlWidth(Math.max(idealTextWidth + paddingX * 2, 60), pos.width);
     const buttonHeight = fontSize + paddingY * 2;
+    const availableTextWidth = Math.max(0, buttonWidth - paddingX * 2);
+    const visibleText = this.truncateTextToWidth(text, availableTextWidth, fontSize);
 
     // Color configuration with variant override support from colors block.
     const semanticBase = this.getSemanticVariantColor(variant);
@@ -401,7 +403,7 @@ export class SVGRenderer {
           font-size="${fontSize}"
           font-weight="${fontWeight}"
           fill="${textColor}"
-          text-anchor="middle">${this.escapeXml(text)}</text>
+          text-anchor="middle">${this.escapeXml(visibleText)}</text>
   </g>`;
   }
 
@@ -415,9 +417,12 @@ export class SVGRenderer {
     const linkColor = this.resolveVariantColor(variant, this.renderTheme.primary);
 
     // Match Button sizing so Link can align beside regular buttons.
-    const textWidth = text.length * fontSize * 0.6;
-    const linkWidth = Math.max(textWidth + paddingX * 2, 60);
+    const idealTextWidth = text.length * fontSize * 0.6;
+    const linkWidth = this.clampControlWidth(Math.max(idealTextWidth + paddingX * 2, 60), pos.width);
     const linkHeight = fontSize + paddingY * 2;
+    const availableTextWidth = Math.max(0, linkWidth - paddingX * 2);
+    const visibleText = this.truncateTextToWidth(text, availableTextWidth, fontSize);
+    const visibleTextWidth = visibleText.length * fontSize * 0.6;
     const centerY = pos.y + linkHeight / 2 + fontSize * 0.35;
     const underlineY = centerY + 3;
 
@@ -427,9 +432,9 @@ export class SVGRenderer {
           font-size="${fontSize}"
           font-weight="${fontWeight}"
           fill="${linkColor}"
-          text-anchor="middle">${this.escapeXml(text)}</text>
-    <line x1="${pos.x + (linkWidth - textWidth) / 2}" y1="${underlineY}"
-          x2="${pos.x + (linkWidth + textWidth) / 2}" y2="${underlineY}"
+          text-anchor="middle">${this.escapeXml(visibleText)}</text>
+    <line x1="${pos.x + (linkWidth - visibleTextWidth) / 2}" y1="${underlineY}"
+          x2="${pos.x + (linkWidth + visibleTextWidth) / 2}" y2="${underlineY}"
           stroke="${linkColor}"
           stroke-width="1"/>
   </g>`;
@@ -1776,6 +1781,20 @@ export class SVGRenderer {
     }
 
     return lines.length > 0 ? lines : [''];
+  }
+
+  protected clampControlWidth(idealWidth: number, availableWidth: number): number {
+    const safeAvailable = Math.max(1, availableWidth || 0);
+    return Math.max(1, Math.min(idealWidth, safeAvailable));
+  }
+
+  protected truncateTextToWidth(text: string, maxWidth: number, fontSize: number): string {
+    const charWidth = fontSize * 0.6;
+    const maxChars = Math.max(0, Math.floor((maxWidth || 0) / charWidth));
+    if (maxChars <= 0) return '';
+    if (text.length <= maxChars) return text;
+    if (maxChars <= 3) return text.slice(0, maxChars);
+    return `${text.slice(0, maxChars - 3)}...`;
   }
 
   protected escapeXml(text: string): string {

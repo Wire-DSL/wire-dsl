@@ -100,8 +100,9 @@ export class LayoutEngine {
   ): void {
     if (node.kind !== 'container') return;
 
-    // Apply padding normally - children handle their own padding
-    const padding = this.resolveSpacing(node.style.padding);
+    // Most containers use inner padding at this level. Card handles its own padding internally.
+    const usesOuterPadding = node.containerType !== 'card';
+    const padding = usesOuterPadding ? this.resolveSpacing(node.style.padding) : 0;
     const innerX = x + padding;
     const innerY = y + padding;
     const innerWidth = width - padding * 2;
@@ -300,7 +301,7 @@ export class LayoutEngine {
     // For grids, calculate height based on row layout, not linear sum
     if (node.containerType === 'grid') {
       const columns = Number(node.params.columns) || 12;
-      const colWidth = availableWidth / columns;
+      const colWidth = (availableWidth - gap * (columns - 1)) / columns;
 
       // Calculate row heights
       let currentRow = 0;
@@ -316,15 +317,16 @@ export class LayoutEngine {
         if (child?.kind === 'container' && child.meta?.source === 'cell') {
           span = Number(child.params.span) || 1;
         }
+        const spanWidth = colWidth * span + gap * (span - 1);
 
         if (child?.kind === 'component') {
           if (child.props.height) {
             childHeight = Number(child.props.height);
           } else {
-            childHeight = this.getIntrinsicComponentHeight(child, colWidth * span);
+            childHeight = this.getIntrinsicComponentHeight(child, spanWidth);
           }
         } else if (child?.kind === 'container') {
-          childHeight = this.calculateContainerHeight(child, colWidth * span);
+          childHeight = this.calculateContainerHeight(child, spanWidth);
         }
 
         // Check if cell fits in current row
@@ -420,14 +422,20 @@ export class LayoutEngine {
     node.children.forEach((childRef, cellIndex) => {
       const child = this.nodes[childRef.ref];
       let cellHeight = this.getComponentHeight();
+      let span = 1;
+
+      if (child?.kind === 'container' && child.meta?.source === 'cell') {
+        span = Number(child.params.span) || 1;
+      }
+      const spanWidth = colWidth * span + gap * (span - 1);
 
       if (child?.kind === 'container') {
-        cellHeight = this.calculateContainerHeight(child, colWidth);
+        cellHeight = this.calculateContainerHeight(child, spanWidth);
       } else if (child?.kind === 'component') {
         if (child.props.height) {
           cellHeight = Number(child.props.height);
         } else {
-          cellHeight = this.getIntrinsicComponentHeight(child, colWidth);
+          cellHeight = this.getIntrinsicComponentHeight(child, spanWidth);
         }
       }
 
@@ -482,6 +490,34 @@ export class LayoutEngine {
       const cellX = x + col * (colWidth + gap);
 
       this.calculateNode(childRef.ref, cellX, cellY, cellWidth, cellHeight, 'grid');
+    });
+
+    // Pass 4: Reflow rows using ACTUAL rendered heights (containers may grow after children layout).
+    // This prevents overlaps when estimated row heights differ from final intrinsic heights.
+    const actualRowHeights = [...rowHeights];
+    node.children.forEach((childRef, cellIndex) => {
+      const { row } = cellPositions[cellIndex];
+      const childPos = this.result[childRef.ref];
+      if (childPos) {
+        actualRowHeights[row] = Math.max(actualRowHeights[row], childPos.height);
+      }
+    });
+
+    const rowOffsets: number[] = [0];
+    for (let r = 1; r < actualRowHeights.length; r++) {
+      rowOffsets[r] = rowOffsets[r - 1] + (actualRowHeights[r - 1] - rowHeights[r - 1]);
+    }
+
+    node.children.forEach((childRef, cellIndex) => {
+      const { row } = cellPositions[cellIndex];
+      const deltaY = rowOffsets[row] || 0;
+      if (deltaY === 0) return;
+
+      const childPos = this.result[childRef.ref];
+      if (!childPos) return;
+
+      childPos.y += deltaY;
+      this.adjustNodeYPositions(childRef.ref, deltaY);
     });
   }
 

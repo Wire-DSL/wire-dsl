@@ -609,6 +609,82 @@ describe('SVG Renderer', () => {
     expect(svg).toContain('Save');
   });
 
+  it('should not render Button wider than its layout width in narrow grid cells', () => {
+    const input = `
+      project "GridButtonClamp" {
+        style {
+          device: "mobile"
+          density: "comfortable"
+        }
+        screen Main {
+          layout grid(columns: 12, gap: sm) {
+            cell span: 2 {
+              component Button text: "Very long button label that should be truncated"
+            }
+          }
+        }
+      }
+    `;
+
+    const { ast } = parseWireDSLWithSourceMap(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+    const buttonEntry = Object.entries(ir.project.nodes).find(
+      ([_, node]) => node.kind === 'component' && node.componentType === 'Button'
+    );
+
+    expect(buttonEntry).toBeTruthy();
+    const buttonNode = buttonEntry![1];
+    const buttonPos = layout[buttonEntry![0]];
+    const nodeId = buttonNode.meta?.nodeId;
+    expect(nodeId).toBeTruthy();
+
+    const match = svg.match(new RegExp(`data-node-id="${nodeId}"[\\s\\S]*?<rect[^>]*width="([^"]+)"`));
+    expect(match).toBeTruthy();
+    const renderedWidth = Number(match![1]);
+    expect(renderedWidth).toBeLessThanOrEqual(buttonPos.width + 0.01);
+  });
+
+  it('should not render Link wider than its layout width in narrow grid cells', () => {
+    const input = `
+      project "GridLinkClamp" {
+        style {
+          device: "mobile"
+          density: "comfortable"
+        }
+        screen Main {
+          layout grid(columns: 12, gap: sm) {
+            cell span: 2 {
+              component Link text: "Very long link label that should be truncated"
+            }
+          }
+        }
+      }
+    `;
+
+    const { ast } = parseWireDSLWithSourceMap(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+    const linkEntry = Object.entries(ir.project.nodes).find(
+      ([_, node]) => node.kind === 'component' && node.componentType === 'Link'
+    );
+
+    expect(linkEntry).toBeTruthy();
+    const linkNode = linkEntry![1];
+    const linkPos = layout[linkEntry![0]];
+    const nodeId = linkNode.meta?.nodeId;
+    expect(nodeId).toBeTruthy();
+
+    const match = svg.match(new RegExp(`data-node-id="${nodeId}"[\\s\\S]*?<line[^>]*x1="([^"]+)"[^>]*x2="([^"]+)"`));
+    expect(match).toBeTruthy();
+    const x1 = Number(match![1]);
+    const x2 = Number(match![2]);
+    const renderedWidth = Math.abs(x2 - x1);
+    expect(renderedWidth).toBeLessThanOrEqual(linkPos.width + 0.01);
+  });
+
   it('should render Breadcrumbs and Divider', () => {
     const input = `
       project "Navigation" {
