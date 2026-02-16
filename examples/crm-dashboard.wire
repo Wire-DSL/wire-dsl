@@ -45,7 +45,7 @@ project "CRM Dashboard" {
           }
 
           layout stack(direction: vertical, gap: md) {
-            component Alert type: "warning" message: "2 SLAs at risk"
+            component Alert variant: "warning" text: "2 SLAs at risk"
             component List items: "New lead created,Deal moved to Proposal,Note added,Task completed,Email sent"
           }
 

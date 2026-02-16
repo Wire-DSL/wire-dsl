@@ -53,8 +53,8 @@ project "Analytics Dashboard" {
           }
 
           layout stack(direction: vertical, gap: sm) {
-            component Alert type: "warning" message: "Traffic spike detected on mobile devices"
-            component Alert type: "error" message: "Sync delayed for EU region"
+            component Alert variant: "warning" text: "Traffic spike detected on mobile devices"
+            component Alert variant: "danger" text: "Sync delayed for EU region"
           }
 
           component Table columns: "User,Country,Device,Time" rows: 10

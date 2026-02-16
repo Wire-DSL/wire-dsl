@@ -121,7 +121,7 @@ project "Hello" {
 
 ---
 
-## 28 Components
+## 30 Components
 
 | Category | Components |
 |----------|------------|
@@ -131,7 +131,7 @@ project "Hello" {
 | **Navigation** | Topbar, SidebarMenu, Sidebar, Breadcrumbs, Tabs |
 | **Data** | Table, List |
 | **Media** | Image, Icon |
-| **Display** | Divider, Badge, Alert |
+| **Display** | Divider, Separate, Badge, Link, Alert |
 | **Information** | StatCard, Code, Chart |
 | **Modal & Overlay** | Modal |
 | **Loading & Feedback** | Spinner |

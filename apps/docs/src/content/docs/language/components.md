@@ -184,18 +184,21 @@ Clickable action button.
 
 **Properties**:
 - `text` (string): Button label
-- `variant` (string): Visual style - `primary` | `secondary` | `ghost` (default: `secondary`)
+- `variant` (string): Visual style - `primary` | `secondary` | `success` | `warning` | `danger` | `info` (default: `primary`)
 
 **Variants**:
 - `primary`: Prominent filled button (usually blue)
-- `secondary`: Medium emphasis button (gray)
-- `ghost`: Low emphasis button (outline only)
+- `secondary`: Neutral action
+- `success`: Positive action
+- `warning`: Caution action
+- `danger`: Destructive action
+- `info`: Informational action
 
 **Example**:
 ```wire
 component Button text: "Save" variant: primary
 component Button text: "Cancel" variant: secondary
-component Button text: "Learn More" variant: ghost
+component Button text: "Delete" variant: danger
 ```
 
 **Rendering**: Rectangular button with text, styled according to variant
@@ -425,13 +428,30 @@ component Divider
 
 ---
 
+### Separate
+
+Invisible spacer used to separate nearby elements without drawing a line.
+
+**Properties**:
+- `size` (enum): Space token - `none` | `xs` | `sm` | `md` | `lg` | `xl` (default: `md`)
+
+**Example**:
+```wire
+component Separate size: sm
+component Separate size: lg
+```
+
+**Rendering**: Adds vertical/horizontal blank space only
+
+---
+
 ### Badge
 
 Small label/tag for status or categorization.
 
 **Properties**:
 - `text` (string): Badge label
-- `variant` (string): Style - `primary` | `secondary` | `success` | `warning` | `error` | `info` (default: `primary`)
+- `variant` (string): Style - `primary` | `secondary` | `success` | `warning` | `danger` | `info` (default: `primary`)
 
 **Example**:
 ```wire
@@ -444,20 +464,39 @@ component Badge text: "Alert" variant: warning
 
 ---
 
+### Link
+
+Hyperlink text.
+
+**Properties**:
+- `text` (string): Link text
+- `variant` (string): Link color variant - `primary` | `secondary` | `success` | `warning` | `danger` | `info` (default: `primary`)
+
+**Example**:
+```wire
+component Link text: "Click here" variant: primary
+component Link text: "Learn more" variant: info
+```
+
+**Rendering**: Underlined text using the selected variant color
+
+---
+
 ### Alert
 
 Alert/notification message box.
 
 **Properties**:
-- `type` (string): Alert type - `info` | `success` | `warning` | `error` (required)
-- `message` (string): Alert message content
+- `variant` (string): Visual variant - `primary` | `secondary` | `success` | `warning` | `danger` | `info` (default: `info`)
+- `title` (string, optional): Bold title shown above text
+- `text` (string): Alert body message
 
 **Example**:
 ```wire
-component Alert type: "success" message: "Changes saved successfully"
-component Alert type: "error" message: "Something went wrong"
-component Alert type: "warning" message: "This action cannot be undone"
-component Alert type: "info" message: "New updates available"
+component Alert variant: "success" title: "Saved" text: "Changes saved successfully"
+component Alert variant: "danger" title: "Error" text: "Something went wrong"
+component Alert variant: "warning" title: "Warning" text: "This action cannot be undone"
+component Alert variant: "info" title: "Info" text: "New updates available"
 ```
 
 **Rendering**: Colored box with icon, title, and message
@@ -473,12 +512,14 @@ Statistics card displaying metric and value.
 **Properties**:
 - `title` (string): Metric label/title
 - `value` (string): Metric value to display
+- `caption` (string, optional): Secondary text shown below value
+- `icon` (string, optional): Icon name rendered in the top-right badge
 
 **Example**:
 ```wire
 component StatCard title: "Total Users" value: "1,234"
-component StatCard title: "Revenue" value: "$45,678"
-component StatCard title: "Growth" value: "+12.5%"
+component StatCard title: "Revenue" value: "$45,678" caption: "vs last month"
+component StatCard title: "Growth" value: "+12.5%" icon: "trending-up"
 ```
 
 **Rendering**: Card with large value and small label below
@@ -518,7 +559,7 @@ component Chart type: "line" height: 300
 component Chart type: "pie" height: 200
 ```
 
-**Rendering**: Chart area with placeholder bars/lines/segments
+**Rendering**: Deterministic chart placeholders with upward trend and subtle fluctuations
 
 ---
 
@@ -585,7 +626,9 @@ component Spinner
 | Image | Media | Image placeholder |
 | Icon | Media | Icon symbol |
 | Divider | Display | Visual separator |
+| Separate | Display | Invisible spacer |
 | Badge | Display | Status label |
+| Link | Display | Underlined action |
 | Alert | Display | Alert message |
 | StatCard | Info | Metric display |
 | Code | Info | Code block |
@@ -593,7 +636,7 @@ component Spinner
 | Modal | Overlay | Dialog box |
 | Spinner | Feedback | Loading indicator |
 
-**Total: 28 Components**
+**Total: 30 Components**
 
 ---
 

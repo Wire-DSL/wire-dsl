@@ -19,14 +19,14 @@ project "Support Desk" {
           component Select label: "Agent" items: "All agents,John,Jane,Bob"
           component Divider
           component Badge text: "SLA 92%" variant: primary
-          component Alert type: "warning" message: "3 tickets near breach"
+          component Alert variant: "warning" text: "3 tickets near breach"
           component Checkbox label: "Only escalated"
         }
 
         layout stack(direction: vertical, gap: lg, padding: lg) {
           component Tabs items: "Open,Pending,Closed" activeIndex: 0
 
-          component Alert type: "error" message: "SLA risk in EU region"
+          component Alert variant: "danger" text: "SLA risk in EU region"
 
           component Table columns: "ID,Subject,Requester,Priority,Updated" rows: 8
 

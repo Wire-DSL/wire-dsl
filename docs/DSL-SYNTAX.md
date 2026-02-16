@@ -526,7 +526,7 @@ component Button text: "Click me" variant: primary
 | `Button` | `text`, `variant` | `component Button text: "Save" variant: primary` |
 | `IconButton` | `icon` | `component IconButton icon: "search"` |
 
-**Button Variants**: `primary` | `secondary` | `ghost`
+**Button Variants**: `primary` | `secondary` | `success` | `warning` | `danger` | `info`
 
 ### Navigation Components
 
@@ -557,10 +557,11 @@ component Button text: "Click me" variant: primary
 |-----------|-----------|---------|
 | `Divider` | - | `component Divider` |
 | `Badge` | `text`, `variant` | `component Badge text: "New" variant: primary` |
-| `Link` | `text` | `component Link text: "Click here"` |
-| `ChartPlaceholder` | `type`, `height` | `component ChartPlaceholder type: "bar" height: 200` |
-| `Alert` | `type`, `message` | `component Alert type: "error" message: "Something went wrong"` |
-| `StatCard` | `title`, `value` | `component StatCard title: "Total Users" value: "1,234"` |
+| `Link` | `text`, `variant` | `component Link text: "Click here" variant: primary` |
+| `Chart` | `type`, `height` | `component Chart type: "bar" height: 200` |
+| `Alert` | `variant`, `title`, `text` | `component Alert variant: "danger" title: "Error" text: "Something went wrong"` |
+| `StatCard` | `title`, `value`, `caption`, `icon` | `component StatCard title: "Total Users" value: "1,234" icon: "users"` |
+| `Separate` | `size` | `component Separate size: md` |
 | `Code` | `content` | `component Code content: "const x = 10;"` |
 | `Spinner` | - | `component Spinner` |
 | `Modal` | `title`, `content` | `component Modal title: "Confirm?" content: "Are you sure?"` |
@@ -621,7 +622,7 @@ project "Admin Dashboard" {
             component Heading title: "Actions"
             component Button text: "Edit" variant: primary
             component Button text: "Delete" variant: secondary
-            component Button text: "Deactivate" variant: ghost
+            component Button text: "Deactivate" variant: danger
           }
         }
       }

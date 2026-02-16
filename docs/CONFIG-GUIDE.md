@@ -363,16 +363,16 @@ project "AdminPortal" {
       layout stack(gap: md, padding: lg) {
         layout grid(columns: 12, gap: md) {
           cell span: 3 {
-            component StatCard label: "Users" value: "1,234"
+            component StatCard title: "Users" value: "1,234"
           }
           cell span: 3 {
-            component StatCard label: "Orders" value: "5,678"
+            component StatCard title: "Orders" value: "5,678"
           }
           cell span: 3 {
-            component StatCard label: "Revenue" value: "$45K"
+            component StatCard title: "Revenue" value: "$45K"
           }
           cell span: 3 {
-            component StatCard label: "Growth" value: "+12%"
+            component StatCard title: "Growth" value: "+12%"
           }
         }
         

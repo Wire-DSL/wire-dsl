@@ -70,7 +70,7 @@ layout stack(direction: vertical, gap: md) {
 layout stack(direction: horizontal, gap: md, padding: md) {
   component Button text: "Save" variant: primary
   component Button text: "Cancel" variant: secondary
-  component Button text: "Delete" variant: ghost
+  component Button text: "Delete" variant: danger
 }
 ```
 All buttons divide the width equally, filling 100% of the container.
@@ -200,16 +200,16 @@ layout grid(columns: 12, gap: md) {
 ```
 layout grid(columns: 12, gap: md) {
   cell span: 3 {
-    component StatCard label: "Total Users" value: "1,234"
+    component StatCard title: "Total Users" value: "1,234"
   }
   cell span: 3 {
-    component StatCard label: "Active" value: "890"
+    component StatCard title: "Active" value: "890"
   }
   cell span: 3 {
-    component StatCard label: "Inactive" value: "344"
+    component StatCard title: "Inactive" value: "344"
   }
   cell span: 3 {
-    component StatCard label: "Pending" value: "100"
+    component StatCard title: "Pending" value: "100"
   }
 }
 ```
@@ -302,10 +302,10 @@ layout split(sidebar: 260, gap: md) {
     component Heading text: "Dashboard"
     layout grid(columns: 12, gap: md) {
       cell span: 6 {
-        component StatCard label: "Total Users" value: "1,234"
+        component StatCard title: "Total Users" value: "1,234"
       }
       cell span: 6 {
-        component StatCard label: "Revenue" value: "$89,012"
+        component StatCard title: "Revenue" value: "$89,012"
       }
     }
   }

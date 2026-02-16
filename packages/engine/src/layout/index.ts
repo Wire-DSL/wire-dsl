@@ -892,8 +892,8 @@ export class LayoutEngine {
     if (node.componentType === 'Button' || node.componentType === 'Link') {
       const text = String(node.props.text || '');
       const { fontSize, paddingX } = this.getButtonMetricsForDensity();
-      const charWidth = fontSize * 0.6;
-      return Math.max(60, Math.ceil(text.length * charWidth + paddingX * 2));
+      const textWidth = this.estimateTextWidth(text, fontSize);
+      return Math.max(60, Math.ceil(textWidth + paddingX * 2));
     }
 
     // Label, Text: content-based width (estimate)
@@ -967,6 +967,23 @@ export class LayoutEngine {
     const totalGap = gap * (count - 1);
     return (totalWidth - totalGap) / count;
   }
+
+  private estimateTextWidth(text: string, fontSize: number): number {
+    let width = 0;
+    for (const ch of text) {
+      if (/\s/.test(ch)) {
+        width += fontSize * 0.33;
+      } else if (/[.,:;'"`|!iIl]/.test(ch)) {
+        width += fontSize * 0.32;
+      } else if (/[MW@#%&]/.test(ch)) {
+        width += fontSize * 0.9;
+      } else {
+        width += fontSize * 0.6;
+      }
+    }
+    return width;
+  }
+
   private adjustNodeYPositions(nodeId: string, deltaY: number): void {
     const node = this.nodes[nodeId];
     if (!node) return;

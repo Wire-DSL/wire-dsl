@@ -67,7 +67,7 @@ export class SkeletonSVGRenderer extends SVGRenderer {
     const paddingY = this.tokens.button.paddingY;
     const linkColor = this.resolveVariantColor(variant, this.renderTheme.primary);
 
-    const textWidth = text.length * fontSize * 0.6;
+    const textWidth = this.estimateTextWidth(text, fontSize);
     const linkWidth = this.clampControlWidth(Math.max(textWidth + paddingX * 2, 60), pos.width);
     const linkHeight = fontSize + paddingY * 2;
     const blockHeight = Math.max(8, Math.round(fontSize * 0.75));
@@ -450,6 +450,11 @@ export class SkeletonSVGRenderer extends SVGRenderer {
    * Render StatCard with gray blocks instead of values
    */
   protected renderStatCard(node: IRComponentNode, pos: any): string {
+    const hasIcon = String(node.props.icon || '').trim().length > 0;
+    const iconSize = 20;
+    const iconX = pos.x + pos.width - 16 - iconSize;
+    const iconY = pos.y + 14;
+
     return `<g${this.getDataNodeId(node)}>
       <rect x="${pos.x}" y="${pos.y}"
             width="${pos.width}" height="${pos.height}"
@@ -457,6 +462,14 @@ export class SkeletonSVGRenderer extends SVGRenderer {
             fill="${this.renderTheme.cardBg}"
             stroke="${this.renderTheme.border}"
             stroke-width="1"/>
+      ${
+        hasIcon
+          ? `<rect x="${iconX}" y="${iconY}"
+            width="${iconSize}" height="${iconSize}"
+            rx="4"
+            fill="${this.renderTheme.border}"/>`
+          : ''
+      }
       <rect x="${pos.x + 16}" y="${pos.y + 16}"
             width="80" height="10"
             rx="4"

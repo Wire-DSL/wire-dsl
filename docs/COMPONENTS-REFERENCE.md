@@ -180,18 +180,21 @@ Clickable action button.
 
 **Properties**:
 - `text` (string): Button label
-- `variant` (string): Visual style - `primary` | `secondary` | `ghost` (default: `secondary`)
+- `variant` (string): Visual style - `primary` | `secondary` | `success` | `warning` | `danger` | `info` (default: `primary`)
 
 **Variants**:
 - `primary`: Prominent filled button (usually blue)
-- `secondary`: Medium emphasis button (gray)
-- `ghost`: Low emphasis button (outline only)
+- `secondary`: Neutral action
+- `success`: Positive action
+- `warning`: Caution action
+- `danger`: Destructive action
+- `info`: Informational action
 
 **Example**:
 ```
 component Button text: "Save" variant: primary
 component Button text: "Cancel" variant: secondary
-component Button text: "Learn More" variant: ghost
+component Button text: "Delete" variant: danger
 ```
 
 **Rendering**: Rectangular button with text, styled according to variant
@@ -395,13 +398,30 @@ component Divider
 
 ---
 
+### Separate
+
+Invisible spacer used to separate nearby elements without drawing a line.
+
+**Properties**:
+- `size` (enum): Space token - `none` | `xs` | `sm` | `md` | `lg` | `xl` (default: `md`)
+
+**Example**:
+```
+component Separate size: sm
+component Separate size: lg
+```
+
+**Rendering**: Adds vertical/horizontal blank space only
+
+---
+
 ### Badge
 
 Small label/tag for status or categorization.
 
 **Properties**:
 - `text` (string): Badge label
-- `variant` (string): Style - `primary` | `secondary` | `success` | `warning` | `error` | `info` (default: `primary`)
+- `variant` (string): Style - `primary` | `secondary` | `success` | `warning` | `danger` | `info` (default: `primary`)
 
 **Example**:
 ```
@@ -420,11 +440,12 @@ Hyperlink text.
 
 **Properties**:
 - `text` (string): Link text
+- `variant` (string): Link color variant - `primary` | `secondary` | `success` | `warning` | `danger` | `info` (default: `primary`)
 
 **Example**:
 ```
-component Link text: "Click here"
-component Link text: "Learn more"
+component Link text: "Click here" variant: primary
+component Link text: "Learn more" variant: info
 ```
 
 **Rendering**: Blue underlined text
@@ -436,15 +457,16 @@ component Link text: "Learn more"
 Alert/notification message box.
 
 **Properties**:
-- `type` (string): Alert type - `info` | `success` | `warning` | `error` (required)
-- `message` (string): Alert message content
+- `variant` (string): Visual variant - `primary` | `secondary` | `success` | `warning` | `danger` | `info` (default: `info`)
+- `title` (string, optional): Bold title shown above text
+- `text` (string): Alert body message
 
 **Example**:
 ```
-component Alert type: "success" message: "Changes saved successfully"
-component Alert type: "error" message: "Something went wrong"
-component Alert type: "warning" message: "This action cannot be undone"
-component Alert type: "info" message: "New updates available"
+component Alert variant: "success" title: "Saved" text: "Changes saved successfully"
+component Alert variant: "danger" title: "Error" text: "Something went wrong"
+component Alert variant: "warning" title: "Warning" text: "This action cannot be undone"
+component Alert variant: "info" title: "Info" text: "New updates available"
 ```
 
 **Rendering**: Colored box with icon, title, and message
@@ -460,12 +482,14 @@ Statistics card displaying metric and value.
 **Properties**:
 - `title` (string): Metric label/title
 - `value` (string): Metric value to display
+- `caption` (string, optional): Secondary text shown below value
+- `icon` (string, optional): Icon name rendered in the top-right badge
 
 **Example**:
 ```
 component StatCard title: "Total Users" value: "1,234"
-component StatCard title: "Revenue" value: "$45,678"
-component StatCard title: "Growth" value: "+12.5%"
+component StatCard title: "Revenue" value: "$45,678" caption: "vs last month"
+component StatCard title: "Growth" value: "+12.5%" icon: "trending-up"
 ```
 
 **Rendering**: Card with large value and small label below
@@ -490,7 +514,7 @@ component Code code: "SELECT * FROM users WHERE active = true;"
 
 ---
 
-### ChartPlaceholder
+### Chart
 
 Placeholder for various chart types.
 
@@ -500,12 +524,12 @@ Placeholder for various chart types.
 
 **Example**:
 ```
-component ChartPlaceholder type: "bar" height: 250
-component ChartPlaceholder type: "line" height: 300
-component ChartPlaceholder type: "pie" height: 200
+component Chart type: "bar" height: 250
+component Chart type: "line" height: 300
+component Chart type: "pie" height: 200
 ```
 
-**Rendering**: Chart area with placeholder bars/lines/segments
+**Rendering**: Deterministic chart placeholders with upward trend and subtle fluctuations
 
 ---
 
@@ -593,10 +617,10 @@ layout stack(direction: vertical, gap: lg, padding: lg) {
   
   layout grid(columns: 12, gap: md) {
     cell span: 6 {
-      component ChartPlaceholder type: "line" height: 300
+      component Chart type: "line" height: 300
     }
     cell span: 6 {
-      component ChartPlaceholder type: "pie" height: 300
+      component Chart type: "pie" height: 300
     }
   }
   
@@ -634,12 +658,12 @@ layout stack(direction: vertical, gap: lg, padding: lg) {
 **Navigation**: Topbar, SidebarMenu, Breadcrumbs, Tabs  
 **Data**: Table, List  
 **Media**: Image, Icon  
-**Display**: Divider, Badge, Link, Alert  
-**Info**: StatCard, Code, ChartPlaceholder  
+**Display**: Divider, Separate, Badge, Link, Alert  
+**Info**: StatCard, Code, Chart  
 **Modal**: Modal  
 **Feedback**: Spinner  
 
-**Total: 21 Components**
+**Total: 22 Components**
 
 ---
 

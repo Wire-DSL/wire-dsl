@@ -141,7 +141,7 @@ theme {
 
 ---
 
-## Available Components (21 Total)
+## Available Components (29 Total)
 
 ### Text Components (3)
 - `Heading` - Large titles
@@ -174,8 +174,9 @@ theme {
 - `Image` - Static image
 - `Icon` - Scalable icon
 
-### Display Components (4)
+### Display Components (5)
 - `Divider` - Visual separator
+- `Separate` - Invisible spacer
 - `Badge` - Status indicator
 - `Link` - Hypertext link
 - `Alert` - Information message
@@ -183,7 +184,7 @@ theme {
 ### Information Components (3)
 - `StatCard` - Metric display
 - `Code` - Code snippet
-- `ChartPlaceholder` - Chart area
+- `Chart` - Chart area
 
 ### Feedback Components (2)
 - `Modal` - Dialog overlay
@@ -197,7 +198,7 @@ theme {
 ```wire
 component Button 
   text: "Click me"              // Display text
-  variant: "primary"            // Visual variant (primary | secondary | ghost)
+  variant: "primary"            // Visual variant (primary | secondary | success | warning | danger | info)
   size: "medium"                // Size (small | medium | large)
 ```
 
@@ -382,19 +383,19 @@ layout stack(direction: vertical, gap: md, padding: lg) {
     cell span: 4 {
       layout card(padding: md, gap: md) {
         component Heading title: "Users"
-        component StatCard label: "Total" value: "1,234"
+        component StatCard title: "Total" value: "1,234"
       }
     }
     cell span: 4 {
       layout card(padding: md, gap: md) {
         component Heading title: "Revenue"
-        component StatCard label: "Monthly" value: "$45.2K"
+        component StatCard title: "Monthly" value: "$45.2K"
       }
     }
     cell span: 4 {
       layout card(padding: md, gap: md) {
         component Heading title: "Growth"
-        component StatCard label: "YoY" value: "12%"
+        component StatCard title: "YoY" value: "12%"
       }
     }
   }
@@ -482,7 +483,7 @@ layout grid(columns: 12, gap: md, padding: lg) {
       component Image placeholder: "square" height: 200
       component Heading title: "Premium Item"
       component Text content: "High-quality product"
-      component StatCard label: "Price" value: "$99.99"
+      component StatCard title: "Price" value: "$99.99"
       component Button text: "Add to Cart" variant: primary
     }
   }
@@ -491,7 +492,7 @@ layout grid(columns: 12, gap: md, padding: lg) {
       component Image placeholder: "square" height: 200
       component Heading title: "Standard Item"
       component Text content: "Good value option"
-      component StatCard label: "Price" value: "$49.99"
+      component StatCard title: "Price" value: "$49.99"
       component Button text: "Add to Cart" variant: primary
     }
   }
@@ -547,7 +548,7 @@ Before generating output, verify:
 - [ ] Grid cells have `span` values between 1-12
 - [ ] Sidebar width is between 200-400 pixels
 - [ ] Card/Panel radius values are: "none", "sm", "md", "lg"
-- [ ] Button variants are: "primary", "secondary", "ghost"
+- [ ] Button variants are: "primary", "secondary", "success", "warning", "danger", "info"
 - [ ] Nested layouts are properly closed with braces
 
 ---

@@ -374,7 +374,7 @@ export class SVGRenderer {
     const paddingY = this.tokens.button.paddingY;
 
     // Keep control inside layout bounds; truncate text if needed.
-    const idealTextWidth = text.length * fontSize * 0.6;  // Approximate character width
+    const idealTextWidth = this.estimateTextWidth(text, fontSize);
     const buttonWidth = this.clampControlWidth(Math.max(idealTextWidth + paddingX * 2, 60), pos.width);
     const buttonHeight = fontSize + paddingY * 2;
     const availableTextWidth = Math.max(0, buttonWidth - paddingX * 2);
@@ -419,12 +419,15 @@ export class SVGRenderer {
     const linkColor = this.resolveVariantColor(variant, this.renderTheme.primary);
 
     // Match Button sizing so Link can align beside regular buttons.
-    const idealTextWidth = text.length * fontSize * 0.6;
+    const idealTextWidth = this.estimateTextWidth(text, fontSize);
     const linkWidth = this.clampControlWidth(Math.max(idealTextWidth + paddingX * 2, 60), pos.width);
     const linkHeight = fontSize + paddingY * 2;
     const availableTextWidth = Math.max(0, linkWidth - paddingX * 2);
     const visibleText = this.truncateTextToWidth(text, availableTextWidth, fontSize);
-    const visibleTextWidth = visibleText.length * fontSize * 0.6;
+    const visibleTextWidth = Math.min(
+      this.estimateTextWidth(visibleText, fontSize),
+      Math.max(0, availableTextWidth)
+    );
     const centerY = pos.y + linkHeight / 2 + fontSize * 0.35;
     const underlineY = centerY + 3;
 
@@ -849,7 +852,7 @@ export class SVGRenderer {
     } else if (type === 'line' || type === 'area') {
       const pointCount = Math.max(4, Math.min(7, Math.floor(innerWidth / 56)));
       const stepX = pointCount > 1 ? innerWidth / (pointCount - 1) : innerWidth;
-      const values = Array.from({ length: pointCount }, (_, i) => 0.18 + i * (0.72 / (pointCount - 1)));
+      const values = this.generateUpwardTrendValues(pointCount, 0.18, 0.88);
       const pointsArray = values.map((value, i) => {
         const x = innerX + i * stepX;
         const y = innerY + innerHeight - value * innerHeight;
@@ -893,7 +896,7 @@ export class SVGRenderer {
       const barCount = Math.max(4, Math.min(8, Math.floor(innerWidth / 42)));
       const slotWidth = innerWidth / barCount;
       const barWidth = Math.max(8, slotWidth * 0.62);
-      const values = Array.from({ length: barCount }, (_, i) => 0.15 + i * (0.75 / (barCount - 1)));
+      const values = this.generateUpwardTrendValues(barCount, 0.16, 0.86);
       const baseY = innerY + innerHeight;
 
       svg += `
@@ -1182,6 +1185,10 @@ export class SVGRenderer {
     // Read items prop instead of tabs, or fall back to empty
     const itemsStr = String(node.props.items || '');
     const tabs = itemsStr ? itemsStr.split(',').map((t) => t.trim()) : ['Tab 1', 'Tab 2', 'Tab 3'];
+    const activeProp = node.props.active ?? 0;
+    const activeIndex = Number.isFinite(Number(activeProp))
+      ? Math.max(0, Math.floor(Number(activeProp)))
+      : 0;
     const tabWidth = pos.width / tabs.length;
 
     let svg = `<g${this.getDataNodeId(node)}>
@@ -1189,7 +1196,7 @@ export class SVGRenderer {
 
     tabs.forEach((tab, i) => {
       const tabX = pos.x + i * tabWidth;
-      const isActive = i === 0;
+      const isActive = i === activeIndex;
 
       svg += `
     <rect x="${tabX}" y="${pos.y}" 
@@ -1454,18 +1461,18 @@ export class SVGRenderer {
     const title = String(node.props.title || 'Metric');
     const value = String(node.props.value || '0');
     const caption = String(node.props.caption || '');
+    const iconName = String(node.props.icon || '').trim();
+    const iconSvg = iconName ? getIcon(iconName) : null;
 
     const padding = this.resolveSpacing(node.style.padding) || 16;
     const innerX = pos.x + padding;
     const innerY = pos.y + padding;
     const innerWidth = pos.width - padding * 2;
-    const innerHeight = pos.height - padding * 2;
 
     // StatCard layout: top-to-bottom flow with natural spacing
     const valueSize = 32;
     const titleSize = 14;
     const captionSize = 12;
-    const lineHeight = 18;
     const topGap = 8;      // Space from top
     const valueGap = 12;   // Space before value
     const captionGap = 12; // Space before caption
@@ -1474,6 +1481,12 @@ export class SVGRenderer {
     const titleY = innerY + topGap + titleSize;
     const valueY = titleY + valueGap + valueSize;
     const captionY = valueY + captionGap + captionSize;
+    const iconSize = 16;
+    const iconBadgeSize = 28;
+    const iconBadgeX = pos.x + pos.width - padding - iconBadgeSize;
+    const iconBadgeY = pos.y + padding;
+    const titleMaxWidth = iconSvg ? Math.max(40, innerWidth - iconBadgeSize - 8) : innerWidth;
+    const visibleTitle = this.truncateTextToWidth(title, titleMaxWidth, titleSize);
 
     let svg = `<g${this.getDataNodeId(node)}>
     <!-- StatCard Background -->
@@ -1489,7 +1502,7 @@ export class SVGRenderer {
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="${titleSize}" 
           font-weight="500" 
-          fill="${this.renderTheme.textMuted}">${this.escapeXml(title)}</text>
+          fill="${this.renderTheme.textMuted}">${this.escapeXml(visibleTitle)}</text>
     
     <!-- Value (Large) -->
     <text x="${innerX}" y="${valueY}" 
@@ -1497,6 +1510,22 @@ export class SVGRenderer {
           font-size="${valueSize}" 
           font-weight="700" 
           fill="${this.renderTheme.primary}">${this.escapeXml(value)}</text>`;
+
+    if (iconSvg) {
+      svg += `
+    <!-- Icon -->
+    <rect x="${iconBadgeX}" y="${iconBadgeY}"
+          width="${iconBadgeSize}" height="${iconBadgeSize}"
+          rx="6"
+          fill="${this.hexToRgba(this.renderTheme.primary, 0.12)}"
+          stroke="${this.hexToRgba(this.renderTheme.primary, 0.35)}"
+          stroke-width="1"/>
+    <g transform="translate(${iconBadgeX + (iconBadgeSize - iconSize) / 2}, ${iconBadgeY + (iconBadgeSize - iconSize) / 2})">
+      <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${this.renderTheme.primary}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        ${this.extractSvgContent(iconSvg)}
+      </svg>
+    </g>`;
+    }
 
     if (caption) {
       svg += `
@@ -1910,12 +1939,55 @@ export class SVGRenderer {
   }
 
   protected truncateTextToWidth(text: string, maxWidth: number, fontSize: number): string {
-    const charWidth = fontSize * 0.6;
-    const maxChars = Math.max(0, Math.floor((maxWidth || 0) / charWidth));
-    if (maxChars <= 0) return '';
-    if (text.length <= maxChars) return text;
-    if (maxChars <= 3) return text.slice(0, maxChars);
-    return `${text.slice(0, maxChars - 3)}...`;
+    if (maxWidth <= 0) return '';
+    if (this.estimateTextWidth(text, fontSize) <= maxWidth) return text;
+
+    const ellipsis = '...';
+    const ellipsisWidth = this.estimateTextWidth(ellipsis, fontSize);
+    if (ellipsisWidth >= maxWidth) return '.';
+
+    let result = '';
+    for (const char of text) {
+      const next = `${result}${char}`;
+      if (this.estimateTextWidth(next, fontSize) + ellipsisWidth > maxWidth) break;
+      result = next;
+    }
+    return `${result}${ellipsis}`;
+  }
+
+  protected estimateTextWidth(text: string, fontSize: number): number {
+    let width = 0;
+    for (const ch of text) {
+      if (/\s/.test(ch)) {
+        width += fontSize * 0.33;
+      } else if (/[.,:;'"`|!iIl]/.test(ch)) {
+        width += fontSize * 0.32;
+      } else if (/[MW@#%&]/.test(ch)) {
+        width += fontSize * 0.9;
+      } else {
+        width += fontSize * 0.6;
+      }
+    }
+    return width;
+  }
+
+  protected generateUpwardTrendValues(count: number, start: number, end: number): number[] {
+    if (count <= 0) return [];
+    if (count === 1) return [end];
+
+    const span = end - start;
+    const values = Array.from({ length: count }, (_, i) => {
+      const progress = i / (count - 1);
+      const base = start + span * progress;
+      const waveA = Math.sin((i + 1) * 1.27) * 0.07;
+      const waveB = Math.cos((i + 2) * 0.83) * 0.035;
+      const zigzag = ((i % 4) - 1.5) * 0.012;
+      return Math.min(0.94, Math.max(0.08, base + waveA + waveB + zigzag));
+    });
+
+    values[0] = start;
+    values[values.length - 1] = end;
+    return values;
   }
 
   protected getControlLabelOffset(label: string): number {

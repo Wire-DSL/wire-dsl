@@ -98,7 +98,7 @@ project "Complete Components Catalog" {
         component Text content: "Button - Variants:"
         component Button text: "Primary" variant: primary
         component Button text: "Secondary" variant: secondary
-        component Button text: "Ghost" variant: ghost
+        component Button text: "Info" variant: info
       }
 
       layout stack(direction: horizontal, gap: md, padding: md) {
@@ -279,9 +279,9 @@ project "Complete Components Catalog" {
       }
 
       layout stack(direction: vertical, gap: sm, padding: md) {
-        component Text content: "Badge - Variant: error"
-        component Badge text: "Failed" variant: error
-        component Badge text: "Critical" variant: error
+        component Text content: "Badge - variant: danger"
+        component Badge text: "Failed" variant: danger
+        component Badge text: "Critical" variant: danger
       }
 
       layout stack(direction: vertical, gap: sm, padding: md) {
@@ -297,22 +297,22 @@ project "Complete Components Catalog" {
 
       layout stack(direction: vertical, gap: sm, padding: md) {
         component Text content: "Alert - Variant: info"
-        component Alert variant: "info" message: "This is an informational message"
+        component Alert variant: "info" text: "This is an informational message"
       }
 
       layout stack(direction: vertical, gap: sm, padding: md) {
         component Text content: "Alert - Variant: success"
-        component Alert variant: "success" message: "Operation completed successfully"
+        component Alert variant: "success" text: "Operation completed successfully"
       }
 
       layout stack(direction: vertical, gap: sm, padding: md) {
         component Text content: "Alert - Variant: warning"
-        component Alert variant: "warning" message: "Please review this action"
+        component Alert variant: "warning" text: "Please review this action"
       }
 
       layout stack(direction: vertical, gap: sm, padding: md) {
-        component Text content: "Alert - Variant: error"
-        component Alert variant: "error" message: "An error occurred while processing"
+        component Text content: "Alert - variant: danger"
+        component Alert variant: "danger" text: "An error occurred while processing"
       }
 
       component Divider

@@ -5,7 +5,7 @@
 
 import * as fs from 'fs';
 import * as path from 'path';
-import { COMPONENTS, KEYWORDS, PROPERTY_VALUES } from './components.js';
+import { COMPONENTS, KEYWORDS, LAYOUTS, PROPERTY_VALUES } from './components.js';
 
 interface TextMateGrammar {
   $schema: string;
@@ -22,10 +22,45 @@ interface TextMateGrammar {
 }
 
 export function generateGrammar(): TextMateGrammar {
-  // Agrupar keywords por tipo
-  const keywords: string[] = ['project', 'screen', 'component', 'if', 'for', 'let', 'const', 'state', 'render'];
+  // Build keywords from canonical language metadata.
+  const keywords = Array.from(
+    new Set([
+      ...KEYWORDS.topLevel,
+      ...KEYWORDS.screen,
+      ...KEYWORDS.layout,
+      ...KEYWORDS.component,
+      ...KEYWORDS.cell,
+      ...KEYWORDS.special,
+    ])
+  );
   const components: string[] = Object.keys(COMPONENTS);
-  const properties: string[] = Object.keys(PROPERTY_VALUES);
+  const componentProperties = Object.values(COMPONENTS).flatMap((component) =>
+    Object.keys(component.properties || {})
+  );
+  const layoutProperties = Object.values(LAYOUTS).flatMap((layout) =>
+    Object.keys(layout.properties || {})
+  );
+  const styleProperties = [
+    'density',
+    'spacing',
+    'radius',
+    'stroke',
+    'font',
+    'background',
+    'theme',
+    'device',
+    'id',
+    'width',
+    'height',
+  ];
+  const properties = Array.from(
+    new Set([
+      ...Object.keys(PROPERTY_VALUES),
+      ...componentProperties,
+      ...layoutProperties,
+      ...styleProperties,
+    ])
+  );
 
   // Crear patrones regex
   const keywordPattern = keywords.join('|');

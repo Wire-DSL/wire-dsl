@@ -45,7 +45,7 @@ export const KEYWORD_COMPLETIONS: CompletionItem[] = [
     label: 'component',
     kind: 'Keyword',
     detail: 'Use a component',
-    documentation: 'component Button label: "Click"',
+    documentation: 'component Button text: "Click"',
     insertText: 'component ',
   },
   {
@@ -96,69 +96,15 @@ export const CONTAINER_COMPLETIONS: CompletionItem[] = [
 ];
 
 export const COMPONENT_COMPLETIONS: CompletionItem[] = [
-  {
-    label: 'button',
-    kind: 'Component',
-    detail: 'Interactive button',
-    documentation: 'button { label: "Click me" }',
-    insertText: 'button {\n\tid: "${1:btn}"\n\tlabel: "${2:Click}"\n\t$0\n}',
-  },
-  {
-    label: 'text',
-    kind: 'Component',
-    detail: 'Text content',
-    documentation: 'text { label: "Content" }',
-    insertText: 'text {\n\tlabel: "${1:Content}"\n\t$0\n}',
-  },
-  {
-    label: 'input',
-    kind: 'Component',
-    detail: 'Text input field',
-    documentation: 'input { placeholder: "Enter..." }',
-    insertText: 'input {\n\tid: "${1:input}"\n\tplaceholder: "${2:Enter...}"\n\t$0\n}',
-  },
-  {
-    label: 'label',
-    kind: 'Component',
-    detail: 'Form label',
-    documentation: 'label { label: "Name" }',
-    insertText: 'label {\n\tlabel: "${1:Name}"\n\t$0\n}',
-  },
-  {
-    label: 'select',
-    kind: 'Component',
-    detail: 'Dropdown select',
-    documentation: 'select { ... }',
-    insertText: 'select {\n\tid: "${1:select}"\n\t$0\n}',
-  },
-  {
-    label: 'checkbox',
-    kind: 'Component',
-    detail: 'Checkbox input',
-    documentation: 'checkbox { label: "Agree" }',
-    insertText: 'checkbox {\n\tid: "${1:check}"\n\tlabel: "${2:Agree}"\n\t$0\n}',
-  },
-  {
-    label: 'textarea',
-    kind: 'Component',
-    detail: 'Multi-line text area',
-    documentation: 'textarea { ... }',
-    insertText: 'textarea {\n\tid: "${1:textarea}"\n\tplaceholder: "${2:Enter text...}"\n\t$0\n}',
-  },
-  {
-    label: 'table',
-    kind: 'Component',
-    detail: 'Data table',
-    documentation: 'table { ... }',
-    insertText: 'table {\n\tid: "${1:table}"\n\t$0\n}',
-  },
-  {
-    label: 'form',
-    kind: 'Component',
-    detail: 'Form container',
-    documentation: 'form { ... }',
-    insertText: 'form {\n\tid: "${1:form}"\n\t$0\n}',
-  },
+  ...Object.entries(COMPONENTS)
+    .filter(([name]) => /^[A-Z]/.test(name))
+    .map(([name, meta]) => ({
+      label: name,
+      kind: 'Component' as const,
+      detail: meta.description,
+      documentation: meta.description,
+      insertText: `${name} `,
+    })),
 ];
 
 export const PROPERTY_COMPLETIONS: CompletionItem[] = [
@@ -180,15 +126,15 @@ export const PROPERTY_COMPLETIONS: CompletionItem[] = [
     label: 'width',
     kind: 'Property',
     detail: 'Element width',
-    documentation: 'width: 200px',
-    insertText: 'width: ${1:100}${2:px|%|rem}',
+    documentation: 'width: 200',
+    insertText: 'width: ${1:200}',
   },
   {
     label: 'height',
     kind: 'Property',
     detail: 'Element height',
-    documentation: 'height: 100px',
-    insertText: 'height: ${1:100}${2:px|%|rem}',
+    documentation: 'height: 120',
+    insertText: 'height: ${1:120}',
   },
   {
     label: 'gap',
@@ -201,8 +147,8 @@ export const PROPERTY_COMPLETIONS: CompletionItem[] = [
     label: 'padding',
     kind: 'Property',
     detail: 'Internal spacing',
-    documentation: 'padding: 16px',
-    insertText: 'padding: ${1:16}px',
+    documentation: 'padding: md',
+    insertText: 'padding: ${1:none|xs|sm|md|lg|xl}',
   },
   {
     label: 'color',
@@ -222,15 +168,15 @@ export const PROPERTY_COMPLETIONS: CompletionItem[] = [
     label: 'border',
     kind: 'Property',
     detail: 'Border style',
-    documentation: 'border: 1px solid #ccc',
-    insertText: 'border: ${1:1px} solid ${2:#ccc}',
+    documentation: 'border: true',
+    insertText: 'border: ${1:true|false}',
   },
   {
     label: 'variant',
     kind: 'Property',
     detail: 'Style variant',
-    documentation: 'variant: primary|secondary',
-    insertText: 'variant: ${1:primary|secondary}',
+    documentation: 'variant: default|primary|secondary|success|warning|danger|info',
+    insertText: 'variant: ${1:default|primary|secondary|success|warning|danger|info}',
   },
 ];
 
@@ -365,7 +311,7 @@ export function getPropertyValueSuggestions(
  * 
  * Hierarchy:
  * - empty-file: suggest 'project' to start
- * - inside-project: suggest project-level keywords (screen, theme, colors, mocks, define)
+ * - inside-project: suggest project-level keywords (screen, style, colors, mocks, define)
  * - inside-screen: suggest 'layout' keyword and containers (stack, grid, split, panel, card)
  * - inside-layout: suggest components and nested layouts
  */
@@ -379,7 +325,7 @@ export function getScopeBasedCompletions(
 
     case 'inside-project': {
       // Suggest project-level keywords from KEYWORDS.topLevel
-      // topLevel: ['project', 'theme', 'colors', 'mocks', 'define']
+      // topLevel: ['project', 'style', 'colors', 'mocks', 'define']
       const topLevelCompletions: CompletionSuggestion[] = [
         {
           label: 'screen',
@@ -389,11 +335,11 @@ export function getScopeBasedCompletions(
           insertText: 'screen ${1:MyScreen} {\n\t$0\n}',
         },
         {
-          label: 'theme',
+          label: 'style',
           kind: 'Keyword',
-          detail: 'Define theme properties',
-          documentation: 'theme { density: "comfortable" ... }',
-          insertText: 'theme {\n\t$0\n}',
+          detail: 'Define style properties',
+          documentation: 'style { density: "comfortable" ... }',
+          insertText: 'style {\n\t$0\n}',
         },
         {
           label: 'colors',
@@ -444,6 +390,13 @@ export function getScopeBasedCompletions(
           detail: 'Grid cell within layout',
           documentation: 'cell span: 2 { ... }',
           insertText: 'cell span: ${1:1} {\n\t$0\n}',
+        },
+        {
+          label: 'component',
+          kind: 'Keyword',
+          detail: 'Insert component instance',
+          documentation: 'component Heading text: "Title"',
+          insertText: 'component ',
         },
         ...COMPONENT_COMPLETIONS,
       ];

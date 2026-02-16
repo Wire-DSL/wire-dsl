@@ -95,7 +95,7 @@ border: false
 
 ---
 
-## The 28 Components
+## The 30 Components
 
 ### Text (3)
 ```wire
@@ -120,7 +120,7 @@ component Button text: "Click" variant: primary
 component IconButton icon: "search"
 ```
 
-**Button variants**: `primary`, `secondary`, `ghost`
+**Button variants**: `primary`, `secondary`, `success`, `warning`, `danger`, `info`
 
 ### Navigation (5)
 ```wire
@@ -145,14 +145,16 @@ component Icon name: "search"
 
 **Image placeholders**: `square`, `landscape`, `portrait`, `avatar`, `circle`
 
-### Display (3)
+### Display (5)
 ```wire
 component Divider
+component Separate size: md
 component Badge text: "New" variant: primary
-component Alert type: "error" message: "Error message"
+component Link text: "Learn more" variant: info
+component Alert variant: "danger" title: "Error" text: "Error message"
 ```
 
-**Alert types**: `info`, `success`, `warning`, `error`
+**Alert variants**: `primary`, `secondary`, `success`, `warning`, `danger`, `info`
 
 ### Information (3)
 ```wire

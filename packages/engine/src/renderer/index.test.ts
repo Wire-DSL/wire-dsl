@@ -150,6 +150,43 @@ describe('SVG Renderer', () => {
     expect(svg).toContain('rgba(239, 68, 68, 0.9)');
   });
 
+  it('should keep Link underline tied to visible text width in wide containers', () => {
+    const input = `
+      project "LinkUnderlineWidth" {
+        screen Main {
+          layout stack(direction: horizontal, gap: md) {
+            component Link text: "iii"
+            component Link text: "another"
+          }
+        }
+      }
+    `;
+
+    const { ast } = parseWireDSLWithSourceMap(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    const linkEntries = Object.entries(ir.project.nodes)
+      .filter(([_, node]) => node.kind === 'component' && node.componentType === 'Link');
+
+    expect(linkEntries.length).toBeGreaterThanOrEqual(1);
+
+    const [firstLinkId, firstLinkNode] = linkEntries[0];
+    const firstLinkPos = layout[firstLinkId];
+    const nodeId = firstLinkNode.meta?.nodeId;
+    expect(nodeId).toBeTruthy();
+
+    const match = svg.match(
+      new RegExp(`data-node-id="${nodeId}"[\\s\\S]*?<line[^>]*x1="([^"]+)"[^>]*x2="([^"]+)"`)
+    );
+    expect(match).toBeTruthy();
+    const underlineWidth = Math.abs(Number(match![2]) - Number(match![1]));
+
+    // Underline should not span the full component width for short text.
+    expect(underlineWidth).toBeLessThan(firstLinkPos.width * 0.75);
+  });
+
   it('should override built-in and custom variants using colors block', () => {
     const input = `
       project "VariantOverrides" {
@@ -366,6 +403,38 @@ describe('SVG Renderer', () => {
 
     expect(svg).toContain('<polyline');
     expect(svg).toContain('<path');
+  });
+
+  it('should render line chart with upward trend and local fluctuations', () => {
+    const input = `
+      project "ChartLineTrend" {
+        screen Main {
+          layout stack {
+            component Chart type: "line" height: 220
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    const pointsMatch = svg.match(/<polyline[^>]*points="([^"]+)"/);
+    expect(pointsMatch).toBeTruthy();
+
+    const yValues = pointsMatch![1]
+      .trim()
+      .split(/\s+/)
+      .map((pair) => Number(pair.split(',')[1]))
+      .filter((n) => !Number.isNaN(n));
+
+    expect(yValues.length).toBeGreaterThan(3);
+    expect(yValues[0]).toBeGreaterThan(yValues[yValues.length - 1]);
+
+    const hasDip = yValues.slice(1).some((y, i) => y > yValues[i]);
+    expect(hasDip).toBe(true);
   });
 
   it('should infer table mock data from column names when mock is not provided', () => {
@@ -679,6 +748,28 @@ describe('SVG Renderer', () => {
     expect(svg).toContain('2,543');
     expect(svg).toContain('Revenue');
     expect(svg).toContain('$45.2K');
+  });
+
+  it('should render StatCard icon when provided', () => {
+    const input = `
+      project "StatCardIcon" {
+        screen Main {
+          layout stack {
+            component StatCard title: "Users" value: "1,234" icon: "users"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    expect(svg).toContain('Users');
+    expect(svg).toContain('1,234');
+    expect(svg).toContain('viewBox="0 0 24 24"');
+    expect(svg).toContain('stroke-linecap="round"');
   });
 
   it('should render form components with labels', () => {
@@ -1328,6 +1419,29 @@ describe('Skeleton SVG Renderer', () => {
     expect(svg).not.toContain('>Delete account<');
     expect(svg).toContain('<line');
     expect(svg).toContain('rgba(239, 68, 68, 0.55)');
+  });
+
+  it('should render StatCard icon as a skeleton placeholder block', () => {
+    const input = `
+      project "Test" {
+        screen Main {
+          layout stack {
+            component StatCard title: "Users" value: "1,234" icon: "users"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+
+    const renderer = new SkeletonSVGRenderer(ir, layout);
+    const svg = renderer.render();
+
+    expect(svg).not.toContain('Users');
+    expect(svg).not.toContain('1,234');
+    expect(svg).toContain('width="20" height="20"');
   });
 
   it('should hide icons', () => {

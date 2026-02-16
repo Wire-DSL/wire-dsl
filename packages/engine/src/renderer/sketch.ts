@@ -1032,6 +1032,8 @@ export class SketchSVGRenderer extends SVGRenderer {
     const title = String(node.props.title || 'Metric');
     const value = String(node.props.value || '0');
     const caption = String(node.props.caption || '');
+    const iconName = String(node.props.icon || '').trim();
+    const iconSvg = iconName ? getIcon(iconName) : null;
 
     // Inline spacing resolution
     const padding = this.resolveSpacing(node.style.padding);
@@ -1048,6 +1050,14 @@ export class SketchSVGRenderer extends SVGRenderer {
     const titleY = innerY + topGap + titleSize;
     const valueY = titleY + valueGap + valueSize;
     const captionY = valueY + captionGap + captionSize;
+    const iconSize = 16;
+    const iconBadgeSize = 28;
+    const iconBadgeX = pos.x + pos.width - padding - iconBadgeSize;
+    const iconBadgeY = pos.y + padding;
+    const titleMaxWidth = iconSvg
+      ? Math.max(40, pos.width - padding * 2 - iconBadgeSize - 8)
+      : Math.max(40, pos.width - padding * 2);
+    const visibleTitle = this.truncateTextToWidth(title, titleMaxWidth, titleSize);
 
     let svg = `<g${this.getDataNodeId(node)}>
     <!-- StatCard Background -->
@@ -1064,7 +1074,7 @@ export class SketchSVGRenderer extends SVGRenderer {
           font-family="${this.fontFamily}"
           font-size="${titleSize}"
           font-weight="500"
-          fill="${this.renderTheme.textMuted}">${this.escapeXml(title)}</text>
+          fill="${this.renderTheme.textMuted}">${this.escapeXml(visibleTitle)}</text>
 
     <!-- Value (Large) -->
     <text x="${innerX}" y="${valueY}"
@@ -1072,6 +1082,23 @@ export class SketchSVGRenderer extends SVGRenderer {
           font-size="${valueSize}"
           font-weight="700"
           fill="${this.renderTheme.primary}">${this.escapeXml(value)}</text>`;
+
+    if (iconSvg) {
+      svg += `
+    <!-- Icon -->
+    <rect x="${iconBadgeX}" y="${iconBadgeY}"
+          width="${iconBadgeSize}" height="${iconBadgeSize}"
+          rx="6"
+          fill="none"
+          stroke="#2D3748"
+          stroke-width="0.5"
+          filter="url(#sketch-rough)"/>
+    <g transform="translate(${iconBadgeX + (iconBadgeSize - iconSize) / 2}, ${iconBadgeY + (iconBadgeSize - iconSize) / 2})">
+      <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${this.renderTheme.primary}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        ${this.extractSvgContent(iconSvg)}
+      </svg>
+    </g>`;
+    }
 
     if (caption) {
       svg += `

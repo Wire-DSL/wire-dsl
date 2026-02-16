@@ -40,8 +40,8 @@ Complete catalog of all component types with:
 - **Navigation**: Topbar, SidebarMenu, Breadcrumbs, Tabs
 - **Data Display**: Table, List
 - **Media**: Image, Icon
-- **Display Elements**: Divider, Badge, Link, Alert
-- **Information**: StatCard, Code, ChartPlaceholder
+- **Display Elements**: Divider, Separate, Badge, Link, Alert
+- **Information**: StatCard, Code, Chart
 - **Modal & Feedback**: Modal, Spinner
 
 Each component includes:
@@ -154,11 +154,11 @@ Project
 | **Navigation** | Topbar, SidebarMenu, Breadcrumbs, Tabs | Navigation |
 | **Data** | Table, List | Data display |
 | **Media** | Image, Icon | Visual content |
-| **Display** | Divider, Badge, Link, Alert | Visual elements |
-| **Info** | StatCard, Code, ChartPlaceholder | Information |
+| **Display** | Divider, Separate, Badge, Link, Alert | Visual elements |
+| **Info** | StatCard, Code, Chart | Information |
 | **Feedback** | Modal, Spinner | User feedback |
 
-### Total: 21 Components
+### Total: 22 Components
 
 ---
 

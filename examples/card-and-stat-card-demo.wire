@@ -50,7 +50,7 @@ project "Card & StatCard Demo" {
         cell span: 2 {
           layout card(padding: md, gap: sm) {
             component Heading title: "Avg Order"
-            component StatCard label: "Last quarter" value: "$1,825"
+            component StatCard title: "Last quarter" value: "$1,825"
           }
         }
       }

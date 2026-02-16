@@ -43,8 +43,8 @@ This roadmap describes the development phases of Wire-DSL from MVP through advan
   - Navigation: Topbar, SidebarMenu, Breadcrumbs, Tabs
   - Data: Table, List
   - Media: Image, Icon
-  - Display: Divider, Badge, Link, Alert
-  - Info: StatCard, Code, ChartPlaceholder
+  - Display: Divider, Separate, Badge, Link, Alert
+  - Info: StatCard, Code, Chart
   - Feedback: Modal, Spinner
 
 #### 1.5 Renderer ✅

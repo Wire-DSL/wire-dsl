@@ -31,7 +31,7 @@ project "Multi-Screen Demo" {
     layout stack(direction: vertical, gap: lg, padding: xl) {
       component Topbar title: "Settings"
       
-      component Alert type: "info" message: "Manage your profile and preferences"
+      component Alert variant: "info" text: "Manage your profile and preferences"
       
       component Textarea label: "Bio" placeholder: "Tell us about yourself" rows: 4
       

@@ -76,7 +76,7 @@ layout stack(direction: vertical, gap: md) {
 layout stack(direction: horizontal, gap: md, padding: md) {
   component Button text: "Save" variant: primary
   component Button text: "Cancel" variant: secondary
-  component Button text: "Delete" variant: ghost
+  component Button text: "Delete" variant: danger
 }
 ```
 <!-- wire-preview:end -->

@@ -95,24 +95,24 @@ project "Wire-DSL Complete Components Catalog" {
 
       layout stack(direction: vertical, gap: md, padding: md) {
         component Heading text: "Button Variants by Emphasis" level: h3
-        component Text content: "Primary (high emphasis), Secondary (medium), Ghost (low emphasis)"
+        component Text content: "Primary (high emphasis), Secondary (medium), Info (low emphasis)"
 
         layout stack(direction: horizontal, gap: md, align: left) {
           component Button text: "Primary Button" variant: primary
           component Button text: "Secondary Button" variant: secondary
-          component Button text: "Ghost Button" variant: ghost
+          component Button text: "Info Button" variant: info
         }
 
         layout stack(direction: horizontal, gap: md, align: left) {
           component Button text: "Save Changes" variant: primary
           component Button text: "Cancel" variant: secondary
-          component Button text: "Learn More" variant: ghost
+          component Button text: "Learn More" variant: info
         }
 
         layout stack(direction: horizontal, gap: md, align: left) {
           component Button text: "Submit Form" variant: primary
           component Button text: "Reset Form" variant: secondary
-          component Button text: "Skip Step" variant: ghost
+          component Button text: "Skip Step" variant: info
         }
 
         component Divider
@@ -303,7 +303,7 @@ project "Wire-DSL Complete Components Catalog" {
           component Badge text: "Secondary" variant: secondary
           component Badge text: "Success" variant: success
           component Badge text: "Warning" variant: warning
-          component Badge text: "Error" variant: error
+          component Badge text: "Error" variant: danger
           component Badge text: "Info" variant: info
         }
 
@@ -311,7 +311,7 @@ project "Wire-DSL Complete Components Catalog" {
           component Badge text: "New Feature" variant: primary
           component Badge text: "Active Status" variant: success
           component Badge text: "Pending Review" variant: warning
-          component Badge text: "Failed" variant: error
+          component Badge text: "Failed" variant: danger
           component Badge text: "Beta" variant: info
           component Badge text: "Draft" variant: secondary
         }
@@ -332,10 +332,10 @@ project "Wire-DSL Complete Components Catalog" {
 
         component Heading text: "Alert Messages (All 4 Types)" level: h3
 
-        component Alert type: "info" message: "This is an informational message. New updates are available for your review and installation."
-        component Alert type: "success" message: "Success! Your changes have been saved successfully and are now live in production."
-        component Alert type: "warning" message: "Warning: This action cannot be undone. Please review carefully before proceeding with this operation."
-        component Alert type: "error" message: "Error: Something went wrong during processing. Please try again or contact technical support for assistance."
+        component Alert variant: "info" text: "This is an informational message. New updates are available for your review and installation."
+        component Alert variant: "success" text: "Success! Your changes have been saved successfully and are now live in production."
+        component Alert variant: "warning" text: "Warning: This action cannot be undone. Please review carefully before proceeding with this operation."
+        component Alert variant: "danger" text: "Error: Something went wrong during processing. Please try again or contact technical support for assistance."
       }
 
       component Divider
@@ -761,7 +761,7 @@ project "Wire-DSL Complete Components Catalog" {
       layout stack(direction: horizontal, gap: md, justify: center, padding: lg) {
         component Button text: "View Full Documentation" variant: primary
         component Button text: "Start Building" variant: secondary
-        component Button text: "Download Examples" variant: ghost
+        component Button text: "Download Examples" variant: info
       }
 
     }
