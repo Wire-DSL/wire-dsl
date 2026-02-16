@@ -1,5 +1,11 @@
 # @wire-dsl/language-support
 
+## 0.2.0
+
+### Minor Changes
+
+- [#51](https://github.com/Wire-DSL/wire-dsl/pull/51) [`6fba9ac`](https://github.com/Wire-DSL/wire-dsl/commit/6fba9ace83474d6ec50f6dca846db1e45c012ce5) Thanks [@roxguel](https://github.com/roxguel)! - Major changes and improvements: add renderers, fix components, and more
+
 ## 0.1.0
 
 ### Minor Changes
