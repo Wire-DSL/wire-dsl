@@ -694,12 +694,13 @@ export class LayoutEngine {
   private getButtonMetricsForDensity(): { fontSize: number; paddingX: number } {
     switch (this.style.density) {
       case 'compact':
-        return { fontSize: 12, paddingX: 8 };
-      case 'comfortable':
-        return { fontSize: 16, paddingX: 16 };
+        return { fontSize: 12, paddingX: 12 };
       case 'normal':
+        return { fontSize: 14, paddingX: 18 };
+      case 'comfortable':
+        return { fontSize: 16, paddingX: 24 };
       default:
-        return { fontSize: 14, paddingX: 12 };
+        return { fontSize: 14, paddingX: 18 };
     }
   }
 

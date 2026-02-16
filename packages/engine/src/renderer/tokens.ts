@@ -77,8 +77,8 @@ export const DENSITY_TOKENS: Record<'compact' | 'normal' | 'comfortable', Design
       xl: 12,
     },
     button: {
-      paddingX: 8,
-      paddingY: 4,
+      paddingX: 12,
+      paddingY: 6,
       radius: 4,
       fontSize: 12,
       fontWeight: 500,
@@ -126,8 +126,8 @@ export const DENSITY_TOKENS: Record<'compact' | 'normal' | 'comfortable', Design
       xl: 24,
     },
     button: {
-      paddingX: 12,
-      paddingY: 6,
+      paddingX: 18,
+      paddingY: 9,
       radius: 6,
       fontSize: 14,
       fontWeight: 500,
@@ -175,8 +175,8 @@ export const DENSITY_TOKENS: Record<'compact' | 'normal' | 'comfortable', Design
       xl: 32,
     },
     button: {
-      paddingX: 16,
-      paddingY: 8,
+      paddingX: 24,
+      paddingY: 12,
       radius: 8,
       fontSize: 16,
       fontWeight: 500,
