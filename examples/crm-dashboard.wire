@@ -37,10 +37,10 @@ project "CRM Dashboard" {
 
           layout grid(columns: 12, gap: md) {
             cell span: 6 {
-              component ChartPlaceholder type: "bar" height: 250
+              component Chart type: "bar" height: 250
             }
             cell span: 6 {
-              component ChartPlaceholder type: "line" height: 250
+              component Chart type: "line" height: 250
             }
           }
 
