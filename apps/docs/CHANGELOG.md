@@ -1,5 +1,14 @@
 # @wire-dsl/docs
 
+## 0.0.5
+
+### Patch Changes
+
+- [#53](https://github.com/Wire-DSL/wire-dsl/pull/53) [`725f3a2`](https://github.com/Wire-DSL/wire-dsl/commit/725f3a2365ca1448d36ac48af4d047c595028e72) Thanks [@roxguel](https://github.com/roxguel)! - Minor documentation updates and patch references for language support and engine
+
+- Updated dependencies [[`725f3a2`](https://github.com/Wire-DSL/wire-dsl/commit/725f3a2365ca1448d36ac48af4d047c595028e72)]:
+  - @wire-dsl/engine@0.2.1
+
 ## 0.0.4
 
 ### Patch Changes
