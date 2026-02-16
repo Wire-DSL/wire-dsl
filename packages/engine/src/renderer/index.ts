@@ -376,7 +376,10 @@ export class SVGRenderer {
 
     // Keep control inside layout bounds; truncate text if needed.
     const idealTextWidth = this.estimateTextWidth(text, fontSize);
-    const buttonWidth = this.clampControlWidth(Math.max(idealTextWidth + paddingX * 2, 60), pos.width);
+    const buttonWidth = this.clampControlWidth(
+      Math.max(Math.ceil(idealTextWidth + paddingX * 2), 60),
+      pos.width
+    );
     const buttonHeight = fontSize + paddingY * 2;
     const availableTextWidth = Math.max(0, buttonWidth - paddingX * 2);
     const visibleText = this.truncateTextToWidth(text, availableTextWidth, fontSize);
@@ -421,7 +424,10 @@ export class SVGRenderer {
 
     // Match Button sizing so Link can align beside regular buttons.
     const idealTextWidth = this.estimateTextWidth(text, fontSize);
-    const linkWidth = this.clampControlWidth(Math.max(idealTextWidth + paddingX * 2, 60), pos.width);
+    const linkWidth = this.clampControlWidth(
+      Math.max(Math.ceil(idealTextWidth + paddingX * 2), 60),
+      pos.width
+    );
     const linkHeight = fontSize + paddingY * 2;
     const availableTextWidth = Math.max(0, linkWidth - paddingX * 2);
     const visibleText = this.truncateTextToWidth(text, availableTextWidth, fontSize);
@@ -2003,17 +2009,18 @@ export class SVGRenderer {
   }
 
   protected truncateTextToWidth(text: string, maxWidth: number, fontSize: number): string {
+    const epsilon = 0.01;
     if (maxWidth <= 0) return '';
-    if (this.estimateTextWidth(text, fontSize) <= maxWidth) return text;
+    if (this.estimateTextWidth(text, fontSize) <= maxWidth + epsilon) return text;
 
     const ellipsis = '...';
     const ellipsisWidth = this.estimateTextWidth(ellipsis, fontSize);
-    if (ellipsisWidth >= maxWidth) return '.';
+    if (ellipsisWidth >= maxWidth - epsilon) return '.';
 
     let result = '';
     for (const char of text) {
       const next = `${result}${char}`;
-      if (this.estimateTextWidth(next, fontSize) + ellipsisWidth > maxWidth) break;
+      if (this.estimateTextWidth(next, fontSize) + ellipsisWidth > maxWidth + epsilon) break;
       result = next;
     }
     return `${result}${ellipsis}`;

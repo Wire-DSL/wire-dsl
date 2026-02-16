@@ -177,7 +177,7 @@ describe('Layout Engine', () => {
     const input = `
       project "LinkWidth" {
         screen Main {
-          layout stack(direction: horizontal, gap: md) {
+          layout stack(direction: horizontal, align: left, gap: md) {
             component Link text: "Short"
             component Link text: "This is a much longer link"
           }
@@ -298,7 +298,7 @@ describe('Layout Engine', () => {
       project "IconBtnCompact" {
         style { density: "compact" }
         screen Main {
-          layout stack {
+          layout stack(direction: horizontal, align: left) {
             component IconButton icon: "menu" size: md
           }
         }
@@ -308,7 +308,7 @@ describe('Layout Engine', () => {
       project "IconBtnComfortable" {
         style { density: "comfortable" }
         screen Main {
-          layout stack {
+          layout stack(direction: horizontal, align: left) {
             component IconButton icon: "menu" size: md
           }
         }
@@ -916,6 +916,7 @@ describe('Layout Engine', () => {
       project "Text Wrap" {
         style {
           spacing: "md"
+          device: "mobile"
         }
 
         screen Main {
@@ -1024,10 +1025,13 @@ describe('Layout Engine', () => {
   it('should use Heading level to compute larger height for larger titles', () => {
     const input = `
       project "Heading Levels Layout" {
+        style {
+          device: "mobile"
+        }
         screen Main {
           layout stack(direction: vertical, gap: md, padding: md) {
-            component Heading text: "Main title" level: h1
-            component Heading text: "Secondary title" level: h4
+            component Heading text: "Main title with enough content to wrap in mobile viewport" level: h1
+            component Heading text: "Main title with enough content to wrap in mobile viewport" level: h4
           }
         }
       }

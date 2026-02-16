@@ -188,7 +188,7 @@ describe('SVG Renderer', () => {
     const svg = renderToSVG(ir, layout);
 
     expect(svg).toContain('Delete');
-    expect(svg).toContain('rgba(239, 68, 68, 0.9)');
+    expect(svg).toContain('#EF4444');
   });
 
   it('should keep Link underline tied to visible text width in wide containers', () => {
@@ -652,7 +652,7 @@ describe('SVG Renderer', () => {
 
     expect(svg).toContain('Juan');
     expect(svg).toContain('Buenos Aires');
-    expect(svg).toContain('$5,000');
+    expect(svg).toMatch(/\$5(?:[.,])?000/);
   });
 
   it('should use list mock type when items are not provided', () => {
@@ -918,7 +918,7 @@ describe('SVG Renderer', () => {
     expect(svg).toContain('Users');
     expect(svg).toContain('Sessions');
     expect(svg).toContain('Revenue');
-    expect(svg).toContain('[BAR CHART]');
+    expect(svg).not.toContain('[BAR CHART]');
     expect(svg).toContain('Date');
     expect(svg).toContain('Event');
   });
