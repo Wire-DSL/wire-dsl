@@ -1,5 +1,16 @@
 # @wire-dsl/docs
 
+## 0.0.6
+
+### Patch Changes
+
+- [#55](https://github.com/Wire-DSL/wire-dsl/pull/55) [`1a593ad`](https://github.com/Wire-DSL/wire-dsl/commit/1a593ad691c3342c5f2698a8c7184d70091236fa) Thanks [@roxguel](https://github.com/roxguel)! - Fix height canvas
+
+- [#55](https://github.com/Wire-DSL/wire-dsl/pull/55) [`1a593ad`](https://github.com/Wire-DSL/wire-dsl/commit/1a593ad691c3342c5f2698a8c7184d70091236fa) Thanks [@roxguel](https://github.com/roxguel)! - Minor documentation updates and patch references for language support and engine
+
+- Updated dependencies [[`1a593ad`](https://github.com/Wire-DSL/wire-dsl/commit/1a593ad691c3342c5f2698a8c7184d70091236fa), [`1a593ad`](https://github.com/Wire-DSL/wire-dsl/commit/1a593ad691c3342c5f2698a8c7184d70091236fa)]:
+  - @wire-dsl/engine@0.2.2
+
 ## 0.0.5
 
 ### Patch Changes
