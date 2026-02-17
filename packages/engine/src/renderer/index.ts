@@ -186,7 +186,7 @@ export class SVGRenderer {
       }
     }
 
-    return Math.max(maxY + 40, this.options.height); // Add 40px padding at bottom
+    return Math.max(maxY, this.options.height);
   }
 
   protected renderNode(nodeId: string, output: string[]): void {
