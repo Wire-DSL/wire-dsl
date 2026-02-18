@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseWireDSL } from './index';
+import { parseWireDSL, parseWireDSLWithSourceMap } from './index';
 
 describe('WireDSL Parser', () => {
   it('should parse minimal project', () => {
@@ -816,5 +816,144 @@ describe('WireDSL Parser', () => {
       expect(panel.layoutType).toBe('panel');
       expect(panel.params.border).toBe('true');
     }
+  });
+
+  it('should return lexer diagnostics with range in tolerant mode', () => {
+    const input = `
+      project "Broken {
+        screen Main {
+          layout stack {
+            component Heading text: "Test"
+          }
+        }
+      }
+    `;
+
+    const result = parseWireDSLWithSourceMap(input, '<input>', { throwOnError: false });
+
+    expect(result.hasErrors).toBe(true);
+    expect(result.errors.length).toBeGreaterThan(0);
+    expect(result.errors[0].phase).toBe('lexer');
+    expect(result.errors[0].range.start.line).toBeGreaterThan(0);
+  });
+
+  it('should return parser diagnostics with range in tolerant mode', () => {
+    const input = `
+      project "Invalid" {
+        screen Main {
+          layout stack
+            component Heading text: "Missing braces"
+          }
+        }
+      }
+    `;
+
+    const result = parseWireDSLWithSourceMap(input, '<input>', { throwOnError: false });
+
+    expect(result.hasErrors).toBe(true);
+    expect(result.errors.length).toBeGreaterThan(0);
+    expect(result.errors[0].phase).toBe('parser');
+    expect(result.errors[0].range.start.line).toBeGreaterThan(0);
+  });
+
+  it('should return semantic warnings for unsupported component properties', () => {
+    const input = `
+      project "Warnings" {
+        screen Main {
+          layout stack {
+            component Button text: "Save" unknownProp: "foo"
+          }
+        }
+      }
+    `;
+
+    const result = parseWireDSLWithSourceMap(input);
+    const warning = result.warnings.find((d) => d.code === 'COMPONENT_UNKNOWN_PROPERTY');
+
+    expect(result.hasErrors).toBe(false);
+    expect(warning).toBeDefined();
+    expect(warning?.severity).toBe('warning');
+    expect(warning?.range.start.line).toBeGreaterThan(0);
+  });
+
+  it('should return semantic warnings for invalid enum values', () => {
+    const input = `
+      project "Warnings" {
+        screen Main {
+          layout stack(direction: diagonal) {
+            component Heading text: "Title"
+          }
+        }
+      }
+    `;
+
+    const result = parseWireDSLWithSourceMap(input);
+    const warning = result.warnings.find((d) => d.code === 'LAYOUT_INVALID_PARAMETER_VALUE');
+
+    expect(result.hasErrors).toBe(false);
+    expect(warning).toBeDefined();
+    expect(warning?.severity).toBe('warning');
+    expect(warning?.range.start.line).toBeGreaterThan(0);
+  });
+
+  it('should return semantic warnings for missing required layout parameters', () => {
+    const input = `
+      project "Warnings" {
+        screen Main {
+          layout grid {
+            component Heading text: "Title"
+          }
+        }
+      }
+    `;
+
+    const result = parseWireDSLWithSourceMap(input);
+    const warning = result.warnings.find((d) => d.code === 'LAYOUT_MISSING_REQUIRED_PARAMETER');
+
+    expect(result.hasErrors).toBe(false);
+    expect(warning).toBeDefined();
+    expect(warning?.message).toContain('columns');
+    expect(warning?.severity).toBe('warning');
+    expect(warning?.range.start.line).toBeGreaterThan(0);
+  });
+
+  it('should return semantic warnings for missing required split sidebar parameter', () => {
+    const input = `
+      project "Warnings" {
+        screen Main {
+          layout split {
+            component Heading text: "Title"
+          }
+        }
+      }
+    `;
+
+    const result = parseWireDSLWithSourceMap(input);
+    const warning = result.warnings.find((d) => d.code === 'LAYOUT_MISSING_REQUIRED_PARAMETER');
+
+    expect(result.hasErrors).toBe(false);
+    expect(warning).toBeDefined();
+    expect(warning?.message).toContain('sidebar');
+    expect(warning?.severity).toBe('warning');
+    expect(warning?.range.start.line).toBeGreaterThan(0);
+  });
+
+  it('should return semantic warning when layout has no children', () => {
+    const input = `
+      project "Warnings" {
+        screen Main {
+          layout stack {
+          }
+        }
+      }
+    `;
+
+    const result = parseWireDSLWithSourceMap(input);
+    const warning = result.warnings.find((d) => d.code === 'LAYOUT_EMPTY');
+
+    expect(result.hasErrors).toBe(false);
+    expect(warning).toBeDefined();
+    expect(warning?.severity).toBe('warning');
+    expect(warning?.range.start.line).toBeGreaterThan(0);
   });
 });

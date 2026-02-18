@@ -1,6 +1,14 @@
 import { Lexer, createToken, CstParser, TokenType } from 'chevrotain';
+import { COMPONENTS, LAYOUTS, type PropertyMetadata } from '@wire-dsl/language-support/components';
 import { SourceMapBuilder } from '../sourcemap/builder';
-import type { ParseResult, CapturedTokens } from '../sourcemap/types';
+import type {
+  ParseResult,
+  ParseDiagnosticsResult,
+  ParseError,
+  SourceMapEntry,
+  CodeRange,
+  CapturedTokens,
+} from '../sourcemap/types';
 
 /**
  * WireDSL Parser
@@ -14,7 +22,7 @@ import type { ParseResult, CapturedTokens } from '../sourcemap/types';
  * ```
  * project "Dashboard" {
  *   screen Main {
- *     layout grid(cols: 3) {
+ *     layout grid(columns: 3) {
  *       component StatCard
  *         title: "Revenue"
  *         value: "45,230"
@@ -1225,6 +1233,459 @@ class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
 
 const visitor = new WireDSLVisitor();
 
+export interface ParseWireDSLWithSourceMapOptions {
+  throwOnError?: boolean;
+  includeSemanticWarnings?: boolean;
+}
+
+type SemanticComponentRules = {
+  allowedProps: string[];
+  requiredProps: string[];
+  enumProps: Record<string, readonly string[]>;
+  booleanProps: Set<string>;
+};
+
+type SemanticLayoutRules = {
+  allowedParams: string[];
+  requiredParams: string[];
+  enumParams: Record<string, readonly string[]>;
+};
+
+function getEnumOptions(property: PropertyMetadata): readonly string[] | undefined {
+  if (property.type === 'enum' && Array.isArray(property.options)) {
+    return property.options;
+  }
+  return undefined;
+}
+
+function buildComponentRulesFromMetadata(): Record<string, SemanticComponentRules> {
+  return Object.fromEntries(
+    Object.entries(COMPONENTS).map(([componentName, metadata]) => {
+      const allowedProps = Object.keys(metadata.properties);
+      const requiredProps = Object.entries(metadata.properties)
+        .filter(([, property]) => property.required === true && property.defaultValue === undefined)
+        .map(([propertyName]) => propertyName);
+      const enumProps: Record<string, readonly string[]> = {};
+      const booleanProps = new Set<string>();
+
+      Object.entries(metadata.properties).forEach(([propertyName, property]) => {
+        const enumOptions = getEnumOptions(property);
+        if (enumOptions) {
+          enumProps[propertyName] = enumOptions;
+        }
+        if (property.type === 'boolean') {
+          booleanProps.add(propertyName);
+        }
+      });
+
+      return [
+        componentName,
+        {
+          allowedProps,
+          requiredProps,
+          enumProps,
+          booleanProps,
+        } satisfies SemanticComponentRules,
+      ];
+    })
+  );
+}
+
+function buildLayoutRulesFromMetadata(): Record<string, SemanticLayoutRules> {
+  return Object.fromEntries(
+    Object.entries(LAYOUTS).map(([layoutName, metadata]) => {
+      const allowedParams = Object.keys(metadata.properties);
+      const requiredParamsFromProperties = Object.entries(metadata.properties)
+        .filter(([, property]) => property.required === true && property.defaultValue === undefined)
+        .map(([propertyName]) => propertyName);
+      const requiredParams = Array.from(
+        new Set([...(metadata.requiredProperties || []), ...requiredParamsFromProperties])
+      );
+      const enumParams: Record<string, readonly string[]> = {};
+
+      Object.entries(metadata.properties).forEach(([propertyName, property]) => {
+        const enumOptions = getEnumOptions(property);
+        if (enumOptions) {
+          enumParams[propertyName] = enumOptions;
+        }
+      });
+
+      return [
+        layoutName,
+        {
+          allowedParams,
+          requiredParams,
+          enumParams,
+        } satisfies SemanticLayoutRules,
+      ];
+    })
+  );
+}
+
+const BUILT_IN_COMPONENTS = new Set(Object.keys(COMPONENTS));
+const COMPONENT_RULES = buildComponentRulesFromMetadata();
+const LAYOUT_RULES = buildLayoutRulesFromMetadata();
+
+function toFallbackRange(): CodeRange {
+  return {
+    start: { line: 1, column: 0 },
+    end: { line: 1, column: 1 },
+  };
+}
+
+function splitDiagnostics(diagnostics: ParseError[]): { errors: ParseError[]; warnings: ParseError[] } {
+  const errors = diagnostics.filter((d) => d.severity === 'error');
+  const warnings = diagnostics.filter((d) => d.severity === 'warning');
+  return { errors, warnings };
+}
+
+function buildParseDiagnosticsResult(
+  diagnostics: ParseError[],
+  ast?: AST,
+  sourceMap?: SourceMapEntry[]
+): ParseDiagnosticsResult {
+  const { errors, warnings } = splitDiagnostics(diagnostics);
+  return {
+    ast,
+    sourceMap,
+    diagnostics,
+    errors,
+    warnings,
+    hasErrors: errors.length > 0,
+  };
+}
+
+function buildParseResult(ast: AST, sourceMap: SourceMapEntry[], diagnostics: ParseError[]): ParseResult {
+  const { errors, warnings } = splitDiagnostics(diagnostics);
+  return {
+    ast,
+    sourceMap,
+    diagnostics,
+    errors,
+    warnings,
+    hasErrors: errors.length > 0,
+  };
+}
+
+function tokenToRange(token: any): CodeRange {
+  if (!token) return toFallbackRange();
+  const startLine = token.startLine || 1;
+  const startColumn = Math.max(0, (token.startColumn || 1) - 1);
+  const endLine = token.endLine || startLine;
+  const endColumn = token.endColumn ?? token.startColumn ?? startColumn + 1;
+  return {
+    start: {
+      line: startLine,
+      column: startColumn,
+      offset: token.startOffset,
+    },
+    end: {
+      line: endLine,
+      column: endColumn,
+      offset: token.endOffset,
+    },
+  };
+}
+
+function createLexerDiagnostic(error: any): ParseError {
+  const startLine = error.line || 1;
+  const startColumn = Math.max(0, (error.column || 1) - 1);
+  const length = Math.max(1, error.length || 1);
+  return {
+    message: error.message || 'Lexer error',
+    severity: 'error',
+    phase: 'lexer',
+    code: 'LEXER_ERROR',
+    range: {
+      start: {
+        line: startLine,
+        column: startColumn,
+        offset: error.offset,
+      },
+      end: {
+        line: startLine,
+        column: startColumn + length,
+        offset: error.offset !== undefined ? error.offset + length : undefined,
+      },
+    },
+  };
+}
+
+function createParserDiagnostic(error: any): ParseError {
+  const token = error?.token || error?.previousToken || error?.resyncedTokens?.[0];
+  const range = token ? tokenToRange(token) : toFallbackRange();
+  return {
+    message: error?.message || 'Parser error',
+    severity: 'error',
+    phase: 'parser',
+    code: 'PARSER_ERROR',
+    range,
+  };
+}
+
+function isBooleanLike(value: string | number): boolean {
+  if (typeof value === 'number') return value === 0 || value === 1;
+  const normalized = String(value).trim().toLowerCase();
+  return normalized === 'true' || normalized === 'false';
+}
+
+function getPropertyRange(
+  entry: SourceMapEntry | undefined,
+  propertyName: string,
+  mode: 'name' | 'value' | 'full' = 'full'
+): CodeRange {
+  const prop = entry?.properties?.[propertyName];
+  if (!prop) return entry?.range || toFallbackRange();
+  if (mode === 'name') return prop.nameRange;
+  if (mode === 'value') return prop.valueRange;
+  return prop.range;
+}
+
+function formatAllowedNames(names: string[], emptyMessage: string): string {
+  return names.length > 0 ? names.join(', ') : emptyMessage;
+}
+
+function getMissingRequiredNames(
+  requiredNames: string[],
+  providedValues: Record<string, string | number>
+): string[] {
+  return requiredNames.filter((name) => providedValues[name] === undefined);
+}
+
+function validateSemanticDiagnostics(ast: AST, sourceMap: SourceMapEntry[]): ParseError[] {
+  const diagnostics: ParseError[] = [];
+  const sourceMapByNodeId = new Map(sourceMap.map((entry) => [entry.nodeId, entry]));
+  const definedComponents = new Set(ast.definedComponents.map((dc) => dc.name));
+
+  const emitWarning = (
+    message: string,
+    code: string,
+    range: CodeRange,
+    nodeId?: string,
+    suggestion?: string
+  ) => {
+    diagnostics.push({
+      message,
+      code,
+      severity: 'warning',
+      phase: 'semantic',
+      range,
+      nodeId,
+      suggestion,
+    });
+  };
+
+  const checkComponent = (component: ASTComponent) => {
+    const nodeId = component._meta?.nodeId;
+    const entry = nodeId ? sourceMapByNodeId.get(nodeId) : undefined;
+    const componentType = component.componentType;
+
+    if (!BUILT_IN_COMPONENTS.has(componentType) && !definedComponents.has(componentType)) {
+      emitWarning(
+        `Component "${componentType}" is not a built-in component and has no local definition.`,
+        'COMPONENT_UNRESOLVED',
+        entry?.nameRange || entry?.range || toFallbackRange(),
+        nodeId,
+        `Define it with: define Component "${componentType}" { ... }`,
+      );
+      return;
+    }
+
+    const rules = COMPONENT_RULES[componentType];
+    if (!rules) return;
+
+    const missingRequiredProps = getMissingRequiredNames(rules.requiredProps, component.props);
+    if (missingRequiredProps.length > 0) {
+      emitWarning(
+        `Component "${componentType}" is missing required propert${
+          missingRequiredProps.length === 1 ? 'y' : 'ies'
+        }: ${missingRequiredProps.join(', ')}.`,
+        'COMPONENT_MISSING_REQUIRED_PROPERTY',
+        entry?.nameRange || entry?.range || toFallbackRange(),
+        nodeId,
+        `Add: ${missingRequiredProps.map((name) => `${name}: ...`).join(' ')}`,
+      );
+    }
+
+    const allowed = new Set(rules.allowedProps);
+
+    for (const [propName, propValue] of Object.entries(component.props)) {
+      if (!allowed.has(propName)) {
+        emitWarning(
+          `Property "${propName}" is not recognized for component "${componentType}".`,
+          'COMPONENT_UNKNOWN_PROPERTY',
+          getPropertyRange(entry, propName, 'name'),
+          nodeId,
+          `Allowed properties: ${formatAllowedNames(
+            rules.allowedProps,
+            '(this component does not accept properties)'
+          )}`,
+        );
+        continue;
+      }
+
+      const enumValues = rules.enumProps?.[propName];
+      if (enumValues) {
+        const normalizedValue = String(propValue);
+        if (!enumValues.includes(normalizedValue)) {
+          emitWarning(
+            `Invalid value "${normalizedValue}" for property "${propName}" in component "${componentType}".`,
+            'COMPONENT_INVALID_PROPERTY_VALUE',
+            getPropertyRange(entry, propName, 'value'),
+            nodeId,
+            `Expected one of: ${enumValues.join(', ')}`,
+          );
+        }
+      }
+
+      if (rules.booleanProps.has(propName) && !isBooleanLike(propValue)) {
+        emitWarning(
+          `Property "${propName}" in component "${componentType}" expects a boolean value.`,
+          'COMPONENT_BOOLEAN_PROPERTY_EXPECTED',
+          getPropertyRange(entry, propName, 'value'),
+          nodeId,
+          'Use true or false.',
+        );
+      }
+    }
+  };
+
+  const checkLayout = (layout: ASTLayout) => {
+    const nodeId = layout._meta?.nodeId;
+    const entry = nodeId ? sourceMapByNodeId.get(nodeId) : undefined;
+    const rules = LAYOUT_RULES[layout.layoutType];
+
+    if (layout.children.length === 0) {
+      emitWarning(
+        `Layout "${layout.layoutType}" is empty.`,
+        'LAYOUT_EMPTY',
+        entry?.bodyRange || entry?.range || toFallbackRange(),
+        nodeId,
+        'Add at least one child: component, layout, or cell.',
+      );
+    }
+
+    if (!rules) {
+      emitWarning(
+        `Layout type "${layout.layoutType}" is not recognized by semantic validation rules.`,
+        'LAYOUT_UNKNOWN_TYPE',
+        entry?.nameRange || entry?.range || toFallbackRange(),
+        nodeId,
+        `Use one of: ${Object.keys(LAYOUT_RULES).join(', ')}.`,
+      );
+    } else {
+      const missingRequiredParams = getMissingRequiredNames(rules.requiredParams, layout.params);
+      if (missingRequiredParams.length > 0) {
+        emitWarning(
+          `Layout "${layout.layoutType}" is missing required parameter${
+            missingRequiredParams.length === 1 ? '' : 's'
+          }: ${missingRequiredParams.join(', ')}.`,
+          'LAYOUT_MISSING_REQUIRED_PARAMETER',
+          entry?.nameRange || entry?.range || toFallbackRange(),
+          nodeId,
+          `Add: ${missingRequiredParams.map((name) => `${name}: ...`).join(', ')}`,
+        );
+      }
+
+      const allowed = new Set(rules.allowedParams);
+      for (const [paramName, paramValue] of Object.entries(layout.params)) {
+        if (!allowed.has(paramName)) {
+          emitWarning(
+            `Parameter "${paramName}" is not recognized for layout "${layout.layoutType}".`,
+            'LAYOUT_UNKNOWN_PARAMETER',
+            getPropertyRange(entry, paramName, 'name'),
+            nodeId,
+            `Allowed parameters: ${formatAllowedNames(
+              rules.allowedParams,
+              '(this layout does not accept parameters)'
+            )}`,
+          );
+          continue;
+        }
+
+        const enumValues = rules.enumParams?.[paramName];
+        if (enumValues) {
+          const normalizedValue = String(paramValue);
+          if (!enumValues.includes(normalizedValue)) {
+            emitWarning(
+              `Invalid value "${normalizedValue}" for parameter "${paramName}" in layout "${layout.layoutType}".`,
+              'LAYOUT_INVALID_PARAMETER_VALUE',
+              getPropertyRange(entry, paramName, 'value'),
+              nodeId,
+              `Expected one of: ${enumValues.join(', ')}`,
+            );
+          }
+        }
+
+        if (layout.layoutType === 'grid' && paramName === 'columns') {
+          const columns = Number(paramValue);
+          if (!Number.isFinite(columns) || columns < 1 || columns > 12) {
+            emitWarning(
+              `Grid "columns" must be a number between 1 and 12.`,
+              'LAYOUT_GRID_COLUMNS_RANGE',
+              getPropertyRange(entry, paramName, 'value'),
+              nodeId,
+              'Use values from 1 to 12.',
+            );
+          }
+        }
+
+        if (layout.layoutType === 'split' && paramName === 'sidebar') {
+          const sidebar = Number(paramValue);
+          if (!Number.isFinite(sidebar) || sidebar <= 0) {
+            emitWarning(
+              'Split "sidebar" must be a positive number.',
+              'LAYOUT_SPLIT_SIDEBAR_INVALID',
+              getPropertyRange(entry, paramName, 'value'),
+              nodeId,
+              'Use a value like sidebar: 240.',
+            );
+          }
+        }
+      }
+    }
+
+    for (const child of layout.children) {
+      if (child.type === 'component') {
+        checkComponent(child);
+      } else if (child.type === 'layout') {
+        checkLayout(child);
+      } else if (child.type === 'cell') {
+        checkCell(child);
+      }
+    }
+  };
+
+  const checkCell = (cell: ASTCell) => {
+    const nodeId = cell._meta?.nodeId;
+    const entry = nodeId ? sourceMapByNodeId.get(nodeId) : undefined;
+
+    if (cell.props.span !== undefined) {
+      const span = Number(cell.props.span);
+      if (!Number.isFinite(span) || span < 1 || span > 12) {
+        emitWarning(
+          'Cell "span" should be a number between 1 and 12.',
+          'CELL_SPAN_RANGE',
+          getPropertyRange(entry, 'span', 'value'),
+          nodeId,
+          'Use values from 1 to 12.',
+        );
+      }
+    }
+
+    for (const child of cell.children) {
+      if (child.type === 'component') checkComponent(child);
+      if (child.type === 'layout') checkLayout(child);
+    }
+  };
+
+  ast.screens.forEach((screen) => {
+    checkLayout(screen.layout);
+  });
+
+  return diagnostics;
+}
+
 export function parseWireDSL(input: string): AST {
   // Tokenize
   const lexResult = WireDSLLexer.tokenize(input);
@@ -1277,15 +1738,30 @@ export function parseWireDSL(input: string): AST {
  * console.log(node.astNode.type);  // 'component'
  * ```
  */
+export function parseWireDSLWithSourceMap(input: string, filePath?: string): ParseResult;
 export function parseWireDSLWithSourceMap(
-  input: string, 
-  filePath: string = '<input>'
-): ParseResult {
+  input: string,
+  filePath: string | undefined,
+  options: ParseWireDSLWithSourceMapOptions & { throwOnError: false }
+): ParseDiagnosticsResult;
+export function parseWireDSLWithSourceMap(
+  input: string,
+  filePath: string = '<input>',
+  options?: ParseWireDSLWithSourceMapOptions
+): ParseResult | ParseDiagnosticsResult {
+  const throwOnError = options?.throwOnError ?? true;
+  const includeSemanticWarnings = options?.includeSemanticWarnings ?? true;
+  const diagnostics: ParseError[] = [];
+
   // Tokenize
   const lexResult = WireDSLLexer.tokenize(input);
 
   if (lexResult.errors.length > 0) {
-    throw new Error(`Lexer errors:\n${lexResult.errors.map((e) => e.message).join('\n')}`);
+    diagnostics.push(...lexResult.errors.map(createLexerDiagnostic));
+    if (throwOnError) {
+      throw new Error(`Lexer errors:\n${lexResult.errors.map((e) => e.message).join('\n')}`);
+    }
+    return buildParseDiagnosticsResult(diagnostics);
   }
 
   // Parse
@@ -1293,7 +1769,11 @@ export function parseWireDSLWithSourceMap(
   const cst = parserInstance.project();
 
   if (parserInstance.errors.length > 0) {
-    throw new Error(`Parser errors:\n${parserInstance.errors.map((e) => e.message).join('\n')}`);
+    diagnostics.push(...parserInstance.errors.map(createParserDiagnostic));
+    if (throwOnError) {
+      throw new Error(`Parser errors:\n${parserInstance.errors.map((e) => e.message).join('\n')}`);
+    }
+    return buildParseDiagnosticsResult(diagnostics);
   }
 
   // Create SourceMap builder
@@ -1302,18 +1782,38 @@ export function parseWireDSLWithSourceMap(
 
   // Convert CST to AST with SourceMap
   const ast = visitorWithSourceMap.visit(cst);
-  
-  // Validate no circular references in component definitions
-  validateComponentDefinitionCycles(ast);
 
   // Build SourceMap
   const sourceMap = sourceMapBuilder.build();
+  
+  // Validate no circular references in component definitions
+  try {
+    validateComponentDefinitionCycles(ast);
+  } catch (error) {
+    const projectEntry = sourceMap.find((entry) => entry.type === 'project');
+    diagnostics.push({
+      message: error instanceof Error ? error.message : 'Semantic validation error',
+      severity: 'error',
+      phase: 'semantic',
+      code: 'COMPONENT_CIRCULAR_DEFINITION',
+      range: projectEntry?.range || toFallbackRange(),
+      nodeId: projectEntry?.nodeId,
+    });
 
-  return {
-    ast,
-    sourceMap,
-    errors: [],  // No errors if we got here (errors throw exceptions)
-  };
+    if (throwOnError) {
+      throw error;
+    }
+  }
+
+  if (includeSemanticWarnings) {
+    diagnostics.push(...validateSemanticDiagnostics(ast, sourceMap));
+  }
+
+  if (!throwOnError) {
+    return buildParseDiagnosticsResult(diagnostics, ast, sourceMap);
+  }
+
+  return buildParseResult(ast, sourceMap, diagnostics);
 }
 
 /**
