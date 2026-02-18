@@ -1,5 +1,20 @@
 import { z } from 'zod';
-import type { AST, ASTScreen, ASTLayout, ASTComponent, ASTCell, ASTDefinedComponent } from '../parser/index';
+import {
+  COMPONENTS,
+  LAYOUTS,
+  type ComponentMetadata,
+  type LayoutMetadata,
+  type PropertyMetadata,
+} from '@wire-dsl/language-support/components';
+import type {
+  AST,
+  ASTScreen,
+  ASTLayout,
+  ASTComponent,
+  ASTCell,
+  ASTDefinedComponent,
+  ASTDefinedLayout,
+} from '../parser/index';
 import { resolveDevicePreset } from './device-presets';
 
 /**
@@ -175,13 +190,27 @@ class IDGenerator {
 // IR GENERATOR
 // ============================================================================
 
+type ExpansionTargetKind = 'component-property' | 'layout-parameter';
+
+interface ExpansionContext {
+  args: Record<string, string | number>;
+  providedArgNames: Set<string>;
+  usedArgNames: Set<string>;
+  definitionName: string;
+  definitionKind: 'component' | 'layout';
+  allowChildrenSlot: boolean;
+  childrenSlot?: ASTComponent | ASTLayout | ASTCell;
+}
+
 export class IRGenerator {
   private idGen = new IDGenerator();
   private nodes: Record<string, IRNode> = {};
   private definedComponents: Map<string, ASTDefinedComponent> = new Map();
+  private definedLayouts: Map<string, ASTDefinedLayout> = new Map();
   private definedComponentIndices: Map<string, number> = new Map();
   private undefinedComponentsUsed: Set<string> = new Set();
   private warnings: Array<{ message: string; type: string }> = [];
+  private errors: Array<{ message: string; type: string }> = [];
   private style: IRStyle = {
     density: 'normal',
     spacing: 'md',
@@ -194,15 +223,22 @@ export class IRGenerator {
     this.idGen.reset();
     this.nodes = {};
     this.definedComponents.clear();
+    this.definedLayouts.clear();
     this.definedComponentIndices.clear();
     this.undefinedComponentsUsed.clear();
     this.warnings = [];
+    this.errors = [];
 
     // Register defined components first (symbol table) with their indices
     if (ast.definedComponents && ast.definedComponents.length > 0) {
       ast.definedComponents.forEach((def, index) => {
         this.definedComponents.set(def.name, def);
         this.definedComponentIndices.set(def.name, index);
+      });
+    }
+    if (ast.definedLayouts && ast.definedLayouts.length > 0) {
+      ast.definedLayouts.forEach((def) => {
+        this.definedLayouts.set(def.name, def);
       });
     }
 
@@ -221,6 +257,11 @@ export class IRGenerator {
         `Components used but not defined: ${undefinedList.join(', ')}\n` +
         `Define these components with: define Component "Name" { ... }`
       );
+    }
+
+    if (this.errors.length > 0) {
+      const messages = this.errors.map((e) => `- [${e.type}] ${e.message}`).join('\n');
+      throw new Error(`IR generation failed with semantic errors:\n${messages}`);
     }
 
     const project: IRProject = {
@@ -390,47 +431,55 @@ export class IRGenerator {
     return this.warnings;
   }
 
-  private convertLayout(layout: ASTLayout): string {
+  private convertLayout(layout: ASTLayout, context?: ExpansionContext): string {
+    const layoutParams = this.resolveLayoutParams(layout.layoutType, layout.params, context);
+    const layoutChildren = layout.children;
+
+    const layoutDefinition = this.definedLayouts.get(layout.layoutType);
+    if (layoutDefinition) {
+      return this.expandDefinedLayout(layoutDefinition, layoutParams, layoutChildren, context);
+    }
+
     const nodeId = this.idGen.generate('node');
     const childRefs: Array<{ ref: string }> = [];
 
     // Process children
-    for (const child of layout.children) {
+    for (const child of layoutChildren) {
       if (child.type === 'layout') {
-        const childId = this.convertLayout(child);
-        childRefs.push({ ref: childId });
+        const childId = this.convertLayout(child, context);
+        if (childId) childRefs.push({ ref: childId });
       } else if (child.type === 'component') {
-        const childId = this.convertComponent(child);
-        childRefs.push({ ref: childId });
+        const childId = this.convertComponent(child, context);
+        if (childId) childRefs.push({ ref: childId });
       } else if (child.type === 'cell') {
-        const childId = this.convertCell(child);
-        childRefs.push({ ref: childId });
+        const childId = this.convertCell(child, context);
+        if (childId) childRefs.push({ ref: childId });
       }
     }
 
     // Extract style properties
     const style: IRNodeStyle = {};
-    if (layout.params.padding) {
-      style.padding = String(layout.params.padding);
+    if (layoutParams.padding !== undefined) {
+      style.padding = String(layoutParams.padding);
     } else {
       // Layouts without explicit padding have no padding by default
       style.padding = 'none';
     }
-    if (layout.params.gap) {
-      style.gap = String(layout.params.gap);
+    if (layoutParams.gap !== undefined) {
+      style.gap = String(layoutParams.gap);
     }
-    if (layout.params.align) {
-      style.align = layout.params.align as IRNodeStyle['align'];
+    if (layoutParams.align !== undefined) {
+      style.align = layoutParams.align as IRNodeStyle['align'];
     }
-    if (layout.params.background) {
-      style.background = String(layout.params.background);
+    if (layoutParams.background !== undefined) {
+      style.background = String(layoutParams.background);
     }
 
     const containerNode: IRContainerNode = {
       id: nodeId,
       kind: 'container',
       containerType: layout.layoutType as 'stack' | 'grid' | 'split' | 'panel' | 'card',
-      params: this.cleanParams(layout.params),
+      params: this.cleanParams(layoutParams),
       children: childRefs,
       style,
       meta: {
@@ -442,18 +491,18 @@ export class IRGenerator {
     return nodeId;
   }
 
-  private convertCell(cell: ASTCell): string {
+  private convertCell(cell: ASTCell, context?: ExpansionContext): string {
     const nodeId = this.idGen.generate('node');
     const childRefs: Array<{ ref: string }> = [];
 
     // Process children
     for (const child of cell.children) {
       if (child.type === 'layout') {
-        const childId = this.convertLayout(child);
-        childRefs.push({ ref: childId });
+        const childId = this.convertLayout(child, context);
+        if (childId) childRefs.push({ ref: childId });
       } else if (child.type === 'component') {
-        const childId = this.convertComponent(child);
-        childRefs.push({ ref: childId });
+        const childId = this.convertComponent(child, context);
+        if (childId) childRefs.push({ ref: childId });
       }
     }
 
@@ -475,12 +524,32 @@ export class IRGenerator {
     return nodeId;
   }
 
-  private convertComponent(component: ASTComponent): string {
+  private convertComponent(component: ASTComponent, context?: ExpansionContext): string | null {
+    if (component.componentType === 'Children') {
+      if (!context?.allowChildrenSlot) {
+        this.errors.push({
+          type: 'children-slot-outside-layout-definition',
+          message: '"Children" placeholder can only be used inside a define Layout body.',
+        });
+        return null;
+      }
+      if (!context.childrenSlot) {
+        this.errors.push({
+          type: 'children-slot-missing-child',
+          message: `Layout "${context.definitionName}" requires exactly one child for "Children".`,
+        });
+        return null;
+      }
+      return this.convertASTNode(context.childrenSlot, context);
+    }
+
+    const resolvedProps = this.resolveComponentProps(component.componentType, component.props, context);
+
     // Check if this component is a defined component (should be expanded)
     const definition = this.definedComponents.get(component.componentType);
     if (definition) {
       // Expand the defined component
-      return this.expandDefinedComponent(definition);
+      return this.expandDefinedComponent(definition, resolvedProps, context);
     }
 
     // Check if it's a known built-in component
@@ -503,7 +572,7 @@ export class IRGenerator {
       id: nodeId,
       kind: 'component',
       componentType: component.componentType,
-      props: component.props,
+      props: resolvedProps,
       style: {},
       meta: {
         nodeId: component._meta?.nodeId,  // Pass SourceMap nodeId from AST
@@ -514,15 +583,204 @@ export class IRGenerator {
     return nodeId;
   }
 
-  private expandDefinedComponent(definition: ASTDefinedComponent): string {
+  private expandDefinedComponent(
+    definition: ASTDefinedComponent,
+    invocationArgs: Record<string, string | number>,
+    parentContext?: ExpansionContext
+  ): string | null {
+    const context: ExpansionContext = {
+      args: invocationArgs,
+      providedArgNames: new Set(Object.keys(invocationArgs)),
+      usedArgNames: new Set<string>(),
+      definitionName: definition.name,
+      definitionKind: 'component',
+      allowChildrenSlot: false,
+    };
+
     // A defined component's body is either a layout or a component
     // We need to expand it recursively
     if (definition.body.type === 'layout') {
-      return this.convertLayout(definition.body);
+      const result = this.convertLayout(definition.body, context);
+      this.reportUnusedArguments(context);
+      return result;
     } else if (definition.body.type === 'component') {
-      return this.convertComponent(definition.body);
+      const result = this.convertComponent(definition.body, context);
+      this.reportUnusedArguments(context);
+      return result;
     } else {
       throw new Error(`Invalid defined component body type for "${definition.name}"`);
+    }
+  }
+
+  private expandDefinedLayout(
+    definition: ASTDefinedLayout,
+    invocationParams: Record<string, string | number>,
+    invocationChildren: (ASTComponent | ASTLayout | ASTCell)[],
+    parentContext?: ExpansionContext
+  ): string {
+    if (invocationChildren.length !== 1) {
+      this.errors.push({
+        type: 'layout-children-arity',
+        message: `Layout "${definition.name}" expects exactly one child, received ${invocationChildren.length}.`,
+      });
+    }
+
+    const rawSlot = invocationChildren[0];
+    const resolvedSlot = rawSlot
+      ? this.resolveChildrenSlot(rawSlot, parentContext)
+      : undefined;
+
+    const context: ExpansionContext = {
+      args: invocationParams,
+      providedArgNames: new Set(Object.keys(invocationParams)),
+      usedArgNames: new Set<string>(),
+      definitionName: definition.name,
+      definitionKind: 'layout',
+      allowChildrenSlot: true,
+      childrenSlot: resolvedSlot,
+    };
+
+    const nodeId = this.convertLayout(definition.body, context);
+    this.reportUnusedArguments(context);
+    return nodeId;
+  }
+
+  private resolveChildrenSlot(
+    slot: ASTComponent | ASTLayout | ASTCell,
+    parentContext?: ExpansionContext
+  ): ASTComponent | ASTLayout | ASTCell | undefined {
+    if (slot.type === 'component' && slot.componentType === 'Children') {
+      if (parentContext?.allowChildrenSlot) {
+        return parentContext.childrenSlot;
+      }
+      this.errors.push({
+        type: 'children-slot-outside-layout-definition',
+        message: '"Children" placeholder forwarding is only valid inside define Layout bodies.',
+      });
+      return undefined;
+    }
+    return slot;
+  }
+
+  private convertASTNode(node: ASTLayout | ASTComponent | ASTCell, context?: ExpansionContext): string | null {
+    if (node.type === 'layout') return this.convertLayout(node, context);
+    if (node.type === 'component') return this.convertComponent(node, context);
+    return this.convertCell(node, context);
+  }
+
+  private resolveLayoutParams(
+    layoutType: string,
+    params: Record<string, string | number>,
+    context?: ExpansionContext
+  ): Record<string, string | number> {
+    const resolved: Record<string, string | number> = {};
+    for (const [key, value] of Object.entries(params)) {
+      const resolvedValue = this.resolveBindingValue(
+        value,
+        context,
+        'layout-parameter',
+        layoutType,
+        key
+      );
+      if (resolvedValue !== undefined) {
+        resolved[key] = resolvedValue;
+      }
+    }
+    return resolved;
+  }
+
+  private resolveComponentProps(
+    componentType: string,
+    props: Record<string, string | number>,
+    context?: ExpansionContext
+  ): Record<string, string | number> {
+    const resolved: Record<string, string | number> = {};
+    for (const [key, value] of Object.entries(props)) {
+      const resolvedValue = this.resolveBindingValue(
+        value,
+        context,
+        'component-property',
+        componentType,
+        key
+      );
+      if (resolvedValue !== undefined) {
+        resolved[key] = resolvedValue;
+      }
+    }
+    return resolved;
+  }
+
+  private resolveBindingValue(
+    value: string | number,
+    context: ExpansionContext | undefined,
+    kind: ExpansionTargetKind,
+    targetType: string,
+    targetName: string
+  ): string | number | undefined {
+    if (typeof value !== 'string' || !value.startsWith('prop_')) {
+      return value;
+    }
+
+    const argName = value.slice('prop_'.length);
+    if (!context) {
+      return value;
+    }
+
+    if (Object.prototype.hasOwnProperty.call(context.args, argName)) {
+      context.usedArgNames.add(argName);
+      return context.args[argName];
+    }
+
+    const required = this.isBindingTargetRequired(kind, targetType, targetName);
+    const descriptor = kind === 'component-property' ? 'property' : 'parameter';
+    const message =
+      `Missing required bound ${descriptor} "${targetName}" for ${kind === 'component-property' ? 'component' : 'layout'} ` +
+      `"${targetType}" in ${context.definitionKind} "${context.definitionName}" (expected arg "${argName}").`;
+
+    if (required) {
+      this.errors.push({ type: 'missing-required-bound-value', message });
+    } else {
+      this.warnings.push({
+        type: 'missing-bound-value',
+        message:
+          `Optional ${descriptor} "${targetName}" in ${kind === 'component-property' ? 'component' : 'layout'} ` +
+          `"${targetType}" was omitted because arg "${argName}" was not provided while expanding ` +
+          `${context.definitionKind} "${context.definitionName}".`,
+      });
+    }
+
+    return undefined;
+  }
+
+  private isBindingTargetRequired(
+    kind: ExpansionTargetKind,
+    targetType: string,
+    targetName: string
+  ): boolean {
+    if (kind === 'component-property') {
+      const metadata = COMPONENTS[targetType as keyof typeof COMPONENTS] as ComponentMetadata | undefined;
+      const property = metadata?.properties?.[targetName] as PropertyMetadata | undefined;
+      if (!property) return false;
+      return property.required === true && property.defaultValue === undefined;
+    }
+
+    const layoutMetadata = LAYOUTS[targetType as keyof typeof LAYOUTS] as LayoutMetadata | undefined;
+    if (!layoutMetadata) return false;
+    const property = layoutMetadata.properties?.[targetName] as PropertyMetadata | undefined;
+    const requiredFromProperty = property?.required === true && property.defaultValue === undefined;
+    const requiredFromLayout = (layoutMetadata.requiredProperties || []).includes(targetName);
+    return requiredFromProperty || requiredFromLayout;
+  }
+
+  private reportUnusedArguments(context: ExpansionContext): void {
+    for (const arg of context.providedArgNames) {
+      if (!context.usedArgNames.has(arg)) {
+        this.warnings.push({
+          type: 'unused-definition-argument',
+          message:
+            `Argument "${arg}" is not used by ${context.definitionKind} "${context.definitionName}".`,
+        });
+      }
     }
   }
 
