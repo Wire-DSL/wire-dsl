@@ -956,4 +956,188 @@ describe('WireDSL Parser', () => {
     expect(warning?.severity).toBe('warning');
     expect(warning?.range.start.line).toBeGreaterThan(0);
   });
+
+  it('should parse define Layout and keyword-like identifiers', () => {
+    const input = `
+      project "Layouts" {
+        define Layout "screen_default" {
+          layout stack {
+            component Children
+          }
+        }
+
+        screen Main {
+          layout screen_default {
+            layout stack {
+              component Heading text: "Main"
+            }
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+
+    expect(ast.definedLayouts).toHaveLength(1);
+    expect(ast.definedLayouts[0].name).toBe('screen_default');
+    expect(ast.screens[0].layout.layoutType).toBe('screen_default');
+  });
+
+  it('should parse keyword prefix names as identifiers', () => {
+    const input = `
+      project "KeywordPrefix" {
+        screen Main {
+          layout screen_default {
+            component Heading text: "Works"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    expect(ast.screens[0].layout.layoutType).toBe('screen_default');
+  });
+
+  it('should return semantic error when Children is used outside define Layout', () => {
+    const input = `
+      project "ChildrenOutside" {
+        screen Main {
+          layout stack {
+            component Children
+          }
+        }
+      }
+    `;
+
+    const result = parseWireDSLWithSourceMap(input, '<input>', { throwOnError: false });
+    const error = result.errors.find((d) => d.code === 'CHILDREN_SLOT_OUTSIDE_LAYOUT_DEFINITION');
+
+    expect(result.hasErrors).toBe(true);
+    expect(error).toBeDefined();
+  });
+
+  it('should return semantic error when define Layout does not have exactly one Children slot', () => {
+    const input = `
+      project "ChildrenCount" {
+        define Layout "screen_default" {
+          layout stack {
+            component Heading text: "No slot"
+          }
+        }
+
+        screen Main {
+          layout screen_default {
+            layout stack {
+              component Heading text: "Body"
+            }
+          }
+        }
+      }
+    `;
+
+    const result = parseWireDSLWithSourceMap(input, '<input>', { throwOnError: false });
+    const error = result.errors.find((d) => d.code === 'LAYOUT_DEFINITION_CHILDREN_SLOT_COUNT');
+
+    expect(result.hasErrors).toBe(true);
+    expect(error).toBeDefined();
+  });
+
+  it('should return semantic error when using define Layout without exactly one child', () => {
+    const input = `
+      project "LayoutArity" {
+        define Layout "screen_default" {
+          layout stack {
+            component Children
+          }
+        }
+
+        screen Main {
+          layout screen_default {
+          }
+        }
+      }
+    `;
+
+    const result = parseWireDSLWithSourceMap(input, '<input>', { throwOnError: false });
+    const error = result.errors.find((d) => d.code === 'LAYOUT_DEFINITION_CHILDREN_ARITY');
+
+    expect(result.hasErrors).toBe(true);
+    expect(error).toBeDefined();
+  });
+
+  it('should return semantic error for invalid define Layout name', () => {
+    const input = `
+      project "BadLayoutName" {
+        define Layout "ScreenDefault" {
+          layout stack {
+            component Children
+          }
+        }
+
+        screen Main {
+          layout ScreenDefault {
+            layout stack {
+              component Heading text: "Body"
+            }
+          }
+        }
+      }
+    `;
+
+    const result = parseWireDSLWithSourceMap(input, '<input>', { throwOnError: false });
+    const error = result.errors.find((d) => d.code === 'LAYOUT_DEFINITION_INVALID_NAME');
+
+    expect(result.hasErrors).toBe(true);
+    expect(error).toBeDefined();
+  });
+
+  it('should return warning for non-PascalCase define Component name', () => {
+    const input = `
+      project "ComponentStyle" {
+        define Component "my_button" {
+          component Button text: "Save"
+        }
+
+        screen Main {
+          layout stack {
+            component my_button
+          }
+        }
+      }
+    `;
+
+    const result = parseWireDSLWithSourceMap(input, '<input>', { throwOnError: false });
+    const warning = result.warnings.find((d) => d.code === 'COMPONENT_DEFINITION_NAME_STYLE');
+
+    expect(result.hasErrors).toBe(false);
+    expect(warning).toBeDefined();
+  });
+
+  it('should detect circular references across component and layout definitions', () => {
+    const input = `
+      project "CrossCycle" {
+        define Component "A" {
+          layout app_shell {
+            component Heading text: "Inner"
+          }
+        }
+
+        define Layout "app_shell" {
+          layout stack {
+            component A
+            component Children
+          }
+        }
+
+        screen Main {
+          layout stack {
+            component A
+          }
+        }
+      }
+    `;
+
+    expect(() => parseWireDSL(input)).toThrow(/Circular component definition/);
+    expect(() => parseWireDSL(input)).toThrow(/A → app_shell → A/);
+  });
 });

@@ -111,8 +111,9 @@ export class SourceMapBuilder {
    * - screen → "screen-0", "screen-1"
    * - component Button → "component-button-0", "component-button-1"
    * - layout stack → "layout-stack-0", "layout-stack-1"
-   * - cell → "cell-0", "cell-1"
-   * - component-definition → "define-MyButton"
+ * - cell → "cell-0", "cell-1"
+ * - component-definition → "define-MyButton"
+ * - layout-definition → "define-layout-MyShell"
    */
   private generateNodeId(
     type: SourceMapNodeType,
@@ -169,6 +170,10 @@ export class SourceMapBuilder {
       case 'component-definition':
         // define-MyButton, define-Card, etc.
         return `define-${metadata?.name || 'unknown'}`;
+
+      case 'layout-definition':
+        // define-layout-screen_default, define-layout-appShell, etc.
+        return `define-layout-${metadata?.name || 'unknown'}`;
         
       default:
         // Fallback
@@ -294,7 +299,7 @@ export class SourceMapBuilder {
 
   /**
    * Calculate insertionPoints for all container nodes
-   * Container nodes: project, screen, layout, cell, component-definition
+   * Container nodes: project, screen, layout, cell, component-definition, layout-definition
    */
   private calculateAllInsertionPoints(): void {
     const containerTypes: SourceMapNodeType[] = [
@@ -302,7 +307,8 @@ export class SourceMapBuilder {
       'screen', 
       'layout', 
       'cell', 
-      'component-definition'
+      'component-definition',
+      'layout-definition',
     ];
 
     for (const entry of this.entries) {

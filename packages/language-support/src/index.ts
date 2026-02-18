@@ -27,6 +27,7 @@ export {
 
 export {
   extractComponentDefinitions,
+  extractLayoutDefinitions,
   getTokenAtPosition,
   isComponentReference,
   extractComponentReferences,
@@ -34,6 +35,7 @@ export {
   getPositionOfDefinition,
   findComponentReferences,
   type ComponentDefinition,
+  type LayoutDefinition,
 } from './document-parser';
 
 export {
