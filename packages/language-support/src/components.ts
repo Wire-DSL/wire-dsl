@@ -427,6 +427,7 @@ export const LAYOUTS: Record<string, LayoutMetadata> = {
       align: { name: 'align', type: 'enum', options: ['justify', 'left', 'center', 'right'] },
       padding: { name: 'padding', type: 'enum', options: spacingEnum.options },
     },
+    requiredProperties: ['columns'],
     example: 'layout grid(columns: 12, gap: md) { ... }',
   },
   split: {
@@ -437,6 +438,7 @@ export const LAYOUTS: Record<string, LayoutMetadata> = {
       gap: { name: 'gap', type: 'enum', options: spacingEnum.options },
       padding: { name: 'padding', type: 'enum', options: spacingEnum.options },
     },
+    requiredProperties: ['sidebar'],
     example: 'layout split(sidebar: 260, gap: md) { ... }',
   },
   panel: {

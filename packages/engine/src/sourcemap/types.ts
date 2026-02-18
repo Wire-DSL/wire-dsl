@@ -97,7 +97,23 @@ export interface InsertionPoint {
 export interface ParseResult {
   ast: AST;                          // Unchanged AST (same as parseWireDSL())
   sourceMap: SourceMapEntry[];       // SourceMap entries
-  errors: ParseError[];              // Parse errors (empty for now, for future)
+  diagnostics: ParseError[];         // Errors + warnings with ranges
+  errors: ParseError[];              // Error diagnostics only
+  warnings: ParseError[];            // Warning diagnostics only
+  hasErrors: boolean;                // True when errors.length > 0
+}
+
+/**
+ * Parse result with diagnostics and optional AST/SourceMap
+ * Used by tolerant editor flows where diagnostics are needed even when parsing fails
+ */
+export interface ParseDiagnosticsResult {
+  ast?: AST;                         // Present when parsing reaches AST stage
+  sourceMap?: SourceMapEntry[];      // Present when SourceMap generation succeeds
+  diagnostics: ParseError[];         // Errors and warnings with precise ranges
+  errors: ParseError[];              // Error diagnostics only
+  warnings: ParseError[];            // Warning diagnostics only
+  hasErrors: boolean;                // Convenience flag for fatal/non-fatal handling
 }
 
 /**
@@ -107,6 +123,11 @@ export interface ParseError {
   message: string;
   range: CodeRange;
   severity: 'error' | 'warning';
+  code?: string;                     // Machine-readable diagnostic code
+  phase?: 'lexer' | 'parser' | 'semantic';
+  expected?: string;
+  actual?: string;
+  suggestion?: string;
   nodeId?: string;                   // Optional: ID of node that caused the error
 }
 
