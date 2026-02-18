@@ -148,9 +148,10 @@ Performed by the **IR Generator** after parsing.
 
 ### Component Composition
 
-- ✅ Custom components (`define Component`) must be defined before use
-- ✅ No circular references in component definitions
-- ✅ All referenced components (built-in or custom) must exist
+- ✅ Custom components (`define Component`) and custom layouts (`define Layout`) can be composed
+- ✅ Circular references across components and layouts are rejected
+- ✅ All referenced components/layouts should exist
+- ✅ Defining before first use is recommended (late definition may emit warnings)
 
 **Invalid**:
 ```wire
@@ -181,6 +182,52 @@ project "App" {
     layout stack {
       component CustomButton  // OK: defined above
     }
+  }
+}
+```
+
+### Layout Definition Rules (`define Layout`)
+
+- ✅ Layout name must match `^[a-z][a-z0-9_]*$`
+- ✅ Body must contain exactly one root `layout`
+- ✅ Body must contain exactly one `component Children` placeholder
+- ✅ `component Children` cannot be used outside `define Layout`
+- ✅ Every use of a defined layout must provide exactly one child block
+
+**Invalid**:
+```wire
+define Layout "ScreenDefault" {      // ❌ invalid name (uppercase)
+  layout stack {
+    component Children
+  }
+}
+```
+
+```wire
+define Layout "screen_default" {
+  layout stack {
+    component Heading text: "No slot" // ❌ missing Children
+  }
+}
+```
+
+### Dynamic Binding Rules (`prop_*`)
+
+- ✅ `prop_*` values in definitions are treated as invocation bindings
+- ✅ Missing required bound value -> semantic error
+- ✅ Missing optional bound value -> warning + property/param omitted
+- ✅ Unused invocation arguments -> warning
+
+**Example**:
+```wire
+define Component "MyMenu" {
+  component SidebarMenu
+    active: prop_active
+}
+
+screen Main {
+  layout stack {
+    component MyMenu active: 1
   }
 }
 ```
@@ -219,7 +266,6 @@ project "App" {
     }
   }
 }
-```
 ```
 
 ### Layout Constraints

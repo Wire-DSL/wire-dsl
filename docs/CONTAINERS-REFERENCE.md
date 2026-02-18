@@ -568,6 +568,44 @@ layout panel(padding: lg) {
 
 ---
 
+## User-Defined Layouts
+
+Besides built-in containers (`stack`, `grid`, `split`, `panel`, `card`), you can define reusable layouts:
+
+```wire
+define Layout "screen_default" {
+  layout split(sidebar: prop_sidebar) {
+    component SidebarMenu
+      items: "Home,Users,Reports"
+      active: prop_active
+    component Children
+  }
+}
+```
+
+Usage:
+
+```wire
+screen Main {
+  layout screen_default(sidebar: 220, active: 1) {
+    layout stack(gap: md) {
+      component Heading text: "Dashboard"
+    }
+  }
+}
+```
+
+Rules:
+- `define Layout` name must match `^[a-z][a-z0-9_]*$`
+- definition body must be one root `layout`
+- definition must contain exactly one `component Children`
+- each layout invocation must include exactly one child block
+- `component Children` cannot be used outside `define Layout`
+
+`prop_*` bindings in layout params/properties are resolved from invocation args. Missing required args produce semantic errors; missing optional args are omitted with warnings.
+
+---
+
 ## Best Practices
 
 ### Do's ✅

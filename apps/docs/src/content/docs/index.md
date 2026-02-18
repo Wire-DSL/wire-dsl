@@ -297,7 +297,7 @@ Wire-DSL is actively developed. Current status:
 - ✅ Phase 1: Core DSL and rendering (complete)
 - ✅ Phase 2: Style system and design tokens (complete)
 - ✅ Phase 3: VS Code Extension (complete)
-- 🚀 Phase 4: Source Maps & Debugging (in progress)
+- ✅ Phase 4: Source Maps & Debugging (complete)
 
 **Planned Features**:
 - LSP support for universal editor integration

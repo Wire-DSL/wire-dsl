@@ -498,6 +498,44 @@ layout card(padding: md, gap: md, radius: md, border: true) {
 
 ---
 
+## User-Defined Layouts
+
+In addition to built-in containers, you can define reusable layout shells:
+
+```wire
+define Layout "screen_default" {
+  layout split(sidebar: prop_sidebar) {
+    component SidebarMenu
+      items: "Home,Users,Reports"
+      active: prop_active
+    component Children
+  }
+}
+```
+
+Usage:
+
+```wire
+screen Main {
+  layout screen_default(sidebar: 220, active: 1) {
+    layout stack(gap: md) {
+      component Heading text: "Dashboard"
+    }
+  }
+}
+```
+
+Rules:
+- `define Layout` name must match `^[a-z][a-z0-9_]*$`
+- body must contain a single root `layout`
+- body must contain exactly one `component Children`
+- each invocation must provide exactly one child block
+- `component Children` is invalid outside `define Layout`
+
+`prop_*` bindings in layout params/properties are resolved from invocation args. Missing required args are semantic errors; missing optional args are omitted with warnings.
+
+---
+
 ## Best Practices
 
 ### Do's

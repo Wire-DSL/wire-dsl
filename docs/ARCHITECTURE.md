@@ -118,6 +118,8 @@ project "Dashboard" {
 - Parser transforms DSL into an **AST** (what the user wrote)
 - Preserves locations (line/column) for error reporting and tooling
 - AST is direct representation of source code
+- Parses both `define Component` and `define Layout` declarations
+- Emits semantic diagnostics for naming, `Children` slot rules, and definition usage arity
 
 **Implementation**: Chevrotain (TypeScript grammar-based parser)
 
@@ -130,6 +132,11 @@ AST is converted to **stable IR**, applying:
 - Normalization (spacing, sizing)
 - Semantic validations
 - Schema validation with Zod
+- Expansion of custom definitions:
+  - `define Component` expansion
+  - `define Layout` expansion to built-in layout tree
+  - `prop_*` dynamic binding substitution
+- Warning/error policy for missing/unused dynamic arguments
 
 IR is the **technical source of truth** for rendering.
 
@@ -161,6 +168,8 @@ Responsible for calculating final positions and sizes from declarative constrain
 - **Card** (flexible box) - Self-contained items
 
 Layout engine operates on IR and produces **Render Tree** with concrete bounding boxes.
+
+Custom layouts are fully expanded before this layer. At layout-engine time, container types are only built-in (`stack`, `grid`, `split`, `panel`, `card`).
 
 **Algorithm**:
 1. Traverse IR nodes top-down
@@ -435,6 +444,12 @@ The IR is immutable once generated, ensuring predictability and enabling caching
 ### 2. Early Validation
 
 Errors detected during parsing/normalization phases, not during rendering.
+
+Examples:
+- invalid `define Layout` names
+- invalid `Children` slot usage/count
+- missing required `prop_*` bindings
+- circular references across component/layout definitions
 
 ### 3. Separation of Concerns
 

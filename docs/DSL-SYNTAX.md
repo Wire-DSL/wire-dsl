@@ -400,141 +400,108 @@ Both comment types are ignored by the compiler and removed from the IR output.
 
 ---
 
-Define reusable custom components to avoid repetition and improve maintainability.
+## Custom Definitions
 
-### Syntax
+Use definitions to reuse UI patterns and app shells.
 
-```
-define Component "ComponentName" {
-  // Content: layout or component reference
-}
-```
-
-### Documentation
-
-You can add documentation to custom components using `/* */` block comments (placed before the definition):
+### Define Component
 
 ```wire
-/**
- * Displays a group of action buttons
- * Useful for form submissions and dialogs
- */
-define Component "ButtonGroup" {
-  layout stack(direction: horizontal, gap: md) {
-    component Button text: "OK" variant: primary
-    component Button text: "Cancel" variant: secondary
-  }
+define Component "MyMenu" {
+  component SidebarMenu
+    items: "Home,Users,Permissions"
+    active: 0
 }
 ```
 
-The documentation will appear:
-- When hovering over the component name in the IDE
-- In IntelliSense tooltips
-- When using Go-to-References to find usages
+A defined component body can be:
+- one `component`
+- one `layout`
 
-Multi-line documentation is fully supported with proper formatting:
+### Dynamic Properties with `prop_`
+
+Inside a definition, any value that starts with `prop_` is treated as a binding key.
 
 ```wire
-/**
- * Reusable form field component
- * 
- * Combines label and input for consistent styling.
- * Automatically handles spacing and alignment.
- */
-define Component "FormField" {
-  layout stack(direction: vertical, gap: sm) {
-    component Label text: "Field Label"
-    component Input placeholder: "Enter value..."
+define Component "MyMenu" {
+  component SidebarMenu
+    items: "Home,Users,Permissions"
+    active: prop_active
+}
+
+screen Main {
+  layout stack {
+    component MyMenu active: 1
   }
 }
 ```
 
-### Basic Example
+Binding behavior:
+- if the argument is provided, the value is substituted
+- if the argument is missing and target field is optional, the field is omitted and a warning is emitted
+- if the argument is missing and target field is required, semantic error
+- extra arguments that are not used by the definition emit a warning
 
-```
-define Component "ButtonGroup" {
-  layout stack(direction: horizontal, gap: md) {
-    component Button text: "OK" variant: primary
-    component Button text: "Cancel" variant: secondary
+`prop_` is reserved in definition bodies for dynamic binding semantics.
+
+### Define Layout (User-Defined Layout Containers)
+
+```wire
+define Layout "screen_default" {
+  layout split(sidebar: prop_sidebar) {
+    component SidebarMenu
+      items: "Home,Users,Permissions"
+      active: prop_active
+    component Children
   }
 }
+```
 
-project "Form App" {
-  style { ... }
+Use it like any other layout:
 
-  screen LoginScreen {
-    layout stack(direction: vertical, gap: lg, padding: xl) {
-      component Heading text: "Login"
-      component Input label: "Email" placeholder: "user@example.com"
-      component Input label: "Password" placeholder: "••••••••"
-      
-      component ButtonGroup
+```wire
+screen Main {
+  layout screen_default(sidebar: 220, active: 1) {
+    layout stack(gap: md) {
+      component Heading text: "Main Screen"
     }
   }
 }
 ```
 
-### Usage Rules
+Rules:
+- `define Layout` body must be exactly one root `layout`
+- each defined layout must contain exactly one `component Children`
+- `component Children` is reserved and only valid inside `define Layout`
+- each invocation of a defined layout must provide exactly one child block
 
-1. **Definitions come first** - Typically place `define Component` before screens
-2. **Can reference other components** - Both built-in and custom
-3. **Can nest layouts** - Define complex patterns once, reuse everywhere
-4. **No parameters** - Components are templates, not functions
+### Naming Rules
 
-### Common Patterns
+- `define Component "Name"`: PascalCase is recommended (`warning` if not)
+- `define Layout "name"`: must match `^[a-z][a-z0-9_]*$` (`error` if not)
+- names with keyword prefixes like `screen_default`, `layout_shell`, `component_grid` are valid identifiers
 
-#### Form Field Pattern with Documentation
+### Definition Docs
+
+You can document a custom definition with block comments (`/* ... */`) right above it:
+
 ```wire
 /**
- * Reusable form field with label and input
- * Ensures consistent styling across forms
+ * Reusable actions row for forms
  */
-define Component "FormField" {
-  layout stack(direction: vertical, gap: sm) {
-    component Label text: "Field Label"
-    component Input placeholder: "Enter value..."
-  }
-}
-```
-
-#### Card Pattern
-```wire
-/**
- * Product display card
- * Shows image, title, description, and action button
- */
-define Component "ProductCard" {
-  layout card(padding: md, gap: md, radius: md) {
-    component Image placeholder: "square" height: 200
-    component Heading text: "Product Name"
-    component Text content: "Product description"
-    component Button text: "View Details" variant: primary
-  }
-}
-```
-
-#### Stat Container
-```wire
-/**
- * Metric display box with title and value
- * Used in dashboard screens
- */
-define Component "MetricBox" {
-  layout panel(padding: lg) {
-    component Heading text: "Metric Name"
-    component StatCard title: "Value" value: "1,234"
+define Component "FormActions" {
+  layout stack(direction: horizontal, gap: md) {
+    component Button text: "Save" variant: primary
+    component Button text: "Cancel"
   }
 }
 ```
 
 ### Notes
 
-- Defined components are expanded at compile-time (no runtime overhead)
-- Component definitions are resolved before IR generation
-- Circular references in components are detected and reported as errors
-- Components used but not defined will generate an error listing all undefined references
-- Documentation via `/* */` block comments appears in IDE hover tooltips and helps maintain component clarity
-- Both line comments (`//`) and block comments (`/* */`) are supported throughout Wire DSL
+- definitions are expanded at compile-time (no runtime custom container type)
+- circular references across components and layouts are detected as errors
+- unresolved components/layouts are reported by semantic diagnostics
 
 ---
 
@@ -701,7 +668,11 @@ project "Admin Dashboard" {
 5. `Table` components require `columns` property
 6. All identifiers must be unique within project scope
 7. Property values must match their defined types
-8. No absolute positioning allowed
+8. `define Layout` names must match `^[a-z][a-z0-9_]*$`
+9. `component Children` is only valid inside `define Layout`
+10. Defined layout declarations and invocations require exactly one `Children` child slot
+11. `prop_*` bindings require matching invocation args when target field is required
+12. No absolute positioning allowed
 
 ---
 

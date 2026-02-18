@@ -320,70 +320,80 @@ Both comment types are removed from the compiled output.
 
 ---
 
-## Custom Components
+## Custom Definitions
 
-Define reusable custom components to avoid repetition.
+Use custom definitions to reuse both components and layout shells.
 
-### Syntax
+### Define Component
 
 ```wire
-define Component "ComponentName" {
-  // Content: layout or component reference
+define Component "MyMenu" {
+  component SidebarMenu
+    items: "Home,Users,Permissions"
+    active: 0
 }
 ```
 
-### Documentation
+### Dynamic properties
 
-Add documentation using block comments:
+Inside a definition body, values starting with `prop_` are dynamic bindings.
 
 ```wire
-/**
- * Displays a group of action buttons
- * Useful for form submissions and dialogs
- */
-define Component "ButtonGroup" {
-  layout stack(direction: horizontal, gap: md) {
-    component Button text: "OK" variant: primary
-    component Button text: "Cancel" variant: secondary
+define Component "MyMenu" {
+  component SidebarMenu
+    items: "Home,Users,Permissions"
+    active: prop_active
+}
+
+screen Main {
+  layout stack {
+    component MyMenu active: 1
   }
 }
 ```
 
-### Example
+Binding behavior:
+- provided arg: value is substituted
+- missing arg on optional target: omitted + warning
+- missing arg on required target: semantic error
+- extra invocation arg not consumed by definition: warning
 
-<!-- wire-preview:start -->
+### Define Layout
+
 ```wire
-project "Form App" {
-  style {
-    device: "mobile-min"
+define Layout "screen_default" {
+  layout split(sidebar: prop_sidebar) {
+    component SidebarMenu
+      items: "Home,Users,Permissions"
+      active: prop_active
+    component Children
   }
+}
+```
 
-  define Component "ButtonGroup" {
-    layout stack(direction: horizontal, gap: md) {
-      component Button text: "OK" variant: primary
-      component Button text: "Cancel" variant: secondary
+Usage:
+
+```wire
+screen Main {
+  layout screen_default(sidebar: 220, active: 1) {
+    layout stack(gap: md) {
+      component Heading text: "Main Screen"
     }
   }
-
-  screen LoginScreen {
-    layout stack(direction: vertical, gap: lg, padding: xl) {
-      component Heading text: "Login"
-      component Input label: "Email" placeholder: "user@example.com"
-      component Input label: "Password" placeholder: "••••••••"
-      component ButtonGroup
-    }
-  }
 }
 ```
-<!-- wire-preview:end -->
 
-### Usage Rules
+Rules:
+1. `define Layout` body must be exactly one root `layout`
+2. `component Children` is reserved for layout definitions
+3. Every defined layout must contain exactly one `component Children`
+4. Every invocation of a defined layout must pass exactly one child block
+5. Layout names must match `^[a-z][a-z0-9_]*$`
 
-1. **Definitions inside project** - Place `define Component` inside the project block
-2. **Define before use** - Highly recommended to define before first use (hoisting supported)
-3. **Can reference other components** - Both built-in and custom
-4. **Can nest layouts** - Define complex patterns once, reuse everywhere
-5. **No parameters** - Components are templates, not functions
+Naming recommendations:
+1. `define Component` should use PascalCase (warning if not)
+2. `define Layout` must use lowercase-first + lowercase/number/underscore
+3. Prefixes like `screen_default` / `layout_shell` are valid identifiers
 
 ---
 
@@ -491,7 +501,11 @@ project "Admin Dashboard" {
 5. `Table` components require `columns` property
 6. All identifiers must be unique within project scope
 7. Property values must match their defined types
-8. No absolute positioning allowed
+8. `define Layout` names must match `^[a-z][a-z0-9_]*$`
+9. `component Children` is only valid inside `define Layout`
+10. Defined layout declarations and invocations require exactly one `Children` child slot
+11. `prop_*` bindings require matching invocation args when target field is required
+12. No absolute positioning allowed
 
 ---
 

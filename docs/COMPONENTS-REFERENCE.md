@@ -5,6 +5,30 @@ Complete reference for all available components with detailed specifications, pr
 
 ---
 
+## Dynamic Custom Component Bindings
+
+Built-in components keep their regular static properties. Dynamic binding with `prop_*` applies when a component is used inside a `define Component` or `define Layout` body.
+
+```wire
+define Component "MyMenu" {
+  component SidebarMenu
+    items: "Home,Users,Settings"
+    active: prop_active
+}
+
+screen Main {
+  layout stack {
+    component MyMenu active: 1
+  }
+}
+```
+
+If `prop_active` is missing on invocation:
+- required targets -> semantic error
+- optional targets -> property omitted + warning
+
+---
+
 ## Text Components
 
 ### Heading

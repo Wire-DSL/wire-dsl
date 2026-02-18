@@ -38,6 +38,8 @@ Transforms raw `.wire` text into an Abstract Syntax Tree (AST).
 - Syntax validation
 - Error reporting with line numbers
 - AST generation preserving source locations
+- Parse custom definitions: `define Component` and `define Layout`
+- Semantic diagnostics for naming rules and `Children` slot constraints
 
 **Technology**: Chevrotain (TypeScript-based parser generator)
 
@@ -55,9 +57,11 @@ Converts AST to an Intermediate Representation (IR) - the normalized, validated 
 **Responsibilities**:
 - Apply style tokens and defaults
 - Semantic validation using Zod schemas
-- Component composition expansion
-- Cycle detection in custom components
+- Expand custom components and custom layouts
+- Resolve `prop_*` dynamic bindings from invocation arguments
+- Cycle detection across custom components and custom layouts
 - Normalize sizing and spacing values
+- Emit warnings for optional missing bindings and unused arguments
 
 **Input**: AST
 **Output**: IR (JSON-serializable structure)
@@ -66,7 +70,7 @@ Converts AST to an Intermediate Representation (IR) - the normalized, validated 
 - Stable, version-controlled schema
 - Complete information for rendering
 - Validation errors with helpful messages
--  values applied throughout
+- Default values applied throughout
 
 ---
 
@@ -89,6 +93,8 @@ Calculates final positions, sizes, and bounding boxes for all components.
 - **Split**: Sidebar (fixed) + main content (flexible)
 - **Panel**: Single-child bordered container
 - **Card**: Multi-child flexible card container
+
+Custom layout definitions are expanded before this stage, so runtime/layout-engine container types remain built-in only.
 
 **Input**: IR
 **Output**: Render tree with computed positions
@@ -328,6 +334,7 @@ Errors include:
 
 Components can be composed:
 - Custom components via `define Component`
+- Custom layout shells via `define Layout`
 - Nested layouts arbitrarily deep
 - Reusable patterns
 
