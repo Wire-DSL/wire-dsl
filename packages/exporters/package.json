@@ -1,6 +1,6 @@
 {
   "name": "@wire-dsl/exporters",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "WireDSL exporters - SVG, PNG, and PDF file export functions (Node.js only)",
   "type": "module",
   "exports": {
