@@ -14,6 +14,14 @@ export interface ComponentDefinition {
   documentation?: string; // Optional JSDoc-style documentation
 }
 
+export interface LayoutDefinition {
+  name: string;
+  line: number;
+  character: number;
+  endLine: number;
+  documentation?: string;
+}
+
 /**
  * Extract all component definitions from document text
  * Syntax: define Component "ComponentName" { ... }
@@ -125,6 +133,52 @@ export function extractComponentDefinitions(text: string): ComponentDefinition[]
       character: character,
       endLine: endLine,
       documentation,
+    });
+  }
+
+  return definitions;
+}
+
+/**
+ * Extract all layout definitions from document text
+ * Syntax: define Layout "layout_name" { ... }
+ */
+export function extractLayoutDefinitions(text: string): LayoutDefinition[] {
+  const definitions: LayoutDefinition[] = [];
+  const regex = /define\s+Layout\s+"([^"]+)"/gm;
+  let match;
+
+  while ((match = regex.exec(text)) !== null) {
+    const layoutName = match[1];
+    const matchIndex = match.index;
+    const lineNumber = text.substring(0, matchIndex).split('\n').length - 1;
+    const lastLineBreak = text.lastIndexOf('\n', matchIndex);
+    const character = matchIndex - (lastLineBreak + 1);
+
+    const afterName = matchIndex + match[0].length;
+    let braceCount = 0;
+    let foundOpening = false;
+    let endLine = lineNumber;
+
+    for (let i = afterName; i < text.length; i++) {
+      const char = text[i];
+      if (char === '{') {
+        braceCount++;
+        foundOpening = true;
+      } else if (char === '}') {
+        braceCount--;
+        if (foundOpening && braceCount === 0) {
+          endLine = text.substring(0, i).split('\n').length - 1;
+          break;
+        }
+      }
+    }
+
+    definitions.push({
+      name: layoutName,
+      line: lineNumber,
+      character,
+      endLine,
     });
   }
 
@@ -324,6 +378,13 @@ export function getPositionOfDefinition(text: string, name: string): { line: num
     return { line: screenDef.line, character: screenDef.character };
   }
 
+  // Then check layout definitions
+  const layoutDefs = extractLayoutDefinitions(text);
+  const layoutDef = layoutDefs.find((def) => def.name === name);
+  if (layoutDef) {
+    return { line: layoutDef.line, character: layoutDef.character };
+  }
+
   return null;
 }
 
@@ -336,9 +397,11 @@ export function findComponentReferences(
 ): Array<{ line: number; character: number }> {
   const references = extractComponentReferences(text);
   const screenReferences = extractScreenDefinitions(text).filter((s) => s.name === name);
+  const layoutDefinitions = extractLayoutDefinitions(text).filter((l) => l.name === name);
 
   return [
     ...references.filter((ref) => ref.name === name).map((ref) => ({ line: ref.line, character: ref.character })),
     ...screenReferences.map((def) => ({ line: def.line, character: def.character })),
+    ...layoutDefinitions.map((def) => ({ line: def.line, character: def.character })),
   ];
 }
