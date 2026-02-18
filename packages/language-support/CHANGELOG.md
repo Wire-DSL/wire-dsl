@@ -1,5 +1,11 @@
 # @wire-dsl/language-support
 
+## 0.2.4
+
+### Patch Changes
+
+- [#59](https://github.com/Wire-DSL/wire-dsl/pull/59) [`16b164b`](https://github.com/Wire-DSL/wire-dsl/commit/16b164b0857ca66bd9ecf3c1573cef72e222718f) Thanks [@roxguel](https://github.com/roxguel)! - Add diagnostics result
+
 ## 0.2.3
 
 ### Patch Changes
