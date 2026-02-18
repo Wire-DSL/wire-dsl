@@ -1,5 +1,14 @@
 # @wire-dsl/core
 
+## 0.2.3
+
+### Patch Changes
+
+- [#57](https://github.com/Wire-DSL/wire-dsl/pull/57) [`794e493`](https://github.com/Wire-DSL/wire-dsl/commit/794e49309e920d2c71f2cffec2b6fd1b85665586) Thanks [@roxguel](https://github.com/roxguel)! - Add diagnostics result
+
+- Updated dependencies [[`794e493`](https://github.com/Wire-DSL/wire-dsl/commit/794e49309e920d2c71f2cffec2b6fd1b85665586)]:
+  - @wire-dsl/language-support@0.2.3
+
 ## 0.2.2
 
 ### Patch Changes
