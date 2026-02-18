@@ -1,5 +1,13 @@
 # @wire-dsl/web
 
+## 0.1.7
+
+### Patch Changes
+
+- Updated dependencies [[`16b164b`](https://github.com/Wire-DSL/wire-dsl/commit/16b164b0857ca66bd9ecf3c1573cef72e222718f)]:
+  - @wire-dsl/language-support@0.2.4
+  - @wire-dsl/engine@0.2.4
+
 ## 0.1.6
 
 ### Patch Changes
