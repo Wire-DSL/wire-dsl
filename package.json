@@ -37,7 +37,8 @@
     "changeset": "changeset",
     "version": "changeset version",
     "release": "changeset publish",
-    "wire": "node packages/cli/dist/index.js"
+    "wire": "node packages/cli/dist/index.js",
+    "docs:llms": "node scripts/generate-llms-full.js"
   },
   "devDependencies": {
     "@changesets/changelog-github": "0.5.2",
