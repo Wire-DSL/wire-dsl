@@ -4,7 +4,7 @@
  * Used by Monaco, VS Code, and other editors
  */
 
-import { COMPONENTS } from './components';
+import { COMPONENTS } from './components.js';
 
 export type DocumentScope = 'empty-file' | 'inside-project' | 'inside-screen' | 'inside-layout';
 

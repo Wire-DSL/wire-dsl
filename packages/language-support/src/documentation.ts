@@ -3,7 +3,7 @@
  * Provides detailed hover documentation for components, layouts, and properties
  */
 
-import { COMPONENTS, LAYOUTS } from './components';
+import { COMPONENTS, LAYOUTS } from './components.js';
 
 /**
  * Generate markdown documentation for a component

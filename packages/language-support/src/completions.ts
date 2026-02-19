@@ -3,8 +3,8 @@
  * Shared completion logic for Monaco, VS Code, and other editors
  */
 
-import { COMPONENTS, LAYOUTS, PROPERTY_VALUES, PropertyMetadata } from './components';
-import type { DocumentScope } from './context-detection';
+import { COMPONENTS, LAYOUTS, PROPERTY_VALUES, PropertyMetadata } from './components.js';
+import type { DocumentScope } from './context-detection.js';
 
 export interface CompletionContext {
   line: string;

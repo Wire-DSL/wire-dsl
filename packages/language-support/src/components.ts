@@ -4,7 +4,7 @@
  *
  * Last synced: February 16, 2026
  */
-import { ICON_NAME_OPTIONS } from './icon-names';
+import { ICON_NAME_OPTIONS } from './icon-names.js';
 
 export interface PropertyMetadata {
   name: string;
