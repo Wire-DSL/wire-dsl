@@ -321,7 +321,7 @@ Specialized container with automatic padding and border styling.
 
 ```
 layout panel(padding: md, background: white) {
-  component Text content: "Panel content"
+  component Text text: "Panel content"
 }
 ```
 
@@ -331,7 +331,7 @@ Or with nested stack:
 layout panel(padding: lg) {
   layout stack(gap: md) {
     component Heading text: "Panel Title"
-    component Text content: "Panel body"
+    component Text text: "Panel body"
   }
 }
 ```
@@ -356,7 +356,7 @@ Flexible vertical container for grouping related content.
 layout card(padding: lg, gap: md, radius: md, border: true) {
   component Image placeholder: "landscape"
   component Heading text: "Product Title"
-  component Text content: "Product description"
+  component Text text: "Product description"
   component Button text: "Learn More"
 }
 ```
@@ -381,7 +381,7 @@ layout card(padding: lg, gap: md, radius: md, border: true) {
 layout card(padding: md, gap: md, radius: lg, border: true) {
   component Image placeholder: "square" height: 250
   component Heading text: "Premium Item"
-  component Text content: "High-quality product with excellent reviews"
+  component Text text: "High-quality product with excellent reviews"
   layout stack(direction: horizontal, gap: sm) {
     component Button text: "View Details"
     component Button text: "Add to Cart"
@@ -395,9 +395,9 @@ layout card(padding: md, gap: md, radius: lg, border: true) {
 layout card(padding: lg, gap: md) {
   component Image placeholder: "avatar" height: 120
   component Heading text: "John Doe"
-  component Text content: "john@example.com"
+  component Text text: "john@example.com"
   component Divider
-  component Text content: "Senior Software Engineer"
+  component Text text: "Senior Software Engineer"
   component Button text: "Follow"
 }
 ```
@@ -569,7 +569,7 @@ component Button text: "Click me" variant: primary
 | Component | Properties | Example |
 |-----------|-----------|---------|
 | `Heading` | `text`, `level`, `spacing`, `variant` | `component Heading text: "Page Title" level: h2 variant: primary` |
-| `Text` | `content` (string) | `component Text content: "Body text"` |
+| `Text` | `content` (string) | `component Text text: "Body text"` |
 | `Label` | `text` (string) | `component Label text: "Field label"` |
 
 ### Input Components
@@ -613,7 +613,7 @@ component Button text: "Click me" variant: primary
 | Component | Properties | Example |
 |-----------|-----------|---------|
 | `Image` | `placeholder`, `height` | `component Image placeholder: "square" height: 200` |
-| `Icon` | `type`, `size`, `variant` | `component Icon type: "search" size: md variant: primary` |
+| `Icon` | `type`, `size`, `variant` | `component Icon icon: "search" size: md variant: primary` |
 
 ### Other Components
 
@@ -675,9 +675,9 @@ project "Admin Dashboard" {
         cell span: 8 {
           layout card(padding: lg, gap: md) {
             component Heading text: "User Profile"
-            component Text content: "Name: John Doe"
-            component Text content: "Email: john@example.com"
-            component Text content: "Role: Administrator"
+            component Text text: "Name: John Doe"
+            component Text text: "Email: john@example.com"
+            component Text text: "Role: Administrator"
           }
         }
         cell span: 4 {
@@ -784,12 +784,12 @@ component Heading text: "Section title" level: h3
 Standard body text for content and descriptions.
 
 **Properties**:
-- `content` (string): The text content
+- `text` (string): The text content
 
 **Example**:
 ```wire
-component Text content: "This is body text"
-component Text content: "User profile information goes here"
+component Text text: "This is body text"
+component Text text: "User profile information goes here"
 ```
 
 **Rendering**: Regular text at 14-16px font size
@@ -1151,14 +1151,14 @@ component Image placeholder: "avatar" height: 100
 Icon symbol.
 
 **Properties**:
-- `type` (string): Icon identifier (e.g., "search", "star", "heart")
+- `icon` (string): Icon identifier (e.g., "search", "star", "heart")
 - `size` (enum): `sm` | `md` | `lg` (default: `md`)
 
 **Example**:
 ```wire
-component Icon type: "search"
-component Icon type: "settings"
-component Icon type: "download"
+component Icon icon: "search"
+component Icon icon: "settings"
+component Icon icon: "download"
 ```
 
 **Rendering**: Small icon symbol inline with text
@@ -1440,7 +1440,7 @@ Arrange elements vertically or horizontally with uniform spacing. The most commo
 ```
 layout stack(direction: vertical, gap: md, padding: lg) {
   component Heading text: "Title"
-  component Text content: "Content"
+  component Text text: "Content"
   component Button text: "Action"
 }
 ```
@@ -1515,19 +1515,19 @@ Buttons group on the right with their natural width, typical pattern for form na
 **Icon Alignment Examples**:
 ```
 layout stack(direction: horizontal, gap: 8, align: "left") {
-  component Icon type: "home"
-  component Icon type: "search"
-  component Icon type: "settings"
+  component Icon icon: "home"
+  component Icon icon: "search"
+  component Icon icon: "settings"
 }
 
 layout stack(direction: horizontal, gap: 8, align: "center") {
-  component Icon type: "heart"
-  component Icon type: "star"
+  component Icon icon: "heart"
+  component Icon icon: "star"
 }
 
 layout stack(direction: horizontal, gap: 8, align: "right") {
-  component Icon type: "download"
-  component Icon type: "share"
+  component Icon icon: "download"
+  component Icon icon: "share"
 }
 ```
 
@@ -1535,7 +1535,7 @@ layout stack(direction: horizontal, gap: 8, align: "right") {
 ```
 layout stack(direction: vertical, gap: lg, padding: xl) {
   component Heading text: "Welcome"
-  component Text content: "Get started with our platform"
+  component Text text: "Get started with our platform"
   component Button text: "Sign Up" variant: primary
 }
 ```
@@ -1632,7 +1632,7 @@ layout grid(columns: 12, gap: md) {
   cell span: 9 {
     layout stack(gap: md) {
       component Heading text: "Main Content"
-      component Text content: "Dashboard content goes here"
+      component Text text: "Dashboard content goes here"
     }
   }
 }
@@ -1758,7 +1758,7 @@ Group related content with visual separation. Ideal for creating sectioned conte
 
 ```
 layout panel(padding: md) {
-  component Text content: "Panel content"
+  component Text text: "Panel content"
 }
 ```
 
@@ -1768,7 +1768,7 @@ Or with nested stack:
 layout panel(padding: lg) {
   layout stack(gap: md) {
     component Heading text: "Panel Title"
-    component Text content: "Panel content"
+    component Text text: "Panel content"
   }
 }
 ```
@@ -1785,7 +1785,7 @@ layout panel(padding: lg) {
 **Single Component Panel**:
 ```
 layout panel(padding: md) {
-  component Text content: "Important information goes here"
+  component Text text: "Important information goes here"
 }
 ```
 
@@ -1794,9 +1794,9 @@ layout panel(padding: md) {
 layout panel(padding: lg) {
   layout stack(gap: md) {
     component Heading text: "User Information"
-    component Text content: "Name: John Doe"
-    component Text content: "Email: john@example.com"
-    component Text content: "Role: Administrator"
+    component Text text: "Name: John Doe"
+    component Text text: "Email: john@example.com"
+    component Text text: "Role: Administrator"
   }
 }
 ```
@@ -1837,7 +1837,7 @@ Create self-contained content cards. Ideal for product displays, user profiles, 
 layout card(padding: lg, gap: md, radius: md, border: true) {
   component Image placeholder: "square" height: 250
   component Heading text: "Card Title"
-  component Text content: "Card description"
+  component Text text: "Card description"
   component Button text: "Action"
 }
 ```
@@ -1865,7 +1865,7 @@ layout card(padding: lg, gap: md, radius: md, border: true) {
 layout card(padding: md, gap: md, radius: lg, border: true) {
   component Image placeholder: "square" height: 200
   component Heading text: "Premium Laptop"
-  component Text content: "High-performance with latest specs"
+  component Text text: "High-performance with latest specs"
   component Badge text: "In Stock" variant: success
   layout stack(direction: horizontal, gap: sm) {
     component Button text: "Buy" variant: primary
@@ -1879,8 +1879,8 @@ layout card(padding: md, gap: md, radius: lg, border: true) {
 layout card(padding: lg, gap: md, radius: md) {
   component Image placeholder: "square"
   component Heading text: "John Doe"
-  component Text content: "Senior Software Engineer"
-  component Text content: "john@example.com"
+  component Text text: "Senior Software Engineer"
+  component Text text: "john@example.com"
   component Divider
   layout stack(direction: horizontal, gap: sm) {
     component Button text: "Message"
@@ -1894,7 +1894,7 @@ layout card(padding: lg, gap: md, radius: md) {
 layout card(padding: md, gap: md, radius: md, border: true) {
   component Image placeholder: "landscape" height: 180
   component Heading text: "Getting Started with Wire-DSL"
-  component Text content: "Learn how to create interactive wireframes with Wire-DSL in 5 minutes"
+  component Text text: "Learn how to create interactive wireframes with Wire-DSL in 5 minutes"
   component Badge text: "Tutorial"
   component Link text: "Read More"
 }
@@ -1903,9 +1903,9 @@ layout card(padding: md, gap: md, radius: md, border: true) {
 **Feature Showcase**:
 ```
 layout card(padding: lg, gap: lg, radius: lg, border: false) {
-  component Icon type: "star"
+  component Icon icon: "star"
   component Heading text: "Premium Features"
-  component Text content: "Access all premium features with unlimited usage"
+  component Text text: "Access all premium features with unlimited usage"
   component List items: "Unlimited projects,Team collaboration,Advanced exports,Priority support"
   component Button text: "Upgrade Now" variant: primary
 }
@@ -2111,20 +2111,20 @@ The `Icon` component renders a simple icon display.
 ### Usage
 
 ```wire
-component Icon type: "home"
-component Icon type: "search"
-component Icon type: "wifi"
-component Icon type: "trash-2"
+component Icon icon: "home"
+component Icon icon: "search"
+component Icon icon: "wifi"
+component Icon icon: "trash-2"
 ```
 
 ### Example with Layout
 
 ```wire
 layout stack(direction: horizontal, gap: 12) {
-  component Icon type: "arrow-left"
-  component Icon type: "arrow-right"
-  component Icon type: "arrow-up"
-  component Icon type: "arrow-down"
+  component Icon icon: "arrow-left"
+  component Icon icon: "arrow-right"
+  component Icon icon: "arrow-up"
+  component Icon icon: "arrow-down"
 }
 ```
 
@@ -2175,7 +2175,7 @@ layout stack(direction: horizontal, gap: 8) {
 ## Available Icons (287)
 
 Wire-DSL currently bundles **287 icons** from **Feather Icons v4.29.0**.
-These names are valid for `Icon.type`, `IconButton.icon`, `Topbar.icon`, `Image icon` (when `placeholder: "icon"`), and `StatCard.icon`.
+These names are valid for `Icon.icon`, `IconButton.icon`, `Topbar.icon`, `Image icon` (when `placeholder: "icon"`), and `StatCard.icon`.
 
 In `@wire-dsl/language-support`, the same catalog is exposed as:
 - `ICON_NAMES` (typed list)
@@ -2484,10 +2484,10 @@ project "Icon Demo" {
 
       // Icons in a horizontal layout
       layout stack(direction: horizontal, gap: 12) {
-        component Icon type: "home"
-        component Icon type: "search"
-        component Icon type: "settings"
-        component Icon type: "user"
+        component Icon icon: "home"
+        component Icon icon: "search"
+        component Icon icon: "settings"
+        component Icon icon: "user"
       }
 
       // Icon buttons for actions
