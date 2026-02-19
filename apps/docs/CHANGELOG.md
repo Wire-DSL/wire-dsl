@@ -1,5 +1,18 @@
 # @wire-dsl/docs
 
+## 0.1.0
+
+### Minor Changes
+
+- [#65](https://github.com/Wire-DSL/wire-dsl/pull/65) [`9f158e4`](https://github.com/Wire-DSL/wire-dsl/commit/9f158e409e15e84c746ee1c5905534fae4ca104b) Thanks [@roxguel](https://github.com/roxguel)! - Improvement engine
+
+### Patch Changes
+
+- [#65](https://github.com/Wire-DSL/wire-dsl/pull/65) [`9f158e4`](https://github.com/Wire-DSL/wire-dsl/commit/9f158e409e15e84c746ee1c5905534fae4ca104b) Thanks [@roxguel](https://github.com/roxguel)! - Add support for user-defined layouts and custom properties for custom layouts/components
+
+- Updated dependencies [[`9f158e4`](https://github.com/Wire-DSL/wire-dsl/commit/9f158e409e15e84c746ee1c5905534fae4ca104b), [`9f158e4`](https://github.com/Wire-DSL/wire-dsl/commit/9f158e409e15e84c746ee1c5905534fae4ca104b), [`9f158e4`](https://github.com/Wire-DSL/wire-dsl/commit/9f158e409e15e84c746ee1c5905534fae4ca104b)]:
+  - @wire-dsl/engine@0.3.0
+
 ## 0.0.8
 
 ### Patch Changes
