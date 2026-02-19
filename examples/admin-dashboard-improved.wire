@@ -11,7 +11,7 @@ project "Admin Dashboard - Improved" {
       layout stack(direction: vertical, gap: 0) {
         layout card(padding: 16, gap: 8) {
           layout stack(direction: horizontal, gap: 8) {
-            component Icon type: "home" size: "sm"
+            component Icon icon: "home" size: "sm"
             component Heading text: "Admin"
           }
         }
@@ -26,7 +26,7 @@ project "Admin Dashboard - Improved" {
         layout stack(direction: horizontal, gap: 16) {
           layout stack(direction: vertical, gap: 4) {
             component Heading text: "Dashboard"
-            component Text content: "Welcome back, Admin"
+            component Text text: "Welcome back, Admin"
             component Button text: "View profile" variant: primary
           }
           layout stack(direction: horizontal, gap: 12) {
@@ -44,9 +44,9 @@ project "Admin Dashboard - Improved" {
                 layout stack(direction: vertical, gap: 8) {
                   component Label text: "Total Users"
                   component Heading text: "2,543"
-                  component Text content: "+12% from last month"
+                  component Text text: "+12% from last month"
                 }
-                component Icon type: "user" size: "lg"
+                component Icon icon: "user" size: "lg"
               }
             }
           }
@@ -58,9 +58,9 @@ project "Admin Dashboard - Improved" {
                 layout stack(direction: vertical, gap: 8) {
                   component Label text: "Active Sessions"
                   component Heading text: "856"
-                  component Text content: "+5% from last hour"
+                  component Text text: "+5% from last hour"
                 }
-                component Icon type: "wifi" size: "lg"
+                component Icon icon: "wifi" size: "lg"
               }
             }
           }
@@ -72,9 +72,9 @@ project "Admin Dashboard - Improved" {
                 layout stack(direction: vertical, gap: 8) {
                   component Label text: "Revenue"
                   component Heading text: "$45.2K"
-                  component Text content: "+8% from last week"
+                  component Text text: "+8% from last week"
                 }
-                component Icon type: "arrow-up" size: "lg"
+                component Icon icon: "arrow-up" size: "lg"
               }
             }
           }
@@ -86,9 +86,9 @@ project "Admin Dashboard - Improved" {
                 layout stack(direction: vertical, gap: 8) {
                   component Label text: "Pending Tasks"
                   component Heading text: "24"
-                  component Text content: "3 due today"
+                  component Text text: "3 due today"
                 }
-                component Icon type: "check" size: "lg"
+                component Icon icon: "check" size: "lg"
               }
             }
           }
@@ -135,7 +135,7 @@ project "Admin Dashboard - Improved" {
       layout stack(direction: vertical, gap: 0) {
         layout card(padding: 16, gap: 8) {
           layout stack(direction: horizontal, gap: 8) {
-            component Icon type: "home" size: "sm"
+            component Icon icon: "home" size: "sm"
             component Heading text: "Admin"
           }
         }
@@ -149,7 +149,7 @@ project "Admin Dashboard - Improved" {
         layout stack(direction: horizontal, gap: 16) {
           layout stack(direction: vertical, gap: 4) {
             component Heading text: "User Management"
-            component Text content: "Manage system users and permissions"
+            component Text text: "Manage system users and permissions"
           }
 
           layout stack(direction: horizontal, gap: 8) {
@@ -162,7 +162,7 @@ project "Admin Dashboard - Improved" {
         // Filters
         layout stack(direction: horizontal, gap: 12) {
           layout stack(direction: horizontal, gap: 4) {
-            component Icon type: "filter" size: "sm"
+            component Icon icon: "filter" size: "sm"
             component Label text: "Filter:"
           }
           component Textarea content: "All Roles"
@@ -185,14 +185,14 @@ project "Admin Dashboard - Improved" {
             // User Row 1
             layout stack(direction: horizontal, gap: 16, padding: 12) {
               layout stack(direction: horizontal, gap: 8) {
-                component Icon type: "user" size: "sm"
-                component Text content: "Alice Johnson"
+                component Icon icon: "user" size: "sm"
+                component Text text: "Alice Johnson"
               }
-              component Text content: "alice@example.com"
-              component Text content: "Admin"
+              component Text text: "alice@example.com"
+              component Text text: "Admin"
               layout stack(direction: horizontal, gap: 4) {
-                component Icon type: "check" size: "sm"
-                component Text content: "Active"
+                component Icon icon: "check" size: "sm"
+                component Text text: "Active"
               }
               layout stack(direction: horizontal, gap: 4) {
                 component IconButton icon: "edit-2" variant: "default" size: "sm"
@@ -204,14 +204,14 @@ project "Admin Dashboard - Improved" {
             // User Row 2
             layout stack(direction: horizontal, gap: 16, padding: 12) {
               layout stack(direction: horizontal, gap: 8) {
-                component Icon type: "user" size: "sm"
-                component Text content: "Bob Martinez"
+                component Icon icon: "user" size: "sm"
+                component Text text: "Bob Martinez"
               }
-              component Text content: "bob@example.com"
-              component Text content: "Editor"
+              component Text text: "bob@example.com"
+              component Text text: "Editor"
               layout stack(direction: horizontal, gap: 4) {
-                component Icon type: "check" size: "sm"
-                component Text content: "Active"
+                component Icon icon: "check" size: "sm"
+                component Text text: "Active"
               }
               layout stack(direction: horizontal, gap: 4) {
                 component IconButton icon: "edit-2" variant: "default" size: "sm"
@@ -223,14 +223,14 @@ project "Admin Dashboard - Improved" {
             // User Row 3
             layout stack(direction: horizontal, gap: 16, padding: 12) {
               layout stack(direction: horizontal, gap: 8) {
-                component Icon type: "user" size: "sm"
-                component Text content: "Carol White"
+                component Icon icon: "user" size: "sm"
+                component Text text: "Carol White"
               }
-              component Text content: "carol@example.com"
-              component Text content: "Viewer"
+              component Text text: "carol@example.com"
+              component Text text: "Viewer"
               layout stack(direction: horizontal, gap: 4) {
-                component Icon type: "alert-circle" size: "sm"
-                component Text content: "Inactive"
+                component Icon icon: "alert-circle" size: "sm"
+                component Text text: "Inactive"
               }
               layout stack(direction: horizontal, gap: 4) {
                 component IconButton icon: "edit-2" variant: "default" size: "sm"
@@ -244,7 +244,7 @@ project "Admin Dashboard - Improved" {
         // Pagination
         layout stack(direction: horizontal, gap: 8) {
           component IconButton icon: "chevron-left" variant: "default" size: "sm"
-          component Text content: "Page 1 of 5"
+          component Text text: "Page 1 of 5"
           component IconButton icon: "chevron-right" variant: "default" size: "sm"
         }
       }

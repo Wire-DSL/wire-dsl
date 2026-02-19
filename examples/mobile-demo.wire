@@ -11,7 +11,7 @@ project "Mobile Wireframe Demo" {
   screen Home {
     layout stack(direction: vertical, gap: md, padding: md) {
       component Heading text: "Mobile App"
-      component Text content: "This wireframe is designed for mobile devices with 375px width (iPhone SE baseline). The height adjusts dynamically based on content."
+      component Text text: "This wireframe is designed for mobile devices with 375px width (iPhone SE baseline). The height adjusts dynamically based on content."
 
       component Button text: "Get Started" variant: primary
       component Button text: "Learn More" variant: secondary
@@ -23,23 +23,23 @@ project "Mobile Wireframe Demo" {
       layout grid(columns: 1, gap: md) {
         layout card(padding: md) {
           component Heading text: "Fast" level: h3
-          component Text content: "Built for speed and performance on mobile devices."
+          component Text text: "Built for speed and performance on mobile devices."
         }
 
         layout card(padding: md) {
           component Heading text: "Simple" level: h3
-          component Text content: "Intuitive interface designed for touch interactions."
+          component Text text: "Intuitive interface designed for touch interactions."
         }
 
         layout card(padding: md) {
           component Heading text: "Secure" level: h3
-          component Text content: "Your data is protected with industry-standard encryption."
+          component Text text: "Your data is protected with industry-standard encryption."
         }
       }
 
       component Divider
 
-      component Text content: "Mobile-optimized wireframe for touch devices"
+      component Text text: "Mobile-optimized wireframe for touch devices"
     }
   }
 
@@ -48,7 +48,7 @@ project "Mobile Wireframe Demo" {
       component Heading text: "Product Details"
       component Image placeholder: "square"
       component Heading text: "Description" level: h2
-      component Text content: "This is a detailed view optimized for mobile screens. All content flows naturally in a single column."
+      component Text text: "This is a detailed view optimized for mobile screens. All content flows naturally in a single column."
       component Button text: "Add to Cart" variant: primary
       component Button text: "Back" variant: secondary
     }

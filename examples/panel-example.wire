@@ -16,7 +16,7 @@ project "Panel Example" {
           component Heading text: "Panel with Stack"
           layout card(padding: md, gap: md) {
             component Heading text: "Card inside Panel"
-            component Text content: "This card is nested in a panel"
+            component Text text: "This card is nested in a panel"
           }
           component Input placeholder: "Text inside panel"
         }
@@ -25,7 +25,7 @@ project "Panel Example" {
       layout panel(padding: md) {
         layout card(padding: md, gap: md) {
           component Heading text: "Simple Card in Panel"
-          component Text content: "Content goes here"
+          component Text text: "Content goes here"
         }
       }
 
@@ -34,13 +34,13 @@ project "Panel Example" {
           cell span: 6 {
             layout card(padding: md, gap: md) {
               component Heading text: "Left Column"
-              component Text content: "Left side content"
+              component Text text: "Left side content"
             }
           }
           cell span: 6 {
             layout card(padding: md, gap: md) {
               component Heading text: "Right Column"
-              component Text content: "Right side content"
+              component Text text: "Right side content"
             }
           }
         }

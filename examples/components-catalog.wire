@@ -18,18 +18,18 @@ project "Wire-DSL Complete Components Catalog" {
     layout stack(direction: vertical, gap: lg, padding: lg) {
 
       component Heading text: "Wire-DSL Components Catalog"
-      component Text content: "Comprehensive showcase of all 28 components and 5 container types. This catalog demonstrates every variant, property combination, and container layout available in Wire-DSL for reference and testing."
+      component Text text: "Comprehensive showcase of all 28 components and 5 container types. This catalog demonstrates every variant, property combination, and container layout available in Wire-DSL for reference and testing."
 
       component Divider
 
       component Heading text: "1. Text Components" level: h2
-      component Text content: "Typography elements for displaying text at different hierarchy levels."
+      component Text text: "Typography elements for displaying text at different hierarchy levels."
 
       layout card(padding: md) {
         component Heading text: "Heading - H1 Level (Largest)" level: h1
         component Heading text: "Heading - H2 Level (Section Header)" level: h2
         component Heading text: "Heading - H3 Level (Subsection)" level: h3
-        component Text content: "Text component for body content. This is the standard text element used for paragraphs and descriptions. It automatically wraps across multiple lines when content exceeds the available width."
+        component Text text: "Text component for body content. This is the standard text element used for paragraphs and descriptions. It automatically wraps across multiple lines when content exceeds the available width."
         component Label text: "Label - Small form label text"
         component Label text: "Email Address"
         component Label text: "Password Required *"
@@ -38,7 +38,7 @@ project "Wire-DSL Complete Components Catalog" {
       component Divider
 
       component Heading text: "2. Input Components" level: h2
-      component Text content: "Form input elements for collecting user data with validation and interaction."
+      component Text text: "Form input elements for collecting user data with validation and interaction."
 
       layout grid(columns: 2, gap: md) {
         cell span: 1 {
@@ -67,7 +67,7 @@ project "Wire-DSL Complete Components Catalog" {
         component Heading text: "Boolean Input Types" level: h3
 
         layout stack(direction: vertical, gap: sm) {
-          component Text content: "Checkboxes (multi-select):"
+          component Text text: "Checkboxes (multi-select):"
           component Checkbox label: "I agree to the terms and conditions" checked: true
           component Checkbox label: "Subscribe to newsletter" checked: false
           component Checkbox label: "Remember my login" checked: true
@@ -77,7 +77,7 @@ project "Wire-DSL Complete Components Catalog" {
         component Divider
 
         layout stack(direction: vertical, gap: sm) {
-          component Text content: "Radio buttons (single-select):"
+          component Text text: "Radio buttons (single-select):"
           component Radio label: "Option A - Selected" checked: true
           component Radio label: "Option B - Not selected"
           component Radio label: "Option C - Not selected" checked: false
@@ -86,7 +86,7 @@ project "Wire-DSL Complete Components Catalog" {
         component Divider
 
         layout stack(direction: vertical, gap: sm) {
-          component Text content: "Toggle switches:"
+          component Text text: "Toggle switches:"
           component Toggle label: "Dark Mode" enabled: true
           component Toggle label: "Push Notifications" enabled: false
           component Toggle label: "Auto-save enabled" enabled: true
@@ -97,11 +97,11 @@ project "Wire-DSL Complete Components Catalog" {
       component Divider
 
       component Heading text: "3. Button Components" level: h2
-      component Text content: "Interactive action buttons with different visual emphasis levels and icon-only variants."
+      component Text text: "Interactive action buttons with different visual emphasis levels and icon-only variants."
 
       layout stack(direction: vertical, gap: md, padding: md) {
         component Heading text: "Button Variants by Emphasis" level: h3
-        component Text content: "Primary (high emphasis), Secondary (medium), Info (low emphasis)"
+        component Text text: "Primary (high emphasis), Secondary (medium), Info (low emphasis)"
 
         layout stack(direction: horizontal, gap: md, align: left) {
           component Button text: "Primary Button" variant: primary
@@ -124,7 +124,7 @@ project "Wire-DSL Complete Components Catalog" {
         component Divider
 
         component Heading text: "Icon Buttons" level: h3
-        component Text content: "Compact buttons with icons for toolbars and action bars"
+        component Text text: "Compact buttons with icons for toolbars and action bars"
 
         layout stack(direction: horizontal, gap: sm, justify: left) {
           component IconButton icon: "search"
@@ -143,30 +143,30 @@ project "Wire-DSL Complete Components Catalog" {
       component Divider
 
       component Heading text: "4. Navigation Components" level: h2
-      component Text content: "Components for application navigation including top bars, side menus, breadcrumbs, and tabs."
+      component Text text: "Components for application navigation including top bars, side menus, breadcrumbs, and tabs."
 
       layout stack(direction: vertical, gap: md, padding: md) {
         component Heading text: "Topbar Configurations" level: h3
 
-        component Text content: "Basic topbar with title only:"
+        component Text text: "Basic topbar with title only:"
         component Topbar title: "Dashboard"
 
-        component Text content: "With subtitle:"
+        component Text text: "With subtitle:"
         component Topbar title: "Application Name" subtitle: "Welcome back, John!"
 
-        component Text content: "With user badge:"
+        component Text text: "With user badge:"
         component Topbar title: "Admin Panel" user: "john_doe"
 
-        component Text content: "With subtitle and user:"
+        component Text text: "With subtitle and user:"
         component Topbar title: "Project Manager" subtitle: "Dashboard Overview" user: "admin" avatar: true icon: "home" variant: danger
 
-        component Text content: "With action menu:"
+        component Text text: "With action menu:"
         component Topbar title: "Wire-DSL Editor" actions: "Help,Settings,Profile,Logout" user: "john_doe"
 
         component Divider
 
         component Heading text: "Sidebar Menus" level: h3
-        component Text content: "Vertical navigation menus with active state highlighting"
+        component Text text: "Vertical navigation menus with active state highlighting"
 
         layout grid(columns: 3, gap: md) {
           cell span: 1 {
@@ -183,7 +183,7 @@ project "Wire-DSL Complete Components Catalog" {
         component Divider
 
         component Heading text: "Breadcrumbs Navigation" level: h3
-        component Text content: "Hierarchical navigation showing current location"
+        component Text text: "Hierarchical navigation showing current location"
 
         component Breadcrumbs items: "Home,Products,Electronics,Laptops"
         component Breadcrumbs items: "Dashboard,Users,User Profile,Settings" separator: ">"
@@ -193,7 +193,7 @@ project "Wire-DSL Complete Components Catalog" {
         component Divider
 
         component Heading text: "Tabs Interface" level: h3
-        component Text content: "Tabbed content panels with active tab highlighting"
+        component Text text: "Tabbed content panels with active tab highlighting"
 
         component Tabs items: "Overview,Details,Comments,History" active: 0
         component Tabs items: "Profile,Settings,Privacy,Security,Notifications" active: 2
@@ -203,24 +203,24 @@ project "Wire-DSL Complete Components Catalog" {
       component Divider
 
       component Heading text: "5. Data Display Components" level: h2
-      component Text content: "Components for displaying structured and tabular data."
+      component Text text: "Components for displaying structured and tabular data."
 
       layout stack(direction: vertical, gap: md, padding: md) {
         component Heading text: "Table Variations" level: h3
 
-        component Text content: "Small table (4 columns, 5 rows):"
+        component Text text: "Small table (4 columns, 5 rows):"
         component Table columns: "Name,Email,Status,Role" rows: 5
 
-        component Text content: "Medium table (6 columns, 8 rows):"
+        component Text text: "Medium table (6 columns, 8 rows):"
         component Table columns: "ID,Product Name,Price,Stock,Category,Supplier" rows: 8
 
-        component Text content: "Large table (4 columns, 10 rows):"
+        component Text text: "Large table (4 columns, 10 rows):"
         component Table columns: "Date,Transaction ID,Amount,Payment Status" rows: 10
 
         component Divider
 
         component Heading text: "List Components" level: h3
-        component Text content: "Vertical lists with optional titles"
+        component Text text: "Vertical lists with optional titles"
 
         layout grid(columns: 3, gap: md) {
           cell span: 1 {
@@ -238,11 +238,11 @@ project "Wire-DSL Complete Components Catalog" {
       component Divider
 
       component Heading text: "6. Media Components" level: h2
-      component Text content: "Components for displaying images and icons with different aspect ratios."
+      component Text text: "Components for displaying images and icons with different aspect ratios."
 
       layout stack(direction: vertical, gap: md, padding: md) {
         component Heading text: "Image Aspect Ratios" level: h3
-        component Text content: "Different placeholder shapes for various use cases"
+        component Text text: "Different placeholder shapes for various use cases"
 
         layout grid(columns: 5, gap: md) {
           cell span: 1 {
@@ -280,26 +280,26 @@ project "Wire-DSL Complete Components Catalog" {
         component Divider
 
         component Heading text: "Icon Symbols" level: h3
-        component Text content: "Inline icon glyphs for UI elements"
+        component Text text: "Inline icon glyphs for UI elements"
 
         layout stack(direction: horizontal, gap: md, justify: left) {
-          component Icon type: "search"
-          component Icon type: "settings"
-          component Icon type: "user"
-          component Icon type: "heart"
-          component Icon type: "star"
-          component Icon type: "bell"
-          component Icon type: "mail"
-          component Icon type: "calendar"
-          component Icon type: "download"
-          component Icon type: "upload"
+          component Icon icon: "search"
+          component Icon icon: "settings"
+          component Icon icon: "user"
+          component Icon icon: "heart"
+          component Icon icon: "star"
+          component Icon icon: "bell"
+          component Icon icon: "mail"
+          component Icon icon: "calendar"
+          component Icon icon: "download"
+          component Icon icon: "upload"
         }
       }
 
       component Divider
 
       component Heading text: "7. Display & Feedback Components" level: h2
-      component Text content: "Visual elements for status indication and user feedback."
+      component Text text: "Visual elements for status indication and user feedback."
 
       layout stack(direction: vertical, gap: md, padding: md) {
         component Heading text: "Badge Variants (All 6 Types)" level: h3
@@ -347,11 +347,11 @@ project "Wire-DSL Complete Components Catalog" {
       component Divider
 
       component Heading text: "8. Information Display Components" level: h2
-      component Text content: "Components for displaying metrics, statistics, code, and data visualizations."
+      component Text text: "Components for displaying metrics, statistics, code, and data visualizations."
 
       layout stack(direction: vertical, gap: md, padding: md) {
         component Heading text: "Stat Cards" level: h3
-        component Text content: "Metric cards for dashboard KPIs"
+        component Text text: "Metric cards for dashboard KPIs"
 
         layout grid(columns: 4, gap: md) {
           cell span: 1 {
@@ -387,7 +387,7 @@ project "Wire-DSL Complete Components Catalog" {
         component Divider
 
         component Heading text: "Code Blocks" level: h3
-        component Text content: "Monospace code display with syntax preservation"
+        component Text text: "Monospace code display with syntax preservation"
 
         component Code code: "const greeting = 'Hello, World!'; console.log(greeting);"
         component Code code: "function sum(a, b) { return a + b; }"
@@ -396,7 +396,7 @@ project "Wire-DSL Complete Components Catalog" {
         component Divider
 
         component Heading text: "Chart Placeholders (All 4 Types)" level: h3
-        component Text content: "Placeholder visualizations for different chart types"
+        component Text text: "Placeholder visualizations for different chart types"
 
         layout grid(columns: 2, gap: md) {
           cell span: 1 {
@@ -432,7 +432,7 @@ project "Wire-DSL Complete Components Catalog" {
       // component Divider
 
       // component Heading text: "9. Modal & Loading Components" level: h2
-      // component Text content: "Overlay dialogs and loading state indicators."
+      // component Text text: "Overlay dialogs and loading state indicators."
 
       // layout stack(direction: vertical, gap: md, padding: md) {
       //   component Heading text: "Modal Dialogs" level: h3
@@ -445,7 +445,7 @@ project "Wire-DSL Complete Components Catalog" {
       component Divider
 
       component Heading text: "10. Container Layouts - Stack" level: h2
-      component Text content: "Stack containers arrange children vertically or horizontally with configurable gaps."
+      component Text text: "Stack containers arrange children vertically or horizontally with configurable gaps."
 
       layout stack(direction: vertical, gap: md, padding: md) {
         component Heading text: "Vertical Stack - Gap Variations" level: h3
@@ -530,7 +530,7 @@ project "Wire-DSL Complete Components Catalog" {
       component Divider
 
       component Heading text: "11. Container Layouts - Grid" level: h2
-      component Text content: "Grid containers use a 12-column system with configurable column spans."
+      component Text text: "Grid containers use a 12-column system with configurable column spans."
 
       layout stack(direction: vertical, gap: md, padding: md) {
         component Label text: "Grid: 2 Columns Equal Width"
@@ -610,7 +610,7 @@ project "Wire-DSL Complete Components Catalog" {
       component Divider
 
       component Heading text: "12. Container Layouts - Split, Card, Panel" level: h2
-      component Text content: "Additional container types for specific layout patterns."
+      component Text text: "Additional container types for specific layout patterns."
 
       layout stack(direction: vertical, gap: md, padding: md) {
         component Heading text: "Split Container (Sidebar Layouts)" level: h3
@@ -620,7 +620,7 @@ project "Wire-DSL Complete Components Catalog" {
           component SidebarMenu items: "Nav Item 1,Nav Item 2,Nav Item 3,Nav Item 4"
           layout stack(direction: vertical, gap: md, padding: md) {
             component Heading text: "Main Content Area" level: h3
-            component Text content: "This is the main content area with a 200px fixed-width sidebar on the left side."
+            component Text text: "This is the main content area with a 200px fixed-width sidebar on the left side."
           }
         }
 
@@ -629,7 +629,7 @@ project "Wire-DSL Complete Components Catalog" {
           component SidebarMenu items: "Dashboard,Users,Settings,Reports,Analytics,Administration"
           layout stack(direction: vertical, gap: md, padding: md) {
             component Heading text: "Wide Sidebar Example" level: h3
-            component Text content: "This layout demonstrates a wider 300px sidebar for more navigation options and content."
+            component Text text: "This layout demonstrates a wider 300px sidebar for more navigation options and content."
           }
         }
 
@@ -645,7 +645,7 @@ project "Wire-DSL Complete Components Catalog" {
                 cell { }
                 cell span: 20 {
                   component Heading text: "Card xs" level: h3 spacing: none
-                  component Text content: "Extra small padding: 4px"
+                  component Text text: "Extra small padding: 4px"
                 }
                 cell { }
               }
@@ -655,13 +655,13 @@ project "Wire-DSL Complete Components Catalog" {
             layout card(padding: md) {
               component Image placeholder: "landscape"
               component Heading text: "Card md" level: h3
-              component Text content: "Medium padding: 16px"
+              component Text text: "Medium padding: 16px"
             }
           }
           cell span: 1 {
             layout card(padding: xl) {
               component Heading text: "Card xl" level: h3
-              component Text content: "Extra large padding: 32px"
+              component Text text: "Extra large padding: 32px"
             }
           }
         }
@@ -672,13 +672,13 @@ project "Wire-DSL Complete Components Catalog" {
 
         layout panel(padding: md) {
           component Heading text: "Panel with Medium Padding" level: h3
-          component Text content: "Panel is a simple wrapper container that adds padding around its content without additional styling."
+          component Text text: "Panel is a simple wrapper container that adds padding around its content without additional styling."
           component Button text: "Action Button" variant: primary
         }
 
         layout panel(padding: lg) {
           component Heading text: "Panel with Large Padding" level: h3
-          component Text content: "This panel demonstrates larger padding for more visual breathing room around the content."
+          component Text text: "This panel demonstrates larger padding for more visual breathing room around the content."
           layout stack(direction: horizontal, gap: md, justify: left) {
             component Button text: "Save" variant: primary
             component Button text: "Cancel" variant: secondary
@@ -689,7 +689,7 @@ project "Wire-DSL Complete Components Catalog" {
       component Divider
 
       component Heading text: "13. Complex Real-World Layouts" level: h2
-      component Text content: "Practical examples combining multiple container types for realistic application interfaces."
+      component Text text: "Practical examples combining multiple container types for realistic application interfaces."
 
       layout stack(direction: vertical, gap: md, padding: md) {
         component Heading text: "Complete Dashboard Layout" level: h3
@@ -774,7 +774,7 @@ project "Wire-DSL Complete Components Catalog" {
       component Divider
 
       component Heading text: "End of Catalog" level: h2
-      component Text content: "This comprehensive catalog demonstrates all 28 components and 5 container types available in Wire-DSL. Use these examples as reference when building your own wireframes. Each component supports various properties and can be combined with containers to create complex, production-ready UI layouts."
+      component Text text: "This comprehensive catalog demonstrates all 28 components and 5 container types available in Wire-DSL. Use these examples as reference when building your own wireframes. Each component supports various properties and can be combined with containers to create complex, production-ready UI layouts."
 
       layout stack(direction: horizontal, gap: md, justify: center, padding: lg) {
         component Button text: "View Full Documentation" variant: primary

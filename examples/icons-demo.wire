@@ -10,7 +10,7 @@ project "Icon Demo" {
   screen IconsShowcase {
     layout stack(direction: vertical, gap: 16, padding: 16) {
       component Heading text: "Icon Components"
-      component Text content: "Using Feather Icons in Wire-DSL"
+      component Text text: "Using Feather Icons in Wire-DSL"
 
       // Basic Icons Row
       layout panel(padding: md) {
@@ -18,11 +18,11 @@ project "Icon Demo" {
         component Heading text: "Basic Icons"
         
         layout stack(direction: horizontal, gap: 16) {
-          component Icon type: "home"
-          component Icon type: "search"
-          component Icon type: "settings"
-          component Icon type: "user"
-          component Icon type: "mail"
+          component Icon icon: "home"
+          component Icon icon: "search"
+          component Icon icon: "settings"
+          component Icon icon: "user"
+          component Icon icon: "mail"
         }
       }
     }
@@ -33,11 +33,11 @@ project "Icon Demo" {
         component Heading text: "Navigation Icons"
         
         layout stack(direction: horizontal, gap: 16) {
-          component Icon type: "arrow-left"
-          component Icon type: "arrow-right"
-          component Icon type: "chevron-up"
-          component Icon type: "chevron-down"
-          component Icon type: "menu"
+          component Icon icon: "arrow-left"
+          component Icon icon: "arrow-right"
+          component Icon icon: "chevron-up"
+          component Icon icon: "chevron-down"
+          component Icon icon: "menu"
         }
       }
     }
@@ -48,11 +48,11 @@ project "Icon Demo" {
         component Heading text: "Action Icons"
         
         layout stack(direction: horizontal, gap: 16) {
-          component Icon type: "plus"
-          component Icon type: "minus"
-          component Icon type: "edit-2"
-          component Icon type: "trash-2"
-          component Icon type: "copy"
+          component Icon icon: "plus"
+          component Icon icon: "minus"
+          component Icon icon: "edit-2"
+          component Icon icon: "trash-2"
+          component Icon icon: "copy"
         }
       }
     }
@@ -63,11 +63,11 @@ project "Icon Demo" {
         component Heading text: "Status & Feedback Icons"
         
         layout stack(direction: horizontal, gap: 16) {
-          component Icon type: "check"
-          component Icon type: "x"
-          component Icon type: "alert-circle"
-          component Icon type: "info"
-          component Icon type: "bell"
+          component Icon icon: "check"
+          component Icon icon: "x"
+          component Icon icon: "alert-circle"
+          component Icon icon: "info"
+          component Icon icon: "bell"
         }
       }
     }
@@ -78,11 +78,11 @@ project "Icon Demo" {
         component Heading text: "Utility Icons"
         
         layout stack(direction: horizontal, gap: 16) {
-          component Icon type: "download"
-          component Icon type: "upload"
-          component Icon type: "eye"
-          component Icon type: "eye-off"
-          component Icon type: "wifi"
+          component Icon icon: "download"
+          component Icon icon: "upload"
+          component Icon icon: "eye"
+          component Icon icon: "eye-off"
+          component Icon icon: "wifi"
         }
       }
     }
@@ -91,7 +91,7 @@ project "Icon Demo" {
     layout panel(padding: md) {
       layout stack(direction: vertical, gap: 12) {
         component Heading text: "Icon Buttons"
-        component Text content: "Clickable icon buttons with different variants"
+        component Text text: "Clickable icon buttons with different variants"
         
         layout stack(direction: vertical, gap: 16) {
           // Default variant buttons
@@ -129,27 +129,27 @@ project "Icon Demo" {
     layout panel(padding: md) {
       layout stack(direction: vertical, gap: 12) {
         component Heading text: "Icons at Different Sizes"
-        component Text content: "Icons automatically scale to fit their container"
+        component Text text: "Icons automatically scale to fit their container"
         
         layout stack(direction: horizontal, gap: 20) {
           // Small icon
           layout panel(padding: md) {
             layout stack(direction: vertical) {
-              component Icon type: "heart" size: sm
+              component Icon icon: "heart" size: sm
             }
           }
 
           // Medium icon
           layout panel(padding: md) {
             layout stack(direction: vertical) {
-              component Icon type: "heart" size: md
+              component Icon icon: "heart" size: md
             }
           }
 
           // Large icon
           layout panel(padding: md) {
             layout stack(direction: vertical) {
-              component Icon type: "heart" size: lg
+              component Icon icon: "heart" size: lg
             }
           }
         }
@@ -160,14 +160,14 @@ project "Icon Demo" {
     layout panel(padding: md) {
       layout stack(direction: vertical, gap: 12) {
         component Heading text: "Icon Colors (from )"
-        component Text content: "Icons use the text color from the current "
+        component Text text: "Icons use the text color from the current "
         
         layout stack(direction: horizontal, gap: 16) {
-          component Icon type: "star"
-          component Icon type: "heart"
-          component Icon type: "wifi"
-          component Icon type: "clock"
-          component Icon type: "map-pin"
+          component Icon icon: "star"
+          component Icon icon: "heart"
+          component Icon icon: "wifi"
+          component Icon icon: "clock"
+          component Icon icon: "map-pin"
         }
       }
     }
@@ -179,8 +179,8 @@ project "Icon Demo" {
       layout panel(padding: md) {
         layout stack(direction: vertical, gap: 8) {
           component Heading text: "Complete Icon Reference"
-          component Text content: "All 50+ available icons from Feather Icons"
-          component Text content: "Usage: component Icon type: \"icon-name\""
+          component Text text: "All 50+ available icons from Feather Icons"
+          component Text text: "Usage: component Icon icon: \"icon-name\""
         }
       }
 
@@ -188,11 +188,11 @@ project "Icon Demo" {
         layout stack(direction: vertical, gap: 16) {
           component Heading text: "UI Navigation"
           layout stack(direction: horizontal, gap: 12) {
-            component Icon type: "home"
-            component Icon type: "menu"
-            component Icon type: "x"
-            component Icon type: "chevron-right"
-            component Icon type: "chevron-left"
+            component Icon icon: "home"
+            component Icon icon: "menu"
+            component Icon icon: "x"
+            component Icon icon: "chevron-right"
+            component Icon icon: "chevron-left"
           }
         }
       }
@@ -201,8 +201,8 @@ project "Icon Demo" {
         layout stack(direction: vertical, gap: 16) {
           component Heading text: "Search & Input"
           layout stack(direction: horizontal, gap: 12) {
-            component Icon type: "search"
-            component Icon type: "filter"
+            component Icon icon: "search"
+            component Icon icon: "filter"
           }
         }
       }
@@ -211,16 +211,16 @@ project "Icon Demo" {
         layout stack(direction: vertical, gap: 16) {
           component Heading text: "Edit & Actions"
           layout stack(direction: horizontal, gap: 12) {
-            component Icon type: "edit"
-            component Icon type: "edit-2"
-            component Icon type: "trash"
-            component Icon type: "trash-2"
-            component Icon type: "copy"
-            component Icon type: "download"
-            component Icon type: "upload"
-            component Icon type: "plus"
-            component Icon type: "minus"
-            component Icon type: "check"
+            component Icon icon: "edit"
+            component Icon icon: "edit-2"
+            component Icon icon: "trash"
+            component Icon icon: "trash-2"
+            component Icon icon: "copy"
+            component Icon icon: "download"
+            component Icon icon: "upload"
+            component Icon icon: "plus"
+            component Icon icon: "minus"
+            component Icon icon: "check"
           }
         }
       }
@@ -229,10 +229,10 @@ project "Icon Demo" {
         layout stack(direction: vertical, gap: 16) {
           component Heading text: "Notifications & Status"
           layout stack(direction: horizontal, gap: 12) {
-            component Icon type: "bell"
-            component Icon type: "alert-circle"
-            component Icon type: "alert-triangle"
-            component Icon type: "info"
+            component Icon icon: "bell"
+            component Icon icon: "alert-circle"
+            component Icon icon: "alert-triangle"
+            component Icon icon: "info"
           }
         }
       }
@@ -241,12 +241,12 @@ project "Icon Demo" {
         layout stack(direction: vertical, gap: 16) {
           component Heading text: "User & Account"
           layout stack(direction: horizontal, gap: 12) {
-            component Icon type: "user"
-            component Icon type: "user-check"
-            component Icon type: "user-x"
-            component Icon type: "settings"
-            component Icon type: "log-out"
-            component Icon type: "log-in"
+            component Icon icon: "user"
+            component Icon icon: "user-check"
+            component Icon icon: "user-x"
+            component Icon icon: "settings"
+            component Icon icon: "log-out"
+            component Icon icon: "log-in"
           }
         }
       }
@@ -255,10 +255,10 @@ project "Icon Demo" {
         layout stack(direction: vertical, gap: 16) {
           component Heading text: "Communication"
           layout stack(direction: horizontal, gap: 12) {
-            component Icon type: "mail"
-            component Icon type: "phone"
-            component Icon type: "share"
-            component Icon type: "share-2"
+            component Icon icon: "mail"
+            component Icon icon: "phone"
+            component Icon icon: "share"
+            component Icon icon: "share-2"
           }
         }
       }
@@ -267,11 +267,11 @@ project "Icon Demo" {
         layout stack(direction: vertical, gap: 16) {
           component Heading text: "Data & Information"
           layout stack(direction: horizontal, gap: 12) {
-            component Icon type: "calendar"
-            component Icon type: "clock"
-            component Icon type: "map-pin"
-            component Icon type: "wifi"
-            component Icon type: "wifi-off"
+            component Icon icon: "calendar"
+            component Icon icon: "clock"
+            component Icon icon: "map-pin"
+            component Icon icon: "wifi"
+            component Icon icon: "wifi-off"
           }
         }
       }
@@ -280,9 +280,9 @@ project "Icon Demo" {
         layout stack(direction: vertical, gap: 16) {
           component Heading text: "Media & Visuals"
           layout stack(direction: horizontal, gap: 12) {
-            component Icon type: "eye"
-            component Icon type: "eye-off"
-            component Icon type: "image"
+            component Icon icon: "eye"
+            component Icon icon: "eye-off"
+            component Icon icon: "image"
           }
         }
       }
@@ -291,8 +291,8 @@ project "Icon Demo" {
         layout stack(direction: vertical, gap: 16) {
           component Heading text: "Feedback & Social"
           layout stack(direction: horizontal, gap: 12) {
-            component Icon type: "heart"
-            component Icon type: "star"
+            component Icon icon: "heart"
+            component Icon icon: "star"
           }
         }
       }
@@ -301,8 +301,8 @@ project "Icon Demo" {
         layout stack(direction: vertical, gap: 16) {
           component Heading text: "Loading & Misc"
           layout stack(direction: horizontal, gap: 12) {
-            component Icon type: "loader"
-            component Icon type: "help-circle"
+            component Icon icon: "loader"
+            component Icon icon: "help-circle"
           }
         }
       }

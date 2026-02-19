@@ -11,7 +11,7 @@ project "Form Example - Two Columns" {
     layout stack(direction: vertical, gap: md, padding: lg) {
       component Heading text: "User Registration"
       
-      component Text content: "Please fill in all required fields below"
+      component Text text: "Please fill in all required fields below"
 
       layout grid(columns: 12, gap: md) {
         cell span: 6 {

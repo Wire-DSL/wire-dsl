@@ -16,7 +16,7 @@ project "Screen Background Demo" {
           component Heading text: "Panel with Default White"
           layout card(padding: md, gap: md) {
             component Heading text: "Card inside white panel"
-            component Text content: "Card content"
+            component Text text: "Card content"
           }
         }
       }
@@ -24,7 +24,7 @@ project "Screen Background Demo" {
       layout panel(padding: lg, background: "white") {
         layout card(padding: md, gap: md) {
           component Heading text: "Panel with Light Blue"
-          component Text content: "Content here"
+          component Text text: "Content here"
         }
       }
     }
@@ -37,7 +37,7 @@ project "Screen Background Demo" {
       layout panel(padding: lg) {
         layout card(padding: md, gap: md) {
           component Heading text: "Card in white panel on green screen"
-          component Text content: "Content goes here"
+          component Text text: "Content goes here"
         }
       }
     }

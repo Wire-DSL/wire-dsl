@@ -12,7 +12,7 @@ project "Admin Dashboard with Icons" {
         // Logo / Title
         layout card(padding: 16, gap: 8) {
           layout stack(direction: horizontal, gap: 8) {
-            component Icon type: "home"
+            component Icon icon: "home"
             component Heading text: "Admin"
           }
         }
@@ -20,20 +20,20 @@ project "Admin Dashboard with Icons" {
         // Navigation Menu
         layout stack(direction: vertical, gap: 2) {
           layout stack(direction: horizontal, gap: 12, padding: 12) {
-            component Icon type: "home" size: "sm"
-            component Text content: "Dashboard"
+            component Icon icon: "home" size: "sm"
+            component Text text: "Dashboard"
           }
           layout stack(direction: horizontal, gap: 12, padding: 12) {
-            component Icon type: "user" size: "sm"
-            component Text content: "Users"
+            component Icon icon: "user" size: "sm"
+            component Text text: "Users"
           }
           layout stack(direction: horizontal, gap: 12, padding: 12) {
-            component Icon type: "settings" size: "sm"
-            component Text content: "Settings"
+            component Icon icon: "settings" size: "sm"
+            component Text text: "Settings"
           }
           layout stack(direction: horizontal, gap: 12, padding: 12) {
-            component Icon type: "help-circle" size: "sm"
-            component Text content: "Help"
+            component Icon icon: "help-circle" size: "sm"
+            component Text text: "Help"
           }
         }
       }
@@ -44,7 +44,7 @@ project "Admin Dashboard with Icons" {
         layout stack(direction: horizontal, gap: 16) {
           layout stack(direction: vertical, gap: 4) {
             component Heading text: "Dashboard"
-            component Text content: "Welcome back, Admin"
+            component Text text: "Welcome back, Admin"
           }
           layout stack(direction: horizontal, gap: 12) {
             component IconButton icon: "bell" variant: "default" size: "sm"
@@ -61,9 +61,9 @@ project "Admin Dashboard with Icons" {
                 layout stack(direction: vertical, gap: 8) {
                   component Label text: "Total Users"
                   component Heading text: "2,543"
-                  component Text content: "+12% from last month"
+                  component Text text: "+12% from last month"
                 }
-                component Icon type: "user"
+                component Icon icon: "user"
               }
             }
           }
@@ -75,9 +75,9 @@ project "Admin Dashboard with Icons" {
                 layout stack(direction: vertical, gap: 8) {
                   component Label text: "Active Sessions"
                   component Heading text: "856"
-                  component Text content: "+5% from last hour"
+                  component Text text: "+5% from last hour"
                 }
-                component Icon type: "wifi"
+                component Icon icon: "wifi"
               }
             }
           }
@@ -89,9 +89,9 @@ project "Admin Dashboard with Icons" {
                 layout stack(direction: vertical, gap: 8) {
                   component Label text: "Revenue"
                   component Heading text: "$45.2K"
-                  component Text content: "+8% from last week"
+                  component Text text: "+8% from last week"
                 }
-                component Icon type: "arrow-up"
+                component Icon icon: "arrow-up"
               }
             }
           }
@@ -103,9 +103,9 @@ project "Admin Dashboard with Icons" {
                 layout stack(direction: vertical, gap: 8) {
                   component Label text: "Pending Tasks"
                   component Heading text: "24"
-                  component Text content: "3 due today"
+                  component Text text: "3 due today"
                 }
-                component Icon type: "check"
+                component Icon icon: "check"
               }
             }
           }
@@ -128,43 +128,43 @@ project "Admin Dashboard with Icons" {
 
               // Row 1
               layout stack(direction: horizontal, gap: 16, padding: 12) {
-                component Text content: "John Smith"
+                component Text text: "John Smith"
                 layout stack(direction: horizontal, gap: 8) {
-                  component Icon type: "arrow-right"
-                  component Text content: "Login"
+                  component Icon icon: "arrow-right"
+                  component Text text: "Login"
                 }
-                component Text content: "2 min ago"
+                component Text text: "2 min ago"
                 layout stack(direction: horizontal, gap: 4) {
-                  component Icon type: "check"
-                  component Text content: "Success"
+                  component Icon icon: "check"
+                  component Text text: "Success"
                 }
               }
 
               // Row 2
               layout stack(direction: horizontal, gap: 16, padding: 12) {
-                component Text content: "Jane Doe"
+                component Text text: "Jane Doe"
                 layout stack(direction: horizontal, gap: 8) {
-                  component Icon type: "edit-2"
-                  component Text content: "Edit Profile"
+                  component Icon icon: "edit-2"
+                  component Text text: "Edit Profile"
                 }
-                component Text content: "5 min ago"
+                component Text text: "5 min ago"
                 layout stack(direction: horizontal, gap: 4) {
-                  component Icon type: "check"
-                  component Text content: "Success"
+                  component Icon icon: "check"
+                  component Text text: "Success"
                 }
               }
 
               // Row 3
               layout stack(direction: horizontal, gap: 16, padding: 12) {
-                component Text content: "Bob Wilson"
+                component Text text: "Bob Wilson"
                 layout stack(direction: horizontal, gap: 8) {
-                  component Icon type: "download"
-                  component Text content: "Download Report"
+                  component Icon icon: "download"
+                  component Text text: "Download Report"
                 }
-                component Text content: "10 min ago"
+                component Text text: "10 min ago"
                 layout stack(direction: horizontal, gap: 4) {
-                  component Icon type: "check"
-                  component Text content: "Success"
+                  component Icon icon: "check"
+                  component Text text: "Success"
                 }
               }
             }
@@ -212,23 +212,23 @@ project "Admin Dashboard with Icons" {
       layout stack(direction: vertical, gap: 0) {
         layout card(padding: 16, gap: 8) {
           layout stack(direction: horizontal, gap: 8) {
-            component Icon type: "home"
+            component Icon icon: "home"
             component Heading text: "Admin"
           }
         }
 
         layout stack(direction: vertical, gap: 2) {
           layout stack(direction: horizontal, gap: 12, padding: 12) {
-            component Icon type: "home"
-            component Text content: "Dashboard"
+            component Icon icon: "home"
+            component Text text: "Dashboard"
           }
           layout stack(direction: horizontal, gap: 12, padding: 12) {
-            component Icon type: "user"
-            component Text content: "Users"
+            component Icon icon: "user"
+            component Text text: "Users"
           }
           layout stack(direction: horizontal, gap: 12, padding: 12) {
-            component Icon type: "settings"
-            component Text content: "Settings"
+            component Icon icon: "settings"
+            component Text text: "Settings"
           }
         }
       }
@@ -239,7 +239,7 @@ project "Admin Dashboard with Icons" {
         layout stack(direction: horizontal, gap: 16) {
           layout stack(direction: vertical, gap: 4) {
             component Heading text: "User Management"
-            component Text content: "Manage system users and permissions"
+            component Text text: "Manage system users and permissions"
           }
 
           layout stack(direction: horizontal, gap: 8) {
@@ -252,7 +252,7 @@ project "Admin Dashboard with Icons" {
         // Filters
         layout stack(direction: horizontal, gap: 12) {
           layout stack(direction: horizontal, gap: 4) {
-            component Icon type: "filter"
+            component Icon icon: "filter"
             component Label text: "Filter:"
           }
           component Textarea content: "All Roles"
@@ -275,14 +275,14 @@ project "Admin Dashboard with Icons" {
             // User Row 1
             layout stack(direction: horizontal, gap: 16, padding: 12) {
               layout stack(direction: horizontal, gap: 8) {
-                component Icon type: "user"
-                component Text content: "Alice Johnson"
+                component Icon icon: "user"
+                component Text text: "Alice Johnson"
               }
-              component Text content: "alice@example.com"
-              component Text content: "Admin"
+              component Text text: "alice@example.com"
+              component Text text: "Admin"
               layout stack(direction: horizontal, gap: 4) {
-                component Icon type: "check"
-                component Text content: "Active"
+                component Icon icon: "check"
+                component Text text: "Active"
               }
               layout stack(direction: horizontal, gap: 4) {
                 component IconButton icon: "edit-2" variant: "default"
@@ -294,14 +294,14 @@ project "Admin Dashboard with Icons" {
             // User Row 2
             layout stack(direction: horizontal, gap: 16, padding: 12) {
               layout stack(direction: horizontal, gap: 8) {
-                component Icon type: "user"
-                component Text content: "Bob Martinez"
+                component Icon icon: "user"
+                component Text text: "Bob Martinez"
               }
-              component Text content: "bob@example.com"
-              component Text content: "Editor"
+              component Text text: "bob@example.com"
+              component Text text: "Editor"
               layout stack(direction: horizontal, gap: 4) {
-                component Icon type: "check"
-                component Text content: "Active"
+                component Icon icon: "check"
+                component Text text: "Active"
               }
               layout stack(direction: horizontal, gap: 4) {
                 component IconButton icon: "edit-2" variant: "default"
@@ -313,14 +313,14 @@ project "Admin Dashboard with Icons" {
             // User Row 3
             layout stack(direction: horizontal, gap: 16, padding: 12) {
               layout stack(direction: horizontal, gap: 8) {
-                component Icon type: "user"
-                component Text content: "Carol White"
+                component Icon icon: "user"
+                component Text text: "Carol White"
               }
-              component Text content: "carol@example.com"
-              component Text content: "Viewer"
+              component Text text: "carol@example.com"
+              component Text text: "Viewer"
               layout stack(direction: horizontal, gap: 4) {
-                component Icon type: "alert-circle"
-                component Text content: "Inactive"
+                component Icon icon: "alert-circle"
+                component Text text: "Inactive"
               }
               layout stack(direction: horizontal, gap: 4) {
                 component IconButton icon: "edit-2" variant: "default"
@@ -334,7 +334,7 @@ project "Admin Dashboard with Icons" {
         // Pagination
         layout stack(direction: horizontal, gap: 8) {
           component IconButton icon: "chevron-left" variant: "default"
-          component Text content: "Page 1 of 5"
+          component Text text: "Page 1 of 5"
           component IconButton icon: "chevron-right" variant: "default"
         }
       }

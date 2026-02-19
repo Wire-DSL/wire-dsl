@@ -10,7 +10,7 @@ project "Stack Alignment Demo" {
   screen StackAlignment {
     layout stack(direction: vertical, gap: 24, padding: 16) {
       component Heading text: "Horizontal Stack Alignment"
-      component Text content: "Demonstrate the 4 alignment modes: justify (default), left, center, right"
+      component Text text: "Demonstrate the 4 alignment modes: justify (default), left, center, right"
 
       // ============================================================
       // 1. JUSTIFY (Default) - Equal width, fills 100%
@@ -18,7 +18,7 @@ project "Stack Alignment Demo" {
       layout panel(padding: md) {
         layout stack(direction: vertical, gap: 12) {
           component Heading text: "align: \"justify\" (Default)"
-          component Text content: "Elements divided equally, filling 100% of width"
+          component Text text: "Elements divided equally, filling 100% of width"
           
           layout stack(direction: horizontal, gap: 12, align: "justify") {
             component Button text: "Button 1" variant: "primary"
@@ -34,7 +34,7 @@ project "Stack Alignment Demo" {
       layout panel(padding: md) {
         layout stack(direction: vertical, gap: 12) {
           component Heading text: "align: \"left\""
-          component Text content: "Elements grouped to the left with their natural width"
+          component Text text: "Elements grouped to the left with their natural width"
           
           layout stack(direction: horizontal, gap: 12, align: "left") {
             component Button text: "Save" variant: "primary"
@@ -50,7 +50,7 @@ project "Stack Alignment Demo" {
       layout panel(padding: md) {
         layout stack(direction: vertical, gap: 12) {
           component Heading text: "align: \"center\""
-          component Text content: "Elements centered horizontally with their natural width"
+          component Text text: "Elements centered horizontally with their natural width"
           
           layout stack(direction: horizontal, gap: 12, align: "center") {
             component Button text: "Agree" variant: "primary"
@@ -65,7 +65,7 @@ project "Stack Alignment Demo" {
       layout panel(padding: md) {
         layout stack(direction: vertical, gap: 12) {
           component Heading text: "align: \"right\""
-          component Text content: "Elements grouped to the right with their natural width"
+          component Text text: "Elements grouped to the right with their natural width"
           
           layout stack(direction: horizontal, gap: 12, align: "right") {
             component Button text: "Back"
@@ -81,25 +81,25 @@ project "Stack Alignment Demo" {
         layout stack(direction: vertical, gap: 12) {
           component Heading text: "Icons with Different Alignments"
           
-          component Text content: "Left aligned icons:"
+          component Text text: "Left aligned icons:"
           layout stack(direction: horizontal, gap: 8, align: "left") {
-            component Icon type: "home"
-            component Icon type: "search"
-            component Icon type: "settings"
+            component Icon icon: "home"
+            component Icon icon: "search"
+            component Icon icon: "settings"
           }
 
-          component Text content: "Center aligned icons:"
+          component Text text: "Center aligned icons:"
           layout stack(direction: horizontal, gap: 8, align: "center") {
-            component Icon type: "heart"
-            component Icon type: "star"
-            component Icon type: "bell"
+            component Icon icon: "heart"
+            component Icon icon: "star"
+            component Icon icon: "bell"
           }
 
-          component Text content: "Right aligned icons:"
+          component Text text: "Right aligned icons:"
           layout stack(direction: horizontal, gap: 8, align: "right") {
-            component Icon type: "download"
-            component Icon type: "upload"
-            component Icon type: "share"
+            component Icon icon: "download"
+            component Icon icon: "upload"
+            component Icon icon: "share"
           }
         }
       }
@@ -111,20 +111,20 @@ project "Stack Alignment Demo" {
         layout stack(direction: vertical, gap: 12) {
           component Heading text: "Icon Buttons with Different Alignments"
           
-          component Text content: "Left aligned:"
+          component Text text: "Left aligned:"
           layout stack(direction: horizontal, gap: 12, align: "left") {
             component IconButton icon: "plus" variant: "primary"
             component IconButton icon: "minus" variant: "primary"
             component IconButton icon: "edit" variant: "primary"
           }
 
-          component Text content: "Center aligned:"
+          component Text text: "Center aligned:"
           layout stack(direction: horizontal, gap: 12, align: "center") {
             component IconButton icon: "check" variant: "primary"
             component IconButton icon: "x" variant: "danger"
           }
 
-          component Text content: "Right aligned:"
+          component Text text: "Right aligned:"
           layout stack(direction: horizontal, gap: 12, align: "right") {
             component IconButton icon: "settings" variant: "default"
             component IconButton icon: "menu" variant: "default"
@@ -139,13 +139,13 @@ project "Stack Alignment Demo" {
         layout stack(direction: vertical, gap: 12) {
           component Heading text: "Mixed Components with Alignment"
           
-          component Text content: "Left aligned mixed:"
+          component Text text: "Left aligned mixed:"
           layout stack(direction: horizontal, gap: 8, align: "left") {
             component Checkbox label: "Accept"
-            component Text content: "terms and conditions"
+            component Text text: "terms and conditions"
           }
 
-          component Text content: "Right aligned action row:"
+          component Text text: "Right aligned action row:"
           layout stack(direction: horizontal, gap: 12, align: "right") {
             component IconButton icon: "help-circle" variant: "default"
             component Button text: "Submit" variant: "primary"
@@ -160,13 +160,13 @@ project "Stack Alignment Demo" {
         layout stack(direction: vertical, gap: 16) {
           component Heading text: "Form with Aligned Actions"
           
-          component Text content: "Email:"
+          component Text text: "Email:"
           component Input placeholder: "enter email"
           
-          component Text content: "Password:"
+          component Text text: "Password:"
           component Input placeholder: "enter password" 
           
-          component Text content: "Dialog actions (buttons on right):"
+          component Text text: "Dialog actions (buttons on right):"
           layout stack(direction: horizontal, gap: 12, align: "right") {
             component Button text: "Cancel" variant: "default"
             component Button text: "Login" variant: "primary"

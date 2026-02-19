@@ -16,7 +16,7 @@ project "Panel with Colors" {
           component Heading text: "Panel with Light Blue Background"
           layout card(padding: md, gap: md) {
             component Heading text: "Card inside colored panel"
-            component Text content: "Card content"
+            component Text text: "Card content"
           }
           component Input placeholder: "Input field"
         }
@@ -27,7 +27,7 @@ project "Panel with Colors" {
           component Heading text: "Panel with White Background"
           layout card(padding: md, gap: md) {
             component Heading text: "Card inside white panel"
-            component Text content: "Card content"
+            component Text text: "Card content"
           }
         }
       }
@@ -35,14 +35,14 @@ project "Panel with Colors" {
       layout panel(padding: md, background: "white") {
         layout card(padding: md, gap: md) {
           component Heading text: "Simple Card in White Panel"
-          component Text content: "Content goes here"
+          component Text text: "Content goes here"
         }
       }
 
       layout panel(padding: md, background: "white") {
         layout card(padding: md, gap: md) {
           component Heading text: "Another Card"
-          component Text content: "More content"
+          component Text text: "More content"
         }
       }
 
@@ -51,13 +51,13 @@ project "Panel with Colors" {
           cell span: 6 {
             layout card(padding: md, gap: md) {
               component Heading text: "Left Column"
-              component Text content: "Left content"
+              component Text text: "Left content"
             }
           }
           cell span: 6 {
             layout card(padding: md, gap: md) {
               component Heading text: "Right Column"
-              component Text content: "Right content"
+              component Text text: "Right content"
             }
           }
         }

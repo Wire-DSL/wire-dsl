@@ -58,14 +58,14 @@ project "Card & StatCard Demo" {
       layout card(padding: lg, gap: md, radius: md, border: true) {
         component Image placeholder: "landscape" height: 250
         component Heading text: "Product Showcase"
-        component Text content: "Explore our latest features and improvements"
+        component Text text: "Explore our latest features and improvements"
         component Button text: "Learn More" variant: primary
       }
 
       layout card(padding: md, gap: sm) {
         component Image placeholder: "portrait" height: 250
         component Heading text: "Beautiful Villa"
-        component Text content: "3 bedrooms, 2 bathrooms, Downtown area"
+        component Text text: "3 bedrooms, 2 bathrooms, Downtown area"
         layout stack(direction: horizontal, gap: md) {
           component Button text: "Schedule"
           component Button text: "Save"
@@ -83,7 +83,7 @@ project "Card & StatCard Demo" {
           layout card(padding: md, gap: md, radius: lg, border: true) {
             component Image placeholder: "square" height: 250
             component Heading text: "Product One"
-            component Text content: "High-quality product with premium features"
+            component Text text: "High-quality product with premium features"
             layout stack(direction: horizontal, gap: sm) {
               component Button text: "View Details"
               component Button text: "Add to Cart" variant: primary
@@ -95,7 +95,7 @@ project "Card & StatCard Demo" {
           layout card(padding: md, gap: md, radius: lg, border: true) {
             component Image placeholder: "square" height: 250
             component Heading text: "Product Two"
-            component Text content: "Best-selling item with excellent reviews"
+            component Text text: "Best-selling item with excellent reviews"
             layout stack(direction: horizontal, gap: sm) {
               component Button text: "View Details"
               component Button text: "Add to Cart" variant: primary
@@ -115,14 +115,14 @@ project "Card & StatCard Demo" {
           component Image placeholder: "avatar" height: 120
           layout stack(direction: vertical, gap: sm) {
             component Heading text: "John Smith"
-            component Text content: "john@example.com"
-            component Text content: "Joined 6 months ago"
+            component Text text: "john@example.com"
+            component Text text: "Joined 6 months ago"
           }
         }
         component Divider
         layout stack(direction: vertical, gap: md) {
-          component Text content: "Location: San Francisco, CA"
-          component Text content: "Interests: Design, Development, Photography"
+          component Text text: "Location: San Francisco, CA"
+          component Text text: "Interests: Design, Development, Photography"
         }
         component Button text: "Edit Profile" variant: primary
       }
