@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+﻿import { describe, it, expect } from 'vitest';
 import { parseWireDSL } from '../parser/index';
 import { generateIR } from '../ir/index';
 import { calculateLayout } from './index';
@@ -1036,7 +1036,7 @@ describe('Layout Engine', () => {
             component Heading text: "Menu"
             component SidebarMenu items: "Dashboard,Users,Roles,Settings" active: 0
             component Heading text: "Dashboard"
-            component Text content: "Welcome to admin panel"
+            component Text text: "Welcome to admin panel"
           }
         }
       }
@@ -1111,7 +1111,7 @@ describe('Layout Engine', () => {
 
         screen Main {
           layout stack(direction: vertical, gap: md, padding: md) {
-            component Text content: "Este es un texto largo que debe hacer wrap automaticamente para no salirse del viewport ni pisar componentes siguientes en el layout."
+            component Text text: "Este es un texto largo que debe hacer wrap automaticamente para no salirse del viewport ni pisar componentes siguientes en el layout."
             component Button text: "Siguiente"
           }
         }
@@ -1292,22 +1292,22 @@ describe('Layout Engine', () => {
             layout grid(columns: 1, gap: sm) {
               layout card(padding: md) {
                 component Heading text: "Fast"
-                component Text content: "Built for speed and performance on mobile devices."
+                component Text text: "Built for speed and performance on mobile devices."
               }
 
               layout card(padding: md) {
                 component Heading text: "Simple"
-                component Text content: "Intuitive interface designed for touch interactions."
+                component Text text: "Intuitive interface designed for touch interactions."
               }
 
               layout card(padding: md) {
                 component Heading text: "Secure"
-                component Text content: "Your data is protected with industry-standard encryption."
+                component Text text: "Your data is protected with industry-standard encryption."
               }
             }
 
             component Divider
-            component Text content: "Mobile-optimized wireframe for touch devices"
+            component Text text: "Mobile-optimized wireframe for touch devices"
           }
         }
       }

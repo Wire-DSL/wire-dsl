@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+﻿import { describe, it, expect } from 'vitest';
 import { parseWireDSL, parseWireDSLWithSourceMap } from '../parser/index';
 import { generateIR } from '../ir/index';
 import { calculateLayout } from '../layout/index';
@@ -1387,7 +1387,7 @@ describe('SVG Renderer', () => {
             
             layout stack(direction: vertical) {
               component Heading text: "Content"
-              component Text content: "Main area"
+              component Text text: "Main area"
             }
           }
         }
@@ -1461,7 +1461,7 @@ describe('SVG Renderer', () => {
         screen Main {
           layout stack(direction: vertical, gap: md) {
             component Heading text: "Brand heading" variant: brand
-            component Icon type: "home" variant: brand
+            component Icon icon: "home" variant: brand
             component Topbar title: "Dashboard" icon: "menu" actions: "Save,Export" variant: brand
           }
         }
@@ -1721,7 +1721,7 @@ describe('SVG Renderer', () => {
         screen Register {
           layout stack(direction: vertical, gap: md, padding: lg) {
             component Heading text: "User Registration"
-            component Text content: "Please fill in all fields"
+            component Text text: "Please fill in all fields"
             
             component Input label: "Full Name" placeholder: "John Doe"
             component Input label: "Email" placeholder: "john@example.com"
@@ -1792,7 +1792,7 @@ describe('SVG Renderer - SourceMap Integration (data-node-id)', () => {
             component Heading text: "Welcome"
             component Input placeholder: "Enter name"
             component Button text: "Submit"
-            component Text content: "Description"
+            component Text text: "Description"
           }
         }
       }
@@ -2019,7 +2019,7 @@ describe('Skeleton SVG Renderer', () => {
       project "Test" {
         screen Main {
           layout stack {
-            component Text content: "Some content"
+            component Text text: "Some content"
           }
         }
       }
@@ -2044,7 +2044,7 @@ describe('Skeleton SVG Renderer', () => {
         }
         screen Main {
           layout stack {
-            component Text content: "This is a very long text content that should wrap into multiple lines in skeleton mode before reaching the viewport edge"
+            component Text text: "This is a very long text content that should wrap into multiple lines in skeleton mode before reaching the viewport edge"
           }
         }
       }
@@ -2164,7 +2164,7 @@ describe('Skeleton SVG Renderer', () => {
       project "Test" {
         screen Main {
           layout stack {
-            component Icon type: "user"
+            component Icon icon: "user"
           }
         }
       }

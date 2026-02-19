@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+﻿import { describe, it, expect, vi } from 'vitest';
 import { parseWireDSL } from '../parser/index';
 import { generateIR, IRGenerator } from './index';
 
@@ -643,7 +643,7 @@ describe('IR Generator', () => {
             component Separate
             component Input placeholder: "Enter"
             component Heading text: "Title"
-            component Text content: "Body"
+            component Text text: "Body"
           }
         }
       }
