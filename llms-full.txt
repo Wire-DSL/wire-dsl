@@ -1,0 +1,3063 @@
+# Wire-DSL — Complete Documentation
+# Generated: 2026-02-19
+# Index: llms.txt
+
+Wire-DSL is a block-declarative DSL for creating interactive wireframes using
+code. Write .wire files and render them to SVG, PNG, or PDF.
+
+Key facts:
+- Syntax: declarative, similar to Mermaid but for UI layouts
+- 30 UI components across 8 groups (Text, Input, Button, Nav, Data, Media, Display, Info/Modal)
+- 5 container types: stack, grid, split, panel, card
+- 287 built-in Feather Icons
+- Custom reusable definitions: define Component, define Layout
+- No absolute positioning — all structure is hierarchical
+
+This file contains, in order:
+  1. DSL Syntax (grammar, tokens, layouts, validation rules)
+  2. Components Reference (all 30 components)
+  3. Containers & Layouts Reference
+  4. Icons Guide (287 icon names)
+  5. CLI — wire render command
+  6. Curated Examples
+
+
+──────────────────────────────────────────────────────────────────────────────
+## DSL SYNTAX
+──────────────────────────────────────────────────────────────────────────────
+
+# Wire-DSL Syntax Guide
+
+## Overview
+
+```
+project "Project Name" {
+  style {
+    density: "normal"
+    spacing: "md"
+    radius: "md"
+    stroke: "normal"
+    font: "base"
+  }
+
+  colors {
+    primary: #3B82F6
+    accent: #3B82F6
+    control: #3B82F6
+    chart: #3B82F6
+  }
+
+  screen ScreenName {
+    layout <type> {
+      // content
+    }
+  }
+}
+```
+
+## Main Blocks
+
+### Project
+
+Defines the complete project.
+
+```
+project "Admin Dashboard" {
+  style {
+    density: "normal"
+    spacing: "md"
+    radius: "md"
+    stroke: "normal"
+    font: "base"
+  }
+
+  colors {
+    primary: #3B82F6
+    accent: #3B82F6
+    control: #3B82F6
+    chart: #3B82F6
+  }
+
+  screen UsersList { ... }
+  screen UserDetail { ... }
+}
+```
+
+**Properties**:
+
+- `name`: Project name (string, required)
+- `style`: Design tokens configuration (highly recommended)
+
+---
+
+### Config Block
+
+Configures design tokens for visual consistency across the entire project.
+
+```
+project "App" {
+  style {
+    density: "normal"
+    spacing: "md"
+    radius: "md"
+    stroke: "normal"
+    font: "base"
+  }
+  ...
+}
+```
+
+**Style Properties**:
+
+- `density`: Visual compactness (`"compact"` | `"normal"` | `"comfortable"`)
+- `spacing`: Default spacing unit (`"xs"` | `"sm"` | `"md"` | `"lg"` | `"xl"`)
+- `radius`: Border radius default (`"none"` | `"sm"` | `"md"` | `"lg"` | `"full"`)
+- `stroke`: Border width (`"thin"` | `"normal"` | `"thick"`)
+- `font`: Typography scale (`"sm"` | `"base"` | `"lg"`)
+
+**Spacing Values**:
+- `"xs"`: 4px
+- `"sm"`: 8px
+- `"md"`: 16px (default)
+- `"lg"`: 24px
+- `"xl"`: 32px
+
+**Radius Values**:
+- `"none"`: 0px
+- `"sm"`: 2px
+- `"md"`: 4px
+- `"lg"`: 8px
+
+**Density Levels**:
+- `"compact"`: Condensed UI
+- `"normal"`: Standard (recommended)
+- `"comfortable"`: Spacious
+
+---
+
+### Colors Block
+
+Defines project-level color tokens.
+
+```wire
+project "App" {
+  colors {
+    primary: #3B82F6
+    danger: #EF4444
+    accent: #2563EB
+    control: #16A34A
+    chart: #F97316
+    brand: primary
+  }
+}
+```
+
+**Rules**:
+
+- Block name is `colors` (plural)
+- Entries are `key: value`
+- `value` can be:
+  - a hex color (`#RRGGBB`)
+  - another color key (alias/chaining), e.g. `brand: primary`
+  - a named color identifier (e.g. `blue`, `red`, `green`)
+
+**Built-in variant keys (for `variant` props)**:
+
+- `primary`, `secondary`, `success`, `warning`, `danger`, `info` (and `error`)
+
+You can override any of them in `colors`.
+
+**Semantic keys**:
+
+- `accent`: used by `Topbar` icon/actions, active `Tabs`, `StatCard` highlighted value/icon, selected `SidebarMenu` item
+- `control`: used by selected/enabled states in `Checkbox`, `Radio`, `Toggle`
+- `chart`: used by `Chart` types `line`, `area`, and `bar`
+- `text`: default text color fallback (`#000000` light, `#FFFFFF` dark)
+- `muted`: default muted text color fallback (`#64748B` light, `#94A3B8` dark)
+
+**Note**:
+
+- `Chart` type `pie` keeps a fixed multi-color palette and does not use `chart` as single fill.
+
+---
+
+### Screen
+
+Defines a screen/page in the prototype.
+
+```
+screen UsersList {
+  layout split(left: 260, gap: md) {
+    layout stack { ... }  // fixed panel
+    layout stack { ... }  // flexible panel
+  }
+}
+```
+
+**Properties**:
+
+- `id`: Unique identifier (derived from name)
+- Must contain exactly one root layout
+
+---
+
+## Layouts
+
+Containers for organizing components hierarchically.
+
+### Stack Layout
+
+Stacks elements vertically or horizontally with configurable spacing and alignment.
+
+```
+layout stack(direction: vertical, gap: md, padding: lg) {
+  component Heading text: "Title"
+  component Button text: "Action"
+}
+```
+
+**Properties**:
+
+- `direction`: `vertical` (default) | `horizontal`
+- `gap`: spacing between children (`xs`=4px, `sm`=8px, `md`=16px, `lg`=24px, `xl`=32px)
+- `padding`: internal padding (`xs`/`sm`/`md`/`lg`/`xl`; default: none)
+- `align`: horizontal alignment for `direction: horizontal` only
+  - `justify` (default): Equal width, fills 100%
+  - `left`: Natural width, grouped left
+  - `center`: Natural width, centered
+  - `right`: Natural width, grouped right
+
+**Examples**:
+
+Horizontal stack with equal width (default):
+```
+layout stack(direction: horizontal, gap: md) {
+  component Button text: "Save"
+  component Button text: "Cancel"
+  component Button text: "Delete"
+}
+```
+
+Horizontal stack with right-aligned buttons:
+```
+layout stack(direction: horizontal, gap: md, align: "right") {
+  component Button text: "Back"
+  component Button text: "Next" variant: primary
+}
+```
+
+Horizontal stack with centered content:
+```
+layout stack(direction: horizontal, gap: md, align: "center") {
+  component Button text: "Agree"
+  component Button text: "Disagree"
+}
+```
+
+**⚠️ Important**: Layouts without explicit padding default to **0px** (no inheritance from project style).
+
+---
+
+### Grid Layout
+
+12-column flexible grid system.
+
+```
+layout grid(columns: 12, gap: md) {
+  cell span: 8 {
+    component Input label: "Search"
+  }
+  cell span: 4 align: end {
+    component Button text: "Create"
+  }
+}
+```
+
+**Properties**:
+
+- `columns`: number of columns (default: 12)
+- `gap`: spacing between cells
+- **Cell properties**:
+  - `span`: column span (default: 12)
+  - `align`: alignment within cell (`start`/`center`/`end`)
+
+---
+
+### Split Layout
+
+Two-panel layout with one fixed side and one flexible side.
+
+```
+layout split(left: 260, gap: md) {
+  layout stack {
+    component SidebarMenu items: ["Home", "Users", "Settings"]
+  }
+
+  layout stack {
+    // main content here
+  }
+}
+```
+
+**Properties**:
+
+- `left`: fixed width for left panel (pixels)
+- `right`: fixed width for right panel (pixels)
+- `background`: color token/variant/hex applied to the fixed panel
+- `border`: `true` adds vertical divider between panels
+- `gap`: spacing between panels
+- `padding`: inner padding
+
+Rules:
+- provide exactly one of `left` or `right`
+- `split` requires exactly 2 children
+- legacy `sidebar` parameter is deprecated and reported as semantic error
+
+---
+
+### Panel Container
+
+Specialized container with automatic padding and border styling.
+
+```
+layout panel(padding: md, background: white) {
+  component Text text: "Panel content"
+}
+```
+
+Or with nested stack:
+
+```
+layout panel(padding: lg) {
+  layout stack(gap: md) {
+    component Heading text: "Panel Title"
+    component Text text: "Panel body"
+  }
+}
+```
+
+**Properties**:
+
+- `padding`: internal padding (`xs`/`sm`/`md`/`lg`/`xl`)
+- `background`: background color (color name or hex)
+
+**Rendering**: Rendered as rectangle with:
+- Gray border
+- Specified background color
+- Content with applied padding
+
+---
+
+### Card Container
+
+Flexible vertical container for grouping related content.
+
+```
+layout card(padding: lg, gap: md, radius: md, border: true) {
+  component Image placeholder: "landscape"
+  component Heading text: "Product Title"
+  component Text text: "Product description"
+  component Button text: "Learn More"
+}
+```
+
+**Properties**:
+
+- `padding`: internal padding (`xs`/`sm`/`md`/`lg`/`xl`; default: `md`)
+- `gap`: spacing between children (`xs`/`sm`/`md`/`lg`/`xl`; default: `md`)
+- `radius`: corner radius (`xs`/`sm`/`md`/`lg`/`xl`; default: `md`)
+- `border`: show border (`true`/`false`; default: `true`)
+
+**Features**:
+
+- Children stack vertically automatically
+- Height calculated dynamically based on content
+- Ideal for product cards, user profiles, advertisements
+- Maintains aspect ratio for responsive images
+
+**Example - Product Card**:
+
+```
+layout card(padding: md, gap: md, radius: lg, border: true) {
+  component Image placeholder: "square" height: 250
+  component Heading text: "Premium Item"
+  component Text text: "High-quality product with excellent reviews"
+  layout stack(direction: horizontal, gap: sm) {
+    component Button text: "View Details"
+    component Button text: "Add to Cart"
+  }
+}
+```
+
+**Example - User Profile Card**:
+
+```
+layout card(padding: lg, gap: md) {
+  component Image placeholder: "avatar" height: 120
+  component Heading text: "John Doe"
+  component Text text: "john@example.com"
+  component Divider
+  component Text text: "Senior Software Engineer"
+  component Button text: "Follow"
+}
+```
+
+---
+
+---
+
+## Comments
+
+Wire DSL supports two types of comments:
+
+### Line Comments
+
+```wire
+// This is a line comment
+project "My App" {
+  // Comments can appear anywhere
+  style { ... }
+}
+```
+
+### Block Comments
+
+```wire
+/* Multi-line block comment
+   can span multiple lines
+   and are useful for longer explanations */
+project "My App" { ... }
+
+/**
+ * Documentation-style block comments
+ * are perfect for documenting components
+ */
+define Component "MyComponent" { ... }
+```
+
+Both comment types are ignored by the compiler and removed from the IR output.
+
+---
+
+## Custom Definitions
+
+Use definitions to reuse UI patterns and app shells.
+
+### Define Component
+
+```wire
+define Component "MyMenu" {
+  component SidebarMenu
+    items: "Home,Users,Permissions"
+    active: 0
+}
+```
+
+A defined component body can be:
+- one `component`
+- one `layout`
+
+### Dynamic Properties with `prop_`
+
+Inside a definition, any value that starts with `prop_` is treated as a binding key.
+
+```wire
+define Component "MyMenu" {
+  component SidebarMenu
+    items: "Home,Users,Permissions"
+    active: prop_active
+}
+
+screen Main {
+  layout stack {
+    component MyMenu active: 1
+  }
+}
+```
+
+Binding behavior:
+- if the argument is provided, the value is substituted
+- if the argument is missing and target field is optional, the field is omitted and a warning is emitted
+- if the argument is missing and target field is required, semantic error
+- extra arguments that are not used by the definition emit a warning
+
+`prop_` is reserved in definition bodies for dynamic binding semantics.
+
+### Define Layout (User-Defined Layout Containers)
+
+```wire
+define Layout "screen_default" {
+  layout split(left: prop_left) {
+    component SidebarMenu
+      items: "Home,Users,Permissions"
+      active: prop_active
+    component Children
+  }
+}
+```
+
+Use it like any other layout:
+
+```wire
+screen Main {
+  layout screen_default(left: 220, active: 1) {
+    layout stack(gap: md) {
+      component Heading text: "Main Screen"
+    }
+  }
+}
+```
+
+Rules:
+- `define Layout` body must be exactly one root `layout`
+- each defined layout must contain exactly one `component Children`
+- `component Children` is reserved and only valid inside `define Layout`
+- each invocation of a defined layout must provide exactly one child block
+
+### Naming Rules
+
+- `define Component "Name"`: PascalCase is recommended (`warning` if not)
+- `define Layout "name"`: must match `^[a-z][a-z0-9_]*$` (`error` if not)
+- names with keyword prefixes like `screen_default`, `layout_shell`, `component_grid` are valid identifiers
+
+### Definition Docs
+
+You can document a custom definition with block comments (`/* ... */`) right above it:
+
+```wire
+/**
+ * Reusable actions row for forms
+ */
+define Component "FormActions" {
+  layout stack(direction: horizontal, gap: md) {
+    component Button text: "Save" variant: primary
+    component Button text: "Cancel"
+  }
+}
+```
+
+### Notes
+
+- definitions are expanded at compile-time (no runtime custom container type)
+- circular references across components and layouts are detected as errors
+- unresolved components/layouts are reported by semantic diagnostics
+
+---
+
+## Components
+
+Individual wireframe elements.
+
+### Syntax
+
+```
+component <Type> <properties>
+```
+
+Example:
+
+```
+component Button text: "Click me" variant: primary
+```
+
+---
+
+## Available Components
+
+### Text Components
+
+| Component | Properties | Example |
+|-----------|-----------|---------|
+| `Heading` | `text`, `level`, `spacing`, `variant` | `component Heading text: "Page Title" level: h2 variant: primary` |
+| `Text` | `content` (string) | `component Text text: "Body text"` |
+| `Label` | `text` (string) | `component Label text: "Field label"` |
+
+### Input Components
+
+| Component | Properties | Example |
+|-----------|-----------|---------|
+| `Input` | `label`, `placeholder`, `size` | `component Input label: "Email" placeholder: "your@email.com" size: md` |
+| `Textarea` | `label`, `placeholder`, `rows` | `component Textarea label: "Message" rows: 4` |
+| `Select` | `label`, `items`, `size` | `component Select label: "Role" items: "Admin,User" size: md` |
+| `Checkbox` | `label`, `checked` | `component Checkbox label: "Agree" checked: true` |
+| `Radio` | `label`, `checked` | `component Radio label: "Option" checked: false` |
+| `Toggle` | `label`, `enabled` | `component Toggle label: "Enable feature" enabled: false` |
+
+### Button Components
+
+| Component | Properties | Example |
+|-----------|-----------|---------|
+| `Button` | `text`, `variant`, `size`, `labelSpace`, `padding`, `block` | `component Button text: "Save" variant: primary size: md labelSpace: true` |
+| `IconButton` | `icon`, `variant`, `size`, `labelSpace`, `padding`, `disabled` | `component IconButton icon: "search" variant: default size: md` |
+
+**Button Variants**: `default` | `primary` | `secondary` | `success` | `warning` | `danger` | `info`
+
+### Navigation Components
+
+| Component | Properties | Example |
+|-----------|-----------|---------|
+| `Topbar` | `title`, `subtitle`, `icon`, `actions`, `user`, `avatar`, `variant`, `border`, `background`, `radius` | `component Topbar title: "Dashboard" variant: primary border: true background: true radius: md` |
+| `SidebarMenu` | `items`, `active` | `component SidebarMenu items: "Home,Users,Settings" active: 0` |
+| `Breadcrumbs` | `items` | `component Breadcrumbs items: "Home,Users,Detail"` |
+| `Tabs` | `items`, `active` | `component Tabs items: "Profile,Settings" active: 0` |
+
+### Data Components
+
+| Component | Properties | Example |
+|-----------|-----------|---------|
+| `Table` | `columns`, `rows`, `pagination`, `paginationAlign`, `actions`, `caption`, `captionAlign`, `border`, `background` | `component Table columns: "Name,Email,Status" rows: 8 actions: "eye,edit" border: true background: true` |
+| `List` | `items` | `component List items: "Item 1,Item 2,Item 3"` |
+
+### Media Components
+
+| Component | Properties | Example |
+|-----------|-----------|---------|
+| `Image` | `placeholder`, `height` | `component Image placeholder: "square" height: 200` |
+| `Icon` | `type`, `size`, `variant` | `component Icon icon: "search" size: md variant: primary` |
+
+### Other Components
+
+| Component | Properties | Example |
+|-----------|-----------|---------|
+| `Divider` | - | `component Divider` |
+| `Badge` | `text`, `variant` | `component Badge text: "New" variant: primary` |
+| `Link` | `text`, `variant`, `size` | `component Link text: "Click here" variant: primary size: lg` |
+| `Chart` | `type`, `height` | `component Chart type: "bar" height: 200` |
+| `Alert` | `variant`, `title`, `text` | `component Alert variant: "danger" title: "Error" text: "Something went wrong"` |
+| `StatCard` | `title`, `value`, `caption`, `icon` | `component StatCard title: "Total Users" value: "1,234" icon: "users"` |
+| `Separate` | `size` | `component Separate size: md` |
+| `Code` | `code` | `component Code code: "const x = 10;"` |
+| `Modal` | `title`, `visible` | `component Modal title: "Confirm?" visible: false` |
+
+---
+
+## Complete Example
+
+```
+project "Admin Dashboard" {
+  style {
+    density: "normal"
+    spacing: "md"
+    radius: "md"
+    stroke: "normal"
+    font: "base"
+  }
+
+  screen UsersList {
+    layout split(left: 260, gap: md) {
+      layout stack(gap: lg, padding: lg) {
+        component Topbar title: "Dashboard"
+        component SidebarMenu items: "Users,Roles,Permissions,Audit" active: 0
+      }
+
+      layout stack(gap: md, padding: lg) {
+        component Heading text: "Users"
+
+        layout grid(columns: 12, gap: md) {
+          cell span: 8 {
+            component Input label: "Search" placeholder: "name, email..."
+          }
+          cell span: 4 align: end {
+            component Button text: "Create User" variant: primary
+          }
+        }
+
+        component Table columns: "Name,Email,Status,Role" rows: 8
+      }
+    }
+  }
+
+  screen UserDetail {
+    layout stack(gap: md, padding: lg) {
+      component Breadcrumbs items: "Users,User Detail"
+
+      layout grid(columns: 12, gap: md) {
+        cell span: 8 {
+          layout card(padding: lg, gap: md) {
+            component Heading text: "User Profile"
+            component Text text: "Name: John Doe"
+            component Text text: "Email: john@example.com"
+            component Text text: "Role: Administrator"
+          }
+        }
+        cell span: 4 {
+          layout panel(padding: lg) {
+            component Heading text: "Actions"
+            component Button text: "Edit" variant: primary
+            component Button text: "Delete" variant: secondary
+            component Button text: "Deactivate" variant: danger
+          }
+        }
+      }
+
+      component Tabs items: "Permissions,Sessions,Activity" active: 0
+    }
+  }
+}
+```
+
+---
+
+## Validation Rules
+
+1. A `project` must have at least one `screen`
+2. Each `screen` must have exactly one root layout
+3. `grid` layouts require `columns` property
+4. `split` layouts require exactly one of `left` or `right` and exactly 2 children
+5. `Table` components require `columns` property
+6. All identifiers must be unique within project scope
+7. Property values must match their defined types
+8. `define Layout` names must match `^[a-z][a-z0-9_]*$`
+9. `component Children` is only valid inside `define Layout`
+10. Defined layout declarations and invocations require exactly one `Children` child slot
+11. `prop_*` bindings require matching invocation args when target field is required
+12. No absolute positioning allowed
+
+---
+
+## Design Principles
+
+1. **Wireframing First**: Focus on structure and layout, not aesthetics
+2. **Composability**: Build complex layouts from simple, reusable containers
+3. **Consistency**: Use style tokens for unified appearance
+4. **Simplicity**: Minimal syntax with maximum expressiveness
+5. **Clarity**: Property names match common UI terminology
+
+──────────────────────────────────────────────────────────────────────────────
+## COMPONENTS REFERENCE
+──────────────────────────────────────────────────────────────────────────────
+
+# Wire-DSL Components Reference
+
+
+Complete reference for all available components with detailed specifications, properties, and examples.
+
+---
+
+## Dynamic Custom Component Bindings
+
+Built-in components keep their regular static properties. Dynamic binding with `prop_*` applies when a component is used inside a `define Component` or `define Layout` body.
+
+```wire
+define Component "MyMenu" {
+  component SidebarMenu
+    items: "Home,Users,Settings"
+    active: prop_active
+}
+
+screen Main {
+  layout stack {
+    component MyMenu active: 1
+  }
+}
+```
+
+If `prop_active` is missing on invocation:
+- required targets -> semantic error
+- optional targets -> property omitted + warning
+
+---
+
+## Text Components
+
+### Heading
+
+Large, bold text for page titles and section headers.
+
+**Properties**:
+- `text` (string): The heading text
+- `level` (enum): Visual heading level - `h1` | `h2` | `h3` | `h4` | `h5` | `h6` (default: `h2`)
+
+**Example**:
+```wire
+component Heading text: "Dashboard" level: h1
+component Heading text: "User Management" level: h2
+component Heading text: "Section title" level: h3
+```
+
+**Rendering**: Bold text with size based on `level`
+
+---
+
+### Text
+
+Standard body text for content and descriptions.
+
+**Properties**:
+- `text` (string): The text content
+
+**Example**:
+```wire
+component Text text: "This is body text"
+component Text text: "User profile information goes here"
+```
+
+**Rendering**: Regular text at 14-16px font size
+
+---
+
+### Label
+
+Small, often bold text used for form field labels.
+
+**Properties**:
+- `text` (string): Label text
+
+**Example**:
+```wire
+component Label text: "Email Address"
+component Label text: "Password"
+```
+
+**Rendering**: Small bold text at 12-14px font size
+
+---
+
+## Input Components
+
+### Input
+
+Single-line text input field.
+
+**Properties**:
+- `label` (string): Field label
+- `placeholder` (string): Placeholder text
+
+**Example**:
+```wire
+component Input label: "Email" placeholder: "you@example.com"
+component Input label: "Search" placeholder: "Type to search..."
+```
+
+**Rendering**: Rectangular input box with border and optional label above
+
+---
+
+### Textarea
+
+Multi-line text input field.
+
+**Properties**:
+- `label` (string): Field label
+- `placeholder` (string): Placeholder text
+- `rows` (number): Number of visible rows (default: 4)
+
+**Example**:
+```wire
+component Textarea label: "Comments" rows: 5
+component Textarea label: "Message" placeholder: "Type your message here" rows: 3
+```
+
+**Rendering**: Tall rectangular input box with scrolling capability
+
+---
+
+### Select
+
+Dropdown selection field.
+
+**Properties**:
+- `label` (string): Field label
+- `items` (string, CSV): Comma-separated list of options
+
+**Example**:
+```wire
+component Select label: "Role" items: "Admin,User,Guest"
+component Select label: "Status" items: "Active,Inactive,Pending"
+```
+
+**Rendering**: Dropdown button with list of options
+
+---
+
+### Checkbox
+
+Boolean checkbox input.
+
+**Properties**:
+- `label` (string): Checkbox label
+- `checked` (boolean, optional): Whether checkbox is checked (default: false)
+
+**Example**:
+```wire
+component Checkbox label: "I agree to terms" checked: true
+component Checkbox label: "Subscribe to newsletter"
+component Checkbox label: "Remember me" checked: false
+```
+
+**Rendering**: Small square checkbox with label text
+
+---
+
+### Radio
+
+Single-select radio button (typically used in groups).
+
+**Properties**:
+- `label` (string): Radio button label
+- `checked` (boolean, optional): Whether radio is selected (default: false)
+
+**Example**:
+```wire
+component Radio label: "Option A" checked: true
+component Radio label: "Option B"
+component Radio label: "Personal" checked: false
+```
+
+**Rendering**: Circular radio button with label text
+
+---
+
+### Toggle
+
+Boolean toggle switch.
+
+**Properties**:
+- `label` (string): Toggle label
+- `enabled` (boolean, optional): Whether toggle is enabled (default: false)
+
+**Example**:
+```wire
+component Toggle label: "Dark Mode" enabled: true
+component Toggle label: "Enable notifications"
+component Toggle label: "Auto-save" enabled: false
+```
+
+**Rendering**: Sliding toggle switch with label
+
+---
+
+## Button Components
+
+### Button
+
+Clickable action button.
+
+**Properties**:
+- `text` (string): Button label
+- `variant` (string): Visual style - `default` | `primary` | `secondary` | `success` | `warning` | `danger` | `info` (default: `default`)
+
+**Variants**:
+- `default`: Neutral button style
+- `primary`: Prominent filled button (usually blue)
+- `secondary`: Neutral action
+- `success`: Positive action
+- `warning`: Caution action
+- `danger`: Destructive action
+- `info`: Informational action
+
+**Example**:
+```wire
+component Button text: "Save" variant: primary
+component Button text: "Cancel" variant: secondary
+component Button text: "Delete" variant: danger
+```
+
+**Rendering**: Rectangular button with text, styled according to variant
+
+---
+
+### IconButton
+
+Button with icon instead of text.
+
+**Properties**:
+- `icon` (string): Icon name (e.g., "search", "menu", "close")
+- `size` (enum): `sm` | `md` | `lg` (default: `md`)
+- `variant` (enum): `default` | `primary` | `secondary` | `success` | `warning` | `danger` | `info`
+- `disabled` (boolean): disabled state (`true` | `false`, default: `false`)
+
+**Example**:
+```wire
+component IconButton icon: "search" size: sm variant: default
+component IconButton icon: "menu" size: md variant: primary
+component IconButton icon: "settings" size: lg variant: info disabled: true
+```
+
+**Rendering**: Square button containing icon symbol
+
+---
+
+## Navigation Components
+
+### Topbar
+
+Top navigation bar/header.
+
+**Properties**:
+- `title` (string): Main title
+- `subtitle` (string, optional): Secondary subtitle
+- `user` (string, optional): User name or identifier for badge
+- `actions` (string, optional): Action items (comma-separated)
+
+**Example**:
+```wire
+component Topbar title: "Dashboard"
+component Topbar title: "Dashboard" subtitle: "Welcome back"
+component Topbar title: "Settings" user: "john_doe"
+component Topbar title: "Admin" actions: "Help,Logout"
+```
+
+**Rendering**: Horizontal bar at top of screen with logo/title and optional user menu
+
+---
+
+### SidebarMenu
+
+Vertical menu for navigation.
+
+**Properties**:
+- `items` (string, CSV): Menu item labels
+- `active` (number): Index of active item (default: 0)
+
+**Example**:
+```wire
+component SidebarMenu items: "Home,Users,Settings,Help" active: 0
+component SidebarMenu items: "Dashboard,Analytics,Reports,Admin" active: 1
+```
+
+**Rendering**: Vertical list of menu items, with one highlighted as active
+
+---
+
+### Sidebar
+
+Side navigation panel.
+
+**Properties**:
+- `title` (string): Sidebar title
+- `items` (string, CSV): Navigation item labels
+
+**Example**:
+```wire
+component Sidebar title: "Navigation" items: "Home,Profile,Settings"
+component Sidebar title: "Dashboard" items: "Overview,Users,Reports,Logs"
+```
+
+**Rendering**: Vertical panel with title and navigation items
+
+---
+
+### Breadcrumbs
+
+Navigation hierarchy showing current page location.
+
+**Properties**:
+- `items` (string, CSV): Breadcrumb labels (required)
+- `separator` (string, optional): Separator character between items (default: "/")
+
+**Example**:
+```wire
+component Breadcrumbs items: "Home,Users,Detail"
+component Breadcrumbs items: "Dashboard,Products,Electronics,Laptops" separator: ">"
+component Breadcrumbs items: "Admin,Settings,Preferences" separator: " > "
+```
+
+**Rendering**: Horizontal path showing navigation hierarchy
+
+---
+
+### Tabs
+
+Tabbed interface with multiple panels.
+
+**Properties**:
+- `items` (string, CSV): Tab labels
+- `active` (number): Index of active tab (default: 0)
+
+**Example**:
+```wire
+component Tabs items: "Overview,Details,Comments" active: 0
+component Tabs items: "Profile,Settings,Privacy,Security" active: 1
+```
+
+**Rendering**: Horizontal tabs with one highlighted as active
+
+---
+
+## Data Components
+
+### Table
+
+Data table with rows and columns.
+
+**Properties**:
+- `columns` (string, CSV): Column headers (required)
+- `rows` (number): Number of rows to display (default: 5)
+- `rowsMock` (number): Alias for `rows`
+- `mock` (string, CSV): Mock type by column position (for example: `"name,city,amount"`)
+- `random` (boolean): If `true`, mock values vary on each render (default: deterministic)
+
+**Example**:
+```wire
+component Table columns: "Name,Email,Status" rows: 8
+component Table columns: "ID,Name,Email,Role" rows: 10
+component Table columns: "Date,Amount,Status,Notes" rows: 15
+component Table columns: "User,City,Amount" rows: 6 mock: "name,city,amount"
+component Table columns: "User,City,Amount" rows: 6 random: true
+```
+
+**Rendering**: Grid table with header row and mock data rows
+
+---
+
+### List
+
+Simple list of items.
+
+**Properties**:
+- `items` (string, CSV): List item labels
+- `title` (string, optional): List title/header
+- `itemsMock` (number, optional): Number of mock items to generate
+- `mock` (string, optional): Mock type used when `items` is not provided
+- `random` (boolean): If `true`, mock values vary on each render (default: deterministic)
+
+**Example**:
+```wire
+component List items: "JavaScript,TypeScript,Python,Java"
+component List items: "Feature 1,Feature 2,Feature 3,Feature 4"
+component List title: "Recent Activity" items: "Login,Purchase,Invite,Export"
+component List title: "Cities" itemsMock: 5 mock: "city"
+component List title: "Cities" itemsMock: 5 mock: "city" random: true
+```
+
+**Rendering**: Vertical list with bullet points or numbers
+
+---
+
+## Media Components
+
+### Image
+
+Placeholder for image content.
+
+**Properties**:
+- `placeholder` (string): Shape - `square` | `landscape` | `portrait` | `avatar` | `icon`
+- `height` (number, optional): Height in pixels (default: 200)
+
+**Example**:
+```wire
+component Image placeholder: "square" height: 250
+component Image placeholder: "landscape" height: 300
+component Image placeholder: "avatar" height: 100
+```
+
+**Rendering**: Rectangular placeholder image with appropriate aspect ratio
+
+---
+
+### Icon
+
+Icon symbol.
+
+**Properties**:
+- `icon` (string): Icon identifier (e.g., "search", "star", "heart")
+- `size` (enum): `sm` | `md` | `lg` (default: `md`)
+
+**Example**:
+```wire
+component Icon icon: "search"
+component Icon icon: "settings"
+component Icon icon: "download"
+```
+
+**Rendering**: Small icon symbol inline with text
+
+---
+
+## Display Components
+
+### Divider
+
+Horizontal or vertical separator line.
+
+**Properties**:
+- None required
+
+**Example**:
+```wire
+component Divider
+```
+
+**Rendering**: Thin horizontal line for visual separation
+
+---
+
+### Separate
+
+Invisible spacer used to separate nearby elements without drawing a line.
+
+**Properties**:
+- `size` (enum): Space token - `none` | `xs` | `sm` | `md` | `lg` | `xl` (default: `md`)
+
+**Example**:
+```wire
+component Separate size: sm
+component Separate size: lg
+```
+
+**Rendering**: Adds vertical/horizontal blank space only
+
+---
+
+### Badge
+
+Small label/tag for status or categorization.
+
+**Properties**:
+- `text` (string): Badge label
+- `variant` (string): Style - `default` | `primary` | `secondary` | `success` | `warning` | `danger` | `info` (default: `default`)
+
+**Example**:
+```wire
+component Badge text: "New" variant: primary
+component Badge text: "Active" variant: success
+component Badge text: "Alert" variant: warning
+```
+
+**Rendering**: Small rounded label with colored background
+
+---
+
+### Link
+
+Hyperlink text.
+
+**Properties**:
+- `text` (string): Link text
+- `variant` (string): Link color variant - `primary` | `secondary` | `success` | `warning` | `danger` | `info` (default: `primary`)
+
+**Example**:
+```wire
+component Link text: "Click here" variant: primary
+component Link text: "Learn more" variant: info
+```
+
+**Rendering**: Underlined text using the selected variant color
+
+---
+
+### Alert
+
+Alert/notification message box.
+
+**Properties**:
+- `variant` (string): Visual variant - `primary` | `secondary` | `success` | `warning` | `danger` | `info` (default: `info`)
+- `title` (string, optional): Bold title shown above text
+- `text` (string): Alert body message
+
+**Example**:
+```wire
+component Alert variant: "success" title: "Saved" text: "Changes saved successfully"
+component Alert variant: "danger" title: "Error" text: "Something went wrong"
+component Alert variant: "warning" title: "Warning" text: "This action cannot be undone"
+component Alert variant: "info" title: "Info" text: "New updates available"
+```
+
+**Rendering**: Colored box with icon, title, and message
+
+---
+
+## Information Display
+
+### StatCard
+
+Statistics card displaying metric and value.
+
+**Properties**:
+- `title` (string): Metric label/title
+- `value` (string): Metric value to display
+- `caption` (string, optional): Secondary text shown below value
+- `icon` (string, optional): Icon name rendered in the top-right badge
+
+**Example**:
+```wire
+component StatCard title: "Total Users" value: "1,234"
+component StatCard title: "Revenue" value: "$45,678" caption: "vs last month"
+component StatCard title: "Growth" value: "+12.5%" icon: "trending-up"
+```
+
+**Rendering**: Card with large value and small label below
+
+---
+
+### Card
+
+Generic content card placeholder component.
+
+**Properties**:
+- `title` (string): Card title
+- `text` (string): Card text content
+
+**Example**:
+```wire
+component Card title: "Plan" text: "Summary details"
+component Card title: "Profile" text: "Account information"
+```
+
+**Rendering**: Generic bordered placeholder block
+
+---
+
+### Code
+
+Code block display.
+
+**Properties**:
+- `code` (string): Code content to display
+
+**Example**:
+```wire
+component Code code: "const x = 10; console.log(x);"
+component Code code: "function sum(a, b) { return a + b; }"
+component Code code: "SELECT * FROM users WHERE active = true;"
+```
+
+**Rendering**: Monospace text in gray background box
+
+---
+
+### Chart
+
+Placeholder for various chart types.
+
+**Properties**:
+- `type` (string): Chart type - `bar` | `line` | `pie` | `area` (default: `bar`)
+- `height` (number): Height in pixels (default: 200)
+- `ChartPlaceholder`: backward-compatible alias of `Chart`
+
+**Example**:
+```wire
+component Chart type: "bar" height: 250
+component Chart type: "line" height: 300
+component Chart type: "pie" height: 200
+```
+
+**Rendering**: Deterministic chart placeholders with upward trend and subtle fluctuations
+
+---
+
+## Modal & Overlay
+
+### Modal
+
+Modal dialog box.
+
+**Properties**:
+- `title` (string): Modal title
+- `visible` (boolean): Show/hide modal overlay (default: `true`)
+
+**Example**:
+```wire
+component Modal title: "Confirm Action"
+component Modal title: "Delete User"
+component Modal title: "Delete User" visible: false
+```
+
+**Rendering**: Centered overlay dialog with title and generic content placeholder
+
+---
+
+## Component Summary
+
+| Component | Type | Use Case |
+|-----------|------|----------|
+| Heading | Text | Page titles |
+| Text | Text | Body content |
+| Label | Text | Form labels |
+| Input | Input | Single-line input |
+| Textarea | Input | Multi-line input |
+| Select | Input | Dropdown choice |
+| Checkbox | Input | Multiple choice |
+| Radio | Input | Single choice |
+| Toggle | Input | Boolean toggle |
+| Button | Button | Clickable action |
+| IconButton | Button | Icon-based action |
+| Topbar | Navigation | Header bar |
+| SidebarMenu | Navigation | Vertical menu |
+| Sidebar | Navigation | Side panel |
+| Breadcrumbs | Navigation | Navigation path |
+| Tabs | Navigation | Tabbed content |
+| Table | Data | Data grid |
+| List | Data | Item list |
+| Image | Media | Image placeholder |
+| Icon | Media | Icon symbol |
+| Divider | Display | Visual separator |
+| Separate | Display | Invisible spacer |
+| Badge | Display | Status label |
+| Link | Display | Underlined action |
+| Alert | Display | Alert message |
+| StatCard | Info | Metric display |
+| Card | Info | Generic content card |
+| Code | Info | Code block |
+| Chart | Info | Chart area |
+| Modal | Overlay | Dialog box |
+
+**Total: 30 Components**
+
+---
+
+## Next Steps
+
+- [Containers & Layouts](CONTAINERS-REFERENCE.md)
+- [Configuration](CONFIG-GUIDE.md)
+- [DSL Syntax](DSL-SYNTAX.md)
+
+──────────────────────────────────────────────────────────────────────────────
+## CONTAINERS & LAYOUTS REFERENCE
+──────────────────────────────────────────────────────────────────────────────
+
+# Containers & Layouts Reference
+
+Complete guide to container types (layouts) for organizing content in Wire-DSL wireframes.
+
+---
+
+## Overview
+
+Containers are structural elements that organize and position child components. Wire-DSL provides 5 main container types, each with specific use cases and properties.
+
+| Container | Purpose | Children | Use Case |
+|-----------|---------|----------|----------|
+| **Stack** | Linear arrangement | Multiple | Vertical/horizontal lists |
+| **Grid** | Multi-column layout | Cells | Responsive layouts |
+| **Split** | Two-panel layout | Two stacks | Sidebar + content |
+| **Panel** | Single bordered container | Single | Grouped content sections |
+| **Card** | Flexible content box | Multiple | Product cards, profiles |
+
+---
+
+## Stack Container
+
+Linear layout that stacks children in a single direction with consistent spacing.
+
+### Purpose
+
+Arrange elements vertically or horizontally with uniform spacing. The most common container for building layouts.
+
+### Syntax
+
+```
+layout stack(direction: vertical, gap: md, padding: lg) {
+  component Heading text: "Title"
+  component Text text: "Content"
+  component Button text: "Action"
+}
+```
+
+### Properties
+
+| Property | Type | Options | Default | Description |
+|----------|------|---------|---------|-------------|
+| `direction` | string | `vertical`, `horizontal` | `vertical` | Stack direction |
+| `gap` | string | `xs`, `sm`, `md`, `lg`, `xl` | `md` | Spacing between children |
+| `padding` | string | `xs`, `sm`, `md`, `lg`, `xl` | none | Internal padding |
+| `align` | string | `justify`, `left`, `center`, `right` | `justify` | Horizontal alignment (horizontal stacks only) |
+
+### Spacing Values
+
+- `xs`: 4px
+- `sm`: 8px
+- `md`: 16px
+- `lg`: 24px
+- `xl`: 32px
+
+### Examples
+
+**Vertical Stack (Default)**:
+```
+layout stack(direction: vertical, gap: md) {
+  component Heading text: "Form"
+  component Input label: "Name"
+  component Input label: "Email"
+  component Button text: "Submit" variant: primary
+}
+```
+
+**Horizontal Stack with Equal Width (Default)**:
+```
+layout stack(direction: horizontal, gap: md, padding: md) {
+  component Button text: "Save" variant: primary
+  component Button text: "Cancel" variant: secondary
+  component Button text: "Delete" variant: danger
+}
+```
+All buttons divide the width equally, filling 100% of the container.
+
+**Horizontal Stack - Left Aligned**:
+```
+layout stack(direction: horizontal, gap: md, align: "left") {
+  component Button text: "Save" variant: primary
+  component Button text: "Cancel"
+  component Button text: "Reset"
+}
+```
+Buttons group on the left with their natural width, useful for left-aligned action bars.
+
+**Horizontal Stack - Center Aligned**:
+```
+layout stack(direction: horizontal, gap: md, align: "center") {
+  component Button text: "Agree" variant: primary
+  component Button text: "Disagree"
+}
+```
+Buttons group in the center with their natural width, ideal for dialogs or confirmations.
+
+**Horizontal Stack - Right Aligned**:
+```
+layout stack(direction: horizontal, gap: md, align: "right") {
+  component Button text: "Back"
+  component Button text: "Next" variant: primary
+}
+```
+Buttons group on the right with their natural width, typical pattern for form navigation or dialog actions.
+
+**Icon Alignment Examples**:
+```
+layout stack(direction: horizontal, gap: 8, align: "left") {
+  component Icon icon: "home"
+  component Icon icon: "search"
+  component Icon icon: "settings"
+}
+
+layout stack(direction: horizontal, gap: 8, align: "center") {
+  component Icon icon: "heart"
+  component Icon icon: "star"
+}
+
+layout stack(direction: horizontal, gap: 8, align: "right") {
+  component Icon icon: "download"
+  component Icon icon: "share"
+}
+```
+
+**Vertical Stack with Centered Content**:
+```
+layout stack(direction: vertical, gap: lg, padding: xl) {
+  component Heading text: "Welcome"
+  component Text text: "Get started with our platform"
+  component Button text: "Sign Up" variant: primary
+}
+```
+
+### Horizontal Stack Alignment
+
+The `align` property controls how children are distributed horizontally in `direction: horizontal` stacks:
+
+| Value | Behavior | Use Case |
+|-------|----------|----------|
+| `justify` (default) | Equal width, fills 100% | Standard layouts, button groups |
+| `left` | Natural widths, grouped left | Left-aligned action bars |
+| `center` | Natural widths, centered | Dialogs, centered confirmations |
+| `right` | Natural widths, grouped right | Form navigation, right-aligned actions |
+
+**Key Behaviors**:
+- **`justify`**: All children get equal width. The traditional "100% width distribution" behavior.
+- **`left`, `center`, `right`**: Children use their natural intrinsic width (based on content, component type, etc.). The remaining space is used for alignment.
+- **Gap**: Always applied between children in all alignment modes.
+
+### Important Notes
+
+⚠️ **Padding Inheritance**: Stacks without explicit padding have **0px padding by default** (no inheritance from project style)
+
+⚠️ **Align in Horizontal Stacks Only**: The `align` property only affects `direction: horizontal` stacks. For vertical stacks, use nested centered containers if needed.
+
+⚠️ **Nesting**: Avoid excessive nesting of the same layout type; use Grid for multi-column layouts instead
+
+⚠️ **Natural Width Calculation**: For `left`, `center`, and `right` alignment, component widths are calculated based on component type and content (e.g., Button text length, Icon size, etc.). Explicit `width` properties in components override these calculations.
+
+---
+
+## Grid Container
+
+12-column responsive grid system for flexible multi-column layouts.
+
+### Purpose
+
+Create responsive column-based layouts. Ideal for dashboards, data tables, and flexible content arrangements.
+
+### Syntax
+
+```
+layout grid(columns: 12, gap: md) {
+  cell span: 8 {
+    component Input label: "Search"
+  }
+  cell span: 4 align: end {
+    component Button text: "Create"
+  }
+}
+```
+
+### Properties
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `columns` | number | 12 | Number of columns in grid |
+| `gap` | string | `md` | Spacing between cells |
+
+### Cell Properties
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `span` | number | 12 | Columns the cell occupies |
+| `align` | string | `start` | Cell alignment (`start`, `center`, `end`) |
+
+### Examples
+
+**Responsive Dashboard**:
+```
+layout grid(columns: 12, gap: md) {
+  cell span: 3 {
+    component StatCard title: "Total Users" value: "1,234"
+  }
+  cell span: 3 {
+    component StatCard title: "Active" value: "890"
+  }
+  cell span: 3 {
+    component StatCard title: "Inactive" value: "344"
+  }
+  cell span: 3 {
+    component StatCard title: "Pending" value: "100"
+  }
+}
+```
+
+**Sidebar + Content**:
+```
+layout grid(columns: 12, gap: md) {
+  cell span: 3 {
+    component SidebarMenu items: "Dashboard,Users,Settings"
+  }
+  cell span: 9 {
+    layout stack(gap: md) {
+      component Heading text: "Main Content"
+      component Text text: "Dashboard content goes here"
+    }
+  }
+}
+```
+
+**Search + Results**:
+```
+layout grid(columns: 12, gap: md) {
+  cell span: 8 {
+    component Input label: "Search" placeholder: "Search users..."
+  }
+  cell span: 4 align: end {
+    component Select label: "Status" items: "All,Active,Inactive"
+  }
+}
+
+component Table columns: "Name,Email,Status,Role" rows: 10
+```
+
+### Important Notes
+
+⚠️ **12-Column System**: All spans reference a 12-column grid for consistency
+
+⚠️ **Gap vs Padding**: Grid `gap` handles spacing between cells; cells have 0px padding by default
+
+⚠️ **Wrapping**: Cells don't wrap automatically; plan your layout accordingly
+
+---
+
+## Split Container
+
+Two-panel layout with fixed sidebar and flexible main content area.
+
+### Purpose
+
+Create sidebar navigation layouts. Ideal for admin dashboards and application shells.
+
+### Syntax
+
+```
+layout split(sidebar: 260, gap: md) {
+  layout stack {
+    component SidebarMenu items: ["Home", "Users", "Settings"]
+  }
+
+  layout stack {
+    // Main content here
+  }
+}
+```
+
+### Properties
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `sidebar` | number | required | Width of left panel (px) |
+| `gap` | string | `md` | Spacing between panels |
+
+### Child Structure
+
+Split **requires exactly 2 children**, both typically `stack` layouts:
+1. **Left panel**: Usually sidebar navigation
+2. **Right panel**: Main content area
+
+### Examples
+
+**Admin Dashboard**:
+```
+layout split(sidebar: 260, gap: md) {
+  layout stack(padding: lg) {
+    component Topbar title: "Dashboard"
+    component SidebarMenu items: "Dashboard,Users,Products,Analytics" active: 0
+  }
+
+  layout stack(padding: lg) {
+    component Heading text: "Dashboard"
+    layout grid(columns: 12, gap: md) {
+      cell span: 6 {
+        component StatCard title: "Total Users" value: "1,234"
+      }
+      cell span: 6 {
+        component StatCard title: "Revenue" value: "$89,012"
+      }
+    }
+  }
+}
+```
+
+**Content Management System**:
+```
+layout split(sidebar: 280, gap: lg) {
+  layout stack(gap: md, padding: md) {
+    component Heading text: "CMS"
+    component SidebarMenu items: "Pages,Posts,Media,Settings" active: 1
+  }
+
+  layout stack(gap: md, padding: lg) {
+    component Breadcrumbs items: "Content,Posts"
+    component Table columns: "Title,Author,Date,Status" rows: 8
+  }
+}
+```
+
+### Important Notes
+
+⚠️ **Exactly 2 Children**: Split requires exactly 2 child layouts
+
+⚠️ **Fixed Sidebar**: Left panel has fixed width; right panel is flexible
+
+⚠️ **Width Values**: Use pixel values for `sidebar` property (e.g., `260`, `300`, `280`)
+
+---
+
+## Panel Container
+
+Single-child container with automatic padding and border styling.
+
+### Purpose
+
+Group related content with visual separation. Ideal for creating sectioned content areas.
+
+### Syntax
+
+```
+layout panel(padding: md) {
+  component Text text: "Panel content"
+}
+```
+
+Or with nested stack:
+
+```
+layout panel(padding: lg) {
+  layout stack(gap: md) {
+    component Heading text: "Panel Title"
+    component Text text: "Panel content"
+  }
+}
+```
+
+### Properties
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `padding` | string | `md` | Internal padding |
+| `background` | string | white | Background color |
+
+### Examples
+
+**Single Component Panel**:
+```
+layout panel(padding: md) {
+  component Text text: "Important information goes here"
+}
+```
+
+**Grouped Content**:
+```
+layout panel(padding: lg) {
+  layout stack(gap: md) {
+    component Heading text: "User Information"
+    component Text text: "Name: John Doe"
+    component Text text: "Email: john@example.com"
+    component Text text: "Role: Administrator"
+  }
+}
+```
+
+**Form Section**:
+```
+layout panel(padding: lg) {
+  layout stack(gap: md) {
+    component Heading text: "Contact Details"
+    component Input label: "Email"
+    component Input label: "Phone"
+    component Input label: "Address"
+  }
+}
+```
+
+### Important Notes
+
+⚠️ **Single Child Only**: Panel accepts only one child element (stack, grid, component, or card)
+
+⚠️ **Auto Border**: Panel automatically renders with gray border and background
+
+⚠️ **Content Centering**: Content is centered within the panel
+
+---
+
+## Card Container
+
+Flexible vertical container for grouping related content with automatic styling.
+
+### Purpose
+
+Create self-contained content cards. Ideal for product displays, user profiles, and article previews.
+
+### Syntax
+
+```
+layout card(padding: lg, gap: md, radius: md, border: true) {
+  component Image placeholder: "square" height: 250
+  component Heading text: "Card Title"
+  component Text text: "Card description"
+  component Button text: "Action"
+}
+```
+
+### Properties
+
+| Property | Type | Options | Default | Description |
+|----------|------|---------|---------|-------------|
+| `padding` | string | `xs`, `sm`, `md`, `lg`, `xl` | `md` | Internal padding |
+| `gap` | string | `xs`, `sm`, `md`, `lg`, `xl` | `md` | Spacing between children |
+| `radius` | string | `none`, `sm`, `md`, `lg` | `md` | Corner radius |
+| `border` | boolean | `true`, `false` | `true` | Show border |
+
+### Radius Values
+
+- `none`: 0px
+- `sm`: 2px
+- `md`: 4px
+- `lg`: 8px
+
+### Examples
+
+**Product Card**:
+```
+layout card(padding: md, gap: md, radius: lg, border: true) {
+  component Image placeholder: "square" height: 200
+  component Heading text: "Premium Laptop"
+  component Text text: "High-performance with latest specs"
+  component Badge text: "In Stock" variant: success
+  layout stack(direction: horizontal, gap: sm) {
+    component Button text: "Buy" variant: primary
+    component Button text: "Details" variant: secondary
+  }
+}
+```
+
+**User Profile Card**:
+```
+layout card(padding: lg, gap: md, radius: md) {
+  component Image placeholder: "square"
+  component Heading text: "John Doe"
+  component Text text: "Senior Software Engineer"
+  component Text text: "john@example.com"
+  component Divider
+  layout stack(direction: horizontal, gap: sm) {
+    component Button text: "Message"
+    component Button text: "Connect"
+  }
+}
+```
+
+**Blog Post Card**:
+```
+layout card(padding: md, gap: md, radius: md, border: true) {
+  component Image placeholder: "landscape" height: 180
+  component Heading text: "Getting Started with Wire-DSL"
+  component Text text: "Learn how to create interactive wireframes with Wire-DSL in 5 minutes"
+  component Badge text: "Tutorial"
+  component Link text: "Read More"
+}
+```
+
+**Feature Showcase**:
+```
+layout card(padding: lg, gap: lg, radius: lg, border: false) {
+  component Icon icon: "star"
+  component Heading text: "Premium Features"
+  component Text text: "Access all premium features with unlimited usage"
+  component List items: "Unlimited projects,Team collaboration,Advanced exports,Priority support"
+  component Button text: "Upgrade Now" variant: primary
+}
+```
+
+### Important Notes
+
+⚠️ **Automatic Stacking**: Children stack vertically automatically
+
+⚠️ **Dynamic Height**: Card height adjusts based on content
+
+⚠️ **Image Aspect Ratio**: Images within cards maintain proper aspect ratios
+
+---
+
+## Layout Composition Guide
+
+### Common Patterns
+
+**Full-Width Section**:
+```
+layout stack(direction: vertical, gap: lg, padding: lg) {
+  component Heading text: "Section"
+  // Content here
+}
+```
+
+**Sidebar Navigation**:
+```
+layout split(sidebar: 260, gap: md) {
+  layout stack(gap: md, padding: md) {
+    component SidebarMenu items: "..."
+  }
+  layout stack(gap: md, padding: lg) {
+    // Main content
+  }
+}
+```
+
+**Card Grid**:
+```
+layout grid(columns: 12, gap: md, padding: lg) {
+  cell span: 4 {
+    layout card { ... }
+  }
+  cell span: 4 {
+    layout card { ... }
+  }
+  cell span: 4 {
+    layout card { ... }
+  }
+}
+```
+
+**Form Layout**:
+```
+layout panel(padding: lg) {
+  layout stack(gap: md) {
+    component Heading text: "Form"
+    component Input label: "Name"
+    component Input label: "Email"
+    layout stack(direction: horizontal, gap: md) {
+      component Button text: "Submit" variant: primary
+      component Button text: "Cancel"
+    }
+  }
+}
+```
+
+---
+
+## User-Defined Layouts
+
+Besides built-in containers (`stack`, `grid`, `split`, `panel`, `card`), you can define reusable layouts:
+
+```wire
+define Layout "screen_default" {
+  layout split(sidebar: prop_sidebar) {
+    component SidebarMenu
+      items: "Home,Users,Reports"
+      active: prop_active
+    component Children
+  }
+}
+```
+
+Usage:
+
+```wire
+screen Main {
+  layout screen_default(sidebar: 220, active: 1) {
+    layout stack(gap: md) {
+      component Heading text: "Dashboard"
+    }
+  }
+}
+```
+
+Rules:
+- `define Layout` name must match `^[a-z][a-z0-9_]*$`
+- definition body must be one root `layout`
+- definition must contain exactly one `component Children`
+- each layout invocation must include exactly one child block
+- `component Children` cannot be used outside `define Layout`
+
+`prop_*` bindings in layout params/properties are resolved from invocation args. Missing required args produce semantic errors; missing optional args are omitted with warnings.
+
+---
+
+## Best Practices
+
+### Do's ✅
+
+✅ Use Stack for sequential content  
+✅ Use Grid for responsive multi-column layouts  
+✅ Use Split for navigation + content pattern  
+✅ Use Panel for grouped content sections  
+✅ Use Card for self-contained items  
+✅ Limit nesting depth to 3-4 levels  
+✅ Use consistent spacing with style tokens  
+
+### Don'ts ❌
+
+❌ Don't nest the same layout type excessively  
+❌ Don't leave containers empty  
+❌ Don't use absolute positioning  
+❌ Don't mix text and components at same level  
+❌ Don't ignore responsive design patterns  
+❌ Don't create containers with single empty child  
+
+---
+
+## Migration Guide: Old vs New Syntax
+
+### Stack Layout
+```
+// Old
+layout stack spacing: md gap: lg
+
+// New
+layout stack(gap: lg, padding: md)
+```
+
+### Grid Layout
+```
+// Old
+layout grid cols: 12 spacing: md
+
+// New
+layout grid(columns: 12, gap: md)
+```
+
+### Split Layout
+```
+// Old
+layout split left: 260 spacing: md
+
+// New
+layout split(sidebar: 260, gap: md)
+```
+
+---
+
+## Performance Considerations
+
+- **Nesting Limit**: Keep layout nesting ≤ 5 levels deep
+- **Grid Columns**: 12-column system ensures optimal performance
+- **Card Sizing**: Cards scale automatically based on content
+- **Memory**: Large tables (>50 rows) use mock data efficiently
+
+---
+
+## Next Steps
+
+- [DSL-SYNTAX.md](DSL-SYNTAX.md) - Complete syntax reference
+- [COMPONENTS-REFERENCE.md](COMPONENTS-REFERENCE.md) - All component types
+- [CONFIG-GUIDE.md](CONFIG-GUIDE.md) - Style configuration
+
+──────────────────────────────────────────────────────────────────────────────
+## ICONS GUIDE
+──────────────────────────────────────────────────────────────────────────────
+
+# Icon Components Guide
+
+Wire-DSL includes two icon components powered by **Feather Icons** (MIT License): `Icon` and `IconButton`.
+
+## Overview
+
+Both components use the official Feather Icons library naming convention. All icons are scalable SVG graphics that automatically adapt to their container size and  colors.
+
+## Component: Icon
+
+The `Icon` component renders a simple icon display.
+
+### Properties
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `type` | enum | `help-circle` | Icon name from the built-in icon catalog |
+| `size` | enum | `md` | Icon size: `sm`, `md`, `lg` |
+| `variant` | enum/string | `default` | Color variant (`default`, built-ins, or custom key in `colors`) |
+
+### Usage
+
+```wire
+component Icon icon: "home"
+component Icon icon: "search"
+component Icon icon: "wifi"
+component Icon icon: "trash-2"
+```
+
+### Example with Layout
+
+```wire
+layout stack(direction: horizontal, gap: 12) {
+  component Icon icon: "arrow-left"
+  component Icon icon: "arrow-right"
+  component Icon icon: "arrow-up"
+  component Icon icon: "arrow-down"
+}
+```
+
+## Component: IconButton
+
+The `IconButton` component renders a clickable icon button with background and border styling.
+
+### Properties
+
+| Property | Type | Default | Description |
+|----------|------|---------|-------------|
+| `icon` | enum | `help-circle` | Icon name from the built-in icon catalog |
+| `size` | enum | `md` | IconButton size: `sm`, `md`, `lg` |
+| `variant` | string | `default` | Button style: `default`, `primary`, `secondary`, `success`, `warning`, `danger`, `info` |
+| `disabled` | boolean | `false` | Disable the button: `true` or `false` |
+| `labelSpace` | boolean | `false` | Adds top label offset to align with labeled form controls |
+| `padding` | enum | `none` | Horizontal inset: `none`, `xs`, `sm`, `md`, `lg`, `xl` |
+
+### Variants
+
+- **default**: Neutral background + border
+- **primary**: Accent action
+- **secondary**: Secondary action
+- **success**: Positive action
+- **warning**: Caution action
+- **danger**: Destructive action
+- **info**: Informational action
+
+### Usage
+
+```wire
+component IconButton icon: "home" variant: "default"
+component IconButton icon: "download" variant: "primary"
+component IconButton icon: "share-2" variant: "secondary"
+component IconButton icon: "trash-2" variant: "danger"
+component IconButton icon: "settings" variant: "default" disabled: true
+```
+
+### Disabled Buttons
+
+```wire
+layout stack(direction: horizontal, gap: 8) {
+  component IconButton icon: "lock" variant: "default" disabled: true
+  component IconButton icon: "eye-off" variant: "default" disabled: true
+}
+```
+
+## Available Icons (287)
+
+Wire-DSL currently bundles **287 icons** from **Feather Icons v4.29.0**.
+These names are valid for `Icon.icon`, `IconButton.icon`, `Topbar.icon`, `Image icon` (when `placeholder: "icon"`), and `StatCard.icon`.
+
+In `@wire-dsl/language-support`, the same catalog is exposed as:
+- `ICON_NAMES` (typed list)
+- `ICON_NAME_OPTIONS` (metadata options for completions)
+- `IconName` (TypeScript union type)
+
+### Full list (alphabetical)
+
+```text
+activity
+airplay
+alert-circle
+alert-octagon
+alert-triangle
+align-center
+align-justify
+align-left
+align-right
+anchor
+aperture
+archive
+arrow-down
+arrow-down-circle
+arrow-down-left
+arrow-down-right
+arrow-left
+arrow-left-circle
+arrow-right
+arrow-right-circle
+arrow-up
+arrow-up-circle
+arrow-up-left
+arrow-up-right
+at-sign
+award
+bar-chart
+bar-chart-2
+battery
+battery-charging
+bell
+bell-off
+bluetooth
+bold
+book
+book-open
+bookmark
+box
+briefcase
+calendar
+camera
+camera-off
+cast
+check
+check-circle
+check-square
+chevron-down
+chevron-left
+chevron-right
+chevron-up
+chevrons-down
+chevrons-left
+chevrons-right
+chevrons-up
+chrome
+circle
+clipboard
+clock
+cloud
+cloud-drizzle
+cloud-lightning
+cloud-off
+cloud-rain
+cloud-snow
+code
+codepen
+codesandbox
+coffee
+columns
+command
+compass
+copy
+corner-down-left
+corner-down-right
+corner-left-down
+corner-left-up
+corner-right-down
+corner-right-up
+corner-up-left
+corner-up-right
+cpu
+credit-card
+crop
+crosshair
+database
+delete
+disc
+divide
+divide-circle
+divide-square
+dollar-sign
+download
+download-cloud
+dribbble
+droplet
+edit
+edit-2
+edit-3
+external-link
+eye
+eye-off
+facebook
+fast-forward
+feather
+figma
+file
+file-minus
+file-plus
+file-text
+film
+filter
+flag
+folder
+folder-minus
+folder-plus
+framer
+frown
+gift
+git-branch
+git-commit
+git-merge
+git-pull-request
+github
+gitlab
+globe
+grid
+hard-drive
+hash
+headphones
+heart
+help-circle
+hexagon
+home
+image
+inbox
+info
+instagram
+italic
+key
+layers
+layout
+life-buoy
+link
+link-2
+linkedin
+list
+loader
+lock
+log-in
+log-out
+mail
+map
+map-pin
+maximize
+maximize-2
+meh
+menu
+message-circle
+message-square
+mic
+mic-off
+minimize
+minimize-2
+minus
+minus-circle
+minus-square
+monitor
+moon
+more-horizontal
+more-vertical
+mouse-pointer
+move
+music
+navigation
+navigation-2
+octagon
+package
+paperclip
+pause
+pause-circle
+pen-tool
+percent
+phone
+phone-call
+phone-forwarded
+phone-incoming
+phone-missed
+phone-off
+phone-outgoing
+pie-chart
+play
+play-circle
+plus
+plus-circle
+plus-square
+pocket
+power
+printer
+radio
+refresh-ccw
+refresh-cw
+repeat
+rewind
+rotate-ccw
+rotate-cw
+rss
+save
+scissors
+search
+send
+server
+settings
+share
+share-2
+shield
+shield-off
+shopping-bag
+shopping-cart
+shuffle
+sidebar
+skip-back
+skip-forward
+slack
+slash
+sliders
+smartphone
+smile
+speaker
+square
+star
+stop-circle
+sun
+sunrise
+sunset
+table
+tablet
+tag
+target
+terminal
+thermometer
+thumbs-down
+thumbs-up
+toggle-left
+toggle-right
+tool
+trash
+trash-2
+trello
+trending-down
+trending-up
+triangle
+truck
+tv
+twitch
+twitter
+type
+umbrella
+underline
+unlock
+upload
+upload-cloud
+user
+user-check
+user-minus
+user-plus
+user-x
+users
+video
+video-off
+voicemail
+volume
+volume-1
+volume-2
+volume-x
+watch
+wifi
+wifi-off
+wind
+x
+x-circle
+x-octagon
+x-square
+youtube
+zap
+zap-off
+zoom-in
+zoom-out
+```
+
+## Complete Example
+
+```wire
+project "Icon Demo" {
+  screen Dashboard {
+    layout stack(direction: vertical, gap: 16, padding: 16) {
+      component Heading text: "Dashboard Controls"
+
+      // Icons in a horizontal layout
+      layout stack(direction: horizontal, gap: 12) {
+        component Icon icon: "home"
+        component Icon icon: "search"
+        component Icon icon: "settings"
+        component Icon icon: "user"
+      }
+
+      // Icon buttons for actions
+      component Heading text: "Actions"
+      layout stack(direction: horizontal, gap: 8) {
+        component IconButton icon: "download" variant: "primary"
+        component IconButton icon: "trash-2" variant: "danger"
+        component IconButton icon: "check" variant: "primary"
+        component IconButton icon: "x" variant: "danger"
+      }
+
+      // Disabled buttons
+      layout stack(direction: horizontal, gap: 8) {
+        component IconButton icon: "lock" variant: "default" disabled: true
+        component IconButton icon: "settings" variant: "primary" disabled: true
+      }
+    }
+  }
+}
+```
+
+## Styling Notes
+
+- **Icons** scale to fit their container while maintaining aspect ratio
+- **IconButtons** are square buttons (equal width and height)
+- Colors are determined by:
+  - For `Icon`: renderer defaults
+  - For `IconButton`: the selected `variant`
+- **Disabled** state reduces opacity to 0.5 (visual feedback)
+
+## Icon Sources
+
+All icons are from [Feather Icons](https://feathericons.com) by Cole Bemis and contributors, licensed under the MIT License.
+
+See [ICONS-LICENSE.md](../../../packages/engine/src/renderer/icons/ICONS-LICENSE.md) for full attribution details.
+
+## Rendering
+
+- Icons are rendered as **inline SVG** in the output
+- They scale seamlessly from low-resolution wireframes to high-DPI displays
+- All icons use **stroke-based** rendering (not fill) for consistent appearance with the `stroke: currentColor` attribute
+- The stroke width is fixed at 2px for consistency across sizes
+
+──────────────────────────────────────────────────────────────────────────────
+## CLI — wire render command
+──────────────────────────────────────────────────────────────────────────────
+
+## wire render
+
+Converts a .wire file to SVG, PNG, or PDF.
+
+```bash
+# Render to stdout (SVG)
+wire render input.wire
+
+# Save to file
+wire render input.wire --svg output.svg
+wire render input.wire --pdf output.pdf
+wire render input.wire --png output.png
+
+# Render a specific screen
+wire render input.wire --screen "Dashboard"
+
+# Watch mode (re-renders on file change)
+wire render input.wire --watch
+```
+
+| Option     | Description                           |
+|------------|---------------------------------------|
+| --svg      | Save as SVG                           |
+| --pdf      | All screens as multipage PDF          |
+| --png      | Save as PNG (one file per screen)     |
+| --out      | Auto-detect format from extension     |
+| --screen   | Render a specific screen by name      |
+| --theme    | Apply theme: light (default) or dark  |
+| --width    | Override viewport width in pixels     |
+| --height   | Override viewport height in pixels    |
+| --watch    | Watch for file changes and re-render  |
+
+Multi-screen handling:
+- Single screen + --png → single .png file
+- Multiple screens + --png → directory with one .png per screen
+- --pdf → always a single multipage file (one page per screen)
+
+
+──────────────────────────────────────────────────────────────────────────────
+## EXAMPLES
+──────────────────────────────────────────────────────────────────────────────
+
+### Admin Dashboard — Split layout, multi-screen
+
+_Shows: split with sidebar nav, grid for search/action bar, table, form inputs, multi-screen (list + detail + create)_
+
+```wire
+project "Admin Dashboard" {
+  style {
+    density: "normal"
+    spacing: "md"
+    radius: "md"
+    stroke: "normal"
+    font: "base"
+  }
+
+  screen UsersList {
+    layout split(sidebar: 240, gap: lg) {
+      layout stack(direction: vertical, gap: md, padding: md) {
+        component Heading text: "Menu"
+        component SidebarMenu items: "Users,Roles,Permissions,Audit,Settings" active: 0
+      }
+
+      layout stack(direction: vertical, gap: lg, padding: lg) {
+        component Heading text: "Users"
+        component Text text: "Manage system users"
+
+        layout grid(columns: 12, gap: md) {
+          cell span: 8 {
+            component Input label: "Search user" placeholder: "name, email..."
+          }
+          cell span: 4 align: end {
+            component Button text: "Create user" variant: primary
+          }
+        }
+
+        component Table columns: "ID,Name,Email,Status,Role" rows: 8
+      }
+    }
+  }
+
+  screen UserDetail {
+    layout stack(direction: vertical, gap: lg, padding: lg) {
+      component Breadcrumbs items: "Users,User Details"
+      
+      component Heading text: "User Details"
+      component Text text: "View and edit user information"
+
+      layout panel(padding: lg) {
+        layout stack(direction: vertical, gap: md) {
+          component Heading text: "Account Status"
+          component Text text: "User account is active and in good standing"
+
+          component Textarea label: "Bio" placeholder: "User bio and notes..." rows: 4
+
+          component Checkbox label: "Email verified"
+
+          component Toggle label: "Two-factor authentication"
+
+          component Select label: "Status" items: "Active,Inactive,Pending"
+
+          component Divider
+          
+          layout stack(direction: horizontal, gap: md) {
+            component Button text: "Save" variant: primary
+            component Button text: "Cancel"
+          }
+        }
+      }
+    }
+  }
+
+  screen UserCreate {
+    layout stack(direction: vertical, gap: lg, padding: xl) {
+      component Heading text: "Create New User"
+      component Text text: "Add a new user to the system"
+
+      layout panel(padding: lg) {
+        layout stack(direction: vertical, gap: md) {
+          component Input label: "First Name" placeholder: "John"
+
+          component Input label: "Last Name" placeholder: "Doe"
+
+          component Input label: "Email Address" placeholder: "john.doe@example.com"
+
+          component Select label: "Role" items: "Admin,Editor,Viewer,Moderator,User"
+
+          component Select label: "Status" items: "Active,Inactive,Pending"
+
+          component Checkbox label: "Send welcome email"
+
+          component Checkbox label: "Require password change on first login"
+
+          layout stack(direction: horizontal, gap: md) {
+            component Button text: "Create User" variant: primary
+            component Button text: "Cancel"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+### Analytics Dashboard — Charts, alerts, tabs
+
+_Shows: nested split, multiple chart types (bar/line/area), alerts, tabs, filters sidebar_
+
+```wire
+project "Analytics Dashboard" {
+  style {
+    density: "normal"
+    spacing: "md"
+    radius: "md"
+    stroke: "normal"
+    font: "base"
+  }
+
+  screen Dashboard {
+    layout stack(direction: vertical, gap: lg, padding: xl) {
+      component Topbar title: "Analytics" subtitle: "Realtime overview"
+
+      layout split(sidebar: 260, gap: lg) {
+        layout stack(direction: vertical, gap: md, padding: md) {
+          component Heading text: "Filters"
+          component Select label: "Date Range" items: "Last 7 days,Last 30 days,Last 90 days"
+          component Select label: "Channel" items: "All channels,Social,Email,Direct"
+          component Select label: "Region" items: "Global,North America,Europe,Asia"
+          component Divider
+          component Checkbox label: "Email alerts"
+          component Checkbox label: "Slack alerts"
+        }
+
+        layout stack(direction: vertical, gap: lg, padding: lg) {
+          layout grid(columns: 12, gap: md) {
+            cell span: 3 {
+              component Badge text: "+12%" variant: primary
+            }
+            cell span: 3 {
+              component Badge text: "-3%" variant: secondary
+            }
+            cell span: 3 {
+              component Badge text: "4.5k" variant: primary
+            }
+            cell span: 3 {
+              component Badge text: "1.2k" variant: secondary
+            }
+          }
+
+          component Tabs items: "Overview,Traffic,Revenue,Engagement" active: 0
+
+          layout grid(columns: 12, gap: md) {
+            cell span: 6 {
+              component Chart type: "bar" height: 250
+            }
+            cell span: 6 {
+              component Chart type: "line" height: 250
+            }
+            cell span: 12 {
+              component Chart type: "area" height: 250
+            }
+          }
+
+          layout stack(direction: vertical, gap: sm) {
+            component Alert variant: "warning" text: "Traffic spike detected on mobile devices"
+            component Alert variant: "danger" text: "Sync delayed for EU region"
+          }
+
+          component Table columns: "User,Country,Device,Time" rows: 10
+
+          layout stack(direction: vertical, gap: md) {
+            component Divider
+            component Heading text: "Latest events"
+            component List items: "Login,Purchase,Invite,Logout,Password Reset"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+### Simple Dashboard — Grid + stat cards
+
+_Shows: topbar, grid of cards with statcards, chart, table_
+
+```wire
+project "Simple Dashboard" {
+  style {
+    density: "comfortable"
+    spacing: "lg"
+    radius: "md"
+    stroke: "normal"
+    font: "base"
+  }
+
+  screen Dashboard {
+    layout stack(direction: vertical, gap: lg, padding: xl) {
+      component Topbar title: "Dashboard"
+      
+      layout grid(columns: 12, gap: lg) {
+        cell span: 4 {
+          layout card(padding: md, gap: md) {
+            component Heading text: "Total Users"
+            component StatCard title: "Count" value: "2,543"
+          }
+        }
+        cell span: 4 {
+          layout card(padding: md, gap: md) {
+            component Heading text: "Active Sessions"
+            component StatCard title: "Active" value: "856"
+          }
+        }
+        cell span: 4 {
+          layout card(padding: md, gap: md) {
+            component Heading text: "Revenue"
+            component StatCard title: "Total" value: "$45.2K"
+          }
+        }
+      }
+
+      component Chart type: "bar" height: 300
+
+      component Table columns: "Date,Event,User" rows: 5
+    }
+  }
+}
+```
+
+### Form Example — All input components
+
+_Shows: Input, Textarea, Select, Checkbox, Radio, Toggle — all input types in a single form_
+
+```wire
+project "Form Example" {
+  style {
+    density: "normal"
+    spacing: "md"
+    radius: "md"
+    stroke: "normal"
+    font: "base"
+  }
+
+  screen FormScreen {
+    layout stack(direction: vertical, gap: md, padding: lg) {
+      component Heading text: "User Registration"
+      
+      component Text text: "Please fill in all required fields below"
+
+      layout stack(direction: vertical, gap: md, padding: md) {
+        component Input label: "Full Name" placeholder: "John Doe"
+        
+        component Input label: "Email" placeholder: "john@example.com"
+        
+        component Textarea label: "Bio" placeholder: "Tell us about yourself..." rows: 4
+        
+        component Select label: "Country" items: "USA,Canada,Mexico,UK,Spain"
+        
+        layout stack(direction: vertical, gap: sm, padding: md) {
+          component Heading text: "Preferences"
+          
+          component Checkbox label: "Subscribe to newsletter"
+          component Checkbox label: "Enable notifications"
+        }
+        
+        layout stack(direction: vertical, gap: sm, padding: md) {
+          component Heading text: "Account Type"
+          
+          component Radio label: "Personal"
+          component Radio label: "Business"
+        }
+        
+        layout stack(direction: vertical, gap: md) {
+          component Toggle label: "Terms & Conditions"
+        }
+      }
+
+      layout stack(direction: horizontal, gap: md) {
+        component Button text: "Cancel"
+        component Button text: "Submit" variant: primary
+      }
+    }
+  }
+}
+```
+
+### Card & StatCard Demo — Multi-screen
+
+_Shows: stat card grid, product cards, profile card with avatar, horizontal stack in card_
+
+```wire
+project "Card & StatCard Demo" {
+  style {
+    spacing: "md"
+    density: "normal"
+    radius: "md"
+    stroke: "normal"
+    font: "base"
+  }
+
+  screen Dashboard {
+    layout stack(direction: vertical, gap: lg, padding: xl) {
+      component Heading text: "Dashboard"
+
+      layout grid(columns: 12, gap: md) {
+        cell span: 2 {
+          layout card(padding: md, gap: sm) {
+            component Heading text: "Revenue"
+            component StatCard title: "Last 30 days" value: "45,230"
+          }
+        }
+
+        cell span: 2 {
+          layout card(padding: md, gap: sm) {
+            component Heading text: "Active Users"
+            component StatCard title: "Total registered" value: "1,234"
+          }
+        }
+
+        cell span: 2 {
+          layout card(padding: md, gap: sm) {
+            component Heading text: "Conversion"
+            component StatCard title: "This month" value: "8.2%"
+          }
+        }
+
+        cell span: 2 {
+          layout card(padding: md, gap: sm) {
+            component Heading text: "Growth Rate"
+            component StatCard title: "Month over month" value: "23.5%"
+          }
+        }
+
+        cell span: 2 {
+          layout card(padding: md, gap: sm) {
+            component Heading text: "New Leads"
+            component StatCard title: "This week" value: "142"
+          }
+        }
+
+        cell span: 2 {
+          layout card(padding: md, gap: sm) {
+            component Heading text: "Avg Order"
+            component StatCard title: "Last quarter" value: "$1,825"
+          }
+        }
+      }
+
+      layout card(padding: lg, gap: md, radius: md, border: true) {
+        component Image placeholder: "landscape" height: 250
+        component Heading text: "Product Showcase"
+        component Text text: "Explore our latest features and improvements"
+        component Button text: "Learn More" variant: primary
+      }
+
+      layout card(padding: md, gap: sm) {
+        component Image placeholder: "portrait" height: 250
+        component Heading text: "Beautiful Villa"
+        component Text text: "3 bedrooms, 2 bathrooms, Downtown area"
+        layout stack(direction: horizontal, gap: md) {
+          component Button text: "Schedule"
+          component Button text: "Save"
+        }
+      }
+    }
+  }
+
+  screen Products {
+    layout stack(direction: vertical, gap: lg, padding: xl) {
+      component Heading text: "Featured Products"
+
+      layout grid(columns: 12, gap: md) {
+        cell span: 6 {
+          layout card(padding: md, gap: md, radius: lg, border: true) {
+            component Image placeholder: "square" height: 250
+            component Heading text: "Product One"
+            component Text text: "High-quality product with premium features"
+            layout stack(direction: horizontal, gap: sm) {
+              component Button text: "View Details"
+              component Button text: "Add to Cart" variant: primary
+            }
+          }
+        }
+
+        cell span: 6 {
+          layout card(padding: md, gap: md, radius: lg, border: true) {
+            component Image placeholder: "square" height: 250
+            component Heading text: "Product Two"
+            component Text text: "Best-selling item with excellent reviews"
+            layout stack(direction: horizontal, gap: sm) {
+              component Button text: "View Details"
+              component Button text: "Add to Cart" variant: primary
+            }
+          }
+        }
+      }
+    }
+  }
+
+  screen Profile {
+    layout stack(direction: vertical, gap: lg, padding: xl) {
+      component Heading text: "User Profile"
+
+      layout card(padding: xl, gap: lg, radius: md) {
+        layout stack(direction: horizontal, gap: lg) {
+          component Image placeholder: "avatar" height: 120
+          layout stack(direction: vertical, gap: sm) {
+            component Heading text: "John Smith"
+            component Text text: "john@example.com"
+            component Text text: "Joined 6 months ago"
+          }
+        }
+        component Divider
+        layout stack(direction: vertical, gap: md) {
+          component Text text: "Location: San Francisco, CA"
+          component Text text: "Interests: Design, Development, Photography"
+        }
+        component Button text: "Edit Profile" variant: primary
+      }
+    }
+  }
+}
+```
+
+### Mobile Demo — device: mobile target
+
+_Shows: device: "mobile" style property, single-column card grid, multi-screen mobile flow_
+
+```wire
+project "Mobile Wireframe Demo" {
+  style {
+    device: "mobile"
+    density: "comfortable"
+    // spacing: "md"
+    // radius: "md"
+    // stroke: "normal"
+    // font: "base"
+  }
+
+  screen Home {
+    layout stack(direction: vertical, gap: md, padding: md) {
+      component Heading text: "Mobile App"
+      component Text text: "This wireframe is designed for mobile devices with 375px width (iPhone SE baseline). The height adjusts dynamically based on content."
+
+      component Button text: "Get Started" variant: primary
+      component Button text: "Learn More" variant: secondary
+
+      component Image placeholder: "landscape"
+
+      component Heading text: "Features" level: h2
+
+      layout grid(columns: 1, gap: md) {
+        layout card(padding: md) {
+          component Heading text: "Fast" level: h3
+          component Text text: "Built for speed and performance on mobile devices."
+        }
+
+        layout card(padding: md) {
+          component Heading text: "Simple" level: h3
+          component Text text: "Intuitive interface designed for touch interactions."
+        }
+
+        layout card(padding: md) {
+          component Heading text: "Secure" level: h3
+          component Text text: "Your data is protected with industry-standard encryption."
+        }
+      }
+
+      component Divider
+
+      component Text text: "Mobile-optimized wireframe for touch devices"
+    }
+  }
+
+  screen Details {
+    layout stack(direction: vertical, gap: md, padding: md) {
+      component Heading text: "Product Details"
+      component Image placeholder: "square"
+      component Heading text: "Description" level: h2
+      component Text text: "This is a detailed view optimized for mobile screens. All content flows naturally in a single column."
+      component Button text: "Add to Cart" variant: primary
+      component Button text: "Back" variant: secondary
+    }
+  }
+}
+```

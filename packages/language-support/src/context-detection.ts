@@ -4,7 +4,7 @@
  * Used by Monaco, VS Code, and other editors
  */
 
-import { COMPONENTS } from './components';
+import { COMPONENTS } from './components.js';
 
 export type DocumentScope = 'empty-file' | 'inside-project' | 'inside-screen' | 'inside-layout';
 
@@ -50,7 +50,7 @@ export function determineScope(textBeforeCursor: string): DocumentScope {
     if (line.match(/\bscreen\s+[A-Za-z_][A-Za-z0-9_]*\s*{/)) {
       hasScreen = true;
     }
-    if (line.match(/\blayout\s+(?:stack|grid|card|panel|split)\s*\(/)) {
+    if (line.match(/\blayout\s+[A-Za-z_][A-Za-z0-9_]*\s*\(/)) {
       hasLayout = true;
     }
 

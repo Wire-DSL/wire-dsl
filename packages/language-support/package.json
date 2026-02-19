@@ -3,7 +3,8 @@
   "version": "0.2.4",
   "description": "Wire DSL language definitions for Monaco, VS Code, and other editors. Keywords, components, properties, autocompletion, grammar, and document parsing.",
   "type": "module",
-  "main": "./dist/index.js",
+  "main": "./dist-cjs/index.js",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "engines": {
     "node": ">=18.0.0"
@@ -11,42 +12,52 @@
   "exports": {
     ".": {
       "import": "./dist/index.js",
+      "require": "./dist-cjs/index.js",
       "types": "./dist/index.d.ts"
     },
     "./completions": {
       "import": "./dist/completions.js",
+      "require": "./dist-cjs/completions.js",
       "types": "./dist/completions.d.ts"
     },
     "./grammar": {
       "import": "./dist/grammar.js",
+      "require": "./dist-cjs/grammar.js",
       "types": "./dist/grammar.d.ts"
     },
     "./components": {
       "import": "./dist/components.js",
+      "require": "./dist-cjs/components.js",
       "types": "./dist/components.d.ts"
     },
     "./documentation": {
       "import": "./dist/documentation.js",
+      "require": "./dist-cjs/documentation.js",
       "types": "./dist/documentation.d.ts"
     },
     "./document-parser": {
       "import": "./dist/document-parser.js",
+      "require": "./dist-cjs/document-parser.js",
       "types": "./dist/document-parser.d.ts"
     },
     "./context-detection": {
       "import": "./dist/context-detection.js",
+      "require": "./dist-cjs/context-detection.js",
       "types": "./dist/context-detection.d.ts"
     }
   },
   "files": [
     "dist",
+    "dist-cjs",
     "wire.tmLanguage.json",
     "README.md",
     "LICENSE",
     "INTEGRATION-GUIDE.md"
   ],
   "scripts": {
-    "build": "tsc",
+    "build": "pnpm run build:esm && pnpm run build:cjs",
+    "build:esm": "tsc -p tsconfig.json",
+    "build:cjs": "tsc -p tsconfig.cjs.json && node -e \"const fs=require('node:fs');fs.mkdirSync('dist-cjs',{recursive:true});fs.writeFileSync('dist-cjs/package.json','{\\\"type\\\":\\\"commonjs\\\"}\\n');\"",
     "type-check": "tsc --noEmit",
     "dev": "tsc --watch",
     "prepublishOnly": "npm run build && npm run type-check"

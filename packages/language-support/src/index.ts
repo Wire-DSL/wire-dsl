@@ -4,7 +4,7 @@
  */
 
 // Import for internal use
-import { COMPONENTS, KEYWORDS } from './components';
+import { COMPONENTS, KEYWORDS } from './components.js';
 
 // Re-export new core modules
 export {
@@ -16,17 +16,19 @@ export {
   type ComponentCategory,
   type LayoutMetadata,
   type PropertyMetadata,
-} from './components';
+} from './components.js';
+export { ICON_NAMES, ICON_NAME_OPTIONS, type IconName } from './icon-names.js';
 
 export {
   getComponentDocumentation,
   getLayoutDocumentation,
   getPropertyDocumentation,
   getKeywordDocumentation,
-} from './documentation';
+} from './documentation.js';
 
 export {
   extractComponentDefinitions,
+  extractLayoutDefinitions,
   getTokenAtPosition,
   isComponentReference,
   extractComponentReferences,
@@ -34,7 +36,8 @@ export {
   getPositionOfDefinition,
   findComponentReferences,
   type ComponentDefinition,
-} from './document-parser';
+  type LayoutDefinition,
+} from './document-parser.js';
 
 export {
   determineScope,
@@ -43,7 +46,7 @@ export {
   getAlreadyDeclaredProperties,
   type DocumentScope,
   type CompletionItem,
-} from './context-detection';
+} from './context-detection.js';
 
 export {
   KEYWORD_COMPLETIONS,
@@ -58,7 +61,7 @@ export {
   detectPropertyValueContext,
   getAvailableComponents,
   getComponentProperties,
-} from './completions';
+} from './completions.js';
 
 // Legacy interface support
 export interface KeywordDefinition {

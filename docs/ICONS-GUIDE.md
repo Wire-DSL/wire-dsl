@@ -1,4 +1,4 @@
-# Icon Components Guide
+﻿# Icon Components Guide
 
 Wire-DSL includes two icon components powered by **Feather Icons** (MIT License): `Icon` and `IconButton`.
 
@@ -14,26 +14,27 @@ The `Icon` component renders a simple icon display.
 
 | Property | Type | Default | Description |
 |----------|------|---------|-------------|
-| `type` | string | `help-circle` | Icon name from Feather Icons library |
+| `type` | enum | `help-circle` | Icon name from the built-in icon catalog |
 | `size` | enum | `md` | Icon size: `sm`, `md`, `lg` |
+| `variant` | enum/string | `default` | Color variant (`default`, built-ins, or custom key in `colors`) |
 
 ### Usage
 
 ```wire
-component Icon type: "home"
-component Icon type: "search"
-component Icon type: "wifi"
-component Icon type: "trash-2"
+component Icon icon: "home"
+component Icon icon: "search"
+component Icon icon: "wifi"
+component Icon icon: "trash-2"
 ```
 
 ### Example with Layout
 
 ```wire
 layout stack(direction: horizontal, gap: 12) {
-  component Icon type: "arrow-left"
-  component Icon type: "arrow-right"
-  component Icon type: "arrow-up"
-  component Icon type: "arrow-down"
+  component Icon icon: "arrow-left"
+  component Icon icon: "arrow-right"
+  component Icon icon: "arrow-up"
+  component Icon icon: "arrow-down"
 }
 ```
 
@@ -45,10 +46,12 @@ The `IconButton` component renders a clickable icon button with background and b
 
 | Property | Type | Default | Description |
 |----------|------|---------|-------------|
-| `icon` | string | `help-circle` | Icon name from Feather Icons library |
+| `icon` | enum | `help-circle` | Icon name from the built-in icon catalog |
 | `size` | enum | `md` | IconButton size: `sm`, `md`, `lg` |
 | `variant` | string | `default` | Button style: `default`, `primary`, `secondary`, `success`, `warning`, `danger`, `info` |
 | `disabled` | boolean | `false` | Disable the button: `true` or `false` |
+| `labelSpace` | boolean | `false` | Adds top label offset to align with labeled form controls |
+| `padding` | enum | `none` | Horizontal inset: `none`, `xs`, `sm`, `md`, `lg`, `xl` |
 
 ### Variants
 
@@ -82,7 +85,12 @@ layout stack(direction: horizontal, gap: 8) {
 ## Available Icons (287)
 
 Wire-DSL currently bundles **287 icons** from **Feather Icons v4.29.0**.
-These names are valid for `Icon.type`, `IconButton.icon`, `Topbar.icon`, `Image icon` (when `placeholder: "icon"`), `StatCard.icon`, and `SidebarMenu.icons`.
+These names are valid for `Icon.icon`, `IconButton.icon`, `Topbar.icon`, `Image icon` (when `placeholder: "icon"`), and `StatCard.icon`.
+
+In `@wire-dsl/language-support`, the same catalog is exposed as:
+- `ICON_NAMES` (typed list)
+- `ICON_NAME_OPTIONS` (metadata options for completions)
+- `IconName` (TypeScript union type)
 
 ### Full list (alphabetical)
 
@@ -386,10 +394,10 @@ project "Icon Demo" {
 
       // Icons in a horizontal layout
       layout stack(direction: horizontal, gap: 12) {
-        component Icon type: "home"
-        component Icon type: "search"
-        component Icon type: "settings"
-        component Icon type: "user"
+        component Icon icon: "home"
+        component Icon icon: "search"
+        component Icon icon: "settings"
+        component Icon icon: "user"
       }
 
       // Icon buttons for actions

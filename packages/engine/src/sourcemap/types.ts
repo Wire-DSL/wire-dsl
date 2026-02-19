@@ -45,6 +45,7 @@ export type SourceMapNodeType =
   | 'layout'
   | 'component'
   | 'component-definition'  // For user-defined components (define Component "Name")
+  | 'layout-definition'     // For user-defined layouts (define Layout "Name")
   | 'cell'                  // For grid cells
   | 'style'                 // Style configuration block
   | 'mocks'                 // Mocks data block

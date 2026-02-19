@@ -14,7 +14,7 @@ project "Token Background Demo" {
       layout panel(padding: lg, background: "white") {
         layout card(padding: md, gap: md) {
           component Heading text: "Default screen background"
-          component Text content: "Content with default styling"
+          component Text text: "Content with default styling"
         }
       }
     }
@@ -27,7 +27,7 @@ project "Token Background Demo" {
       layout panel(padding: lg, background: "white") {
         layout card(padding: md, gap: md) {
           component Heading text: "Custom background"
-          component Text content: "Screen-specific styling"
+          component Text text: "Screen-specific styling"
         }
       }
     }
@@ -40,7 +40,7 @@ project "Token Background Demo" {
       layout panel(padding: lg, background: "white") {
         layout card(padding: md, gap: md) {
           component Heading text: "Uses default token background"
-          component Text content: "Consistent with other screens"
+          component Text text: "Consistent with other screens"
         }
       }
     }

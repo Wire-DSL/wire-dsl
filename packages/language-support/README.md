@@ -1,6 +1,8 @@
 # @wire-dsl/language-support
 
-Shared language definitions for Wire DSL - used by Monaco Editor, VS Code, and CLI tools.
+Shared language metadata and tooling for Wire DSL.
+
+It powers autocomplete, syntax metadata, grammar helpers, and document parsing across editors/tools.
 
 ## Installation
 
@@ -8,49 +10,53 @@ Shared language definitions for Wire DSL - used by Monaco Editor, VS Code, and C
 npm install @wire-dsl/language-support
 ```
 
+## Module Support
+
+The package publishes both module formats:
+- ESM (`import`)
+- CommonJS (`require`)
+
 ## Quick Start
 
-```typescript
-import { getCompletions, ALL_KEYWORDS } from '@wire-dsl/language-support';
-import { MONACO_GRAMMAR } from '@wire-dsl/language-support/grammar';
+```ts
+import {
+  ALL_KEYWORDS,
+  COMPONENTS,
+  LAYOUTS,
+  ICON_NAMES,
+  type IconName,
+  getCompletions,
+} from '@wire-dsl/language-support';
 
-// Use completions
-const suggestions = getCompletions('but'); // → [button, ...]
-
-// Use grammar for syntax highlighting
-// See INTEGRATION-GUIDE.md for setup
+const suggestions = getCompletions('tab');
 ```
 
-## What's Included
+## Main Exports
 
-- **Core Keywords** - project, screen, style, layout, component, define
-- **30+ UI Components** - All built-in components with autocomplete
-- **Autocomplete Logic** - Context-aware suggestions
-- **Syntax Grammar** - For Monaco, VS Code, and TextMate editors
+From `@wire-dsl/language-support`:
+- `KEYWORDS`, `PROPERTIES`, `ALL_KEYWORDS`
+- `COMPONENTS`, `LAYOUTS`, `PROPERTY_VALUES`
+- `ICON_NAMES`, `ICON_NAME_OPTIONS`, `IconName`
+- `getCompletions`, `getKeywordsByType`
+
+Subpath exports:
+- `@wire-dsl/language-support/components`
+- `@wire-dsl/language-support/completions`
+- `@wire-dsl/language-support/grammar`
+- `@wire-dsl/language-support/documentation`
+- `@wire-dsl/language-support/document-parser`
+- `@wire-dsl/language-support/context-detection`
+
+## Notes
+
+- `COMPONENTS` / `LAYOUTS` include the latest DSL metadata (for example `split` with `left`/`right`, `background`, `border`).
+- Icon properties (`Icon.type`, `IconButton.icon`, `Topbar.icon`, `Image.icon`, `StatCard.icon`) are backed by a shared icon catalog.
 
 ## Documentation
 
-- **[STRATEGY.md](STRATEGY.md)** - NPM publication strategy & rationale
-- **[INTEGRATION-GUIDE.md](INTEGRATION-GUIDE.md)** - How to use in your tool
-
-## Exports
-
-```typescript
-// Keywords and components
-export { ALL_KEYWORDS, KEYWORDS, PROPERTIES } from '@wire-dsl/language-support';
-export { getCompletions, getKeywordsByType } from '@wire-dsl/language-support';
-
-// Grammar for syntax highlighting
-export { MONACO_GRAMMAR, TOKENIZE_RULES } from '@wire-dsl/language-support/grammar';
-
-// Advanced completions
-export { getContextualCompletions } from '@wire-dsl/language-support/completions';
-```
-
-## Published Versions
-
-- **1.0.0** - Initial release with 35+ keywords and components
+- `INTEGRATION-GUIDE.md`
+- `STRATEGY.md`
 
 ## License
 
-MIT - See LICENSE in root directory
+MIT

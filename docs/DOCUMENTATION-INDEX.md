@@ -199,6 +199,12 @@ Common properties across containers:
 - `span`: Column span in grid
 - `align`: Content alignment
 
+### Custom Definitions
+- `define Component "PascalCaseName"` for reusable components
+- `define Layout "lower_case_name"` for reusable layout shells with one `Children` slot
+- `prop_*` values inside definitions become dynamic bindings resolved from invocation args
+- Missing required bindings are errors; missing optional bindings are warnings
+
 ---
 
 ## Syntax Quick Reference
@@ -231,6 +237,20 @@ layout card(padding: lg, gap: md, radius: md) { ... }
 component Button text: "Save" variant: primary
 component Input label: "Email" placeholder: "you@example.com"
 component Table columns: "Name,Email,Status" rows: 8
+```
+
+### Custom Definition Syntax
+```
+define Component "MyMenu" {
+  component SidebarMenu
+    active: prop_active
+}
+
+define Layout "screen_default" {
+  layout split(sidebar: prop_sidebar) {
+    component Children
+  }
+}
 ```
 
 ---
@@ -307,11 +327,13 @@ Property names match common UI terminology.
 - Split: Exactly 2 children
 - Panel: Single child
 - Card: Multiple children
+- Defined layout: Exactly 1 `component Children` placeholder and exactly 1 child at invocation
 
 **Naming Constraints**:
 - Screen names must be unique
 - identifiers are case-sensitive
 - No special characters in names
+- `define Layout` names must match `^[a-z][a-z0-9_]*$`
 
 ---
 

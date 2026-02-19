@@ -1,4 +1,4 @@
-# Wire-DSL Syntax Guide
+﻿# Wire-DSL Syntax Guide
 
 ## Overview
 
@@ -144,6 +144,8 @@ You can override any of them in `colors`.
 - `accent`: used by `Topbar` icon/actions, active `Tabs`, `StatCard` highlighted value/icon, selected `SidebarMenu` item
 - `control`: used by selected/enabled states in `Checkbox`, `Radio`, `Toggle`
 - `chart`: used by `Chart` types `line`, `area`, and `bar`
+- `text`: default text color fallback (`#000000` light, `#FFFFFF` dark)
+- `muted`: default muted text color fallback (`#64748B` light, `#94A3B8` dark)
 
 **Note**:
 
@@ -157,9 +159,9 @@ Defines a screen/page in the prototype.
 
 ```
 screen UsersList {
-  layout split(sidebar: 260, gap: md) {
-    layout stack { ... }  // sidebar
-    layout stack { ... }  // main content
+  layout split(left: 260, gap: md) {
+    layout stack { ... }  // fixed panel
+    layout stack { ... }  // flexible panel
   }
 }
 ```
@@ -255,10 +257,10 @@ layout grid(columns: 12, gap: md) {
 
 ### Split Layout
 
-Two-panel layout (sidebar + main content).
+Two-panel layout with one fixed side and one flexible side.
 
 ```
-layout split(sidebar: 260, gap: md) {
+layout split(left: 260, gap: md) {
   layout stack {
     component SidebarMenu items: ["Home", "Users", "Settings"]
   }
@@ -271,8 +273,17 @@ layout split(sidebar: 260, gap: md) {
 
 **Properties**:
 
-- `sidebar`: width of left panel in pixels
+- `left`: fixed width for left panel (pixels)
+- `right`: fixed width for right panel (pixels)
+- `background`: color token/variant/hex applied to the fixed panel
+- `border`: `true` adds vertical divider between panels
 - `gap`: spacing between panels
+- `padding`: inner padding
+
+Rules:
+- provide exactly one of `left` or `right`
+- `split` requires exactly 2 children
+- legacy `sidebar` parameter is deprecated and reported as semantic error
 
 ---
 
@@ -282,7 +293,7 @@ Specialized container with automatic padding and border styling.
 
 ```
 layout panel(padding: md, background: white) {
-  component Text content: "Panel content"
+  component Text text: "Panel content"
 }
 ```
 
@@ -292,7 +303,7 @@ Or with nested stack:
 layout panel(padding: lg) {
   layout stack(gap: md) {
     component Heading text: "Panel Title"
-    component Text content: "Panel body"
+    component Text text: "Panel body"
   }
 }
 ```
@@ -317,7 +328,7 @@ Flexible vertical container for grouping related content.
 layout card(padding: lg, gap: md, radius: md, border: true) {
   component Image placeholder: "landscape"
   component Heading text: "Product Title"
-  component Text content: "Product description"
+  component Text text: "Product description"
   component Button text: "Learn More"
 }
 ```
@@ -342,7 +353,7 @@ layout card(padding: lg, gap: md, radius: md, border: true) {
 layout card(padding: md, gap: md, radius: lg, border: true) {
   component Image placeholder: "square" height: 250
   component Heading text: "Premium Item"
-  component Text content: "High-quality product with excellent reviews"
+  component Text text: "High-quality product with excellent reviews"
   layout stack(direction: horizontal, gap: sm) {
     component Button text: "View Details"
     component Button text: "Add to Cart"
@@ -356,9 +367,9 @@ layout card(padding: md, gap: md, radius: lg, border: true) {
 layout card(padding: lg, gap: md) {
   component Image placeholder: "avatar" height: 120
   component Heading text: "John Doe"
-  component Text content: "john@example.com"
+  component Text text: "john@example.com"
   component Divider
-  component Text content: "Senior Software Engineer"
+  component Text text: "Senior Software Engineer"
   component Button text: "Follow"
 }
 ```
@@ -400,141 +411,108 @@ Both comment types are ignored by the compiler and removed from the IR output.
 
 ---
 
-Define reusable custom components to avoid repetition and improve maintainability.
+## Custom Definitions
 
-### Syntax
+Use definitions to reuse UI patterns and app shells.
 
-```
-define Component "ComponentName" {
-  // Content: layout or component reference
-}
-```
-
-### Documentation
-
-You can add documentation to custom components using `/* */` block comments (placed before the definition):
+### Define Component
 
 ```wire
-/**
- * Displays a group of action buttons
- * Useful for form submissions and dialogs
- */
-define Component "ButtonGroup" {
-  layout stack(direction: horizontal, gap: md) {
-    component Button text: "OK" variant: primary
-    component Button text: "Cancel" variant: secondary
-  }
+define Component "MyMenu" {
+  component SidebarMenu
+    items: "Home,Users,Permissions"
+    active: 0
 }
 ```
 
-The documentation will appear:
-- When hovering over the component name in the IDE
-- In IntelliSense tooltips
-- When using Go-to-References to find usages
+A defined component body can be:
+- one `component`
+- one `layout`
 
-Multi-line documentation is fully supported with proper formatting:
+### Dynamic Properties with `prop_`
+
+Inside a definition, any value that starts with `prop_` is treated as a binding key.
 
 ```wire
-/**
- * Reusable form field component
- * 
- * Combines label and input for consistent styling.
- * Automatically handles spacing and alignment.
- */
-define Component "FormField" {
-  layout stack(direction: vertical, gap: sm) {
-    component Label text: "Field Label"
-    component Input placeholder: "Enter value..."
+define Component "MyMenu" {
+  component SidebarMenu
+    items: "Home,Users,Permissions"
+    active: prop_active
+}
+
+screen Main {
+  layout stack {
+    component MyMenu active: 1
   }
 }
 ```
 
-### Basic Example
+Binding behavior:
+- if the argument is provided, the value is substituted
+- if the argument is missing and target field is optional, the field is omitted and a warning is emitted
+- if the argument is missing and target field is required, semantic error
+- extra arguments that are not used by the definition emit a warning
 
-```
-define Component "ButtonGroup" {
-  layout stack(direction: horizontal, gap: md) {
-    component Button text: "OK" variant: primary
-    component Button text: "Cancel" variant: secondary
+`prop_` is reserved in definition bodies for dynamic binding semantics.
+
+### Define Layout (User-Defined Layout Containers)
+
+```wire
+define Layout "screen_default" {
+  layout split(left: prop_left) {
+    component SidebarMenu
+      items: "Home,Users,Permissions"
+      active: prop_active
+    component Children
   }
 }
+```
 
-project "Form App" {
-  style { ... }
+Use it like any other layout:
 
-  screen LoginScreen {
-    layout stack(direction: vertical, gap: lg, padding: xl) {
-      component Heading text: "Login"
-      component Input label: "Email" placeholder: "user@example.com"
-      component Input label: "Password" placeholder: "••••••••"
-      
-      component ButtonGroup
+```wire
+screen Main {
+  layout screen_default(left: 220, active: 1) {
+    layout stack(gap: md) {
+      component Heading text: "Main Screen"
     }
   }
 }
 ```
 
-### Usage Rules
+Rules:
+- `define Layout` body must be exactly one root `layout`
+- each defined layout must contain exactly one `component Children`
+- `component Children` is reserved and only valid inside `define Layout`
+- each invocation of a defined layout must provide exactly one child block
 
-1. **Definitions come first** - Typically place `define Component` before screens
-2. **Can reference other components** - Both built-in and custom
-3. **Can nest layouts** - Define complex patterns once, reuse everywhere
-4. **No parameters** - Components are templates, not functions
+### Naming Rules
 
-### Common Patterns
+- `define Component "Name"`: PascalCase is recommended (`warning` if not)
+- `define Layout "name"`: must match `^[a-z][a-z0-9_]*$` (`error` if not)
+- names with keyword prefixes like `screen_default`, `layout_shell`, `component_grid` are valid identifiers
 
-#### Form Field Pattern with Documentation
+### Definition Docs
+
+You can document a custom definition with block comments (`/* ... */`) right above it:
+
 ```wire
 /**
- * Reusable form field with label and input
- * Ensures consistent styling across forms
+ * Reusable actions row for forms
  */
-define Component "FormField" {
-  layout stack(direction: vertical, gap: sm) {
-    component Label text: "Field Label"
-    component Input placeholder: "Enter value..."
-  }
-}
-```
-
-#### Card Pattern
-```wire
-/**
- * Product display card
- * Shows image, title, description, and action button
- */
-define Component "ProductCard" {
-  layout card(padding: md, gap: md, radius: md) {
-    component Image placeholder: "square" height: 200
-    component Heading text: "Product Name"
-    component Text content: "Product description"
-    component Button text: "View Details" variant: primary
-  }
-}
-```
-
-#### Stat Container
-```wire
-/**
- * Metric display box with title and value
- * Used in dashboard screens
- */
-define Component "MetricBox" {
-  layout panel(padding: lg) {
-    component Heading text: "Metric Name"
-    component StatCard title: "Value" value: "1,234"
+define Component "FormActions" {
+  layout stack(direction: horizontal, gap: md) {
+    component Button text: "Save" variant: primary
+    component Button text: "Cancel"
   }
 }
 ```
 
 ### Notes
 
-- Defined components are expanded at compile-time (no runtime overhead)
-- Component definitions are resolved before IR generation
-- Circular references in components are detected and reported as errors
-- Components used but not defined will generate an error listing all undefined references
-- Documentation via `/* */` block comments appears in IDE hover tooltips and helps maintain component clarity
-- Both line comments (`//`) and block comments (`/* */`) are supported throughout Wire DSL
+- definitions are expanded at compile-time (no runtime custom container type)
+- circular references across components and layouts are detected as errors
+- unresolved components/layouts are reported by semantic diagnostics
 
 ---
 
@@ -562,17 +540,17 @@ component Button text: "Click me" variant: primary
 
 | Component | Properties | Example |
 |-----------|-----------|---------|
-| `Heading` | `text` (string) | `component Heading text: "Page Title"` |
-| `Text` | `content` (string) | `component Text content: "Body text"` |
+| `Heading` | `text`, `level`, `spacing`, `variant` | `component Heading text: "Page Title" level: h2 variant: primary` |
+| `Text` | `content` (string) | `component Text text: "Body text"` |
 | `Label` | `text` (string) | `component Label text: "Field label"` |
 
 ### Input Components
 
 | Component | Properties | Example |
 |-----------|-----------|---------|
-| `Input` | `label`, `placeholder` | `component Input label: "Email" placeholder: "your@email.com"` |
+| `Input` | `label`, `placeholder`, `size` | `component Input label: "Email" placeholder: "your@email.com" size: md` |
 | `Textarea` | `label`, `placeholder`, `rows` | `component Textarea label: "Message" rows: 4` |
-| `Select` | `label`, `items` | `component Select label: "Role" items: "Admin,User"` |
+| `Select` | `label`, `items`, `size` | `component Select label: "Role" items: "Admin,User" size: md` |
 | `Checkbox` | `label`, `checked` | `component Checkbox label: "Agree" checked: true` |
 | `Radio` | `label`, `checked` | `component Radio label: "Option" checked: false` |
 | `Toggle` | `label`, `enabled` | `component Toggle label: "Enable feature" enabled: false` |
@@ -581,8 +559,8 @@ component Button text: "Click me" variant: primary
 
 | Component | Properties | Example |
 |-----------|-----------|---------|
-| `Button` | `text`, `variant` | `component Button text: "Save" variant: primary` |
-| `IconButton` | `icon` | `component IconButton icon: "search"` |
+| `Button` | `text`, `variant`, `size`, `labelSpace`, `padding`, `block` | `component Button text: "Save" variant: primary size: md labelSpace: true` |
+| `IconButton` | `icon`, `variant`, `size`, `labelSpace`, `padding`, `disabled` | `component IconButton icon: "search" variant: default size: md` |
 
 **Button Variants**: `default` | `primary` | `secondary` | `success` | `warning` | `danger` | `info`
 
@@ -590,7 +568,7 @@ component Button text: "Click me" variant: primary
 
 | Component | Properties | Example |
 |-----------|-----------|---------|
-| `Topbar` | `title`, `subtitle` | `component Topbar title: "Dashboard"` |
+| `Topbar` | `title`, `subtitle`, `icon`, `actions`, `user`, `avatar`, `variant`, `border`, `background`, `radius` | `component Topbar title: "Dashboard" variant: primary border: true background: true radius: md` |
 | `SidebarMenu` | `items`, `active` | `component SidebarMenu items: "Home,Users,Settings" active: 0` |
 | `Breadcrumbs` | `items` | `component Breadcrumbs items: "Home,Users,Detail"` |
 | `Tabs` | `items`, `active` | `component Tabs items: "Profile,Settings" active: 0` |
@@ -599,7 +577,7 @@ component Button text: "Click me" variant: primary
 
 | Component | Properties | Example |
 |-----------|-----------|---------|
-| `Table` | `columns`, `rows` | `component Table columns: "Name,Email,Status" rows: 8` |
+| `Table` | `columns`, `rows`, `pagination`, `paginationAlign`, `actions`, `caption`, `captionAlign`, `border`, `background` | `component Table columns: "Name,Email,Status" rows: 8 actions: "eye,edit" border: true background: true` |
 | `List` | `items` | `component List items: "Item 1,Item 2,Item 3"` |
 
 ### Media Components
@@ -607,7 +585,7 @@ component Button text: "Click me" variant: primary
 | Component | Properties | Example |
 |-----------|-----------|---------|
 | `Image` | `placeholder`, `height` | `component Image placeholder: "square" height: 200` |
-| `Icon` | `type` | `component Icon type: "search"` |
+| `Icon` | `type`, `size`, `variant` | `component Icon icon: "search" size: md variant: primary` |
 
 ### Other Components
 
@@ -615,7 +593,7 @@ component Button text: "Click me" variant: primary
 |-----------|-----------|---------|
 | `Divider` | - | `component Divider` |
 | `Badge` | `text`, `variant` | `component Badge text: "New" variant: primary` |
-| `Link` | `text`, `variant` | `component Link text: "Click here" variant: primary` |
+| `Link` | `text`, `variant`, `size` | `component Link text: "Click here" variant: primary size: lg` |
 | `Chart` | `type`, `height` | `component Chart type: "bar" height: 200` |
 | `Alert` | `variant`, `title`, `text` | `component Alert variant: "danger" title: "Error" text: "Something went wrong"` |
 | `StatCard` | `title`, `value`, `caption`, `icon` | `component StatCard title: "Total Users" value: "1,234" icon: "users"` |
@@ -638,7 +616,7 @@ project "Admin Dashboard" {
   }
 
   screen UsersList {
-    layout split(sidebar: 260, gap: md) {
+    layout split(left: 260, gap: md) {
       layout stack(gap: lg, padding: lg) {
         component Topbar title: "Dashboard"
         component SidebarMenu items: "Users,Roles,Permissions,Audit" active: 0
@@ -669,9 +647,9 @@ project "Admin Dashboard" {
         cell span: 8 {
           layout card(padding: lg, gap: md) {
             component Heading text: "User Profile"
-            component Text content: "Name: John Doe"
-            component Text content: "Email: john@example.com"
-            component Text content: "Role: Administrator"
+            component Text text: "Name: John Doe"
+            component Text text: "Email: john@example.com"
+            component Text text: "Role: Administrator"
           }
         }
         cell span: 4 {
@@ -697,11 +675,15 @@ project "Admin Dashboard" {
 1. A `project` must have at least one `screen`
 2. Each `screen` must have exactly one root layout
 3. `grid` layouts require `columns` property
-4. `split` layouts require `sidebar` property
+4. `split` layouts require exactly one of `left` or `right` and exactly 2 children
 5. `Table` components require `columns` property
 6. All identifiers must be unique within project scope
 7. Property values must match their defined types
-8. No absolute positioning allowed
+8. `define Layout` names must match `^[a-z][a-z0-9_]*$`
+9. `component Children` is only valid inside `define Layout`
+10. Defined layout declarations and invocations require exactly one `Children` child slot
+11. `prop_*` bindings require matching invocation args when target field is required
+12. No absolute positioning allowed
 
 ---
 

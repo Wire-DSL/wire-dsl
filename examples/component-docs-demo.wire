@@ -43,7 +43,7 @@ project "Component Demo" {
     layout card(padding: md, gap: md, radius: md) {
       component Image placeholder: "square" height: 200
       component Heading text: "Product Name"
-      component Text content: "Product description text"
+      component Text text: "Product description text"
       component Button text: "View Details" variant: primary
     }
   }

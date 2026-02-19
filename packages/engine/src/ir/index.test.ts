@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+﻿import { describe, it, expect, vi } from 'vitest';
 import { parseWireDSL } from '../parser/index';
 import { generateIR, IRGenerator } from './index';
 
@@ -643,7 +643,7 @@ describe('IR Generator', () => {
             component Separate
             component Input placeholder: "Enter"
             component Heading text: "Title"
-            component Text content: "Body"
+            component Text text: "Body"
           }
         }
       }
@@ -729,7 +729,7 @@ describe('IR Generator', () => {
     const input = `
       project "Admin" {
         screen Dashboard {
-          layout split(sidebar: 240, gap: lg) {
+          layout split(left: 240, gap: lg) {
             layout stack(direction: vertical, gap: md) {
               component SidebarMenu items: "Users,Roles,Settings" active: 1
             }
@@ -886,5 +886,181 @@ describe('IR Generator', () => {
     // Verify screens and nodes were created
     expect(ir.project.screens).toHaveLength(1);
     expect(Object.keys(ir.project.nodes).length).toBeGreaterThan(0);
+  });
+
+  it('should expand dynamic prop_ bindings in defined components', () => {
+    const input = `
+      project "DynamicComponentProps" {
+        define Component "MyMenu" {
+          component SidebarMenu
+            items: "Home,Users,Roles"
+            active: prop_active
+        }
+
+        screen Main {
+          layout stack {
+            component MyMenu active: 1
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+
+    const sidebarMenu = Object.values(ir.project.nodes).find(
+      (node) => node.kind === 'component' && node.componentType === 'SidebarMenu'
+    );
+
+    expect(sidebarMenu).toBeDefined();
+    if (sidebarMenu?.kind === 'component') {
+      expect(sidebarMenu.props.active).toBe(1);
+    }
+  });
+
+  it('should omit optional missing prop_ binding and emit warning', () => {
+    const input = `
+      project "OptionalMissingBinding" {
+        define Component "ActionButton" {
+          component Button
+            text: "Save"
+            variant: prop_variant
+        }
+
+        screen Main {
+          layout stack {
+            component ActionButton
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const generator = new IRGenerator();
+    const ir = generator.generate(ast);
+    const warnings = generator.getWarnings();
+
+    const button = Object.values(ir.project.nodes).find(
+      (node) => node.kind === 'component' && node.componentType === 'Button'
+    );
+
+    expect(button).toBeDefined();
+    if (button?.kind === 'component') {
+      expect(button.props.variant).toBeUndefined();
+    }
+    expect(warnings.some((warning) => warning.type === 'missing-bound-value')).toBe(true);
+  });
+
+  it('should throw for required missing prop_ binding', () => {
+    const input = `
+      project "RequiredMissingBinding" {
+        define Layout "screen_shell" {
+          layout grid(columns: prop_columns) {
+            component Children
+          }
+        }
+
+        screen Main {
+          layout screen_shell {
+            layout stack {
+              component Heading text: "Main"
+            }
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    expect(() => generateIR(ast)).toThrow(/missing-required-bound-value/);
+  });
+
+  it('should warn on unused invocation arguments', () => {
+    const input = `
+      project "UnusedArgs" {
+        define Component "StaticButton" {
+          component Button text: "Save"
+        }
+
+        screen Main {
+          layout stack {
+            component StaticButton foo: 1
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const generator = new IRGenerator();
+    generator.generate(ast);
+    const warnings = generator.getWarnings();
+
+    expect(warnings.some((warning) => warning.type === 'unused-definition-argument')).toBe(true);
+  });
+
+  it('should expand defined layouts with Children slot and dynamic params', () => {
+    const input = `
+      project "DefinedLayoutExpansion" {
+        define Layout "screen_default" {
+          layout split(left: prop_left) {
+            component SidebarMenu
+              items: "Home,Users,Roles"
+              active: prop_active
+            component Children
+          }
+        }
+
+        screen Main {
+          layout screen_default(left: 200, active: 1) {
+            layout stack {
+              component Heading text: "Main Screen"
+            }
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const nodes = Object.values(ir.project.nodes);
+
+    const splitNode = nodes.find((node) => node.kind === 'container' && node.containerType === 'split');
+    const sidebarMenu = nodes.find(
+      (node) => node.kind === 'component' && node.componentType === 'SidebarMenu'
+    );
+    const hasCustomContainerType = nodes.some(
+      (node) =>
+        node.kind === 'container' &&
+        !['stack', 'grid', 'split', 'panel', 'card'].includes(node.containerType)
+    );
+
+    expect(splitNode).toBeDefined();
+    if (splitNode?.kind === 'container') {
+      expect(splitNode.params.left).toBe(200);
+    }
+    expect(sidebarMenu).toBeDefined();
+    if (sidebarMenu?.kind === 'component') {
+      expect(sidebarMenu.props.active).toBe(1);
+    }
+    expect(hasCustomContainerType).toBe(false);
+  });
+
+  it('should throw when using defined layout with invalid child arity', () => {
+    const input = `
+      project "DefinedLayoutArity" {
+        define Layout "screen_default" {
+          layout stack {
+            component Children
+          }
+        }
+
+        screen Main {
+          layout screen_default {
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    expect(() => generateIR(ast)).toThrow(/layout-children-arity/);
   });
 });

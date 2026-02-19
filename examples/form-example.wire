@@ -11,7 +11,7 @@ project "Form Example" {
     layout stack(direction: vertical, gap: md, padding: lg) {
       component Heading text: "User Registration"
       
-      component Text content: "Please fill in all required fields below"
+      component Text text: "Please fill in all required fields below"
 
       layout stack(direction: vertical, gap: md, padding: md) {
         component Input label: "Full Name" placeholder: "John Doe"

@@ -10,7 +10,7 @@ project " Test" {
   screen Dashboard {
     layout stack(direction: vertical, gap: md, padding: lg) {
       component Heading text: "Welcome to  Test"
-      component Text content: "This project uses the new style block syntax"
+      component Text text: "This project uses the new style block syntax"
       
       layout grid(columns: 12, gap: md) {
         cell span: 4 {

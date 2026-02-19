@@ -5,7 +5,13 @@ import { ColorResolver } from './colors';
 import { getIcon } from './icons/iconLibrary';
 import { resolveTokens, type DesignTokens } from './tokens';
 import { resolveSpacingToken, type DensityLevel } from '../shared/spacing';
-import { resolveIconButtonSize, resolveIconSize } from '../shared/component-sizes';
+import {
+  resolveActionControlHeight,
+  resolveControlHeight,
+  resolveControlHorizontalPadding,
+  resolveIconButtonSize,
+  resolveIconSize,
+} from '../shared/component-sizes';
 import { resolveHeadingTypography } from '../shared/heading-levels';
 import { resolveHeadingVerticalPadding } from '../shared/heading-spacing';
 
@@ -43,7 +49,7 @@ const THEMES = {
     bg: '#F8FAFC',
     cardBg: '#FFFFFF',
     border: '#E2E8F0',
-    text: '#1E293B',
+    text: '#000000',
     textMuted: '#64748B',
     primary: '#3B82F6',
     primaryHover: '#2563EB',
@@ -53,7 +59,7 @@ const THEMES = {
     bg: '#0F172A',
     cardBg: '#1E293B',
     border: '#334155',
-    text: '#F1F5F9',
+    text: '#FFFFFF',
     textMuted: '#94A3B8',
     primary: '#60A5FA',
     primaryHover: '#3B82F6',
@@ -66,7 +72,7 @@ const THEMES = {
 // ============================================================================
 
 export class SVGRenderer {
-  private ir: IRContract;
+  protected ir: IRContract;
   private layout: LayoutResult;
   protected options: Required<Omit<SVGRenderOptions, 'screenName'>> & { screenName?: string };
   protected renderTheme: typeof THEMES.light;
@@ -74,7 +80,7 @@ export class SVGRenderer {
   private selectedScreenName?: string;
   protected renderedNodeIds: Set<string> = new Set(); // Track nodes rendered in current pass
   protected colorResolver: ColorResolver;
-  protected fontFamily: string = 'system-ui, -apple-system, sans-serif';
+  protected fontFamily: string = 'Arial, Helvetica, sans-serif';
   private parentContainerByChildId: Map<string, IRContainerNode> = new Map();
 
   constructor(ir: IRContract, layout: LayoutResult, options?: SVGRenderOptions) {
@@ -95,8 +101,7 @@ export class SVGRenderer {
       includeLabels: options?.includeLabels ?? true,
       screenName: options?.screenName,
     };
-    
-    this.renderTheme = THEMES[this.options.theme];
+
     this.colorResolver = new ColorResolver();
     this.buildParentContainerIndex();
 
@@ -109,6 +114,13 @@ export class SVGRenderer {
     if (ir.project.colors && Object.keys(ir.project.colors).length > 0) {
       this.colorResolver.setCustomColors(ir.project.colors);
     }
+
+    const themeDefaults = THEMES[this.options.theme];
+    this.renderTheme = {
+      ...themeDefaults,
+      text: this.resolveTextColor(),
+      textMuted: this.resolveMutedColor(),
+    };
   }
 
   /**
@@ -227,6 +239,9 @@ export class SVGRenderer {
       if (node.containerType === 'card') {
         this.renderCardBorder(node, pos, containerGroup);
       }
+      if (node.containerType === 'split') {
+        this.renderSplitDecoration(node, pos, containerGroup);
+      }
 
       // Render container children
       node.children.forEach((childRef) => {
@@ -332,6 +347,9 @@ export class SVGRenderer {
 
   protected renderHeading(node: IRComponentNode, pos: any): string {
     const text = String(node.props.text || 'Heading');
+    const variant = String(node.props.variant || 'default');
+    const headingColor =
+      variant === 'default' ? this.resolveTextColor() : this.resolveVariantColor(variant, this.resolveTextColor());
 
     const headingTypography = this.getHeadingTypography(node);
     const fontSize = headingTypography.fontSize;
@@ -343,10 +361,10 @@ export class SVGRenderer {
     if (lines.length <= 1) {
       return `<g${this.getDataNodeId(node)}>
     <text x="${pos.x}" y="${firstLineY}"
-          font-family="system-ui, -apple-system, sans-serif"
+          font-family="Arial, Helvetica, sans-serif"
           font-size="${fontSize}"
           font-weight="${fontWeight}"
-          fill="${this.renderTheme.text}">${this.escapeXml(text)}</text>
+          fill="${headingColor}">${this.escapeXml(text)}</text>
   </g>`;
     }
 
@@ -359,16 +377,20 @@ export class SVGRenderer {
 
     return `<g${this.getDataNodeId(node)}>
     <text x="${pos.x}" y="${firstLineY}"
-          font-family="system-ui, -apple-system, sans-serif"
+          font-family="Arial, Helvetica, sans-serif"
           font-size="${fontSize}"
           font-weight="${fontWeight}"
-          fill="${this.renderTheme.text}">${tspans}</text>
+          fill="${headingColor}">${tspans}</text>
   </g>`;
   }
 
   protected renderButton(node: IRComponentNode, pos: any): string {
     const text = String(node.props.text || 'Button');
     const variant = String(node.props.variant || 'default');
+    const size = String(node.props.size || 'md');
+    const density = (this.ir.project.style.density || 'normal') as DensityLevel;
+    const extraPadding = resolveControlHorizontalPadding(String(node.props.padding || 'none'), density);
+    const labelOffset = this.parseBooleanProp(node.props.labelSpace, false) ? 18 : 0;
     const fullWidth = this.shouldButtonFillAvailableWidth(node);
 
     // Use tokens from density configuration
@@ -376,15 +398,16 @@ export class SVGRenderer {
     const fontSize = this.tokens.button.fontSize;
     const fontWeight = this.tokens.button.fontWeight;
     const paddingX = this.tokens.button.paddingX;
-    const paddingY = this.tokens.button.paddingY;
+    const controlHeight = resolveActionControlHeight(size, density);
+    const buttonY = pos.y + labelOffset;
+    const buttonHeight = Math.max(16, Math.min(controlHeight, pos.height - labelOffset));
 
     // Keep control inside layout bounds; truncate text if needed.
     const idealTextWidth = this.estimateTextWidth(text, fontSize);
     const buttonWidth = fullWidth
       ? Math.max(1, pos.width)
-      : this.clampControlWidth(Math.max(Math.ceil(idealTextWidth + paddingX * 2), 60), pos.width);
-    const buttonHeight = fontSize + paddingY * 2;
-    const availableTextWidth = Math.max(0, buttonWidth - paddingX * 2);
+      : this.clampControlWidth(Math.max(Math.ceil(idealTextWidth + (paddingX + extraPadding) * 2), 60), pos.width);
+    const availableTextWidth = Math.max(0, buttonWidth - (paddingX + extraPadding) * 2);
     const visibleText = this.truncateTextToWidth(text, availableTextWidth, fontSize);
 
     // Color configuration with variant override support from colors block.
@@ -395,20 +418,22 @@ export class SVGRenderer {
     const bgColor = hasExplicitVariantColor
       ? this.hexToRgba(resolvedBase, 0.85)
       : 'rgba(226, 232, 240, 0.9)';
-    const textColor = hasExplicitVariantColor ? '#FFFFFF' : 'rgba(30, 41, 59, 0.85)';
+    const textColor = hasExplicitVariantColor
+      ? '#FFFFFF'
+      : this.hexToRgba(this.resolveTextColor(), 0.85);
     const borderColor = hasExplicitVariantColor
       ? this.hexToRgba(resolvedBase, 0.7)
       : 'rgba(100, 116, 139, 0.4)';
 
     return `<g${this.getDataNodeId(node)}>
-    <rect x="${pos.x}" y="${pos.y}"
+    <rect x="${pos.x}" y="${buttonY}"
           width="${buttonWidth}" height="${buttonHeight}"
           rx="${radius}"
           fill="${bgColor}"
           stroke="${borderColor}"
           stroke-width="1"/>
-    <text x="${pos.x + buttonWidth / 2}" y="${pos.y + buttonHeight / 2 + fontSize * 0.35}"
-          font-family="system-ui, -apple-system, sans-serif"
+    <text x="${pos.x + buttonWidth / 2}" y="${buttonY + buttonHeight / 2 + fontSize * 0.35}"
+          font-family="Arial, Helvetica, sans-serif"
           font-size="${fontSize}"
           font-weight="${fontWeight}"
           fill="${textColor}"
@@ -419,10 +444,11 @@ export class SVGRenderer {
   protected renderLink(node: IRComponentNode, pos: any): string {
     const text = String(node.props.text || 'Link');
     const variant = String(node.props.variant || 'primary');
+    const size = String(node.props.size || 'md');
+    const density = (this.ir.project.style.density || 'normal') as DensityLevel;
     const fontSize = this.tokens.button.fontSize;
     const fontWeight = this.tokens.button.fontWeight;
     const paddingX = this.tokens.button.paddingX;
-    const paddingY = this.tokens.button.paddingY;
     const linkColor = this.resolveVariantColor(variant, this.renderTheme.primary);
 
     // Match Button sizing so Link can align beside regular buttons.
@@ -431,7 +457,7 @@ export class SVGRenderer {
       Math.max(Math.ceil(idealTextWidth + paddingX * 2), 60),
       pos.width
     );
-    const linkHeight = fontSize + paddingY * 2;
+    const linkHeight = Math.max(16, Math.min(resolveActionControlHeight(size, density), pos.height));
     const availableTextWidth = Math.max(0, linkWidth - paddingX * 2);
     const visibleText = this.truncateTextToWidth(text, availableTextWidth, fontSize);
     const visibleTextWidth = Math.min(
@@ -443,7 +469,7 @@ export class SVGRenderer {
 
     return `<g${this.getDataNodeId(node)}>
     <text x="${pos.x + linkWidth / 2}" y="${centerY}"
-          font-family="system-ui, -apple-system, sans-serif"
+          font-family="Arial, Helvetica, sans-serif"
           font-size="${fontSize}"
           font-weight="${fontWeight}"
           fill="${linkColor}"
@@ -471,7 +497,7 @@ export class SVGRenderer {
     ${
       label
         ? `<text x="${pos.x + paddingX}" y="${this.getControlLabelBaselineY(pos.y)}"
-          font-family="system-ui, -apple-system, sans-serif"
+          font-family="Arial, Helvetica, sans-serif"
           font-size="12"
           fill="${this.renderTheme.text}">${this.escapeXml(label)}</text>`
         : ''
@@ -483,7 +509,7 @@ export class SVGRenderer {
           stroke="${this.renderTheme.border}"
           stroke-width="1"/>
     <text x="${pos.x + paddingX}" y="${controlY + controlHeight / 2 + 5}"
-          font-family="system-ui, -apple-system, sans-serif"
+          font-family="Arial, Helvetica, sans-serif"
           font-size="${fontSize}"
           fill="${this.renderTheme.textMuted}">${this.escapeXml(placeholder)}</text>
   </g>`;
@@ -494,19 +520,39 @@ export class SVGRenderer {
     const subtitle = String(node.props.subtitle || '');
     const actions = String(node.props.actions || '');
     const user = String(node.props.user || '');
-    const accentColor = this.resolveAccentColor();
+    const variant = String(node.props.variant || 'default');
+    const accentColor =
+      variant === 'default'
+        ? this.resolveAccentColor()
+        : this.resolveVariantColor(variant, this.resolveAccentColor());
+    const showBorder = this.parseBooleanProp(node.props.border, false);
+    const showBackground = this.parseBooleanProp(node.props.background ?? node.props.backround, false);
+    const radiusMap: Record<string, number> = {
+      none: 0,
+      sm: 4,
+      md: this.tokens.card.radius,
+      lg: 12,
+      xl: 16,
+    };
+    const topbarRadius = radiusMap[String(node.props.radius || 'md')] ?? this.tokens.card.radius;
     const topbar = this.calculateTopbarLayout(node, pos, title, subtitle, actions, user);
 
-    let svg = `<g${this.getDataNodeId(node)}>
+    let svg = `<g${this.getDataNodeId(node)}>`;
+    if (showBorder || showBackground) {
+      const bg = showBackground ? this.renderTheme.cardBg : 'none';
+      const stroke = showBorder ? this.renderTheme.border : 'none';
+      svg += `
     <rect x="${pos.x}" y="${pos.y}" 
           width="${pos.width}" height="${pos.height}" 
-          fill="${this.renderTheme.cardBg}" 
-          stroke="${this.renderTheme.border}" 
-          stroke-width="1"/>
-    
+          rx="${topbarRadius}"
+          fill="${bg}" 
+          stroke="${stroke}" 
+          stroke-width="1"/>`;
+    }
+    svg += `
     <!-- Title -->
     <text x="${topbar.textX}" y="${topbar.titleY}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="18" 
           font-weight="600" 
           fill="${this.renderTheme.text}">${this.escapeXml(topbar.visibleTitle)}</text>`;
@@ -515,7 +561,7 @@ export class SVGRenderer {
     if (topbar.hasSubtitle) {
       svg += `
     <text x="${topbar.textX}" y="${topbar.subtitleY}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="13" 
           fill="${this.renderTheme.textMuted}">${this.escapeXml(topbar.visibleSubtitle)}</text>`;
     }
@@ -546,7 +592,7 @@ export class SVGRenderer {
           fill="${accentColor}" 
           stroke="none"/>
     <text x="${action.x + action.width / 2}" y="${action.y + action.height / 2 + 4}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="12" 
           font-weight="600" 
           fill="white" 
@@ -563,7 +609,7 @@ export class SVGRenderer {
           stroke="${this.renderTheme.border}" 
           stroke-width="1"/>
     <text x="${topbar.userBadge.x + topbar.userBadge.width / 2}" y="${topbar.userBadge.y + topbar.userBadge.height / 2 + 4}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="12" 
           fill="${this.renderTheme.text}" 
           text-anchor="middle">${this.escapeXml(topbar.userBadge.label)}</text>`;
@@ -643,17 +689,78 @@ export class SVGRenderer {
     output.push(svg);
   }
 
+  protected renderSplitDecoration(node: IRNode, pos: any, output: string[]): void {
+    if (node.kind !== 'container') return;
+
+    const gap = this.resolveSpacing(node.style.gap);
+    const leftParam = Number(node.params.left);
+    const rightParam = Number(node.params.right);
+    const hasLeft = node.params.left !== undefined;
+    const hasRight = node.params.right !== undefined && node.params.left === undefined;
+    const fixedLeftWidth = Number.isFinite(leftParam) && leftParam > 0 ? leftParam : 250;
+    const fixedRightWidth = Number.isFinite(rightParam) && rightParam > 0 ? rightParam : 250;
+    const backgroundKey = String(node.style.background || '').trim();
+    const showBorder = this.parseBooleanProp(node.params.border, false);
+
+    if (backgroundKey) {
+      const fill = this.colorResolver.resolveColor(backgroundKey, this.renderTheme.cardBg);
+      if (hasRight) {
+        const panelX = pos.x + Math.max(0, pos.width - fixedRightWidth);
+        output.push(`<g>
+    <rect x="${panelX}" y="${pos.y}" width="${Math.max(1, fixedRightWidth)}" height="${pos.height}" fill="${fill}" stroke="none"/>
+    </g>`);
+      } else if (hasLeft || !hasRight) {
+        output.push(`<g>
+    <rect x="${pos.x}" y="${pos.y}" width="${Math.max(1, fixedLeftWidth)}" height="${pos.height}" fill="${fill}" stroke="none"/>
+    </g>`);
+      }
+    }
+
+    if (showBorder) {
+      const dividerX = hasRight
+        ? pos.x + Math.max(0, pos.width - fixedRightWidth - gap / 2)
+        : pos.x + Math.max(0, fixedLeftWidth + gap / 2);
+      output.push(`<g>
+    <line x1="${dividerX}" y1="${pos.y}" x2="${dividerX}" y2="${pos.y + pos.height}" stroke="${this.renderTheme.border}" stroke-width="1"/>
+    </g>`);
+    }
+  }
+
   protected renderTable(node: IRComponentNode, pos: any): string {
     const title = String(node.props.title || '');
     const columnsStr = String(node.props.columns || 'Col1,Col2,Col3');
-    const columns = columnsStr.split(',').map((c) => c.trim());
+    const columns = columnsStr
+      .split(',')
+      .map((c) => c.trim())
+      .filter(Boolean);
     const rowCount = Number(node.props.rows || node.props.rowsMock || 5);
     const mockStr = String(node.props.mock || '');
     const random = this.parseBooleanProp(node.props.random, false);
-    const paginationValue = String(node.props.pagination || 'false');
-    const pagination = paginationValue === 'true';
-    const pageCount = Number(node.props.pages || 5);
-    const paginationAlign = String(node.props.paginationAlign || 'right'); // left, center, right
+    const pagination = this.parseBooleanProp(node.props.pagination, false);
+    const parsedPageCount = Number(node.props.pages || 5);
+    const pageCount = Number.isFinite(parsedPageCount) && parsedPageCount > 0 ? Math.floor(parsedPageCount) : 5;
+    const paginationAlign = String(node.props.paginationAlign || 'right');
+    const actions = String(node.props.actions || '')
+      .split(',')
+      .map((value) => value.trim())
+      .filter(Boolean);
+    const hasActions = actions.length > 0;
+    const caption = String(node.props.caption || '').trim();
+    const hasCaption = caption.length > 0;
+    const showOuterBorder = this.parseBooleanProp(node.props.border, false);
+    const showOuterBackground = this.parseBooleanProp(
+      node.props.background ?? node.props.backround,
+      false
+    );
+    const showInnerBorder = this.parseBooleanProp(node.props.innerBorder, true);
+    const rawCaptionAlign = String(node.props.captionAlign || '');
+    const captionAlign =
+      rawCaptionAlign === 'left' || rawCaptionAlign === 'center' || rawCaptionAlign === 'right'
+        ? rawCaptionAlign
+        : paginationAlign === 'left'
+          ? 'right'
+          : 'left';
+    const sameFooterAlign = hasCaption && pagination && captionAlign === paginationAlign;
 
     // Parse mock types by column. If not provided, infer from column names.
     const mockTypes = mockStr
@@ -662,20 +769,25 @@ export class SVGRenderer {
           .map((m) => m.trim())
           .filter(Boolean)
       : [];
-    while (mockTypes.length < columns.length) {
-      const inferred = MockDataGenerator.inferMockTypeFromColumn(columns[mockTypes.length] || 'item');
+    const safeColumns = columns.length > 0 ? columns : ['Column'];
+    while (mockTypes.length < safeColumns.length) {
+      const inferred = MockDataGenerator.inferMockTypeFromColumn(safeColumns[mockTypes.length] || 'item');
       mockTypes.push(inferred);
     }
 
     const headerHeight = 44;
     const rowHeight = 36;
-    const colWidth = pos.width / columns.length;
+    const actionColumnWidth = hasActions
+      ? Math.max(96, Math.min(180, actions.length * 26 + 28))
+      : 0;
+    const dataWidth = Math.max(20, pos.width - actionColumnWidth);
+    const dataColWidth = dataWidth / safeColumns.length;
 
     // Generate mock rows based on mock types
     const mockRows: Record<string, string>[] = [];
     for (let rowIdx = 0; rowIdx < rowCount; rowIdx++) {
       const row: Record<string, string> = {};
-      columns.forEach((col, colIdx) => {
+      safeColumns.forEach((col, colIdx) => {
         const mockType =
           mockTypes[colIdx] || MockDataGenerator.inferMockTypeFromColumn(col) || 'item';
         row[col] = MockDataGenerator.getMockValue(mockType, rowIdx, random);
@@ -683,19 +795,24 @@ export class SVGRenderer {
       mockRows.push(row);
     }
 
-    let svg = `<g${this.getDataNodeId(node)}>
+    let svg = `<g${this.getDataNodeId(node)}>`;
+    if (showOuterBorder || showOuterBackground) {
+      const outerFill = showOuterBackground ? this.renderTheme.cardBg : 'none';
+      const outerStroke = showOuterBorder ? this.renderTheme.border : 'none';
+      svg += `
     <rect x="${pos.x}" y="${pos.y}" 
           width="${pos.width}" height="${pos.height}" 
           rx="8" 
-          fill="${this.renderTheme.cardBg}" 
-          stroke="${this.renderTheme.border}" 
+          fill="${outerFill}" 
+          stroke="${outerStroke}" 
           stroke-width="1"/>`;
+    }
 
     // Title
     if (title) {
       svg += `
     <text x="${pos.x + 16}" y="${pos.y + 24}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="13" 
           font-weight="600" 
           fill="${this.renderTheme.text}">${this.escapeXml(title)}</text>`;
@@ -703,42 +820,81 @@ export class SVGRenderer {
 
     // Header row
     const headerY = pos.y + (title ? 32 : 0);
-    svg += `
+    if (showInnerBorder) {
+      svg += `
     <line x1="${pos.x}" y1="${headerY + headerHeight}" x2="${pos.x + pos.width}" y2="${headerY + headerHeight}" 
           stroke="${this.renderTheme.border}" stroke-width="1"/>`;
+    }
 
-    columns.forEach((col, i) => {
+    safeColumns.forEach((col, i) => {
       svg += `
-    <text x="${pos.x + i * colWidth + 12}" y="${headerY + 26}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+    <text x="${pos.x + i * dataColWidth + 12}" y="${headerY + 26}" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="11" 
           font-weight="600" 
           fill="${this.renderTheme.textMuted}">${this.escapeXml(col)}</text>`;
     });
+
+    if (hasActions && showInnerBorder) {
+      const dividerX = pos.x + dataWidth;
+      svg += `
+    <line x1="${dividerX}" y1="${headerY + headerHeight}" x2="${dividerX}" y2="${headerY + headerHeight + mockRows.length * rowHeight}"
+          stroke="${this.renderTheme.border}" stroke-width="1"/>`;
+    }
 
     // Data rows (render all, don't restrict by height)
     mockRows.forEach((row, rowIdx) => {
       const rowY = headerY + headerHeight + rowIdx * rowHeight;
 
       // Row separator
-      svg += `
+      if (showInnerBorder) {
+        svg += `
     <line x1="${pos.x}" y1="${rowY + rowHeight}" x2="${pos.x + pos.width}" y2="${rowY + rowHeight}" 
           stroke="${this.renderTheme.border}" stroke-width="0.5"/>`;
+      }
 
       // Row data
-      columns.forEach((col, colIdx) => {
+      safeColumns.forEach((col, colIdx) => {
         const cellValue = row[col] || '';
         svg += `
-    <text x="${pos.x + colIdx * colWidth + 12}" y="${rowY + 22}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+    <text x="${pos.x + colIdx * dataColWidth + 12}" y="${rowY + 22}" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="12" 
           fill="${this.renderTheme.text}">${this.escapeXml(cellValue)}</text>`;
       });
+
+      if (hasActions) {
+        const iconSize = 14;
+        const buttonSize = 22;
+        const buttonGap = 6;
+        const actionsWidth = actions.length * buttonSize + Math.max(0, actions.length - 1) * buttonGap;
+        let currentX = pos.x + pos.width - 12 - actionsWidth;
+        const buttonY = rowY + (rowHeight - buttonSize) / 2;
+        actions.forEach((actionIcon) => {
+          const iconSvg = getIcon(actionIcon);
+          const iconX = currentX + (buttonSize - iconSize) / 2;
+          const iconY = buttonY + (buttonSize - iconSize) / 2;
+          svg += `
+    <rect x="${currentX}" y="${buttonY}" width="${buttonSize}" height="${buttonSize}" rx="4"
+          fill="${this.renderTheme.cardBg}" stroke="${showInnerBorder ? this.renderTheme.border : 'none'}" stroke-width="1"/>`;
+          if (iconSvg) {
+            svg += `
+    <g transform="translate(${iconX}, ${iconY})">
+      <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${this.hexToRgba(this.resolveTextColor(), 0.75)}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        ${this.extractSvgContent(iconSvg)}
+      </svg>
+    </g>`;
+          }
+          currentX += buttonSize + buttonGap;
+        });
+      }
     });
 
-    // Render pagination if enabled
+    const footerTop = headerY + headerHeight + mockRows.length * rowHeight + 16;
+
+    // Render pagination if enabled.
     if (pagination) {
-      const paginationY = headerY + headerHeight + mockRows.length * rowHeight + 16;
+      const paginationY = sameFooterAlign ? footerTop + 18 + 8 : footerTop;
       const buttonWidth = 40;
       const buttonHeight = 32;
       const gap = 8;
@@ -756,18 +912,25 @@ export class SVGRenderer {
       }
 
       // Previous button
+      const previousIcon = getIcon('chevron-left');
       svg += `
     <rect x="${startX}" y="${paginationY}" 
           width="${buttonWidth}" height="${buttonHeight}" 
           rx="4" 
           fill="${this.renderTheme.cardBg}" 
           stroke="${this.renderTheme.border}" 
-          stroke-width="1"/>
-    <text x="${startX + buttonWidth / 2}" y="${paginationY + buttonHeight / 2 + 4}" 
-          font-family="system-ui, -apple-system, sans-serif" 
-          font-size="14" 
-          fill="${this.renderTheme.text}" 
-          text-anchor="middle">&lt;</text>`;
+          stroke-width="1"/>`;
+      if (previousIcon) {
+        const iconSize = 14;
+        const iconX = startX + (buttonWidth - iconSize) / 2;
+        const iconY = paginationY + (buttonHeight - iconSize) / 2;
+        svg += `
+    <g transform="translate(${iconX}, ${iconY})">
+      <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${this.resolveTextColor()}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        ${this.extractSvgContent(previousIcon)}
+      </svg>
+    </g>`;
+      }
 
       // Page number buttons
       for (let i = 1; i <= pageCount; i++) {
@@ -784,7 +947,7 @@ export class SVGRenderer {
           stroke="${this.renderTheme.border}" 
           stroke-width="1"/>
     <text x="${btnX + buttonWidth / 2}" y="${paginationY + buttonHeight / 2 + 4}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="14" 
           fill="${textColor}" 
           text-anchor="middle">${i}</text>`;
@@ -792,18 +955,44 @@ export class SVGRenderer {
 
       // Next button
       const nextX = startX + (buttonWidth + gap) * (pageCount + 1);
+      const nextIcon = getIcon('chevron-right');
       svg += `
     <rect x="${nextX}" y="${paginationY}" 
           width="${buttonWidth}" height="${buttonHeight}" 
           rx="4" 
           fill="${this.renderTheme.cardBg}" 
           stroke="${this.renderTheme.border}" 
-          stroke-width="1"/>
-    <text x="${nextX + buttonWidth / 2}" y="${paginationY + buttonHeight / 2 + 4}" 
-          font-family="system-ui, -apple-system, sans-serif" 
-          font-size="14" 
-          fill="${this.renderTheme.text}" 
-          text-anchor="middle">&gt;</text>`;
+          stroke-width="1"/>`;
+      if (nextIcon) {
+        const iconSize = 14;
+        const iconX = nextX + (buttonWidth - iconSize) / 2;
+        const iconY = paginationY + (buttonHeight - iconSize) / 2;
+        svg += `
+    <g transform="translate(${iconX}, ${iconY})">
+      <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${this.resolveTextColor()}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        ${this.extractSvgContent(nextIcon)}
+      </svg>
+    </g>`;
+      }
+    }
+
+    if (hasCaption) {
+      const captionY = sameFooterAlign ? footerTop + 12 : footerTop + (pagination ? 21 : 12);
+      let captionX = pos.x + 16;
+      let textAnchor: 'start' | 'middle' | 'end' = 'start';
+      if (captionAlign === 'center') {
+        captionX = pos.x + pos.width / 2;
+        textAnchor = 'middle';
+      } else if (captionAlign === 'right') {
+        captionX = pos.x + pos.width - 16;
+        textAnchor = 'end';
+      }
+      svg += `
+    <text x="${captionX}" y="${captionY}" 
+          font-family="Arial, Helvetica, sans-serif" 
+          font-size="12" 
+          fill="${this.hexToRgba(this.resolveTextColor(), 0.75)}"
+          text-anchor="${textAnchor}">${this.escapeXml(caption)}</text>`;
     }
 
     svg += '\n  </g>';
@@ -934,7 +1123,7 @@ export class SVGRenderer {
   // ============================================================================
 
   protected renderText(node: IRComponentNode, pos: any): string {
-    const text = String(node.props.content || 'Text content');
+    const text = String(node.props.text || 'Text content');
 
     // Use tokens from density configuration
     const fontSize = this.tokens.text.fontSize;
@@ -950,7 +1139,7 @@ export class SVGRenderer {
 
     return `<g${this.getDataNodeId(node)}>
     <text x="${pos.x}" y="${firstLineY}"
-          font-family="system-ui, -apple-system, sans-serif"
+          font-family="Arial, Helvetica, sans-serif"
           font-size="${fontSize}"
           fill="${this.renderTheme.text}">${tspans}</text>
   </g>`;
@@ -961,7 +1150,7 @@ export class SVGRenderer {
 
     return `<g${this.getDataNodeId(node)}>
     <text x="${pos.x}" y="${pos.y + 12}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="12" 
           fill="${this.renderTheme.textMuted}">${this.escapeXml(text)}</text>
   </g>`;
@@ -1002,7 +1191,7 @@ export class SVGRenderer {
     ${
       label
         ? `<text x="${pos.x}" y="${this.getControlLabelBaselineY(pos.y)}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="12" 
           fill="${this.renderTheme.text}">${this.escapeXml(label)}</text>`
         : ''
@@ -1014,7 +1203,7 @@ export class SVGRenderer {
           stroke="${this.renderTheme.border}" 
           stroke-width="1"/>
     <text x="${pos.x + paddingX}" y="${placeholderY}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="${fontSize}" 
           fill="${this.renderTheme.textMuted}">${this.escapeXml(placeholder)}</text>
   </g>`;
@@ -1032,7 +1221,7 @@ export class SVGRenderer {
     ${
       label
         ? `<text x="${pos.x}" y="${this.getControlLabelBaselineY(pos.y)}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="12" 
           fill="${this.renderTheme.text}">${this.escapeXml(label)}</text>`
         : ''
@@ -1044,11 +1233,11 @@ export class SVGRenderer {
           stroke="${this.renderTheme.border}" 
           stroke-width="1"/>
     <text x="${pos.x + 12}" y="${centerY}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="14" 
           fill="${this.renderTheme.textMuted}">${this.escapeXml(placeholder)}</text>
     <text x="${pos.x + pos.width - 20}" y="${centerY}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="16" 
           fill="${this.renderTheme.textMuted}">▼</text>
   </g>`;
@@ -1072,14 +1261,14 @@ export class SVGRenderer {
     ${
       checked
         ? `<text x="${pos.x + checkboxSize / 2}" y="${checkboxY + 14}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="12" 
           fill="white" 
           text-anchor="middle">✓</text>`
         : ''
     }
     <text x="${pos.x + checkboxSize + 12}" y="${pos.y + pos.height / 2 + 5}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="14" 
           fill="${this.renderTheme.text}">${this.escapeXml(label)}</text>
   </g>`;
@@ -1107,7 +1296,7 @@ export class SVGRenderer {
         : ''
     }
     <text x="${pos.x + radioSize + 12}" y="${pos.y + pos.height / 2 + 5}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="14" 
           fill="${this.renderTheme.text}">${this.escapeXml(label)}</text>
   </g>`;
@@ -1132,7 +1321,7 @@ export class SVGRenderer {
             r="8" 
             fill="white"/>
     <text x="${pos.x + toggleWidth + 12}" y="${pos.y + pos.height / 2 + 5}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="14" 
           fill="${this.renderTheme.text}">${this.escapeXml(label)}</text>
   </g>`;
@@ -1168,7 +1357,7 @@ export class SVGRenderer {
           stroke-width="1"/>
     <!-- Title -->
     <text x="${pos.x + padding}" y="${pos.y + padding + 8}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="14" 
           font-weight="600" 
           fill="${this.renderTheme.text}">${this.escapeXml(title)}</text>
@@ -1187,7 +1376,7 @@ export class SVGRenderer {
           fill="${isActive ? this.renderTheme.primary : 'transparent'}" 
           stroke="none"/>
     <text x="${pos.x + 16}" y="${itemY + 22}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="13" 
           fill="${isActive ? 'white' : this.renderTheme.textMuted}">${this.escapeXml(item)}</text>`;
     });
@@ -1221,7 +1410,7 @@ export class SVGRenderer {
           stroke="${isActive ? 'none' : this.renderTheme.border}" 
           stroke-width="1"/>
     <text x="${tabX + tabWidth / 2}" y="${pos.y + 28}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="13" 
           font-weight="${isActive ? '600' : '500'}" 
           fill="${isActive ? 'white' : this.renderTheme.text}" 
@@ -1299,14 +1488,14 @@ export class SVGRenderer {
     ${
       hasTitle
         ? `<text x="${contentX}" y="${titleStartY}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="${fontSize}" 
           font-weight="700"
           fill="${bgColor}">${titleTspans}</text>`
         : ''
     }
     <text x="${contentX}" y="${textStartY}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="${fontSize}" 
           fill="${bgColor}">${textTspans}</text>
   </g>`;
@@ -1336,7 +1525,7 @@ export class SVGRenderer {
           fill="${bgColor}"
           stroke="none"/>
     <text x="${pos.x + pos.width / 2}" y="${pos.y + pos.height / 2 + 4}"
-          font-family="system-ui, -apple-system, sans-serif"
+          font-family="Arial, Helvetica, sans-serif"
           font-size="${fontSize}"
           font-weight="600"
           fill="${textColor}"
@@ -1381,20 +1570,20 @@ export class SVGRenderer {
           stroke-width="1"/>
     
       <text x="${modalX + padding}" y="${modalY + padding + 16}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="16" 
           font-weight="600" 
           fill="${this.renderTheme.text}">${this.escapeXml(title)}</text>
     
     <!-- Close button -->
       <text x="${modalX + pos.width - 16}" y="${modalY + padding + 12}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="18" 
           fill="${this.renderTheme.textMuted}">✕</text>
     
     <!-- Content placeholder -->
       <text x="${modalX + pos.width / 2}" y="${modalY + headerHeight + (pos.height - headerHeight) / 2}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="13" 
           fill="${this.renderTheme.textMuted}" 
           text-anchor="middle">Modal content</text>
@@ -1439,7 +1628,7 @@ export class SVGRenderer {
     if (title) {
       svg += `
     <text x="${pos.x + padding}" y="${pos.y + 26}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="13" 
           font-weight="600" 
           fill="${this.renderTheme.text}">${this.escapeXml(title)}</text>
@@ -1457,7 +1646,7 @@ export class SVGRenderer {
           stroke="${this.renderTheme.border}" 
           stroke-width="0.5"/>
     <text x="${pos.x + padding}" y="${itemY + 24}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="13" 
           fill="${this.renderTheme.text}">${this.escapeXml(item)}</text>`;
       }
@@ -1477,7 +1666,7 @@ export class SVGRenderer {
           stroke-width="1" 
           stroke-dasharray="4 4"/>
     <text x="${pos.x + pos.width / 2}" y="${pos.y + pos.height / 2}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="12" 
           fill="${this.renderTheme.textMuted}" 
           text-anchor="middle">${node.componentType}</text>
@@ -1536,14 +1725,14 @@ export class SVGRenderer {
     
     <!-- Title -->
     <text x="${innerX}" y="${titleY}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="${titleSize}" 
           font-weight="500" 
           fill="${this.renderTheme.textMuted}">${this.escapeXml(visibleTitle)}</text>
     
     <!-- Value (Large) -->
     <text x="${innerX}" y="${valueY}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="${valueSize}" 
           font-weight="700" 
           fill="${accentColor}">${this.escapeXml(value)}</text>`;
@@ -1568,7 +1757,7 @@ export class SVGRenderer {
       svg += `
     <!-- Caption -->
     <text x="${innerX}" y="${captionY}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="${captionSize}" 
           fill="${this.renderTheme.textMuted}">${this.escapeXml(visibleCaption)}</text>`;
     }
@@ -1734,7 +1923,7 @@ export class SVGRenderer {
 
       svg += `
     <text x="${currentX}" y="${pos.y + pos.height / 2 + 4}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="${fontSize}" 
           font-weight="${fontWeight}" 
           fill="${textColor}">${this.escapeXml(item)}</text>`;
@@ -1747,7 +1936,7 @@ export class SVGRenderer {
       if (!isLast) {
         svg += `
     <text x="${currentX + 4}" y="${pos.y + pos.height / 2 + 4}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="${fontSize}" 
           fill="${this.renderTheme.textMuted}">${this.escapeXml(separator)}</text>`;
         currentX += separatorWidth;
@@ -1775,7 +1964,9 @@ export class SVGRenderer {
       const itemY = pos.y + index * itemHeight;
       const isActive = index === activeIndex;
       const bgColor = isActive ? this.hexToRgba(accentColor, 0.15) : 'transparent';
-      const textColor = isActive ? this.hexToRgba(accentColor, 0.9) : 'rgba(30, 41, 59, 0.75)';
+      const textColor = isActive
+        ? this.hexToRgba(accentColor, 0.9)
+        : this.hexToRgba(this.resolveTextColor(), 0.75);
       const fontWeight = isActive ? '500' : '400';
 
       // Item background (only if active)
@@ -1796,7 +1987,7 @@ export class SVGRenderer {
           const iconY = itemY + (itemHeight - iconSize) / 2;
           svg += `
     <g transform="translate(${currentX}, ${iconY})">
-      <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="rgba(30, 41, 59, 0.6)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${this.hexToRgba(this.resolveMutedColor(), 0.9)}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         ${this.extractSvgContent(iconSvg)}
       </svg>
     </g>`;
@@ -1807,7 +1998,7 @@ export class SVGRenderer {
       // Item text
       svg += `
     <text x="${currentX}" y="${itemY + itemHeight / 2 + 5}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="${fontSize}" 
           font-weight="${fontWeight}" 
           fill="${textColor}">${this.escapeXml(item)}</text>`;
@@ -1818,21 +2009,25 @@ export class SVGRenderer {
   }
 
   protected renderIcon(node: IRComponentNode, pos: any): string {
-    const iconType = String(node.props.type || 'help-circle');
+    const iconType = String(node.props.icon || 'help-circle');
     const size = String(node.props.size || 'md');
+    const variant = String(node.props.variant || 'default');
     const iconSvg = getIcon(iconType);
+    const iconColor =
+      variant === 'default'
+        ? this.hexToRgba(this.resolveTextColor(), 0.75)
+        : this.resolveVariantColor(variant, this.resolveTextColor());
 
     if (!iconSvg) {
       // Fallback: render a placeholder with question mark
       return `<g${this.getDataNodeId(node)}>
     <!-- Icon not found: ${iconType} -->
-    <circle cx="${pos.x + pos.width / 2}" cy="${pos.y + pos.height / 2}" r="${Math.min(pos.width, pos.height) / 2 - 2}" fill="none" stroke="rgba(100, 116, 139, 0.4)" stroke-width="1"/>
-    <text x="${pos.x + pos.width / 2}" y="${pos.y + pos.height / 2 + 4}" font-family="system-ui, -apple-system, sans-serif" font-size="12" fill="rgba(100, 116, 139, 0.6)" text-anchor="middle">?</text>
+    <circle cx="${pos.x + pos.width / 2}" cy="${pos.y + pos.height / 2}" r="${Math.min(pos.width, pos.height) / 2 - 2}" fill="none" stroke="${this.hexToRgba(this.resolveMutedColor(), 0.4)}" stroke-width="1"/>
+    <text x="${pos.x + pos.width / 2}" y="${pos.y + pos.height / 2 + 4}" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="${this.hexToRgba(this.resolveMutedColor(), 0.7)}" text-anchor="middle">?</text>
   </g>`;
     }
 
     const iconSize = this.getIconSize(size);
-    const iconColor = 'rgba(30, 41, 59, 0.75)';
     const offsetX = pos.x + (pos.width - iconSize) / 2;
     const offsetY = pos.y + (pos.height - iconSize) / 2;
 
@@ -1851,6 +2046,9 @@ export class SVGRenderer {
     const variant = String(node.props.variant || 'default');
     const size = String(node.props.size || 'md');
     const disabled = String(node.props.disabled || 'false') === 'true';
+    const density = (this.ir.project.style.density || 'normal') as DensityLevel;
+    const labelOffset = this.parseBooleanProp(node.props.labelSpace, false) ? 18 : 0;
+    const extraPadding = resolveControlHorizontalPadding(String(node.props.padding || 'none'), density);
 
     const semanticBase = this.getSemanticVariantColor(variant);
     const hasExplicitVariantColor =
@@ -1859,7 +2057,9 @@ export class SVGRenderer {
     const bgColor = hasExplicitVariantColor
       ? this.hexToRgba(resolvedBase, 0.85)
       : 'rgba(226, 232, 240, 0.9)';
-    const iconColor = hasExplicitVariantColor ? '#FFFFFF' : 'rgba(30, 41, 59, 0.75)';
+    const iconColor = hasExplicitVariantColor
+      ? '#FFFFFF'
+      : this.hexToRgba(this.resolveTextColor(), 0.75);
     const borderColor = hasExplicitVariantColor
       ? this.hexToRgba(resolvedBase, 0.7)
       : 'rgba(100, 116, 139, 0.4)';
@@ -1867,18 +2067,23 @@ export class SVGRenderer {
     const opacity = disabled ? '0.5' : '1';
     const iconSvg = getIcon(iconName);
 
-    const buttonSize = this.getIconButtonSize(size);
+    const buttonSize = Math.max(
+      16,
+      Math.min(resolveActionControlHeight(size, density), pos.height - labelOffset)
+    );
+    const buttonWidth = buttonSize + extraPadding * 2;
     const radius = 6;
+    const buttonY = pos.y + labelOffset;
 
     let svg = `<g${this.getDataNodeId(node)} opacity="${opacity}">
     <!-- IconButton background -->
-    <rect x="${pos.x}" y="${pos.y}" width="${buttonSize}" height="${buttonSize}" rx="${radius}" fill="${bgColor}" stroke="${borderColor}" stroke-width="1"/>`;
+    <rect x="${pos.x}" y="${buttonY}" width="${buttonWidth}" height="${buttonSize}" rx="${radius}" fill="${bgColor}" stroke="${borderColor}" stroke-width="1"/>`;
 
     // Icon inside button
     if (iconSvg) {
       const iconSize = buttonSize * 0.6;
-      const offsetX = pos.x + (buttonSize - iconSize) / 2;
-      const offsetY = pos.y + (buttonSize - iconSize) / 2;
+      const offsetX = pos.x + (buttonWidth - iconSize) / 2;
+      const offsetY = buttonY + (buttonSize - iconSize) / 2;
 
       svg += `
     <!-- Icon -->
@@ -1918,6 +2123,16 @@ export class SVGRenderer {
 
   protected resolveChartColor(): string {
     return this.colorResolver.resolveColor('chart', this.renderTheme.primary);
+  }
+
+  protected resolveTextColor(): string {
+    const fallback = this.options.theme === 'dark' ? '#FFFFFF' : '#000000';
+    return this.colorResolver.resolveColor('text', fallback);
+  }
+
+  protected resolveMutedColor(): string {
+    const fallback = this.options.theme === 'dark' ? '#94A3B8' : '#64748B';
+    return this.colorResolver.resolveColor('muted', fallback);
   }
 
   protected getSemanticVariantColor(variant: string): string | undefined {

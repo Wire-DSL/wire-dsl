@@ -3,8 +3,8 @@
  * Shared completion logic for Monaco, VS Code, and other editors
  */
 
-import { COMPONENTS, LAYOUTS, PROPERTY_VALUES, PropertyMetadata } from './components';
-import type { DocumentScope } from './context-detection';
+import { COMPONENTS, LAYOUTS, PROPERTY_VALUES, PropertyMetadata } from './components.js';
+import type { DocumentScope } from './context-detection.js';
 
 export interface CompletionContext {
   line: string;
@@ -368,6 +368,14 @@ export function getScopeBasedCompletions(
           detail: 'Define custom component',
           documentation: 'define Component "Name" { ... }',
           insertText: 'define Component "${1:CustomName}" {\n\t$0\n}',
+        },
+        {
+          label: 'define layout',
+          kind: 'Keyword',
+          detail: 'Define custom layout',
+          documentation: 'define Layout "name" { layout stack { ... } }',
+          insertText:
+            'define Layout "${1:screen_default}" {\n\tlayout ${2:stack}(${3:direction: vertical}) {\n\t\tcomponent Children\n\t}\n}',
         },
       ];
       return topLevelCompletions;

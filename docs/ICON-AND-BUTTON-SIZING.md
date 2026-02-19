@@ -1,8 +1,9 @@
-# Icon and Button Sizing Guide
+﻿# Icon and Button Sizing Guide
 
 ## Overview
 
-Wire-DSL now supports flexible sizing for both Icon and IconButton components, matching the approach used by other design system components like Heading. All components now feature improved color palettes with reduced opacity and more subtle gray tones for better visual balance.
+Wire-DSL supports flexible sizing for `Icon`, `IconButton`, `Button`, `Input`, and `Select`.
+`Button`, `IconButton`, `Input`, and `Select` share the same control-height matrix by `size`, so they align naturally in horizontal stacks.
 
 ## Icon Component
 
@@ -13,7 +14,7 @@ Wire-DSL now supports flexible sizing for both Icon and IconButton components, m
 
 ### Size Reference
 
-| Size | Pixel Value | Use Case |
+| Size | Pixel Value (normal density) | Use Case |
 |------|-------------|----------|
 | `sm` | 14px | Navigation items, sidebar menus, compact layouts |
 | `md` | 18px | Stat cards, regular data displays |
@@ -24,8 +25,8 @@ Wire-DSL now supports flexible sizing for both Icon and IconButton components, m
 ```wire
 // Small icon - navigation
 layout stack(direction: horizontal, gap: 8) {
-  component Icon type: "home" size: "sm"
-  component Text content: "Dashboard"
+  component Icon icon: "home" size: "sm"
+  component Text text: "Dashboard"
 }
 
 // Medium icon - data card
@@ -34,12 +35,12 @@ layout stack(direction: horizontal, gap: 12) {
     component Label text: "Users"
     component Heading text: "2,543"
   }
-  component Icon type: "user" size: "md"
+  component Icon icon: "user" size: "md"
 }
 
 // Large icon - prominent display
 layout card(padding: 24) {
-  component Icon type: "star" size: "lg"
+  component Icon icon: "star" size: "lg"
   component Heading text: "Premium Feature"
 }
 ```
@@ -61,14 +62,16 @@ Icons use a grayish tone with controlled opacity:
 - `variant` (string, optional): Button style - `default` | `primary` | `danger` (default: `default`)
 - `size` (string, optional): Button size - `sm` | `md` | `lg` (default: `md`)
 - `disabled` (boolean, optional): Disable button state (default: false)
+- `labelSpace` (boolean, optional): Adds top offset to align with labeled controls
+- `padding` (enum, optional): Horizontal inset `none` | `xs` | `sm` | `md` | `lg` | `xl`
 
 ### Size Reference
 
-| Size | Pixel Value | Use Case |
+| Size | Pixel Value (normal density) | Use Case |
 |------|-------------|----------|
-| `sm` | 28px | Compact toolbars, list actions, dense layouts |
-| `md` | 32px | Standard buttons, common actions |
-| `lg` | 40px | Prominent actions, hero sections, primary CTAs |
+| `sm` | 36px | Compact toolbars, list actions, dense layouts |
+| `md` | 40px | Standard buttons, common actions |
+| `lg` | 48px | Prominent actions, hero sections, primary CTAs |
 
 ### Variants
 
@@ -121,6 +124,8 @@ Buttons now also support sizing options:
 - `text` (string, required): Button label
 - `variant` (string, optional): Style - `primary` | `secondary` | `success` | `warning` | `danger` | `info` (default: `primary`)
 - `size` (string, optional): Button size - `sm` | `md` | `lg` (default: `md`)
+- `labelSpace` (boolean, optional): Adds top offset to align with labeled controls
+- `padding` (enum, optional): Horizontal inset `none` | `xs` | `sm` | `md` | `lg` | `xl`
 
 ### Size Reference
 
@@ -155,6 +160,9 @@ component Button text: "Create User" variant: "primary" size: "md"
 
 // Large call-to-action
 component Button text: "Get Started" variant: "primary" size: "lg"
+
+// Align with labeled inputs in the same horizontal stack
+component Button text: "Save" size: "md" labelSpace: true padding: "md"
 ```
 
 ---
@@ -249,14 +257,14 @@ If you have existing Wire files with icons and buttons:
 
 **Before (no sizing):**
 ```wire
-component Icon type: "home"
+component Icon icon: "home"
 component IconButton icon: "plus" variant: "primary"
 component Button text: "Submit" variant: "primary"
 ```
 
 **After (with sizing):**
 ```wire
-component Icon type: "home" size: "sm"
+component Icon icon: "home" size: "sm"
 component IconButton icon: "plus" variant: "primary" size: "md"
 component Button text: "Submit" variant: "primary" size: "md"
 ```
@@ -270,9 +278,10 @@ All existing files continue to work (using `md` as default), but adding explicit
 1. **Use appropriate sizes**: `sm` for dense layouts, `lg` for emphasis
 2. **Match icon sizes**: Keep related icons at the same size for consistency
 3. **Color variants**: Use primary for main actions, default for secondary
-4. **SidebarMenu icons**: Always include icons for navigation menus
-5. **IconButton combinations**: Use size `sm` for multiple buttons in a row
-6. **Accessibility**: Maintain sufficient contrast (all defaults meet WCAG AA)
+4. **Control alignment**: use `labelSpace: true` on `Button`/`IconButton` beside labeled `Input`/`Select`
+5. **Horizontal tuning**: use `padding` to widen button hit area without changing control height
+6. **SidebarMenu icons**: include icons where navigation clarity matters
+7. **Accessibility**: maintain sufficient contrast (all defaults meet WCAG AA)
 
 ---
 

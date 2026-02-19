@@ -7,9 +7,27 @@ const ICON_SIZES_BY_DENSITY: Record<DensityLevel, Record<string, number>> = {
 };
 
 const ICON_BUTTON_SIZES_BY_DENSITY: Record<DensityLevel, Record<string, number>> = {
-  compact: { sm: 24, md: 28, lg: 32 },
-  normal: { sm: 28, md: 32, lg: 40 },
-  comfortable: { sm: 32, md: 40, lg: 48 },
+  compact: { sm: 20, md: 24, lg: 32 },
+  normal: { sm: 24, md: 32, lg: 40 },
+  comfortable: { sm: 28, md: 40, lg: 48 },
+};
+
+const CONTROL_HEIGHTS_BY_DENSITY: Record<DensityLevel, Record<string, number>> = {
+  compact: { sm: 28, md: 32, lg: 36 },
+  normal: { sm: 36, md: 40, lg: 48 },
+  comfortable: { sm: 40, md: 48, lg: 56 },
+};
+
+const ACTION_CONTROL_HEIGHTS_BY_DENSITY: Record<DensityLevel, Record<string, number>> = {
+  compact: { sm: 20, md: 24, lg: 32 },
+  normal: { sm: 24, md: 32, lg: 40 },
+  comfortable: { sm: 28, md: 40, lg: 48 },
+};
+
+const CONTROL_PADDING_BY_DENSITY: Record<DensityLevel, Record<string, number>> = {
+  compact: { none: 0, xs: 4, sm: 8, md: 10, lg: 14, xl: 18 },
+  normal: { none: 0, xs: 6, sm: 10, md: 14, lg: 18, xl: 24 },
+  comfortable: { none: 0, xs: 8, sm: 12, md: 16, lg: 22, xl: 28 },
 };
 
 export function resolveIconSize(size?: string, density: DensityLevel = 'normal'): number {
@@ -20,4 +38,22 @@ export function resolveIconSize(size?: string, density: DensityLevel = 'normal')
 export function resolveIconButtonSize(size?: string, density: DensityLevel = 'normal'): number {
   const map = ICON_BUTTON_SIZES_BY_DENSITY[density] || ICON_BUTTON_SIZES_BY_DENSITY.normal;
   return map[size || 'md'] || map.md;
+}
+
+export function resolveControlHeight(size?: string, density: DensityLevel = 'normal'): number {
+  const map = CONTROL_HEIGHTS_BY_DENSITY[density] || CONTROL_HEIGHTS_BY_DENSITY.normal;
+  return map[size || 'md'] || map.md;
+}
+
+export function resolveActionControlHeight(size?: string, density: DensityLevel = 'normal'): number {
+  const map = ACTION_CONTROL_HEIGHTS_BY_DENSITY[density] || ACTION_CONTROL_HEIGHTS_BY_DENSITY.normal;
+  return map[size || 'md'] || map.md;
+}
+
+export function resolveControlHorizontalPadding(
+  padding?: string,
+  density: DensityLevel = 'normal'
+): number {
+  const map = CONTROL_PADDING_BY_DENSITY[density] || CONTROL_PADDING_BY_DENSITY.normal;
+  return map[padding || 'md'] ?? map.md;
 }

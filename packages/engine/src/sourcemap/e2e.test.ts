@@ -86,7 +86,7 @@ describe('SourceMap E2E Integration', () => {
           }
           
           screen Analytics {
-            layout split(sidebar: 260, gap: md) {
+            layout split(left: 260, gap: md) {
               layout stack(gap: md, padding: lg) {
                 component Heading text: "Navigation"
                 component Button text: "Home"
@@ -306,7 +306,7 @@ describe('SourceMap E2E Integration', () => {
       const code = `
         project "Nested" {
           screen Main {
-            layout split(sidebar: 260) {
+            layout split(left: 260) {
               layout stack(gap: md) {
                 layout panel(padding: lg) {
                   layout stack(gap: sm) {
@@ -438,7 +438,7 @@ describe('SourceMap E2E Integration', () => {
               layout grid(columns: 12) {
                 component Text text: "Grid" span: 12
               }
-              layout split(sidebar: 260) {
+              layout split(left: 260) {
                 component Text text: "Left"
                 component Text text: "Right"
               }

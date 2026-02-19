@@ -1,4 +1,5 @@
 import { writeFile, mkdir } from 'fs/promises';
+import path from 'path';
 
 /**
  * Save SVG string to file
@@ -6,7 +7,6 @@ import { writeFile, mkdir } from 'fs/promises';
  * @param outputPath Path where to save the file
  */
 export async function exportSVG(svg: string, outputPath: string): Promise<void> {
-  const path = require('path');
   const outputDir = path.dirname(outputPath);
   await mkdir(outputDir, { recursive: true }).catch(() => {});
   await writeFile(outputPath, svg, 'utf8');

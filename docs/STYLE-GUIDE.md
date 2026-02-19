@@ -1,4 +1,4 @@
-# Style Configuration Guide
+﻿# Style Configuration Guide
 
 Complete guide to the Wire-DSL style system for establishing visual consistency across wireframes.
 
@@ -168,7 +168,7 @@ project "MyApp" {
   screen Dashboard {
     layout stack(direction: vertical, gap: lg) {  // Explicitly use 24px instead
       component Heading text: "Title"
-      component Text content: "Content"
+      component Text text: "Content"
     }
   }
 }
@@ -458,7 +458,7 @@ project "ECommerceStore" {
           layout card(padding: lg, gap: md, radius: lg, border: true) {
             component Image placeholder: "square" height: 250
             component Heading text: "Product 1"
-            component Text content: "High quality product"
+            component Text text: "High quality product"
             component Button text: "View Details"
           }
         }
@@ -466,7 +466,7 @@ project "ECommerceStore" {
           layout card(padding: lg, gap: md, radius: lg, border: true) {
             component Image placeholder: "square" height: 250
             component Heading text: "Product 2"
-            component Text content: "Best seller"
+            component Text text: "Best seller"
             component Button text: "View Details"
           }
         }
@@ -474,7 +474,7 @@ project "ECommerceStore" {
           layout card(padding: lg, gap: md, radius: lg, border: true) {
             component Image placeholder: "square" height: 250
             component Heading text: "Product 3"
-            component Text content: "New arrival"
+            component Text text: "New arrival"
             component Button text: "View Details"
           }
         }

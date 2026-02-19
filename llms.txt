@@ -1,0 +1,30 @@
+# Wire-DSL
+
+> Declarative DSL for creating interactive wireframes using code. Write `.wire` files and render to SVG, PNG, or PDF.
+> 30 UI components | Containers: Stack, Grid, Split, Panel, Card | 287 Feather Icons
+
+Wire-DSL uses a block-declarative syntax. A project contains screens; each screen has exactly one root layout; layouts contain components or other nested layouts. No absolute positioning — all structure is defined through composable containers.
+
+## Reference
+
+- [DSL Syntax](docs/DSL-SYNTAX.md): Language grammar — project structure, style/color tokens, all layout types (stack, grid, split, panel, card), component syntax, custom definitions (`define Component`, `define Layout`), `prop_*` bindings, validation rules, design principles
+- [Components Reference](docs/COMPONENTS-REFERENCE.md): All 30 UI components with properties and examples — Text, Input, Button, Navigation, Data, Media, Display, Info, and Modal groups
+- [Containers Reference](docs/CONTAINERS-REFERENCE.md): Layout containers with composition patterns, alignment options, best practices, and user-defined layouts
+- [Icons Guide](docs/ICONS-GUIDE.md): 287 Feather Icons available for `Icon`, `IconButton`, `Topbar`, `StatCard`, and `Image` components — full alphabetical list included
+
+## CLI
+
+- [wire render](docs/CLI-REFERENCE.md): Export `.wire` files to SVG, PNG, or PDF; `--screen` to target a specific screen; `--watch` for live reload; multi-screen export handling
+
+## Examples
+
+- [Admin Dashboard](examples/admin-dashboard.wire): Split layout with sidebar nav, multi-screen (list + detail + create form), grid with search/action bar
+- [Analytics Dashboard](examples/analytics-dashboard.wire): Nested split + grid, multiple chart types, alerts, tabs, filters panel
+- [Simple Dashboard](examples/simple-dashboard.wire): Grid of stat cards + chart + table, minimal structure
+- [Form Example](examples/form-example.wire): All input components — Input, Textarea, Select, Checkbox, Radio, Toggle — with button row
+- [Card & StatCard Demo](examples/card-and-stat-card-demo.wire): Product cards, profile card, stat card grid — multi-screen
+- [Mobile Demo](examples/mobile-demo.wire): `device: "mobile"` target for 375px viewport, single-column layout
+
+## Optional
+
+- [llms-full.txt](llms-full.txt): All documentation concatenated into a single file — for LLMs with large context windows that prefer one file over multiple links

@@ -1,4 +1,4 @@
-# Containers & Layouts Reference
+﻿# Containers & Layouts Reference
 
 Complete guide to container types (layouts) for organizing content in Wire-DSL wireframes.
 
@@ -31,7 +31,7 @@ Arrange elements vertically or horizontally with uniform spacing. The most commo
 ```
 layout stack(direction: vertical, gap: md, padding: lg) {
   component Heading text: "Title"
-  component Text content: "Content"
+  component Text text: "Content"
   component Button text: "Action"
 }
 ```
@@ -106,19 +106,19 @@ Buttons group on the right with their natural width, typical pattern for form na
 **Icon Alignment Examples**:
 ```
 layout stack(direction: horizontal, gap: 8, align: "left") {
-  component Icon type: "home"
-  component Icon type: "search"
-  component Icon type: "settings"
+  component Icon icon: "home"
+  component Icon icon: "search"
+  component Icon icon: "settings"
 }
 
 layout stack(direction: horizontal, gap: 8, align: "center") {
-  component Icon type: "heart"
-  component Icon type: "star"
+  component Icon icon: "heart"
+  component Icon icon: "star"
 }
 
 layout stack(direction: horizontal, gap: 8, align: "right") {
-  component Icon type: "download"
-  component Icon type: "share"
+  component Icon icon: "download"
+  component Icon icon: "share"
 }
 ```
 
@@ -126,7 +126,7 @@ layout stack(direction: horizontal, gap: 8, align: "right") {
 ```
 layout stack(direction: vertical, gap: lg, padding: xl) {
   component Heading text: "Welcome"
-  component Text content: "Get started with our platform"
+  component Text text: "Get started with our platform"
   component Button text: "Sign Up" variant: primary
 }
 ```
@@ -223,7 +223,7 @@ layout grid(columns: 12, gap: md) {
   cell span: 9 {
     layout stack(gap: md) {
       component Heading text: "Main Content"
-      component Text content: "Dashboard content goes here"
+      component Text text: "Dashboard content goes here"
     }
   }
 }
@@ -349,7 +349,7 @@ Group related content with visual separation. Ideal for creating sectioned conte
 
 ```
 layout panel(padding: md) {
-  component Text content: "Panel content"
+  component Text text: "Panel content"
 }
 ```
 
@@ -359,7 +359,7 @@ Or with nested stack:
 layout panel(padding: lg) {
   layout stack(gap: md) {
     component Heading text: "Panel Title"
-    component Text content: "Panel content"
+    component Text text: "Panel content"
   }
 }
 ```
@@ -376,7 +376,7 @@ layout panel(padding: lg) {
 **Single Component Panel**:
 ```
 layout panel(padding: md) {
-  component Text content: "Important information goes here"
+  component Text text: "Important information goes here"
 }
 ```
 
@@ -385,9 +385,9 @@ layout panel(padding: md) {
 layout panel(padding: lg) {
   layout stack(gap: md) {
     component Heading text: "User Information"
-    component Text content: "Name: John Doe"
-    component Text content: "Email: john@example.com"
-    component Text content: "Role: Administrator"
+    component Text text: "Name: John Doe"
+    component Text text: "Email: john@example.com"
+    component Text text: "Role: Administrator"
   }
 }
 ```
@@ -428,7 +428,7 @@ Create self-contained content cards. Ideal for product displays, user profiles, 
 layout card(padding: lg, gap: md, radius: md, border: true) {
   component Image placeholder: "square" height: 250
   component Heading text: "Card Title"
-  component Text content: "Card description"
+  component Text text: "Card description"
   component Button text: "Action"
 }
 ```
@@ -456,7 +456,7 @@ layout card(padding: lg, gap: md, radius: md, border: true) {
 layout card(padding: md, gap: md, radius: lg, border: true) {
   component Image placeholder: "square" height: 200
   component Heading text: "Premium Laptop"
-  component Text content: "High-performance with latest specs"
+  component Text text: "High-performance with latest specs"
   component Badge text: "In Stock" variant: success
   layout stack(direction: horizontal, gap: sm) {
     component Button text: "Buy" variant: primary
@@ -470,8 +470,8 @@ layout card(padding: md, gap: md, radius: lg, border: true) {
 layout card(padding: lg, gap: md, radius: md) {
   component Image placeholder: "square"
   component Heading text: "John Doe"
-  component Text content: "Senior Software Engineer"
-  component Text content: "john@example.com"
+  component Text text: "Senior Software Engineer"
+  component Text text: "john@example.com"
   component Divider
   layout stack(direction: horizontal, gap: sm) {
     component Button text: "Message"
@@ -485,7 +485,7 @@ layout card(padding: lg, gap: md, radius: md) {
 layout card(padding: md, gap: md, radius: md, border: true) {
   component Image placeholder: "landscape" height: 180
   component Heading text: "Getting Started with Wire-DSL"
-  component Text content: "Learn how to create interactive wireframes with Wire-DSL in 5 minutes"
+  component Text text: "Learn how to create interactive wireframes with Wire-DSL in 5 minutes"
   component Badge text: "Tutorial"
   component Link text: "Read More"
 }
@@ -494,9 +494,9 @@ layout card(padding: md, gap: md, radius: md, border: true) {
 **Feature Showcase**:
 ```
 layout card(padding: lg, gap: lg, radius: lg, border: false) {
-  component Icon type: "star"
+  component Icon icon: "star"
   component Heading text: "Premium Features"
-  component Text content: "Access all premium features with unlimited usage"
+  component Text text: "Access all premium features with unlimited usage"
   component List items: "Unlimited projects,Team collaboration,Advanced exports,Priority support"
   component Button text: "Upgrade Now" variant: primary
 }
@@ -565,6 +565,44 @@ layout panel(padding: lg) {
   }
 }
 ```
+
+---
+
+## User-Defined Layouts
+
+Besides built-in containers (`stack`, `grid`, `split`, `panel`, `card`), you can define reusable layouts:
+
+```wire
+define Layout "screen_default" {
+  layout split(sidebar: prop_sidebar) {
+    component SidebarMenu
+      items: "Home,Users,Reports"
+      active: prop_active
+    component Children
+  }
+}
+```
+
+Usage:
+
+```wire
+screen Main {
+  layout screen_default(sidebar: 220, active: 1) {
+    layout stack(gap: md) {
+      component Heading text: "Dashboard"
+    }
+  }
+}
+```
+
+Rules:
+- `define Layout` name must match `^[a-z][a-z0-9_]*$`
+- definition body must be one root `layout`
+- definition must contain exactly one `component Children`
+- each layout invocation must include exactly one child block
+- `component Children` cannot be used outside `define Layout`
+
+`prop_*` bindings in layout params/properties are resolved from invocation args. Missing required args produce semantic errors; missing optional args are omitted with warnings.
 
 ---
 

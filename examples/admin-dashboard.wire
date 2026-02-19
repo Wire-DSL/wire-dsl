@@ -16,7 +16,7 @@ project "Admin Dashboard" {
 
       layout stack(direction: vertical, gap: lg, padding: lg) {
         component Heading text: "Users"
-        component Text content: "Manage system users"
+        component Text text: "Manage system users"
 
         layout grid(columns: 12, gap: md) {
           cell span: 8 {
@@ -37,12 +37,12 @@ project "Admin Dashboard" {
       component Breadcrumbs items: "Users,User Details"
       
       component Heading text: "User Details"
-      component Text content: "View and edit user information"
+      component Text text: "View and edit user information"
 
       layout panel(padding: lg) {
         layout stack(direction: vertical, gap: md) {
           component Heading text: "Account Status"
-          component Text content: "User account is active and in good standing"
+          component Text text: "User account is active and in good standing"
 
           component Textarea label: "Bio" placeholder: "User bio and notes..." rows: 4
 
@@ -66,7 +66,7 @@ project "Admin Dashboard" {
   screen UserCreate {
     layout stack(direction: vertical, gap: lg, padding: xl) {
       component Heading text: "Create New User"
-      component Text content: "Add a new user to the system"
+      component Text text: "Add a new user to the system"
 
       layout panel(padding: lg) {
         layout stack(direction: vertical, gap: md) {

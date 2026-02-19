@@ -7,6 +7,30 @@ Complete reference for all available components with detailed specifications, pr
 
 ---
 
+## Dynamic Custom Component Bindings
+
+Built-in components use static properties. Dynamic `prop_*` bindings apply when a component is inside `define Component` or `define Layout`.
+
+```wire
+define Component "MyMenu" {
+  component SidebarMenu
+    items: "Home,Users,Settings"
+    active: prop_active
+}
+
+screen Main {
+  layout stack {
+    component MyMenu active: 1
+  }
+}
+```
+
+If a binding argument is missing:
+- required target field: semantic error
+- optional target field: omitted + warning
+
+---
+
 ## Text Components
 
 ### Heading
@@ -17,6 +41,7 @@ Large, bold text for page titles and section headers.
 - `text` (string): The heading text
 - `level` (enum): Visual heading level - `h1` | `h2` | `h3` | `h4` | `h5` | `h6` (default: `h2`)
 - `spacing` (enum): Vertical inner spacing around heading text - `none` | `xs` | `sm` | `md` | `lg` | `xl` (optional)
+- `variant` (string): Color variant - `default` | built-ins (`primary`, `danger`, etc.) | custom key in `colors`
 
 **Example**:
 ```wire
@@ -24,6 +49,7 @@ component Heading text: "Dashboard" level: h1
 component Heading text: "User Management" level: h2
 component Heading text: "Section title" level: h3
 component Heading text: "Card Title" level: h4 spacing: none
+component Heading text: "Brand Title" variant: primary
 ```
 
 **Rendering**: Bold text with size based on `level`
@@ -73,11 +99,13 @@ Single-line text input field.
 **Properties**:
 - `label` (string): Field label
 - `placeholder` (string): Placeholder text
+- `size` (enum): Control size - `sm` | `md` | `lg` (default: `md`)
 
 **Example**:
 ```wire
 component Input label: "Email" placeholder: "you@example.com"
 component Input label: "Search" placeholder: "Type to search..."
+component Input label: "Compact" placeholder: "..." size: sm
 ```
 
 **Rendering**: Rectangular input box with border and optional label above
@@ -110,11 +138,13 @@ Dropdown selection field.
 **Properties**:
 - `label` (string): Field label
 - `items` (string, CSV): Comma-separated list of options
+- `size` (enum): Control size - `sm` | `md` | `lg` (default: `md`)
 
 **Example**:
 ```wire
 component Select label: "Role" items: "Admin,User,Guest"
 component Select label: "Status" items: "Active,Inactive,Pending"
+component Select label: "Size" items: "S,M,L" size: lg
 ```
 
 **Rendering**: Dropdown button with list of options
@@ -187,6 +217,10 @@ Clickable action button.
 **Properties**:
 - `text` (string): Button label
 - `variant` (string): Visual style - `default` | `primary` | `secondary` | `success` | `warning` | `danger` | `info` (default: `default`)
+- `size` (enum): `sm` | `md` | `lg` (default: `md`)
+- `labelSpace` (boolean): Adds top offset to align with labeled `Input`/`Select` controls
+- `padding` (enum): Horizontal inset - `none` | `xs` | `sm` | `md` | `lg` | `xl`
+- `block` (boolean): Expands button width in compatible horizontal layouts
 
 **Variants**:
 - `default`: Neutral button style
@@ -202,9 +236,11 @@ Clickable action button.
 component Button text: "Save" variant: primary
 component Button text: "Cancel" variant: secondary
 component Button text: "Delete" variant: danger
+component Button text: "Aligned" size: md labelSpace: true padding: md
 ```
 
 **Rendering**: Rectangular button with text, styled according to variant
+Size note: For action controls, `lg` aligns with the base `Input`/`Select` height.
 
 ---
 
@@ -213,19 +249,23 @@ component Button text: "Delete" variant: danger
 Button with icon instead of text.
 
 **Properties**:
-- `icon` (string): Icon name (e.g., "search", "menu", "close")
+- `icon` (enum): Icon name (from built-in icon catalog)
 - `size` (enum): `sm` | `md` | `lg` (default: `md`)
 - `variant` (enum): `default` | `primary` | `secondary` | `success` | `warning` | `danger` | `info`
 - `disabled` (boolean): disabled state (`true` | `false`, default: `false`)
+- `labelSpace` (boolean): Adds top offset to align with labeled form controls
+- `padding` (enum): Horizontal inset - `none` | `xs` | `sm` | `md` | `lg` | `xl`
 
 **Example**:
 ```wire
 component IconButton icon: "search" size: sm variant: default
 component IconButton icon: "menu" size: md variant: primary
 component IconButton icon: "settings" size: lg variant: info disabled: true
+component IconButton icon: "check" size: md labelSpace: true padding: md
 ```
 
 **Rendering**: Square button containing icon symbol
+Size note: Uses the same action size scale as `Button` and `Link`.
 
 ---
 
@@ -242,6 +282,10 @@ Top navigation bar/header.
 - `avatar` (boolean, optional): Show avatar circle on the right (`true`/`false`)
 - `user` (string, optional): User name or identifier for badge
 - `actions` (string, optional): Action items (comma-separated)
+- `variant` (string, optional): Accent color variant for left icon/actions (`default` or custom/built-in key)
+- `border` (boolean, optional): Draws container border (default: `false`)
+- `background` (boolean, optional): Draws container background fill (default: `false`)
+- `radius` (enum, optional): Corner radius - `none` | `sm` | `md` | `lg` | `xl` (default: `md`)
 
 **Example**:
 ```wire
@@ -250,6 +294,8 @@ component Topbar title: "Dashboard" subtitle: "Welcome back"
 component Topbar title: "Settings" user: "john_doe"
 component Topbar title: "Admin" actions: "Help,Logout"
 component Topbar title: "Workspace" subtitle: "Overview" icon: "menu" actions: "Help,Logout" user: "john_doe" avatar: true
+component Topbar title: "Workspace" icon: "menu" actions: "Save,Export" variant: primary
+component Topbar title: "Workspace" border: true background: true radius: lg
 ```
 
 **Rendering**: Horizontal bar at top of screen with optional left icon, title/subtitle, right actions, user badge, and avatar. When `user` is present, `actions` are shifted left to avoid overlap.
@@ -341,6 +387,15 @@ Data table with rows and columns.
 - `rowsMock` (number): Alias for `rows`
 - `mock` (string, CSV): Mock type by column position (for example: `"name,city,amount"`)
 - `random` (boolean): If `true`, mock values vary on each render (default: deterministic)
+- `pagination` (boolean): Enables pager controls
+- `pages` (number): Total page count when `pagination` is enabled
+- `paginationAlign` (enum): `left` | `center` | `right` (default: `right`)
+- `actions` (string, CSV): Action icon names (e.g. `"eye,edit,trash"`) rendered in right action column
+- `caption` (string): Footer caption text
+- `captionAlign` (enum): `left` | `center` | `right` (auto-default based on pagination alignment)
+- `border` (boolean): Draws the outer table border (default: `false`)
+- `background` (boolean): Draws outer table background fill (default: `false`)
+- `backround` (boolean): Alias accepted for backwards compatibility/typo tolerance
 
 **Example**:
 ```wire
@@ -349,9 +404,17 @@ component Table columns: "ID,Name,Email,Role" rows: 10
 component Table columns: "Date,Amount,Status,Notes" rows: 15
 component Table columns: "User,City,Amount" rows: 6 mock: "name,city,amount"
 component Table columns: "User,City,Amount" rows: 6 random: true
+component Table columns: "User,Status" rows: 5 actions: "eye,edit,trash" caption: "Show 1 - 5 of 20" pagination: true
+component Table columns: "User,Status" rows: 5 border: true background: true
 ```
 
 **Rendering**: Grid table with header row and mock data rows
+
+Footer behavior:
+- `caption` and `pagination` can render together
+- if `captionAlign` and `paginationAlign` resolve to the same side, both render (stacked) and a semantic warning is emitted
+- when `caption` or `pagination` is enabled, extra bottom spacing is reserved so footer content is not glued to the table edge
+- `actions` adds a right-aligned action column with icon buttons and empty header text
 
 ---
 
@@ -407,14 +470,16 @@ component Image placeholder: "icon" icon: "search" height: 120
 Icon symbol.
 
 **Properties**:
-- `type` (string): Icon identifier (e.g., "search", "star", "heart")
+- `type` (enum): Icon identifier (built-in icon catalog)
 - `size` (enum): `sm` | `md` | `lg` (default: `md`)
+- `variant` (string): Color variant (`default`, built-ins, or custom key in `colors`)
 
 **Example**:
 ```wire
 component Icon type: "search"
 component Icon type: "settings"
 component Icon type: "download"
+component Icon type: "home" variant: primary
 ```
 
 **Rendering**: Small icon symbol inline with text
@@ -482,14 +547,17 @@ Hyperlink text.
 **Properties**:
 - `text` (string): Link text
 - `variant` (string): Link color variant - `primary` | `secondary` | `success` | `warning` | `danger` | `info` (default: `primary`)
+- `size` (enum): `sm` | `md` | `lg` (default: `md`)
 
 **Example**:
 ```wire
 component Link text: "Click here" variant: primary
 component Link text: "Learn more" variant: info
+component Link text: "Read docs" variant: primary size: lg
 ```
 
 **Rendering**: Underlined text using the selected variant color
+Size note: Uses the same action size scale as `Button` and `IconButton`.
 
 ---
 

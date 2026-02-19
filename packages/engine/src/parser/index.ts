@@ -49,19 +49,23 @@ import type {
 // ============================================================================
 
 // Keywords
-const Project = createToken({ name: 'Project', pattern: /project/ });
-const Screen = createToken({ name: 'Screen', pattern: /screen/ });
-const Layout = createToken({ name: 'Layout', pattern: /layout/ });
-const Component = createToken({ name: 'Component', pattern: /component/ });
+const Project = createToken({ name: 'Project', pattern: /project\b/ });
+const Screen = createToken({ name: 'Screen', pattern: /screen\b/ });
+const Layout = createToken({ name: 'Layout', pattern: /layout\b/ });
+const Component = createToken({ name: 'Component', pattern: /component\b/ });
 const ComponentKeyword = createToken({
   name: 'ComponentKeyword',
   pattern: /Component\b/,
 });
-const Define = createToken({ name: 'Define', pattern: /define/ });
-const Style = createToken({ name: 'Style', pattern: /style/ });
-const Mocks = createToken({ name: 'Mocks', pattern: /mocks/ });
+const LayoutKeyword = createToken({
+  name: 'LayoutKeyword',
+  pattern: /Layout\b/,
+});
+const Define = createToken({ name: 'Define', pattern: /define\b/ });
+const Style = createToken({ name: 'Style', pattern: /style\b/ });
+const Mocks = createToken({ name: 'Mocks', pattern: /mocks\b/ });
 const Colors = createToken({ name: 'Colors', pattern: /colors(?=\s*\{)/ });
-const Cell = createToken({ name: 'Cell', pattern: /cell/ });
+const Cell = createToken({ name: 'Cell', pattern: /cell\b/ });
 
 // Punctuation
 const LCurly = createToken({ name: 'LCurly', pattern: /{/ });
@@ -122,6 +126,7 @@ const allTokens = [
   Project,
   Screen,
   Layout,
+  LayoutKeyword,
   ComponentKeyword,
   Component,
   Define,
@@ -163,6 +168,7 @@ class WireDSLParser extends CstParser {
     this.MANY(() => {
       this.OR([
         { ALT: () => this.SUBRULE(this.definedComponent) },
+        { ALT: () => this.SUBRULE(this.definedLayout) },
         { ALT: () => this.SUBRULE(this.styleDecl) },
         { ALT: () => this.SUBRULE(this.mocksDecl) },
         { ALT: () => this.SUBRULE(this.colorsDecl) },
@@ -236,6 +242,16 @@ class WireDSLParser extends CstParser {
       { ALT: () => this.SUBRULE(this.layout) },
       { ALT: () => this.SUBRULE(this.component) },
     ]);
+    this.CONSUME(RCurly);
+  });
+
+  // define Layout "ScreenShell" { layout split { ... } }
+  private definedLayout = this.RULE('definedLayout', () => {
+    this.CONSUME(Define);
+    this.CONSUME(LayoutKeyword, { LABEL: 'layoutKeyword' });
+    this.CONSUME(StringLiteral, { LABEL: 'layoutName' });
+    this.CONSUME(LCurly);
+    this.SUBRULE(this.layout);
     this.CONSUME(RCurly);
   });
 
@@ -329,6 +345,7 @@ export interface AST {
   mocks: Record<string, string>;
   colors: Record<string, string>;
   definedComponents: ASTDefinedComponent[];
+  definedLayouts: ASTDefinedLayout[];
   screens: ASTScreen[];
   _meta?: {
     nodeId: string;
@@ -403,6 +420,7 @@ class WireDSLVisitor extends BaseCstVisitor {
     const mocks: Record<string, string> = {};
     const colors: Record<string, string> = {};
     const definedComponents: ASTDefinedComponent[] = [];
+    const definedLayouts: ASTDefinedLayout[] = [];
     const screens: ASTScreen[] = [];
 
     if (ctx.styleDecl && ctx.styleDecl.length > 0) {
@@ -425,6 +443,11 @@ class WireDSLVisitor extends BaseCstVisitor {
         definedComponents.push(this.visit(comp));
       });
     }
+    if (ctx.definedLayout) {
+      ctx.definedLayout.forEach((layoutDef: any) => {
+        definedLayouts.push(this.visit(layoutDef));
+      });
+    }
 
     if (ctx.screen) {
       ctx.screen.forEach((screen: any) => {
@@ -439,6 +462,7 @@ class WireDSLVisitor extends BaseCstVisitor {
       mocks,
       colors,
       definedComponents,
+      definedLayouts,
       screens,
     };
   }
@@ -509,6 +533,16 @@ class WireDSLVisitor extends BaseCstVisitor {
 
     return {
       type: 'definedComponent',
+      name,
+      body,
+    };
+  }
+
+  definedLayout(ctx: any): ASTDefinedLayout {
+    const name = ctx.layoutName[0].image.slice(1, -1); // Remove quotes
+    const body = this.visit(ctx.layout[0]);
+    return {
+      type: 'definedLayout',
       name,
       body,
     };
@@ -679,6 +713,7 @@ class WireDSLVisitor extends BaseCstVisitor {
 
 class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
   private definedComponentNames = new Set<string>();
+  private definedLayoutNames = new Set<string>();
 
   constructor(sourceMapBuilder: SourceMapBuilder) {
     super();
@@ -691,6 +726,7 @@ class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
     const mocks: Record<string, string> = {};
     const colors: Record<string, string> = {};
     const definedComponents: ASTDefinedComponent[] = [];
+    const definedLayouts: ASTDefinedLayout[] = [];
     const screens: ASTScreen[] = [];
 
     // Capture tokens for project node
@@ -707,6 +743,7 @@ class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
       mocks: {},
       colors: {},
       definedComponents: [],  // Will be filled after push
+      definedLayouts: [],  // Will be filled after push
       screens: [],  // Will be filled after push
     };
 
@@ -743,6 +780,11 @@ class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
     if (ctx.definedComponent) {
       ctx.definedComponent.forEach((comp: any) => {
         ast.definedComponents.push(this.visit(comp));
+      });
+    }
+    if (ctx.definedLayout) {
+      ctx.definedLayout.forEach((layoutDef: any) => {
+        ast.definedLayouts.push(this.visit(layoutDef));
       });
     }
 
@@ -1079,6 +1121,41 @@ class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
     return ast;
   }
 
+  definedLayout(ctx: any): ASTDefinedLayout {
+    const name = ctx.layoutName[0].image.slice(1, -1); // Remove quotes
+    this.definedLayoutNames.add(name);
+
+    const tokens: CapturedTokens = {
+      keyword: ctx.Define[0],
+      name: ctx.layoutName[0],
+      body: ctx.RCurly[0],
+    };
+
+    const ast: ASTDefinedLayout = {
+      type: 'definedLayout',
+      name,
+      body: {} as any, // Will be filled after push
+    };
+
+    if (this.sourceMapBuilder) {
+      const nodeId = this.sourceMapBuilder.addNode(
+        'layout-definition',
+        tokens,
+        { name }
+      );
+      ast._meta = { nodeId };
+      this.sourceMapBuilder.pushParent(nodeId);
+    }
+
+    ast.body = this.visit(ctx.layout[0]);
+
+    if (this.sourceMapBuilder) {
+      this.sourceMapBuilder.popParent();
+    }
+
+    return ast;
+  }
+
   // Override styleDecl to capture style block in SourceMap
   styleDecl(ctx: any): Record<string, string> {
     const style: Record<string, string> = {};
@@ -1238,6 +1315,15 @@ export interface ParseWireDSLWithSourceMapOptions {
   includeSemanticWarnings?: boolean;
 }
 
+export interface ASTDefinedLayout {
+  type: 'definedLayout';
+  name: string;
+  body: ASTLayout;
+  _meta?: {
+    nodeId: string;
+  };
+}
+
 type SemanticComponentRules = {
   allowedProps: string[];
   requiredProps: string[];
@@ -1325,6 +1411,15 @@ function buildLayoutRulesFromMetadata(): Record<string, SemanticLayoutRules> {
 const BUILT_IN_COMPONENTS = new Set(Object.keys(COMPONENTS));
 const COMPONENT_RULES = buildComponentRulesFromMetadata();
 const LAYOUT_RULES = buildLayoutRulesFromMetadata();
+const BUILT_IN_LAYOUTS = new Set(Object.keys(LAYOUTS));
+
+function isPascalCaseIdentifier(name: string): boolean {
+  return /^[A-Z][A-Za-z0-9]*$/.test(name);
+}
+
+function isValidDefinedLayoutName(name: string): boolean {
+  return /^[a-z][a-z0-9_]*$/.test(name);
+}
 
 function toFallbackRange(): CodeRange {
   return {
@@ -1429,6 +1524,18 @@ function isBooleanLike(value: string | number): boolean {
   return normalized === 'true' || normalized === 'false';
 }
 
+function parseBooleanLike(value: string | number, fallback: boolean = false): boolean {
+  if (typeof value === 'number') {
+    if (value === 1) return true;
+    if (value === 0) return false;
+    return fallback;
+  }
+  const normalized = String(value).trim().toLowerCase();
+  if (normalized === 'true') return true;
+  if (normalized === 'false') return false;
+  return fallback;
+}
+
 function getPropertyRange(
   entry: SourceMapEntry | undefined,
   propertyName: string,
@@ -1456,8 +1563,10 @@ function validateSemanticDiagnostics(ast: AST, sourceMap: SourceMapEntry[]): Par
   const diagnostics: ParseError[] = [];
   const sourceMapByNodeId = new Map(sourceMap.map((entry) => [entry.nodeId, entry]));
   const definedComponents = new Set(ast.definedComponents.map((dc) => dc.name));
+  const definedLayouts = new Set(ast.definedLayouts.map((dl) => dl.name));
 
-  const emitWarning = (
+  const emitDiagnostic = (
+    severity: 'warning' | 'error',
     message: string,
     code: string,
     range: CodeRange,
@@ -1467,7 +1576,7 @@ function validateSemanticDiagnostics(ast: AST, sourceMap: SourceMapEntry[]): Par
     diagnostics.push({
       message,
       code,
-      severity: 'warning',
+      severity,
       phase: 'semantic',
       range,
       nodeId,
@@ -1475,10 +1584,59 @@ function validateSemanticDiagnostics(ast: AST, sourceMap: SourceMapEntry[]): Par
     });
   };
 
-  const checkComponent = (component: ASTComponent) => {
+  const emitWarning = (
+    message: string,
+    code: string,
+    range: CodeRange,
+    nodeId?: string,
+    suggestion?: string
+  ) => emitDiagnostic('warning', message, code, range, nodeId, suggestion);
+
+  const emitError = (
+    message: string,
+    code: string,
+    range: CodeRange,
+    nodeId?: string,
+    suggestion?: string
+  ) => emitDiagnostic('error', message, code, range, nodeId, suggestion);
+
+  const countChildrenSlots = (layout: ASTLayout): number => {
+    let count = 0;
+    for (const child of layout.children) {
+      if (child.type === 'component') {
+        if (child.componentType === 'Children') count += 1;
+      } else if (child.type === 'layout') {
+        count += countChildrenSlots(child);
+      } else if (child.type === 'cell') {
+        for (const cellChild of child.children) {
+          if (cellChild.type === 'component') {
+            if (cellChild.componentType === 'Children') count += 1;
+          } else if (cellChild.type === 'layout') {
+            count += countChildrenSlots(cellChild);
+          }
+        }
+      }
+    }
+    return count;
+  };
+
+  const checkComponent = (component: ASTComponent, insideDefinedLayout: boolean) => {
     const nodeId = component._meta?.nodeId;
     const entry = nodeId ? sourceMapByNodeId.get(nodeId) : undefined;
     const componentType = component.componentType;
+
+    if (componentType === 'Children') {
+      if (!insideDefinedLayout) {
+        emitError(
+          'Component "Children" can only be used inside a define Layout body.',
+          'CHILDREN_SLOT_OUTSIDE_LAYOUT_DEFINITION',
+          entry?.nameRange || entry?.range || toFallbackRange(),
+          nodeId,
+          'Move this placeholder into a define Layout block.',
+        );
+      }
+      return;
+    }
 
     if (!BUILT_IN_COMPONENTS.has(componentType) && !definedComponents.has(componentType)) {
       emitWarning(
@@ -1527,7 +1685,11 @@ function validateSemanticDiagnostics(ast: AST, sourceMap: SourceMapEntry[]): Par
       const enumValues = rules.enumProps?.[propName];
       if (enumValues) {
         const normalizedValue = String(propValue);
-        if (!enumValues.includes(normalizedValue)) {
+        const isCustomVariantFromColors =
+          propName === 'variant' &&
+          !enumValues.includes(normalizedValue) &&
+          Object.prototype.hasOwnProperty.call(ast.colors || {}, normalizedValue);
+        if (!enumValues.includes(normalizedValue) && !isCustomVariantFromColors) {
           emitWarning(
             `Invalid value "${normalizedValue}" for property "${propName}" in component "${componentType}".`,
             'COMPONENT_INVALID_PROPERTY_VALUE',
@@ -1548,12 +1710,51 @@ function validateSemanticDiagnostics(ast: AST, sourceMap: SourceMapEntry[]): Par
         );
       }
     }
+
+    if (componentType === 'Table') {
+      const hasCaption = String(component.props.caption || '').trim().length > 0;
+      const hasPagination = parseBooleanLike(component.props.pagination ?? 'false', false);
+      if (hasCaption && hasPagination) {
+        const rawPaginationAlign = String(component.props.paginationAlign || 'right');
+        const paginationAlign =
+          rawPaginationAlign === 'left' || rawPaginationAlign === 'center' || rawPaginationAlign === 'right'
+            ? rawPaginationAlign
+            : 'right';
+        const rawCaptionAlign = String(component.props.captionAlign || '');
+        const captionAlign =
+          rawCaptionAlign === 'left' || rawCaptionAlign === 'center' || rawCaptionAlign === 'right'
+            ? rawCaptionAlign
+            : paginationAlign === 'left'
+              ? 'right'
+              : 'left';
+        if (captionAlign === paginationAlign) {
+          emitWarning(
+            `Table footer collision: "captionAlign" and "paginationAlign" both resolve to "${captionAlign}".`,
+            'TABLE_FOOTER_ALIGNMENT_COLLISION',
+            entry?.range || toFallbackRange(),
+            nodeId,
+            'Use different alignments to avoid visual overlap.',
+          );
+        }
+      }
+    }
   };
 
-  const checkLayout = (layout: ASTLayout) => {
+  const checkLayout = (layout: ASTLayout, insideDefinedLayout: boolean) => {
     const nodeId = layout._meta?.nodeId;
     const entry = nodeId ? sourceMapByNodeId.get(nodeId) : undefined;
     const rules = LAYOUT_RULES[layout.layoutType];
+    const isDefinedLayoutUsage = definedLayouts.has(layout.layoutType);
+
+    if (isDefinedLayoutUsage && layout.children.length !== 1) {
+      emitError(
+        `Layout "${layout.layoutType}" expects exactly one child for its Children slot.`,
+        'LAYOUT_DEFINITION_CHILDREN_ARITY',
+        entry?.bodyRange || entry?.range || toFallbackRange(),
+        nodeId,
+        'Provide exactly one nested child block when using this layout.',
+      );
+    }
 
     if (layout.children.length === 0) {
       emitWarning(
@@ -1565,7 +1766,7 @@ function validateSemanticDiagnostics(ast: AST, sourceMap: SourceMapEntry[]): Par
       );
     }
 
-    if (!rules) {
+    if (!rules && !isDefinedLayoutUsage) {
       emitWarning(
         `Layout type "${layout.layoutType}" is not recognized by semantic validation rules.`,
         'LAYOUT_UNKNOWN_TYPE',
@@ -1573,7 +1774,7 @@ function validateSemanticDiagnostics(ast: AST, sourceMap: SourceMapEntry[]): Par
         nodeId,
         `Use one of: ${Object.keys(LAYOUT_RULES).join(', ')}.`,
       );
-    } else {
+    } else if (rules) {
       const missingRequiredParams = getMissingRequiredNames(rules.requiredParams, layout.params);
       if (missingRequiredParams.length > 0) {
         emitWarning(
@@ -1589,6 +1790,17 @@ function validateSemanticDiagnostics(ast: AST, sourceMap: SourceMapEntry[]): Par
 
       const allowed = new Set(rules.allowedParams);
       for (const [paramName, paramValue] of Object.entries(layout.params)) {
+        if (layout.layoutType === 'split' && paramName === 'sidebar') {
+          emitError(
+            'Split parameter "sidebar" was removed. Use "left" or "right" instead.',
+            'LAYOUT_SPLIT_SIDEBAR_DEPRECATED',
+            getPropertyRange(entry, paramName, 'name'),
+            nodeId,
+            'Example: layout split(left: 260) { ... }',
+          );
+          continue;
+        }
+
         if (!allowed.has(paramName)) {
           emitWarning(
             `Parameter "${paramName}" is not recognized for layout "${layout.layoutType}".`,
@@ -1630,33 +1842,65 @@ function validateSemanticDiagnostics(ast: AST, sourceMap: SourceMapEntry[]): Par
           }
         }
 
-        if (layout.layoutType === 'split' && paramName === 'sidebar') {
-          const sidebar = Number(paramValue);
-          if (!Number.isFinite(sidebar) || sidebar <= 0) {
+        if (layout.layoutType === 'split' && (paramName === 'left' || paramName === 'right')) {
+          const splitSize = Number(paramValue);
+          if (!Number.isFinite(splitSize) || splitSize <= 0) {
             emitWarning(
-              'Split "sidebar" must be a positive number.',
-              'LAYOUT_SPLIT_SIDEBAR_INVALID',
+              `Split "${paramName}" must be a positive number. Falling back to 250.`,
+              'LAYOUT_SPLIT_WIDTH_INVALID',
               getPropertyRange(entry, paramName, 'value'),
               nodeId,
-              'Use a value like sidebar: 240.',
+              `Use a value like ${paramName}: 260.`,
             );
           }
+        }
+      }
+
+      if (layout.layoutType === 'split') {
+        const hasLeft = layout.params.left !== undefined;
+        const hasRight = layout.params.right !== undefined;
+        if (!hasLeft && !hasRight) {
+          emitError(
+            'Split layout requires exactly one fixed side width: "left" or "right".',
+            'LAYOUT_SPLIT_SIDE_REQUIRED',
+            entry?.nameRange || entry?.range || toFallbackRange(),
+            nodeId,
+            'Add either left: <number> or right: <number>.',
+          );
+        }
+        if (hasLeft && hasRight) {
+          emitError(
+            'Split layout accepts only one fixed side width: use either "left" or "right", not both.',
+            'LAYOUT_SPLIT_SIDE_CONFLICT',
+            entry?.nameRange || entry?.range || toFallbackRange(),
+            nodeId,
+            'Remove one of the two parameters.',
+          );
+        }
+        if (layout.children.length !== 2) {
+          emitError(
+            `Split layout requires exactly 2 children, received ${layout.children.length}.`,
+            'LAYOUT_SPLIT_CHILDREN_ARITY',
+            entry?.bodyRange || entry?.range || toFallbackRange(),
+            nodeId,
+            'Provide exactly two child blocks (left/right content).',
+          );
         }
       }
     }
 
     for (const child of layout.children) {
       if (child.type === 'component') {
-        checkComponent(child);
+        checkComponent(child, insideDefinedLayout);
       } else if (child.type === 'layout') {
-        checkLayout(child);
+        checkLayout(child, insideDefinedLayout);
       } else if (child.type === 'cell') {
-        checkCell(child);
+        checkCell(child, insideDefinedLayout);
       }
     }
   };
 
-  const checkCell = (cell: ASTCell) => {
+  const checkCell = (cell: ASTCell, insideDefinedLayout: boolean) => {
     const nodeId = cell._meta?.nodeId;
     const entry = nodeId ? sourceMapByNodeId.get(nodeId) : undefined;
 
@@ -1674,13 +1918,60 @@ function validateSemanticDiagnostics(ast: AST, sourceMap: SourceMapEntry[]): Par
     }
 
     for (const child of cell.children) {
-      if (child.type === 'component') checkComponent(child);
-      if (child.type === 'layout') checkLayout(child);
+      if (child.type === 'component') checkComponent(child, insideDefinedLayout);
+      if (child.type === 'layout') checkLayout(child, insideDefinedLayout);
     }
   };
 
+  for (const componentDef of ast.definedComponents) {
+    const nodeId = componentDef._meta?.nodeId;
+    const entry = nodeId ? sourceMapByNodeId.get(nodeId) : undefined;
+    if (!isPascalCaseIdentifier(componentDef.name)) {
+      emitWarning(
+        `Defined component "${componentDef.name}" should use PascalCase naming.`,
+        'COMPONENT_DEFINITION_NAME_STYLE',
+        entry?.nameRange || entry?.range || toFallbackRange(),
+        nodeId,
+        'Use a name like "MyComponent".',
+      );
+    }
+
+    if (componentDef.body.type === 'component') {
+      checkComponent(componentDef.body, false);
+    } else {
+      checkLayout(componentDef.body, false);
+    }
+  }
+
+  for (const layoutDef of ast.definedLayouts) {
+    const nodeId = layoutDef._meta?.nodeId;
+    const entry = nodeId ? sourceMapByNodeId.get(nodeId) : undefined;
+    if (!isValidDefinedLayoutName(layoutDef.name)) {
+      emitError(
+        `Defined layout "${layoutDef.name}" must match /^[a-z][a-z0-9_]*$/.`,
+        'LAYOUT_DEFINITION_INVALID_NAME',
+        entry?.nameRange || entry?.range || toFallbackRange(),
+        nodeId,
+        'Use names like "screen_default" or "appShell".',
+      );
+    }
+
+    const childrenSlotCount = countChildrenSlots(layoutDef.body);
+    if (childrenSlotCount !== 1) {
+      emitError(
+        `Defined layout "${layoutDef.name}" must contain exactly one "component Children" placeholder.`,
+        'LAYOUT_DEFINITION_CHILDREN_SLOT_COUNT',
+        entry?.bodyRange || entry?.range || toFallbackRange(),
+        nodeId,
+        'Add exactly one "component Children" in the layout body.',
+      );
+    }
+
+    checkLayout(layoutDef.body, true);
+  }
+
   ast.screens.forEach((screen) => {
-    checkLayout(screen.layout);
+    checkLayout(screen.layout, false);
   });
 
   return diagnostics;
@@ -1706,7 +1997,7 @@ export function parseWireDSL(input: string): AST {
   const ast = visitor.visit(cst);
   
   // Validate no circular references in component definitions
-  validateComponentDefinitionCycles(ast);
+  validateDefinitionCycles(ast);
   
   return ast;
 }
@@ -1788,7 +2079,7 @@ export function parseWireDSLWithSourceMap(
   
   // Validate no circular references in component definitions
   try {
-    validateComponentDefinitionCycles(ast);
+    validateDefinitionCycles(ast);
   } catch (error) {
     const projectEntry = sourceMap.find((entry) => entry.type === 'project');
     diagnostics.push({
@@ -1817,101 +2108,127 @@ export function parseWireDSLWithSourceMap(
 }
 
 /**
- * Validates that component definitions don't have circular references
- * Uses depth-first search to detect cycles in the component dependency graph
+ * Validates that component/layout definitions don't have circular references.
+ * Uses depth-first search over a unified graph:
+ * - Components depend on components/layouts referenced in their bodies.
+ * - Layouts depend on components/layouts referenced in their bodies.
  */
-function validateComponentDefinitionCycles(ast: AST): void {
-  if (!ast.definedComponents || ast.definedComponents.length === 0) {
+function validateDefinitionCycles(ast: AST): void {
+  if (
+    (!ast.definedComponents || ast.definedComponents.length === 0) &&
+    (!ast.definedLayouts || ast.definedLayouts.length === 0)
+  ) {
     return;
   }
 
   const components = new Map<string, ASTDefinedComponent>();
-  ast.definedComponents.forEach(comp => {
+  const layouts = new Map<string, ASTDefinedLayout>();
+  ast.definedComponents.forEach((comp) => {
     components.set(comp.name, comp);
   });
+  ast.definedLayouts.forEach((layoutDef) => {
+    layouts.set(layoutDef.name, layoutDef);
+  });
 
-  const visited = new Set<string>();
-  const recursionStack = new Set<string>();
+  type DefinitionKey = `component:${string}` | `layout:${string}`;
+  const makeComponentKey = (name: string): DefinitionKey => `component:${name}`;
+  const makeLayoutKey = (name: string): DefinitionKey => `layout:${name}`;
+  const displayKey = (key: DefinitionKey): string => key.split(':')[1];
+  const shouldTrackComponentDependency = (name: string): boolean =>
+    components.has(name) && !BUILT_IN_COMPONENTS.has(name);
+  const shouldTrackLayoutDependency = (name: string): boolean =>
+    layouts.has(name) && !BUILT_IN_LAYOUTS.has(name);
 
-  function getComponentDependencies(node: ASTLayout | ASTComponent): Set<string> {
-    const deps = new Set<string>();
+  const visited = new Set<DefinitionKey>();
+  const recursionStack = new Set<DefinitionKey>();
 
-    if (node.type === 'layout') {
-      const layout = node as ASTLayout;
-      if (layout.children) {
-        layout.children.forEach(child => {
-          if (child.type === 'component') {
-            const component = child as ASTComponent;
-            deps.add(component.componentType);
-          } else if (child.type === 'layout') {
-            const nested = getComponentDependencies(child);
-            nested.forEach(d => deps.add(d));
-          } else if (child.type === 'cell') {
-            const cell = child as ASTCell;
-            if (cell.children) {
-              cell.children.forEach(cellChild => {
-                if (cellChild.type === 'component') {
-                  deps.add((cellChild as ASTComponent).componentType);
-                } else if (cellChild.type === 'layout') {
-                  const nested = getComponentDependencies(cellChild);
-                  nested.forEach(d => deps.add(d));
-                }
-              });
+  const collectLayoutDependencies = (layout: ASTLayout, deps: Set<DefinitionKey>): void => {
+    if (shouldTrackLayoutDependency(layout.layoutType)) {
+      deps.add(makeLayoutKey(layout.layoutType));
+    }
+
+    for (const child of layout.children) {
+      if (child.type === 'component') {
+        if (shouldTrackComponentDependency(child.componentType)) {
+          deps.add(makeComponentKey(child.componentType));
+        }
+      } else if (child.type === 'layout') {
+        collectLayoutDependencies(child, deps);
+      } else if (child.type === 'cell') {
+        for (const cellChild of child.children) {
+          if (cellChild.type === 'component') {
+            if (shouldTrackComponentDependency(cellChild.componentType)) {
+              deps.add(makeComponentKey(cellChild.componentType));
             }
+          } else if (cellChild.type === 'layout') {
+            collectLayoutDependencies(cellChild, deps);
           }
-        });
-      }
-    }
-
-    return deps;
-  }
-
-  function hasCycle(componentName: string, path: string[] = []): string[] | null {
-    if (recursionStack.has(componentName)) {
-      // Found a cycle
-      const cycleStart = path.indexOf(componentName);
-      const cycle = path.slice(cycleStart).concat(componentName);
-      return cycle;
-    }
-
-    if (visited.has(componentName)) {
-      return null; // Already validated, no cycle from this path
-    }
-
-    const component = components.get(componentName);
-    if (!component) {
-      return null; // Not a defined component, skip
-    }
-
-    recursionStack.add(componentName);
-    const currentPath = [...path, componentName];
-
-    const dependencies = getComponentDependencies(component.body);
-
-    for (const dep of dependencies) {
-      const definedDep = components.has(dep);
-      if (definedDep) {
-        const cycle = hasCycle(dep, currentPath);
-        if (cycle) {
-          return cycle;
         }
       }
     }
+  };
 
-    recursionStack.delete(componentName);
-    visited.add(componentName);
+  const getDependencies = (key: DefinitionKey): Set<DefinitionKey> => {
+    const deps = new Set<DefinitionKey>();
+    if (key.startsWith('component:')) {
+      const name = key.slice('component:'.length);
+      const def = components.get(name);
+      if (!def) return deps;
+
+      if (def.body.type === 'component') {
+        if (shouldTrackComponentDependency(def.body.componentType)) {
+          deps.add(makeComponentKey(def.body.componentType));
+        }
+      } else {
+        collectLayoutDependencies(def.body, deps);
+      }
+      return deps;
+    }
+
+    const name = key.slice('layout:'.length);
+    const def = layouts.get(name);
+    if (!def) return deps;
+    collectLayoutDependencies(def.body, deps);
+    return deps;
+  };
+
+  const findCycle = (key: DefinitionKey, path: DefinitionKey[] = []): DefinitionKey[] | null => {
+    if (recursionStack.has(key)) {
+      const cycleStart = path.indexOf(key);
+      return path.slice(cycleStart).concat(key);
+    }
+
+    if (visited.has(key)) {
+      return null;
+    }
+
+    recursionStack.add(key);
+    const currentPath = [...path, key];
+    const dependencies = getDependencies(key);
+
+    for (const dep of dependencies) {
+      const cycle = findCycle(dep, currentPath);
+      if (cycle) return cycle;
+    }
+
+    recursionStack.delete(key);
+    visited.add(key);
     return null;
-  }
+  };
 
-  // Check each component for cycles
-  for (const [componentName] of components) {
+  const allDefinitions: DefinitionKey[] = [
+    ...Array.from(components.keys()).map(makeComponentKey),
+    ...Array.from(layouts.keys()).map(makeLayoutKey),
+  ];
+
+  for (const key of allDefinitions) {
     visited.clear();
     recursionStack.clear();
-    const cycle = hasCycle(componentName);
+    const cycle = findCycle(key);
     if (cycle) {
       throw new Error(
-        `Circular component definition detected: ${cycle.join(' → ')}\n` +
-        `Components cannot reference each other in a cycle.`
+        `Circular component definition detected: ${cycle.map(displayKey).join(' → ')}\n` +
+        `Components and layouts cannot reference each other in a cycle.`
       );
     }
   }
