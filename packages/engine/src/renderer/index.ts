@@ -43,7 +43,7 @@ const THEMES = {
     bg: '#F8FAFC',
     cardBg: '#FFFFFF',
     border: '#E2E8F0',
-    text: '#1E293B',
+    text: '#000000',
     textMuted: '#64748B',
     primary: '#3B82F6',
     primaryHover: '#2563EB',
@@ -53,7 +53,7 @@ const THEMES = {
     bg: '#0F172A',
     cardBg: '#1E293B',
     border: '#334155',
-    text: '#F1F5F9',
+    text: '#FFFFFF',
     textMuted: '#94A3B8',
     primary: '#60A5FA',
     primaryHover: '#3B82F6',
@@ -95,8 +95,7 @@ export class SVGRenderer {
       includeLabels: options?.includeLabels ?? true,
       screenName: options?.screenName,
     };
-    
-    this.renderTheme = THEMES[this.options.theme];
+
     this.colorResolver = new ColorResolver();
     this.buildParentContainerIndex();
 
@@ -109,6 +108,13 @@ export class SVGRenderer {
     if (ir.project.colors && Object.keys(ir.project.colors).length > 0) {
       this.colorResolver.setCustomColors(ir.project.colors);
     }
+
+    const themeDefaults = THEMES[this.options.theme];
+    this.renderTheme = {
+      ...themeDefaults,
+      text: this.resolveTextColor(),
+      textMuted: this.resolveMutedColor(),
+    };
   }
 
   /**
@@ -395,7 +401,9 @@ export class SVGRenderer {
     const bgColor = hasExplicitVariantColor
       ? this.hexToRgba(resolvedBase, 0.85)
       : 'rgba(226, 232, 240, 0.9)';
-    const textColor = hasExplicitVariantColor ? '#FFFFFF' : 'rgba(30, 41, 59, 0.85)';
+    const textColor = hasExplicitVariantColor
+      ? '#FFFFFF'
+      : this.hexToRgba(this.resolveTextColor(), 0.85);
     const borderColor = hasExplicitVariantColor
       ? this.hexToRgba(resolvedBase, 0.7)
       : 'rgba(100, 116, 139, 0.4)';
@@ -1775,7 +1783,9 @@ export class SVGRenderer {
       const itemY = pos.y + index * itemHeight;
       const isActive = index === activeIndex;
       const bgColor = isActive ? this.hexToRgba(accentColor, 0.15) : 'transparent';
-      const textColor = isActive ? this.hexToRgba(accentColor, 0.9) : 'rgba(30, 41, 59, 0.75)';
+      const textColor = isActive
+        ? this.hexToRgba(accentColor, 0.9)
+        : this.hexToRgba(this.resolveTextColor(), 0.75);
       const fontWeight = isActive ? '500' : '400';
 
       // Item background (only if active)
@@ -1796,7 +1806,7 @@ export class SVGRenderer {
           const iconY = itemY + (itemHeight - iconSize) / 2;
           svg += `
     <g transform="translate(${currentX}, ${iconY})">
-      <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="rgba(30, 41, 59, 0.6)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${this.hexToRgba(this.resolveMutedColor(), 0.9)}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         ${this.extractSvgContent(iconSvg)}
       </svg>
     </g>`;
@@ -1826,13 +1836,13 @@ export class SVGRenderer {
       // Fallback: render a placeholder with question mark
       return `<g${this.getDataNodeId(node)}>
     <!-- Icon not found: ${iconType} -->
-    <circle cx="${pos.x + pos.width / 2}" cy="${pos.y + pos.height / 2}" r="${Math.min(pos.width, pos.height) / 2 - 2}" fill="none" stroke="rgba(100, 116, 139, 0.4)" stroke-width="1"/>
-    <text x="${pos.x + pos.width / 2}" y="${pos.y + pos.height / 2 + 4}" font-family="system-ui, -apple-system, sans-serif" font-size="12" fill="rgba(100, 116, 139, 0.6)" text-anchor="middle">?</text>
+    <circle cx="${pos.x + pos.width / 2}" cy="${pos.y + pos.height / 2}" r="${Math.min(pos.width, pos.height) / 2 - 2}" fill="none" stroke="${this.hexToRgba(this.resolveMutedColor(), 0.4)}" stroke-width="1"/>
+    <text x="${pos.x + pos.width / 2}" y="${pos.y + pos.height / 2 + 4}" font-family="system-ui, -apple-system, sans-serif" font-size="12" fill="${this.hexToRgba(this.resolveMutedColor(), 0.7)}" text-anchor="middle">?</text>
   </g>`;
     }
 
     const iconSize = this.getIconSize(size);
-    const iconColor = 'rgba(30, 41, 59, 0.75)';
+    const iconColor = this.hexToRgba(this.resolveTextColor(), 0.75);
     const offsetX = pos.x + (pos.width - iconSize) / 2;
     const offsetY = pos.y + (pos.height - iconSize) / 2;
 
@@ -1859,7 +1869,9 @@ export class SVGRenderer {
     const bgColor = hasExplicitVariantColor
       ? this.hexToRgba(resolvedBase, 0.85)
       : 'rgba(226, 232, 240, 0.9)';
-    const iconColor = hasExplicitVariantColor ? '#FFFFFF' : 'rgba(30, 41, 59, 0.75)';
+    const iconColor = hasExplicitVariantColor
+      ? '#FFFFFF'
+      : this.hexToRgba(this.resolveTextColor(), 0.75);
     const borderColor = hasExplicitVariantColor
       ? this.hexToRgba(resolvedBase, 0.7)
       : 'rgba(100, 116, 139, 0.4)';
@@ -1918,6 +1930,16 @@ export class SVGRenderer {
 
   protected resolveChartColor(): string {
     return this.colorResolver.resolveColor('chart', this.renderTheme.primary);
+  }
+
+  protected resolveTextColor(): string {
+    const fallback = this.options.theme === 'dark' ? '#FFFFFF' : '#000000';
+    return this.colorResolver.resolveColor('text', fallback);
+  }
+
+  protected resolveMutedColor(): string {
+    const fallback = this.options.theme === 'dark' ? '#94A3B8' : '#64748B';
+    return this.colorResolver.resolveColor('muted', fallback);
   }
 
   protected getSemanticVariantColor(variant: string): string | undefined {

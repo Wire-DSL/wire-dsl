@@ -4,6 +4,7 @@ import { generateIR } from '../ir/index';
 import { calculateLayout } from '../layout/index';
 import { renderToSVG } from './index';
 import { SkeletonSVGRenderer } from './skeleton';
+import { SketchSVGRenderer } from './sketch';
 
 describe('SVG Renderer', () => {
   it('should render basic SVG', () => {
@@ -328,6 +329,31 @@ describe('SVG Renderer', () => {
     expect(svg).toContain('stroke="#AA5500"');
     expect(svg).toContain('rgba(170, 85, 0, 0.18)');
     expect(svg).toContain('rgba(170, 85, 0, 0.82)');
+  });
+
+  it('should apply text and muted colors from colors block', () => {
+    const input = `
+      project "SemanticTextOverrides" {
+        colors {
+          text: #101010
+          muted: #778899
+        }
+        screen Main {
+          layout stack {
+            component Heading text: "Title"
+            component Input label: "Email" placeholder: "user@example.com"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    expect(svg).toContain('fill="#101010"');
+    expect(svg).toContain('fill="#778899"');
   });
 
   it('should render Separate component as invisible spacer (no divider line)', () => {
@@ -864,6 +890,27 @@ describe('SVG Renderer', () => {
     const svg = renderToSVG(ir, layout, { theme: 'dark' });
 
     expect(svg).toContain('#0F172A'); // Dark theme background
+  });
+
+  it('should fallback text color to black in light theme and white in dark theme', () => {
+    const input = `
+      project "ThemeTextFallbacks" {
+        screen Main {
+          layout stack {
+            component Heading text: "Theme Text"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svgLight = renderToSVG(ir, layout, { theme: 'light' });
+    const svgDark = renderToSVG(ir, layout, { theme: 'dark' });
+
+    expect(svgLight).toContain('fill="#000000"');
+    expect(svgDark).toContain('fill="#FFFFFF"');
   });
 
   it('should respect custom dimensions', () => {
@@ -1613,6 +1660,30 @@ describe('Skeleton SVG Renderer', () => {
     expect(svg).not.toContain('>Click me<');
   });
 
+  it('should apply muted color override in skeleton renderer', () => {
+    const input = `
+      project "SkeletonMutedOverride" {
+        colors {
+          muted: #8899AA
+        }
+        screen Main {
+          layout stack {
+            component Select label: "Country" items: "AR,UY,CL"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+
+    const renderer = new SkeletonSVGRenderer(ir, layout);
+    const svg = renderer.render();
+
+    expect(svg).toContain('fill="#8899AA"');
+  });
+
   it('should render heading as gray block', () => {
     const input = `
       project "Test" {
@@ -1798,5 +1869,34 @@ describe('Skeleton SVG Renderer', () => {
     // Input should render as shape only (no placeholder text)
     expect(svg).toContain('<rect');  // Input box
     expect(svg).not.toContain('>Enter text<');  // Placeholder text should not appear
+  });
+});
+
+describe('Sketch SVG Renderer', () => {
+  it('should apply text and muted colors in sketch renderer', () => {
+    const input = `
+      project "SketchTextMutedOverrides" {
+        colors {
+          text: #222222
+          muted: #7A7A7A
+        }
+        screen Main {
+          layout stack {
+            component Heading text: "Sketch heading"
+            component Breadcrumbs items: "Home,Users"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+
+    const renderer = new SketchSVGRenderer(ir, layout);
+    const svg = renderer.render();
+
+    expect(svg).toContain('fill="#222222"');
+    expect(svg).toContain('fill="#7A7A7A"');
   });
 });

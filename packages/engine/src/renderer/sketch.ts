@@ -105,7 +105,7 @@ export class SketchSVGRenderer extends SVGRenderer {
       semanticBase !== undefined || this.colorResolver.hasColor(variant);
     const variantColor = hasExplicitVariantColor
       ? this.resolveVariantColor(variant, this.renderTheme.primary)
-      : '#2D3748';
+      : this.resolveTextColor();
     const borderColor = variantColor;
     const textColor = variantColor;
     const strokeWidth = 0.5;
@@ -138,7 +138,7 @@ export class SketchSVGRenderer extends SVGRenderer {
       semanticBase !== undefined || this.colorResolver.hasColor(variant);
     const variantColor = hasExplicitVariantColor
       ? this.resolveVariantColor(variant, this.renderTheme.primary)
-      : '#2D3748';
+      : this.resolveTextColor();
     const borderColor = variantColor;
     const textColor = variantColor;
     const badgeRadius = this.tokens.badge.radius === 'pill' ? pos.height / 2 : this.tokens.badge.radius;
@@ -173,7 +173,7 @@ export class SketchSVGRenderer extends SVGRenderer {
       semanticBase !== undefined || this.colorResolver.hasColor(variant);
     const variantColor = hasExplicitVariantColor
       ? this.resolveVariantColor(variant, this.renderTheme.primary)
-      : '#2D3748';
+      : this.resolveTextColor();
     const borderColor = variantColor;
     const iconColor = variantColor;
     const buttonSize = this.getIconButtonSize(size);
@@ -1277,7 +1277,7 @@ export class SketchSVGRenderer extends SVGRenderer {
       const itemY = pos.y + index * itemHeight;
       const isActive = index === activeIndex;
       const bgColor = isActive ? this.hexToRgba(accentColor, 0.15) : 'transparent';
-      const textColor = isActive ? accentColor : '#2D3748';
+      const textColor = isActive ? accentColor : this.resolveTextColor();
       const fontWeight = isActive ? '500' : '400';
 
       if (isActive) {
@@ -1313,16 +1313,16 @@ export class SketchSVGRenderer extends SVGRenderer {
       return `<g${this.getDataNodeId(node)}>
     <circle cx="${pos.x + pos.width / 2}" cy="${pos.y + pos.height / 2}"
             r="${Math.min(pos.width, pos.height) / 2 - 2}"
-            fill="none" stroke="#2D3748" stroke-width="0.5"
+            fill="none" stroke="${this.resolveMutedColor()}" stroke-width="0.5"
             filter="url(#sketch-rough)"/>
     <text x="${pos.x + pos.width / 2}" y="${pos.y + pos.height / 2 + 4}"
           font-family="${this.fontFamily}"
-          font-size="12" fill="#2D3748" text-anchor="middle">?</text>
+          font-size="12" fill="${this.resolveMutedColor()}" text-anchor="middle">?</text>
   </g>`;
     }
 
     const iconSize = this.getIconSize(size);
-    const iconColor = '#2D3748';
+    const iconColor = this.resolveTextColor();
     const offsetX = pos.x + (pos.width - iconSize) / 2;
     const offsetY = pos.y + (pos.height - iconSize) / 2;
 
