@@ -558,8 +558,8 @@ describe('Layout Engine', () => {
       .filter(([_, n]) => n.kind === 'component')
       .map(([id]) => layout[id])[0];
 
-    // Comfortable density = 48px height
-    expect(button.height).toBe(48);
+    // Comfortable density: Button uses action control height (md = 40px)
+    expect(button.height).toBe(40);
   });
 
   it('should use custom component dimensions', () => {

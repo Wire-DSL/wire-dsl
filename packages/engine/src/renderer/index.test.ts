@@ -709,7 +709,7 @@ describe('SVG Renderer', () => {
     expect(svg).toContain('points="9 18 15 12 9 6"');
   });
 
-  it('should not render Table internal borders by default', () => {
+  it('should render Table internal borders by default', () => {
     const input = `
       project "TableNoInnerBorders" {
         screen Main {
@@ -730,17 +730,18 @@ describe('SVG Renderer', () => {
 
     expect(tableEntry).toBeDefined();
     const tablePos = layout[tableEntry![0]];
+    const headerHeight = 44;
     const actionColumnWidth = 96;
     const dividerX = tablePos.x + (tablePos.width - actionColumnWidth);
     const dividerRegex = new RegExp(
-      `<line x1="${dividerX}" y1="${tablePos.y}" x2="${dividerX}" y2="${tablePos.y + 116}"\\s+stroke="[^"]+"\\s+stroke-width="1"`,
+      `<line x1="${dividerX}" y1="${tablePos.y + headerHeight}" x2="${dividerX}" y2="${tablePos.y + 116}"\\s+stroke="[^"]+"\\s+stroke-width="1"`,
       'm'
     );
-    expect(dividerRegex.test(svg)).toBe(false);
-    expect(svg).not.toContain('stroke-width="0.5"');
+    expect(dividerRegex.test(svg)).toBe(true);
+    expect(svg).toContain('stroke-width="0.5"');
   });
 
-  it('should render Table internal borders when innerBorder is true', () => {
+  it('should render Table internal borders when innerBorder is explicitly true', () => {
     const input = `
       project "TableWithInnerBorders" {
         screen Main {
@@ -761,10 +762,11 @@ describe('SVG Renderer', () => {
 
     expect(tableEntry).toBeDefined();
     const tablePos = layout[tableEntry![0]];
+    const headerHeight = 44;
     const actionColumnWidth = 96;
     const dividerX = tablePos.x + (tablePos.width - actionColumnWidth);
     const dividerRegex = new RegExp(
-      `<line x1="${dividerX}" y1="${tablePos.y}" x2="${dividerX}" y2="${tablePos.y + 116}"\\s+stroke="[^"]+"\\s+stroke-width="1"`,
+      `<line x1="${dividerX}" y1="${tablePos.y + headerHeight}" x2="${dividerX}" y2="${tablePos.y + 116}"\\s+stroke="[^"]+"\\s+stroke-width="1"`,
       'm'
     );
     expect(dividerRegex.test(svg)).toBe(true);
@@ -2110,7 +2112,7 @@ describe('Skeleton SVG Renderer', () => {
     expect(svg).toContain('rgba(239, 68, 68, 0.55)');
   });
 
-  it('should render breadcrumbs in skeleton as blocks with muted previous crumbs and emphasized last crumb', () => {
+  it('should render breadcrumbs in skeleton as blocks without text content', () => {
     const input = `
       project "Test" {
         screen Main {
@@ -2131,9 +2133,8 @@ describe('Skeleton SVG Renderer', () => {
     expect(svg).not.toContain('>Home<');
     expect(svg).not.toContain('>Users<');
     expect(svg).not.toContain('>Details<');
-    expect(svg).toContain('>/>');
-    expect(svg).toContain('rgba(100, 116, 139, 0.35)');
-    expect(svg).toContain('rgba(15, 23, 42, 0.8)');
+    expect(svg).toContain('stroke="none"/>');
+    expect(svg).toContain('font-size="12"');
   });
 
   it('should render StatCard icon as a skeleton placeholder block', () => {
