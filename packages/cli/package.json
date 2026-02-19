@@ -1,6 +1,6 @@
 {
   "name": "@wire-dsl/cli",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "description": "WireDSL CLI - Command-line tool for wireframe generation and validation",
   "type": "module",
   "exports": {
