@@ -1,4 +1,4 @@
-# Icon and Button Sizing Guide
+﻿# Icon and Button Sizing Guide
 
 ## Overview
 
@@ -25,8 +25,8 @@ Wire-DSL supports flexible sizing for `Icon`, `IconButton`, `Button`, `Input`, a
 ```wire
 // Small icon - navigation
 layout stack(direction: horizontal, gap: 8) {
-  component Icon type: "home" size: "sm"
-  component Text content: "Dashboard"
+  component Icon icon: "home" size: "sm"
+  component Text text: "Dashboard"
 }
 
 // Medium icon - data card
@@ -35,12 +35,12 @@ layout stack(direction: horizontal, gap: 12) {
     component Label text: "Users"
     component Heading text: "2,543"
   }
-  component Icon type: "user" size: "md"
+  component Icon icon: "user" size: "md"
 }
 
 // Large icon - prominent display
 layout card(padding: 24) {
-  component Icon type: "star" size: "lg"
+  component Icon icon: "star" size: "lg"
   component Heading text: "Premium Feature"
 }
 ```
@@ -257,14 +257,14 @@ If you have existing Wire files with icons and buttons:
 
 **Before (no sizing):**
 ```wire
-component Icon type: "home"
+component Icon icon: "home"
 component IconButton icon: "plus" variant: "primary"
 component Button text: "Submit" variant: "primary"
 ```
 
 **After (with sizing):**
 ```wire
-component Icon type: "home" size: "sm"
+component Icon icon: "home" size: "sm"
 component IconButton icon: "plus" variant: "primary" size: "md"
 component Button text: "Submit" variant: "primary" size: "md"
 ```

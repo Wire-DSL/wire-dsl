@@ -1,4 +1,4 @@
-# LLM Prompt Guide: Generating Valid `.wire` Files
+﻿# LLM Prompt Guide: Generating Valid `.wire` Files
 
 This guide enables LLMs to generate valid Wire-DSL files from text descriptions or wireframe images.
 
@@ -105,7 +105,7 @@ style {
 | Component | Required Props | Optional Props | Example |
 |---|---|---|---|
 | `Heading` | `text` | `level`, `spacing`, `variant` | `component Heading text: "Page Title" level: h2 variant: primary` |
-| `Text` | `content` | - | `component Text content: "Body text"` |
+| `Text` | `content` | - | `component Text text: "Body text"` |
 | `Label` | `text` | - | `component Label text: "Field label"` |
 
 ### Input Components Details
@@ -122,7 +122,7 @@ style {
 | Component | Key Properties | Valid Placeholders | Example |
 |---|---|---|---|
 | `Image` | `placeholder`, `height` | `"landscape"`, `"square"`, `"portrait"`, `"avatar"`, `"icon"` | `component Image placeholder: "square" height: 250` |
-| `Icon` | `type` | `size`, `variant` | `component Icon type: "search" size: md variant: primary` |
+| `Icon` | `type` | `size`, `variant` | `component Icon icon: "search" size: md variant: primary` |
 
 ### Navigation Components Details
 | Component | Key Properties | Example |
@@ -372,7 +372,7 @@ project "Admin Dashboard" {
 layout card(padding: lg, gap: md, radius: lg, border: true) {
   component Image placeholder: "square" height: 250
   component Heading text: "Product Title"
-  component Text content: "Product description"
+  component Text text: "Product description"
   layout stack(direction: horizontal, gap: md) {
     component Button text: "View Details" variant: primary
     component Button text: "Add to Cart" variant: secondary
@@ -448,9 +448,9 @@ layout split(left: 280, gap: md) {
     layout card(padding: lg, gap: md, radius: lg, border: true) {
       component Image placeholder: "square"
       component Heading text: "John Doe"
-      component Text content: "john@example.com"
+      component Text text: "john@example.com"
       component Divider
-      component Text content: "Senior Software Engineer"
+      component Text text: "Senior Software Engineer"
       layout stack(direction: horizontal, gap: md) {
         component Button text: "Edit Profile" variant: primary
         component Button text: "Change Password" variant: secondary
@@ -488,7 +488,7 @@ layout grid(columns: 12, gap: md, padding: lg) {
     layout card(padding: md, gap: md, radius: lg, border: true) {
       component Image placeholder: "square" height: 200
       component Heading text: "Premium Item"
-      component Text content: "High-quality product"
+      component Text text: "High-quality product"
       component StatCard title: "Price" value: "$99.99"
       component Button text: "Add to Cart" variant: primary
     }
@@ -497,7 +497,7 @@ layout grid(columns: 12, gap: md, padding: lg) {
     layout card(padding: md, gap: md, radius: lg, border: true) {
       component Image placeholder: "square" height: 200
       component Heading text: "Standard Item"
-      component Text content: "Good value option"
+      component Text text: "Good value option"
       component StatCard title: "Price" value: "$49.99"
       component Button text: "Add to Cart" variant: primary
     }
@@ -512,7 +512,7 @@ layout split(left: 280, gap: md) {
     component Topbar title: "Admin Panel"
     component SidebarMenu items: "Dashboard,Users,Reports,Settings" active: 0
     component Divider
-    component Text content: "Settings"
+    component Text text: "Settings"
     component Link text: "Profile"
     component Link text: "Logout"
   }

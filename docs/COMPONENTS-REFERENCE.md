@@ -1,4 +1,4 @@
-# Wire-DSL Components Reference
+﻿# Wire-DSL Components Reference
 
 
 Complete reference for all available components with detailed specifications, properties, and examples.
@@ -55,12 +55,12 @@ component Heading text: "Section title" level: h3
 Standard body text for content and descriptions.
 
 **Properties**:
-- `content` (string): The text content
+- `text` (string): The text content
 
 **Example**:
 ```wire
-component Text content: "This is body text"
-component Text content: "User profile information goes here"
+component Text text: "This is body text"
+component Text text: "User profile information goes here"
 ```
 
 **Rendering**: Regular text at 14-16px font size
@@ -422,14 +422,14 @@ component Image placeholder: "avatar" height: 100
 Icon symbol.
 
 **Properties**:
-- `type` (string): Icon identifier (e.g., "search", "star", "heart")
+- `icon` (string): Icon identifier (e.g., "search", "star", "heart")
 - `size` (enum): `sm` | `md` | `lg` (default: `md`)
 
 **Example**:
 ```wire
-component Icon type: "search"
-component Icon type: "settings"
-component Icon type: "download"
+component Icon icon: "search"
+component Icon icon: "settings"
+component Icon icon: "download"
 ```
 
 **Rendering**: Small icon symbol inline with text

@@ -1,4 +1,4 @@
-# Wire-DSL Syntax Guide
+﻿# Wire-DSL Syntax Guide
 
 ## Overview
 
@@ -293,7 +293,7 @@ Specialized container with automatic padding and border styling.
 
 ```
 layout panel(padding: md, background: white) {
-  component Text content: "Panel content"
+  component Text text: "Panel content"
 }
 ```
 
@@ -303,7 +303,7 @@ Or with nested stack:
 layout panel(padding: lg) {
   layout stack(gap: md) {
     component Heading text: "Panel Title"
-    component Text content: "Panel body"
+    component Text text: "Panel body"
   }
 }
 ```
@@ -328,7 +328,7 @@ Flexible vertical container for grouping related content.
 layout card(padding: lg, gap: md, radius: md, border: true) {
   component Image placeholder: "landscape"
   component Heading text: "Product Title"
-  component Text content: "Product description"
+  component Text text: "Product description"
   component Button text: "Learn More"
 }
 ```
@@ -353,7 +353,7 @@ layout card(padding: lg, gap: md, radius: md, border: true) {
 layout card(padding: md, gap: md, radius: lg, border: true) {
   component Image placeholder: "square" height: 250
   component Heading text: "Premium Item"
-  component Text content: "High-quality product with excellent reviews"
+  component Text text: "High-quality product with excellent reviews"
   layout stack(direction: horizontal, gap: sm) {
     component Button text: "View Details"
     component Button text: "Add to Cart"
@@ -367,9 +367,9 @@ layout card(padding: md, gap: md, radius: lg, border: true) {
 layout card(padding: lg, gap: md) {
   component Image placeholder: "avatar" height: 120
   component Heading text: "John Doe"
-  component Text content: "john@example.com"
+  component Text text: "john@example.com"
   component Divider
-  component Text content: "Senior Software Engineer"
+  component Text text: "Senior Software Engineer"
   component Button text: "Follow"
 }
 ```
@@ -541,7 +541,7 @@ component Button text: "Click me" variant: primary
 | Component | Properties | Example |
 |-----------|-----------|---------|
 | `Heading` | `text`, `level`, `spacing`, `variant` | `component Heading text: "Page Title" level: h2 variant: primary` |
-| `Text` | `content` (string) | `component Text content: "Body text"` |
+| `Text` | `content` (string) | `component Text text: "Body text"` |
 | `Label` | `text` (string) | `component Label text: "Field label"` |
 
 ### Input Components
@@ -585,7 +585,7 @@ component Button text: "Click me" variant: primary
 | Component | Properties | Example |
 |-----------|-----------|---------|
 | `Image` | `placeholder`, `height` | `component Image placeholder: "square" height: 200` |
-| `Icon` | `type`, `size`, `variant` | `component Icon type: "search" size: md variant: primary` |
+| `Icon` | `type`, `size`, `variant` | `component Icon icon: "search" size: md variant: primary` |
 
 ### Other Components
 
@@ -647,9 +647,9 @@ project "Admin Dashboard" {
         cell span: 8 {
           layout card(padding: lg, gap: md) {
             component Heading text: "User Profile"
-            component Text content: "Name: John Doe"
-            component Text content: "Email: john@example.com"
-            component Text content: "Role: Administrator"
+            component Text text: "Name: John Doe"
+            component Text text: "Email: john@example.com"
+            component Text text: "Role: Administrator"
           }
         }
         cell span: 4 {
