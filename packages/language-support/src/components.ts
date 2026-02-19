@@ -112,9 +112,9 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     description: 'Body text content.',
     category: 'Text',
     properties: {
-      content: { name: 'content', type: 'string', required: true },
+      text: { name: 'text', type: 'string', required: true },
     },
-    example: 'component Text content: "Lorem ipsum dolor sit amet"',
+    example: 'component Text text: "Lorem ipsum dolor sit amet"',
   },
   Label: {
     name: 'Label',
@@ -380,11 +380,11 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     description: 'Standalone icon component.',
     category: 'Media',
     properties: {
-      type: { name: 'type', type: 'enum', options: ICON_NAME_OPTIONS, required: true },
+      icon: { name: 'icon', type: 'enum', options: ICON_NAME_OPTIONS, required: true },
       size: sizeEnum,
       variant: variantWithDefaultEnum,
     },
-    example: 'component Icon type: "home" size: md',
+    example: 'component Icon icon: "home" size: md',
   },
   IconButton: {
     name: 'IconButton',
