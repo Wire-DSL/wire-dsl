@@ -432,7 +432,10 @@ export class IRGenerator {
   }
 
   private convertLayout(layout: ASTLayout, context?: ExpansionContext): string {
-    const layoutParams = this.resolveLayoutParams(layout.layoutType, layout.params, context);
+    let layoutParams = this.resolveLayoutParams(layout.layoutType, layout.params, context);
+    if (layout.layoutType === 'split') {
+      layoutParams = this.normalizeSplitParams(layoutParams);
+    }
     const layoutChildren = layout.children;
 
     const layoutDefinition = this.definedLayouts.get(layout.layoutType);
@@ -687,6 +690,69 @@ export class IRGenerator {
       }
     }
     return resolved;
+  }
+
+  private normalizeSplitParams(
+    params: Record<string, string | number>
+  ): Record<string, string | number> {
+    const normalized: Record<string, string | number> = { ...params };
+
+    if (
+      normalized.sidebar !== undefined &&
+      normalized.left === undefined &&
+      normalized.right === undefined
+    ) {
+      normalized.left = normalized.sidebar;
+      this.warnings.push({
+        type: 'split-sidebar-deprecated',
+        message: 'Split parameter "sidebar" is deprecated. Use "left" or "right".',
+      });
+    }
+
+    delete normalized.sidebar;
+
+    const hasLeft = normalized.left !== undefined;
+    const hasRight = normalized.right !== undefined;
+
+    if (hasLeft && hasRight) {
+      delete normalized.right;
+      this.warnings.push({
+        type: 'split-side-conflict',
+        message: 'Split layout received both "left" and "right"; keeping "left".',
+      });
+    }
+
+    if (!hasLeft && !hasRight) {
+      normalized.left = 250;
+      this.warnings.push({
+        type: 'split-side-missing',
+        message: 'Split layout missing both "left" and "right"; defaulting to left: 250.',
+      });
+    }
+
+    if (normalized.left !== undefined) {
+      const leftWidth = Number(normalized.left);
+      if (!Number.isFinite(leftWidth) || leftWidth <= 0) {
+        normalized.left = 250;
+        this.warnings.push({
+          type: 'split-left-invalid',
+          message: 'Split "left" must be a positive number. Falling back to 250.',
+        });
+      }
+    }
+
+    if (normalized.right !== undefined) {
+      const rightWidth = Number(normalized.right);
+      if (!Number.isFinite(rightWidth) || rightWidth <= 0) {
+        normalized.right = 250;
+        this.warnings.push({
+          type: 'split-right-invalid',
+          message: 'Split "right" must be a positive number. Falling back to 250.',
+        });
+      }
+    }
+
+    return normalized;
   }
 
   private resolveComponentProps(

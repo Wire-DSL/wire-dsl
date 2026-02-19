@@ -52,7 +52,7 @@ project "ProjectName" {
 **Layout Purposes**:
 - `stack` - Linear vertical or horizontal stacking of elements
 - `grid` - Multi-column responsive layout (12-column system)
-- `split` - Two-panel layout with sidebar + main content
+- `split` - Two-panel layout with one fixed side + one flexible side
 - `panel` - Container with automatic border, padding, and background
 - `card` - Vertical container ideal for product/profile cards with rounded corners
 
@@ -104,16 +104,16 @@ style {
 ### Text Components Details
 | Component | Required Props | Optional Props | Example |
 |---|---|---|---|
-| `Heading` | `text` | - | `component Heading text: "Page Title"` |
+| `Heading` | `text` | `level`, `spacing`, `variant` | `component Heading text: "Page Title" level: h2 variant: primary` |
 | `Text` | `content` | - | `component Text content: "Body text"` |
 | `Label` | `text` | - | `component Label text: "Field label"` |
 
 ### Input Components Details
 | Component | Key Properties | Example |
 |---|---|---|
-| `Input` | `label`, `placeholder` | `component Input label: "Email" placeholder: "your@email.com"` |
+| `Input` | `label`, `placeholder`, `size` | `component Input label: "Email" placeholder: "your@email.com" size: md` |
 | `Textarea` | `label`, `placeholder`, `rows` | `component Textarea label: "Message" rows: 4 placeholder: "Your message..."` |
-| `Select` | `label`, `items` | `component Select label: "Role" items: "Admin,User,Guest"` |
+| `Select` | `label`, `items`, `size` | `component Select label: "Role" items: "Admin,User,Guest" size: md` |
 | `Checkbox` | `label`, `checked` | `component Checkbox label: "I agree to terms" checked: false` |
 | `Radio` | `label`, `checked` | `component Radio label: "Option A" checked: true` |
 | `Toggle` | `label`, `enabled` | `component Toggle label: "Enable notifications" enabled: false` |
@@ -122,7 +122,7 @@ style {
 | Component | Key Properties | Valid Placeholders | Example |
 |---|---|---|---|
 | `Image` | `placeholder`, `height` | `"landscape"`, `"square"`, `"portrait"`, `"avatar"`, `"icon"` | `component Image placeholder: "square" height: 250` |
-| `Icon` | `type` | Common icon names (search, settings, menu, etc.) | `component Icon type: "search"` |
+| `Icon` | `type` | `size`, `variant` | `component Icon type: "search" size: md variant: primary` |
 
 ### Navigation Components Details
 | Component | Key Properties | Example |
@@ -130,12 +130,12 @@ style {
 | `SidebarMenu` | `items`, `active` | `component SidebarMenu items: "Home,Users,Settings" active: 0` |
 | `Tabs` | `items`, `active` | `component Tabs items: "Profile,Settings,Activity" active: 0` |
 | `Breadcrumbs` | `items` | `component Breadcrumbs items: "Home,Users,Detail"` |
-| `Topbar` | `title`, `subtitle` | `component Topbar title: "Dashboard" subtitle: "Analytics"` |
+| `Topbar` | `title`, `subtitle` | `icon`, `actions`, `user`, `avatar`, `variant` | `component Topbar title: "Dashboard" icon: "menu" actions: "Save" variant: primary` |
 
 ### Data Components Details
 | Component | Key Properties | Example |
 |---|---|---|
-| `Table` | `columns`, `rows` | `component Table columns: "Name,Email,Status" rows: 8` |
+| `Table` | `columns`, `rows` | `actions`, `caption`, `pagination`, `paginationAlign`, `captionAlign` | `component Table columns: "Name,Email,Status" rows: 8 actions: "eye,edit"` |
 | `StatCard` | `title`, `value` | `component StatCard title: "Total Users" value: "1,234"` |
 | `List` | `items`, `title` | `component List items: "Item 1,Item 2,Item 3"` |
 
@@ -200,7 +200,9 @@ style {
 component Button 
   text: "Click me"              // Display text
   variant: "primary"            // Visual variant (default | primary | secondary | success | warning | danger | info)
-  size: "medium"                // Size (small | medium | large)
+  size: "md"                    // Size (sm | md | lg)
+  labelSpace: true              // Optional control alignment helper
+  padding: "md"                 // Optional horizontal inset (none | xs | sm | md | lg | xl)
 ```
 
 ### Container/Layout Properties
@@ -245,8 +247,11 @@ layout card(
 ### Split Properties
 ```wire
 layout split(
-  sidebar: 240                  // Sidebar width in pixels (typical: 240-320)
+  left: 260                     // Fixed left panel width (or use right: <number>)
+  background: "accent"          // Optional fixed-panel background color
+  border: true                  // Optional vertical divider
   gap: "md"                     // Space between panels
+  padding: "md"                 // Optional inner padding
 )
 ```
 
@@ -265,7 +270,7 @@ project "Admin Dashboard" {
   }
 
   screen Dashboard {
-    layout split(sidebar: 260, gap: md) {
+    layout split(left: 260, gap: md) {
       layout stack(direction: vertical, gap: md, padding: md) {
         component Heading text: "Menu"
         component SidebarMenu items: ["Dashboard", "Users", "Settings"]
@@ -405,7 +410,7 @@ layout stack(direction: vertical, gap: md, padding: lg) {
 
 ### Panel within Grid (Sidebar Control Panel)
 ```wire
-layout split(sidebar: 260, gap: md) {
+layout split(left: 260, gap: md) {
   layout stack(direction: vertical, gap: md, padding: md) {
     component Heading text: "Menu"
     component SidebarMenu items: "Dashboard,Users,Settings"
@@ -433,7 +438,7 @@ layout split(sidebar: 260, gap: md) {
 
 ### Card within Split Layout (Profile)
 ```wire
-layout split(sidebar: 280, gap: md) {
+layout split(left: 280, gap: md) {
   layout stack(direction: vertical, gap: md, padding: lg) {
     component Heading text: "Profile"
     component SidebarMenu items: "General,Security,Privacy" active: 0
@@ -502,7 +507,7 @@ layout grid(columns: 12, gap: md, padding: lg) {
 
 ### Sidebar Layout Pattern (Admin Interface)
 ```wire
-layout split(sidebar: 280, gap: md) {
+layout split(left: 280, gap: md) {
   layout stack(direction: vertical, gap: md, padding: md) {
     component Topbar title: "Admin Panel"
     component SidebarMenu items: "Dashboard,Users,Reports,Settings" active: 0
@@ -547,7 +552,7 @@ Before generating output, verify:
 - [ ] Image placeholders use valid values: "landscape", "square", "portrait"
 - [ ] Use `Image` for profile pictures when needed
 - [ ] Grid cells have `span` values between 1-12
-- [ ] Sidebar width is between 200-400 pixels
+- [ ] Split fixed side width (`left` or `right`) is between 200-400 pixels
 - [ ] Card/Panel radius values are: "none", "sm", "md", "lg"
 - [ ] Button variants are: "default", "primary", "secondary", "success", "warning", "danger", "info"
 - [ ] Nested layouts are properly closed with braces
@@ -575,7 +580,7 @@ Before generating output, verify:
 - Default `gap` to `md` if spacing not specified
 - Default `columns` to `12` for grids
 - Default `direction` to `vertical` for stacks
-- Default `sidebar` to `260` pixels for split layouts
+- Default split fixed panel to `left: 260` when no side is specified by the user
 
 ---
 

@@ -144,6 +144,8 @@ You can override any of them in `colors`.
 - `accent`: used by `Topbar` icon/actions, active `Tabs`, `StatCard` highlighted value/icon, selected `SidebarMenu` item
 - `control`: used by selected/enabled states in `Checkbox`, `Radio`, `Toggle`
 - `chart`: used by `Chart` types `line`, `area`, and `bar`
+- `text`: default text color fallback (`#000000` light, `#FFFFFF` dark)
+- `muted`: default muted text color fallback (`#64748B` light, `#94A3B8` dark)
 
 **Note**:
 
@@ -157,9 +159,9 @@ Defines a screen/page in the prototype.
 
 ```
 screen UsersList {
-  layout split(sidebar: 260, gap: md) {
-    layout stack { ... }  // sidebar
-    layout stack { ... }  // main content
+  layout split(left: 260, gap: md) {
+    layout stack { ... }  // fixed panel
+    layout stack { ... }  // flexible panel
   }
 }
 ```
@@ -255,10 +257,10 @@ layout grid(columns: 12, gap: md) {
 
 ### Split Layout
 
-Two-panel layout (sidebar + main content).
+Two-panel layout with one fixed side and one flexible side.
 
 ```
-layout split(sidebar: 260, gap: md) {
+layout split(left: 260, gap: md) {
   layout stack {
     component SidebarMenu items: ["Home", "Users", "Settings"]
   }
@@ -271,8 +273,17 @@ layout split(sidebar: 260, gap: md) {
 
 **Properties**:
 
-- `sidebar`: width of left panel in pixels
+- `left`: fixed width for left panel (pixels)
+- `right`: fixed width for right panel (pixels)
+- `background`: color token/variant/hex applied to the fixed panel
+- `border`: `true` adds vertical divider between panels
 - `gap`: spacing between panels
+- `padding`: inner padding
+
+Rules:
+- provide exactly one of `left` or `right`
+- `split` requires exactly 2 children
+- legacy `sidebar` parameter is deprecated and reported as semantic error
 
 ---
 
@@ -448,7 +459,7 @@ Binding behavior:
 
 ```wire
 define Layout "screen_default" {
-  layout split(sidebar: prop_sidebar) {
+  layout split(left: prop_left) {
     component SidebarMenu
       items: "Home,Users,Permissions"
       active: prop_active
@@ -461,7 +472,7 @@ Use it like any other layout:
 
 ```wire
 screen Main {
-  layout screen_default(sidebar: 220, active: 1) {
+  layout screen_default(left: 220, active: 1) {
     layout stack(gap: md) {
       component Heading text: "Main Screen"
     }
@@ -529,7 +540,7 @@ component Button text: "Click me" variant: primary
 
 | Component | Properties | Example |
 |-----------|-----------|---------|
-| `Heading` | `text` (string) | `component Heading text: "Page Title"` |
+| `Heading` | `text`, `level`, `spacing`, `variant` | `component Heading text: "Page Title" level: h2 variant: primary` |
 | `Text` | `content` (string) | `component Text content: "Body text"` |
 | `Label` | `text` (string) | `component Label text: "Field label"` |
 
@@ -537,9 +548,9 @@ component Button text: "Click me" variant: primary
 
 | Component | Properties | Example |
 |-----------|-----------|---------|
-| `Input` | `label`, `placeholder` | `component Input label: "Email" placeholder: "your@email.com"` |
+| `Input` | `label`, `placeholder`, `size` | `component Input label: "Email" placeholder: "your@email.com" size: md` |
 | `Textarea` | `label`, `placeholder`, `rows` | `component Textarea label: "Message" rows: 4` |
-| `Select` | `label`, `items` | `component Select label: "Role" items: "Admin,User"` |
+| `Select` | `label`, `items`, `size` | `component Select label: "Role" items: "Admin,User" size: md` |
 | `Checkbox` | `label`, `checked` | `component Checkbox label: "Agree" checked: true` |
 | `Radio` | `label`, `checked` | `component Radio label: "Option" checked: false` |
 | `Toggle` | `label`, `enabled` | `component Toggle label: "Enable feature" enabled: false` |
@@ -548,8 +559,8 @@ component Button text: "Click me" variant: primary
 
 | Component | Properties | Example |
 |-----------|-----------|---------|
-| `Button` | `text`, `variant` | `component Button text: "Save" variant: primary` |
-| `IconButton` | `icon` | `component IconButton icon: "search"` |
+| `Button` | `text`, `variant`, `size`, `labelSpace`, `padding`, `block` | `component Button text: "Save" variant: primary size: md labelSpace: true` |
+| `IconButton` | `icon`, `variant`, `size`, `labelSpace`, `padding`, `disabled` | `component IconButton icon: "search" variant: default size: md` |
 
 **Button Variants**: `default` | `primary` | `secondary` | `success` | `warning` | `danger` | `info`
 
@@ -557,7 +568,7 @@ component Button text: "Click me" variant: primary
 
 | Component | Properties | Example |
 |-----------|-----------|---------|
-| `Topbar` | `title`, `subtitle` | `component Topbar title: "Dashboard"` |
+| `Topbar` | `title`, `subtitle`, `icon`, `actions`, `user`, `avatar`, `variant` | `component Topbar title: "Dashboard" variant: primary` |
 | `SidebarMenu` | `items`, `active` | `component SidebarMenu items: "Home,Users,Settings" active: 0` |
 | `Breadcrumbs` | `items` | `component Breadcrumbs items: "Home,Users,Detail"` |
 | `Tabs` | `items`, `active` | `component Tabs items: "Profile,Settings" active: 0` |
@@ -566,7 +577,7 @@ component Button text: "Click me" variant: primary
 
 | Component | Properties | Example |
 |-----------|-----------|---------|
-| `Table` | `columns`, `rows` | `component Table columns: "Name,Email,Status" rows: 8` |
+| `Table` | `columns`, `rows`, `pagination`, `paginationAlign`, `actions`, `caption`, `captionAlign`, `border`, `background` | `component Table columns: "Name,Email,Status" rows: 8 actions: "eye,edit" border: true background: true` |
 | `List` | `items` | `component List items: "Item 1,Item 2,Item 3"` |
 
 ### Media Components
@@ -574,7 +585,7 @@ component Button text: "Click me" variant: primary
 | Component | Properties | Example |
 |-----------|-----------|---------|
 | `Image` | `placeholder`, `height` | `component Image placeholder: "square" height: 200` |
-| `Icon` | `type` | `component Icon type: "search"` |
+| `Icon` | `type`, `size`, `variant` | `component Icon type: "search" size: md variant: primary` |
 
 ### Other Components
 
@@ -605,7 +616,7 @@ project "Admin Dashboard" {
   }
 
   screen UsersList {
-    layout split(sidebar: 260, gap: md) {
+    layout split(left: 260, gap: md) {
       layout stack(gap: lg, padding: lg) {
         component Topbar title: "Dashboard"
         component SidebarMenu items: "Users,Roles,Permissions,Audit" active: 0
@@ -664,7 +675,7 @@ project "Admin Dashboard" {
 1. A `project` must have at least one `screen`
 2. Each `screen` must have exactly one root layout
 3. `grid` layouts require `columns` property
-4. `split` layouts require `sidebar` property
+4. `split` layouts require exactly one of `left` or `right` and exactly 2 children
 5. `Table` components require `columns` property
 6. All identifiers must be unique within project scope
 7. Property values must match their defined types

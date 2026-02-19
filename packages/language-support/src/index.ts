@@ -17,6 +17,7 @@ export {
   type LayoutMetadata,
   type PropertyMetadata,
 } from './components';
+export { ICON_NAMES, ICON_NAME_OPTIONS, type IconName } from './icon-names';
 
 export {
   getComponentDocumentation,

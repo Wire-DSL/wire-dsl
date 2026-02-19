@@ -5,7 +5,12 @@ import { ColorResolver } from './colors';
 import { getIcon } from './icons/iconLibrary';
 import { resolveTokens, type DesignTokens } from './tokens';
 import { resolveSpacingToken, type DensityLevel } from '../shared/spacing';
-import { resolveIconButtonSize, resolveIconSize } from '../shared/component-sizes';
+import {
+  resolveControlHeight,
+  resolveControlHorizontalPadding,
+  resolveIconButtonSize,
+  resolveIconSize,
+} from '../shared/component-sizes';
 import { resolveHeadingTypography } from '../shared/heading-levels';
 import { resolveHeadingVerticalPadding } from '../shared/heading-spacing';
 
@@ -66,7 +71,7 @@ const THEMES = {
 // ============================================================================
 
 export class SVGRenderer {
-  private ir: IRContract;
+  protected ir: IRContract;
   private layout: LayoutResult;
   protected options: Required<Omit<SVGRenderOptions, 'screenName'>> & { screenName?: string };
   protected renderTheme: typeof THEMES.light;
@@ -233,6 +238,9 @@ export class SVGRenderer {
       if (node.containerType === 'card') {
         this.renderCardBorder(node, pos, containerGroup);
       }
+      if (node.containerType === 'split') {
+        this.renderSplitDecoration(node, pos, containerGroup);
+      }
 
       // Render container children
       node.children.forEach((childRef) => {
@@ -338,6 +346,9 @@ export class SVGRenderer {
 
   protected renderHeading(node: IRComponentNode, pos: any): string {
     const text = String(node.props.text || 'Heading');
+    const variant = String(node.props.variant || 'default');
+    const headingColor =
+      variant === 'default' ? this.resolveTextColor() : this.resolveVariantColor(variant, this.resolveTextColor());
 
     const headingTypography = this.getHeadingTypography(node);
     const fontSize = headingTypography.fontSize;
@@ -352,7 +363,7 @@ export class SVGRenderer {
           font-family="system-ui, -apple-system, sans-serif"
           font-size="${fontSize}"
           font-weight="${fontWeight}"
-          fill="${this.renderTheme.text}">${this.escapeXml(text)}</text>
+          fill="${headingColor}">${this.escapeXml(text)}</text>
   </g>`;
     }
 
@@ -368,13 +379,17 @@ export class SVGRenderer {
           font-family="system-ui, -apple-system, sans-serif"
           font-size="${fontSize}"
           font-weight="${fontWeight}"
-          fill="${this.renderTheme.text}">${tspans}</text>
+          fill="${headingColor}">${tspans}</text>
   </g>`;
   }
 
   protected renderButton(node: IRComponentNode, pos: any): string {
     const text = String(node.props.text || 'Button');
     const variant = String(node.props.variant || 'default');
+    const size = String(node.props.size || 'md');
+    const density = (this.ir.project.style.density || 'normal') as DensityLevel;
+    const extraPadding = resolveControlHorizontalPadding(String(node.props.padding || 'none'), density);
+    const labelOffset = this.parseBooleanProp(node.props.labelSpace, false) ? 18 : 0;
     const fullWidth = this.shouldButtonFillAvailableWidth(node);
 
     // Use tokens from density configuration
@@ -382,15 +397,16 @@ export class SVGRenderer {
     const fontSize = this.tokens.button.fontSize;
     const fontWeight = this.tokens.button.fontWeight;
     const paddingX = this.tokens.button.paddingX;
-    const paddingY = this.tokens.button.paddingY;
+    const controlHeight = resolveControlHeight(size, density);
+    const buttonY = pos.y + labelOffset;
+    const buttonHeight = Math.max(16, Math.min(controlHeight, pos.height - labelOffset));
 
     // Keep control inside layout bounds; truncate text if needed.
     const idealTextWidth = this.estimateTextWidth(text, fontSize);
     const buttonWidth = fullWidth
       ? Math.max(1, pos.width)
-      : this.clampControlWidth(Math.max(Math.ceil(idealTextWidth + paddingX * 2), 60), pos.width);
-    const buttonHeight = fontSize + paddingY * 2;
-    const availableTextWidth = Math.max(0, buttonWidth - paddingX * 2);
+      : this.clampControlWidth(Math.max(Math.ceil(idealTextWidth + (paddingX + extraPadding) * 2), 60), pos.width);
+    const availableTextWidth = Math.max(0, buttonWidth - (paddingX + extraPadding) * 2);
     const visibleText = this.truncateTextToWidth(text, availableTextWidth, fontSize);
 
     // Color configuration with variant override support from colors block.
@@ -409,13 +425,13 @@ export class SVGRenderer {
       : 'rgba(100, 116, 139, 0.4)';
 
     return `<g${this.getDataNodeId(node)}>
-    <rect x="${pos.x}" y="${pos.y}"
+    <rect x="${pos.x}" y="${buttonY}"
           width="${buttonWidth}" height="${buttonHeight}"
           rx="${radius}"
           fill="${bgColor}"
           stroke="${borderColor}"
           stroke-width="1"/>
-    <text x="${pos.x + buttonWidth / 2}" y="${pos.y + buttonHeight / 2 + fontSize * 0.35}"
+    <text x="${pos.x + buttonWidth / 2}" y="${buttonY + buttonHeight / 2 + fontSize * 0.35}"
           font-family="system-ui, -apple-system, sans-serif"
           font-size="${fontSize}"
           font-weight="${fontWeight}"
@@ -502,7 +518,11 @@ export class SVGRenderer {
     const subtitle = String(node.props.subtitle || '');
     const actions = String(node.props.actions || '');
     const user = String(node.props.user || '');
-    const accentColor = this.resolveAccentColor();
+    const variant = String(node.props.variant || 'default');
+    const accentColor =
+      variant === 'default'
+        ? this.resolveAccentColor()
+        : this.resolveVariantColor(variant, this.resolveAccentColor());
     const topbar = this.calculateTopbarLayout(node, pos, title, subtitle, actions, user);
 
     let svg = `<g${this.getDataNodeId(node)}>
@@ -651,17 +671,77 @@ export class SVGRenderer {
     output.push(svg);
   }
 
+  protected renderSplitDecoration(node: IRNode, pos: any, output: string[]): void {
+    if (node.kind !== 'container') return;
+
+    const gap = this.resolveSpacing(node.style.gap);
+    const leftParam = Number(node.params.left);
+    const rightParam = Number(node.params.right);
+    const hasLeft = node.params.left !== undefined;
+    const hasRight = node.params.right !== undefined && node.params.left === undefined;
+    const fixedLeftWidth = Number.isFinite(leftParam) && leftParam > 0 ? leftParam : 250;
+    const fixedRightWidth = Number.isFinite(rightParam) && rightParam > 0 ? rightParam : 250;
+    const backgroundKey = String(node.style.background || '').trim();
+    const showBorder = this.parseBooleanProp(node.params.border, false);
+
+    if (backgroundKey) {
+      const fill = this.colorResolver.resolveColor(backgroundKey, this.renderTheme.cardBg);
+      if (hasRight) {
+        const panelX = pos.x + Math.max(0, pos.width - fixedRightWidth);
+        output.push(`<g>
+    <rect x="${panelX}" y="${pos.y}" width="${Math.max(1, fixedRightWidth)}" height="${pos.height}" fill="${fill}" stroke="none"/>
+    </g>`);
+      } else if (hasLeft || !hasRight) {
+        output.push(`<g>
+    <rect x="${pos.x}" y="${pos.y}" width="${Math.max(1, fixedLeftWidth)}" height="${pos.height}" fill="${fill}" stroke="none"/>
+    </g>`);
+      }
+    }
+
+    if (showBorder) {
+      const dividerX = hasRight
+        ? pos.x + Math.max(0, pos.width - fixedRightWidth - gap / 2)
+        : pos.x + Math.max(0, fixedLeftWidth + gap / 2);
+      output.push(`<g>
+    <line x1="${dividerX}" y1="${pos.y}" x2="${dividerX}" y2="${pos.y + pos.height}" stroke="${this.renderTheme.border}" stroke-width="1"/>
+    </g>`);
+    }
+  }
+
   protected renderTable(node: IRComponentNode, pos: any): string {
     const title = String(node.props.title || '');
     const columnsStr = String(node.props.columns || 'Col1,Col2,Col3');
-    const columns = columnsStr.split(',').map((c) => c.trim());
+    const columns = columnsStr
+      .split(',')
+      .map((c) => c.trim())
+      .filter(Boolean);
     const rowCount = Number(node.props.rows || node.props.rowsMock || 5);
     const mockStr = String(node.props.mock || '');
     const random = this.parseBooleanProp(node.props.random, false);
-    const paginationValue = String(node.props.pagination || 'false');
-    const pagination = paginationValue === 'true';
-    const pageCount = Number(node.props.pages || 5);
-    const paginationAlign = String(node.props.paginationAlign || 'right'); // left, center, right
+    const pagination = this.parseBooleanProp(node.props.pagination, false);
+    const parsedPageCount = Number(node.props.pages || 5);
+    const pageCount = Number.isFinite(parsedPageCount) && parsedPageCount > 0 ? Math.floor(parsedPageCount) : 5;
+    const paginationAlign = String(node.props.paginationAlign || 'right');
+    const actions = String(node.props.actions || '')
+      .split(',')
+      .map((value) => value.trim())
+      .filter(Boolean);
+    const hasActions = actions.length > 0;
+    const caption = String(node.props.caption || '').trim();
+    const hasCaption = caption.length > 0;
+    const showOuterBorder = this.parseBooleanProp(node.props.border, false);
+    const showOuterBackground = this.parseBooleanProp(
+      node.props.background ?? node.props.backround,
+      false
+    );
+    const rawCaptionAlign = String(node.props.captionAlign || '');
+    const captionAlign =
+      rawCaptionAlign === 'left' || rawCaptionAlign === 'center' || rawCaptionAlign === 'right'
+        ? rawCaptionAlign
+        : paginationAlign === 'left'
+          ? 'right'
+          : 'left';
+    const sameFooterAlign = hasCaption && pagination && captionAlign === paginationAlign;
 
     // Parse mock types by column. If not provided, infer from column names.
     const mockTypes = mockStr
@@ -670,20 +750,25 @@ export class SVGRenderer {
           .map((m) => m.trim())
           .filter(Boolean)
       : [];
-    while (mockTypes.length < columns.length) {
-      const inferred = MockDataGenerator.inferMockTypeFromColumn(columns[mockTypes.length] || 'item');
+    const safeColumns = columns.length > 0 ? columns : ['Column'];
+    while (mockTypes.length < safeColumns.length) {
+      const inferred = MockDataGenerator.inferMockTypeFromColumn(safeColumns[mockTypes.length] || 'item');
       mockTypes.push(inferred);
     }
 
     const headerHeight = 44;
     const rowHeight = 36;
-    const colWidth = pos.width / columns.length;
+    const actionColumnWidth = hasActions
+      ? Math.max(96, Math.min(180, actions.length * 26 + 28))
+      : 0;
+    const dataWidth = Math.max(20, pos.width - actionColumnWidth);
+    const dataColWidth = dataWidth / safeColumns.length;
 
     // Generate mock rows based on mock types
     const mockRows: Record<string, string>[] = [];
     for (let rowIdx = 0; rowIdx < rowCount; rowIdx++) {
       const row: Record<string, string> = {};
-      columns.forEach((col, colIdx) => {
+      safeColumns.forEach((col, colIdx) => {
         const mockType =
           mockTypes[colIdx] || MockDataGenerator.inferMockTypeFromColumn(col) || 'item';
         row[col] = MockDataGenerator.getMockValue(mockType, rowIdx, random);
@@ -691,13 +776,18 @@ export class SVGRenderer {
       mockRows.push(row);
     }
 
-    let svg = `<g${this.getDataNodeId(node)}>
+    let svg = `<g${this.getDataNodeId(node)}>`;
+    if (showOuterBorder || showOuterBackground) {
+      const outerFill = showOuterBackground ? this.renderTheme.cardBg : 'none';
+      const outerStroke = showOuterBorder ? this.renderTheme.border : 'none';
+      svg += `
     <rect x="${pos.x}" y="${pos.y}" 
           width="${pos.width}" height="${pos.height}" 
           rx="8" 
-          fill="${this.renderTheme.cardBg}" 
-          stroke="${this.renderTheme.border}" 
+          fill="${outerFill}" 
+          stroke="${outerStroke}" 
           stroke-width="1"/>`;
+    }
 
     // Title
     if (title) {
@@ -715,14 +805,21 @@ export class SVGRenderer {
     <line x1="${pos.x}" y1="${headerY + headerHeight}" x2="${pos.x + pos.width}" y2="${headerY + headerHeight}" 
           stroke="${this.renderTheme.border}" stroke-width="1"/>`;
 
-    columns.forEach((col, i) => {
+    safeColumns.forEach((col, i) => {
       svg += `
-    <text x="${pos.x + i * colWidth + 12}" y="${headerY + 26}" 
+    <text x="${pos.x + i * dataColWidth + 12}" y="${headerY + 26}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="11" 
           font-weight="600" 
           fill="${this.renderTheme.textMuted}">${this.escapeXml(col)}</text>`;
     });
+
+    if (hasActions) {
+      const dividerX = pos.x + dataWidth;
+      svg += `
+    <line x1="${dividerX}" y1="${headerY}" x2="${dividerX}" y2="${headerY + headerHeight + mockRows.length * rowHeight}" 
+          stroke="${this.renderTheme.border}" stroke-width="1"/>`;
+    }
 
     // Data rows (render all, don't restrict by height)
     mockRows.forEach((row, rowIdx) => {
@@ -734,19 +831,47 @@ export class SVGRenderer {
           stroke="${this.renderTheme.border}" stroke-width="0.5"/>`;
 
       // Row data
-      columns.forEach((col, colIdx) => {
+      safeColumns.forEach((col, colIdx) => {
         const cellValue = row[col] || '';
         svg += `
-    <text x="${pos.x + colIdx * colWidth + 12}" y="${rowY + 22}" 
+    <text x="${pos.x + colIdx * dataColWidth + 12}" y="${rowY + 22}" 
           font-family="system-ui, -apple-system, sans-serif" 
           font-size="12" 
           fill="${this.renderTheme.text}">${this.escapeXml(cellValue)}</text>`;
       });
+
+      if (hasActions) {
+        const iconSize = 14;
+        const buttonSize = 22;
+        const buttonGap = 6;
+        const actionsWidth = actions.length * buttonSize + Math.max(0, actions.length - 1) * buttonGap;
+        let currentX = pos.x + pos.width - 12 - actionsWidth;
+        const buttonY = rowY + (rowHeight - buttonSize) / 2;
+        actions.forEach((actionIcon) => {
+          const iconSvg = getIcon(actionIcon);
+          const iconX = currentX + (buttonSize - iconSize) / 2;
+          const iconY = buttonY + (buttonSize - iconSize) / 2;
+          svg += `
+    <rect x="${currentX}" y="${buttonY}" width="${buttonSize}" height="${buttonSize}" rx="4"
+          fill="${this.renderTheme.cardBg}" stroke="${this.renderTheme.border}" stroke-width="1"/>`;
+          if (iconSvg) {
+            svg += `
+    <g transform="translate(${iconX}, ${iconY})">
+      <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${this.hexToRgba(this.resolveTextColor(), 0.75)}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        ${this.extractSvgContent(iconSvg)}
+      </svg>
+    </g>`;
+          }
+          currentX += buttonSize + buttonGap;
+        });
+      }
     });
 
-    // Render pagination if enabled
+    const footerTop = headerY + headerHeight + mockRows.length * rowHeight + 16;
+
+    // Render pagination if enabled.
     if (pagination) {
-      const paginationY = headerY + headerHeight + mockRows.length * rowHeight + 16;
+      const paginationY = sameFooterAlign ? footerTop + 18 + 8 : footerTop;
       const buttonWidth = 40;
       const buttonHeight = 32;
       const gap = 8;
@@ -764,18 +889,25 @@ export class SVGRenderer {
       }
 
       // Previous button
+      const previousIcon = getIcon('chevron-left');
       svg += `
     <rect x="${startX}" y="${paginationY}" 
           width="${buttonWidth}" height="${buttonHeight}" 
           rx="4" 
           fill="${this.renderTheme.cardBg}" 
           stroke="${this.renderTheme.border}" 
-          stroke-width="1"/>
-    <text x="${startX + buttonWidth / 2}" y="${paginationY + buttonHeight / 2 + 4}" 
-          font-family="system-ui, -apple-system, sans-serif" 
-          font-size="14" 
-          fill="${this.renderTheme.text}" 
-          text-anchor="middle">&lt;</text>`;
+          stroke-width="1"/>`;
+      if (previousIcon) {
+        const iconSize = 14;
+        const iconX = startX + (buttonWidth - iconSize) / 2;
+        const iconY = paginationY + (buttonHeight - iconSize) / 2;
+        svg += `
+    <g transform="translate(${iconX}, ${iconY})">
+      <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${this.resolveTextColor()}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        ${this.extractSvgContent(previousIcon)}
+      </svg>
+    </g>`;
+      }
 
       // Page number buttons
       for (let i = 1; i <= pageCount; i++) {
@@ -800,18 +932,44 @@ export class SVGRenderer {
 
       // Next button
       const nextX = startX + (buttonWidth + gap) * (pageCount + 1);
+      const nextIcon = getIcon('chevron-right');
       svg += `
     <rect x="${nextX}" y="${paginationY}" 
           width="${buttonWidth}" height="${buttonHeight}" 
           rx="4" 
           fill="${this.renderTheme.cardBg}" 
           stroke="${this.renderTheme.border}" 
-          stroke-width="1"/>
-    <text x="${nextX + buttonWidth / 2}" y="${paginationY + buttonHeight / 2 + 4}" 
+          stroke-width="1"/>`;
+      if (nextIcon) {
+        const iconSize = 14;
+        const iconX = nextX + (buttonWidth - iconSize) / 2;
+        const iconY = paginationY + (buttonHeight - iconSize) / 2;
+        svg += `
+    <g transform="translate(${iconX}, ${iconY})">
+      <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${this.resolveTextColor()}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        ${this.extractSvgContent(nextIcon)}
+      </svg>
+    </g>`;
+      }
+    }
+
+    if (hasCaption) {
+      const captionY = sameFooterAlign ? footerTop + 12 : footerTop + (pagination ? 21 : 12);
+      let captionX = pos.x + 16;
+      let textAnchor: 'start' | 'middle' | 'end' = 'start';
+      if (captionAlign === 'center') {
+        captionX = pos.x + pos.width / 2;
+        textAnchor = 'middle';
+      } else if (captionAlign === 'right') {
+        captionX = pos.x + pos.width - 16;
+        textAnchor = 'end';
+      }
+      svg += `
+    <text x="${captionX}" y="${captionY}" 
           font-family="system-ui, -apple-system, sans-serif" 
-          font-size="14" 
-          fill="${this.renderTheme.text}" 
-          text-anchor="middle">&gt;</text>`;
+          font-size="12" 
+          fill="${this.hexToRgba(this.resolveTextColor(), 0.75)}"
+          text-anchor="${textAnchor}">${this.escapeXml(caption)}</text>`;
     }
 
     svg += '\n  </g>';
@@ -1830,7 +1988,12 @@ export class SVGRenderer {
   protected renderIcon(node: IRComponentNode, pos: any): string {
     const iconType = String(node.props.type || 'help-circle');
     const size = String(node.props.size || 'md');
+    const variant = String(node.props.variant || 'default');
     const iconSvg = getIcon(iconType);
+    const iconColor =
+      variant === 'default'
+        ? this.hexToRgba(this.resolveTextColor(), 0.75)
+        : this.resolveVariantColor(variant, this.resolveTextColor());
 
     if (!iconSvg) {
       // Fallback: render a placeholder with question mark
@@ -1842,7 +2005,6 @@ export class SVGRenderer {
     }
 
     const iconSize = this.getIconSize(size);
-    const iconColor = this.hexToRgba(this.resolveTextColor(), 0.75);
     const offsetX = pos.x + (pos.width - iconSize) / 2;
     const offsetY = pos.y + (pos.height - iconSize) / 2;
 
@@ -1861,6 +2023,9 @@ export class SVGRenderer {
     const variant = String(node.props.variant || 'default');
     const size = String(node.props.size || 'md');
     const disabled = String(node.props.disabled || 'false') === 'true';
+    const density = (this.ir.project.style.density || 'normal') as DensityLevel;
+    const labelOffset = this.parseBooleanProp(node.props.labelSpace, false) ? 18 : 0;
+    const extraPadding = resolveControlHorizontalPadding(String(node.props.padding || 'none'), density);
 
     const semanticBase = this.getSemanticVariantColor(variant);
     const hasExplicitVariantColor =
@@ -1879,18 +2044,23 @@ export class SVGRenderer {
     const opacity = disabled ? '0.5' : '1';
     const iconSvg = getIcon(iconName);
 
-    const buttonSize = this.getIconButtonSize(size);
+    const buttonSize = Math.max(
+      16,
+      Math.min(resolveControlHeight(size, density), pos.height - labelOffset)
+    );
+    const buttonWidth = buttonSize + extraPadding * 2;
     const radius = 6;
+    const buttonY = pos.y + labelOffset;
 
     let svg = `<g${this.getDataNodeId(node)} opacity="${opacity}">
     <!-- IconButton background -->
-    <rect x="${pos.x}" y="${pos.y}" width="${buttonSize}" height="${buttonSize}" rx="${radius}" fill="${bgColor}" stroke="${borderColor}" stroke-width="1"/>`;
+    <rect x="${pos.x}" y="${buttonY}" width="${buttonWidth}" height="${buttonSize}" rx="${radius}" fill="${bgColor}" stroke="${borderColor}" stroke-width="1"/>`;
 
     // Icon inside button
     if (iconSvg) {
       const iconSize = buttonSize * 0.6;
-      const offsetX = pos.x + (buttonSize - iconSize) / 2;
-      const offsetY = pos.y + (buttonSize - iconSize) / 2;
+      const offsetX = pos.x + (buttonWidth - iconSize) / 2;
+      const offsetY = buttonY + (buttonSize - iconSize) / 2;
 
       svg += `
     <!-- Icon -->

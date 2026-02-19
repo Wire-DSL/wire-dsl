@@ -1524,6 +1524,18 @@ function isBooleanLike(value: string | number): boolean {
   return normalized === 'true' || normalized === 'false';
 }
 
+function parseBooleanLike(value: string | number, fallback: boolean = false): boolean {
+  if (typeof value === 'number') {
+    if (value === 1) return true;
+    if (value === 0) return false;
+    return fallback;
+  }
+  const normalized = String(value).trim().toLowerCase();
+  if (normalized === 'true') return true;
+  if (normalized === 'false') return false;
+  return fallback;
+}
+
 function getPropertyRange(
   entry: SourceMapEntry | undefined,
   propertyName: string,
@@ -1673,7 +1685,11 @@ function validateSemanticDiagnostics(ast: AST, sourceMap: SourceMapEntry[]): Par
       const enumValues = rules.enumProps?.[propName];
       if (enumValues) {
         const normalizedValue = String(propValue);
-        if (!enumValues.includes(normalizedValue)) {
+        const isCustomVariantFromColors =
+          propName === 'variant' &&
+          !enumValues.includes(normalizedValue) &&
+          Object.prototype.hasOwnProperty.call(ast.colors || {}, normalizedValue);
+        if (!enumValues.includes(normalizedValue) && !isCustomVariantFromColors) {
           emitWarning(
             `Invalid value "${normalizedValue}" for property "${propName}" in component "${componentType}".`,
             'COMPONENT_INVALID_PROPERTY_VALUE',
@@ -1692,6 +1708,34 @@ function validateSemanticDiagnostics(ast: AST, sourceMap: SourceMapEntry[]): Par
           nodeId,
           'Use true or false.',
         );
+      }
+    }
+
+    if (componentType === 'Table') {
+      const hasCaption = String(component.props.caption || '').trim().length > 0;
+      const hasPagination = parseBooleanLike(component.props.pagination ?? 'false', false);
+      if (hasCaption && hasPagination) {
+        const rawPaginationAlign = String(component.props.paginationAlign || 'right');
+        const paginationAlign =
+          rawPaginationAlign === 'left' || rawPaginationAlign === 'center' || rawPaginationAlign === 'right'
+            ? rawPaginationAlign
+            : 'right';
+        const rawCaptionAlign = String(component.props.captionAlign || '');
+        const captionAlign =
+          rawCaptionAlign === 'left' || rawCaptionAlign === 'center' || rawCaptionAlign === 'right'
+            ? rawCaptionAlign
+            : paginationAlign === 'left'
+              ? 'right'
+              : 'left';
+        if (captionAlign === paginationAlign) {
+          emitWarning(
+            `Table footer collision: "captionAlign" and "paginationAlign" both resolve to "${captionAlign}".`,
+            'TABLE_FOOTER_ALIGNMENT_COLLISION',
+            entry?.range || toFallbackRange(),
+            nodeId,
+            'Use different alignments to avoid visual overlap.',
+          );
+        }
       }
     }
   };
@@ -1746,6 +1790,17 @@ function validateSemanticDiagnostics(ast: AST, sourceMap: SourceMapEntry[]): Par
 
       const allowed = new Set(rules.allowedParams);
       for (const [paramName, paramValue] of Object.entries(layout.params)) {
+        if (layout.layoutType === 'split' && paramName === 'sidebar') {
+          emitError(
+            'Split parameter "sidebar" was removed. Use "left" or "right" instead.',
+            'LAYOUT_SPLIT_SIDEBAR_DEPRECATED',
+            getPropertyRange(entry, paramName, 'name'),
+            nodeId,
+            'Example: layout split(left: 260) { ... }',
+          );
+          continue;
+        }
+
         if (!allowed.has(paramName)) {
           emitWarning(
             `Parameter "${paramName}" is not recognized for layout "${layout.layoutType}".`,
@@ -1787,17 +1842,49 @@ function validateSemanticDiagnostics(ast: AST, sourceMap: SourceMapEntry[]): Par
           }
         }
 
-        if (layout.layoutType === 'split' && paramName === 'sidebar') {
-          const sidebar = Number(paramValue);
-          if (!Number.isFinite(sidebar) || sidebar <= 0) {
+        if (layout.layoutType === 'split' && (paramName === 'left' || paramName === 'right')) {
+          const splitSize = Number(paramValue);
+          if (!Number.isFinite(splitSize) || splitSize <= 0) {
             emitWarning(
-              'Split "sidebar" must be a positive number.',
-              'LAYOUT_SPLIT_SIDEBAR_INVALID',
+              `Split "${paramName}" must be a positive number. Falling back to 250.`,
+              'LAYOUT_SPLIT_WIDTH_INVALID',
               getPropertyRange(entry, paramName, 'value'),
               nodeId,
-              'Use a value like sidebar: 240.',
+              `Use a value like ${paramName}: 260.`,
             );
           }
+        }
+      }
+
+      if (layout.layoutType === 'split') {
+        const hasLeft = layout.params.left !== undefined;
+        const hasRight = layout.params.right !== undefined;
+        if (!hasLeft && !hasRight) {
+          emitError(
+            'Split layout requires exactly one fixed side width: "left" or "right".',
+            'LAYOUT_SPLIT_SIDE_REQUIRED',
+            entry?.nameRange || entry?.range || toFallbackRange(),
+            nodeId,
+            'Add either left: <number> or right: <number>.',
+          );
+        }
+        if (hasLeft && hasRight) {
+          emitError(
+            'Split layout accepts only one fixed side width: use either "left" or "right", not both.',
+            'LAYOUT_SPLIT_SIDE_CONFLICT',
+            entry?.nameRange || entry?.range || toFallbackRange(),
+            nodeId,
+            'Remove one of the two parameters.',
+          );
+        }
+        if (layout.children.length !== 2) {
+          emitError(
+            `Split layout requires exactly 2 children, received ${layout.children.length}.`,
+            'LAYOUT_SPLIT_CHILDREN_ARITY',
+            entry?.bodyRange || entry?.range || toFallbackRange(),
+            nodeId,
+            'Provide exactly two child blocks (left/right content).',
+          );
         }
       }
     }

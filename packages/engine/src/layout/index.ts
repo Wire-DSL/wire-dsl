@@ -1,6 +1,11 @@
 import type { IRContract, IRNode, IRStyle } from '../ir/index';
 import { resolveSpacingToken, type DensityLevel } from '../shared/spacing';
-import { resolveIconButtonSize, resolveIconSize } from '../shared/component-sizes';
+import {
+  resolveControlHeight,
+  resolveControlHorizontalPadding,
+  resolveIconButtonSize,
+  resolveIconSize,
+} from '../shared/component-sizes';
 import { resolveHeadingTypography } from '../shared/heading-levels';
 import { resolveHeadingVerticalPadding } from '../shared/heading-spacing';
 
@@ -567,19 +572,32 @@ export class LayoutEngine {
     if (node.kind !== 'container') return;
 
     const gap = this.resolveSpacing(node.style.gap);
-    const sidebarWidth = Number(node.params.sidebar) || 260;
+    const leftParam = node.params.left;
+    const rightParam = node.params.right;
+    const leftWidthRaw = Number(leftParam);
+    const rightWidthRaw = Number(rightParam);
+    const hasLeft = leftParam !== undefined;
+    const hasRight = rightParam !== undefined;
+    const leftWidth =
+      Number.isFinite(leftWidthRaw) && leftWidthRaw > 0 ? leftWidthRaw : 250;
+    const rightWidth =
+      Number.isFinite(rightWidthRaw) && rightWidthRaw > 0 ? rightWidthRaw : 250;
 
     if (node.children.length === 1) {
       // Only one child, give it full width
       this.calculateNode(node.children[0].ref, x, y, width, height, 'split');
     } else if (node.children.length >= 2) {
-      // Left sidebar - will have its left padding, but right padding handled by gap
-      this.calculateNode(node.children[0].ref, x, y, sidebarWidth, height, 'split');
-
-      // Right content - will have its right padding, but left padding handled by gap
-      const contentX = x + sidebarWidth + gap;
-      const contentWidth = width - sidebarWidth - gap;
-      this.calculateNode(node.children[1].ref, contentX, y, contentWidth, height, 'split');
+      if (hasRight && !hasLeft) {
+        const flexibleLeftWidth = Math.max(1, width - rightWidth - gap);
+        const rightX = x + flexibleLeftWidth + gap;
+        this.calculateNode(node.children[0].ref, x, y, flexibleLeftWidth, height, 'split');
+        this.calculateNode(node.children[1].ref, rightX, y, rightWidth, height, 'split');
+      } else {
+        const flexibleRightWidth = Math.max(1, width - leftWidth - gap);
+        const rightX = x + leftWidth + gap;
+        this.calculateNode(node.children[0].ref, x, y, leftWidth, height, 'split');
+        this.calculateNode(node.children[1].ref, rightX, y, flexibleRightWidth, height, 'split');
+      }
     }
   }
 
@@ -772,12 +790,18 @@ export class LayoutEngine {
 
   private getIntrinsicComponentHeight(node: IRNode, availableWidth?: number): number {
     if (node.kind !== 'component') return this.getComponentHeight();
+    const controlSize = String(node.props.size || 'md');
+    const density = (this.style.density || 'normal') as DensityLevel;
+    const controlHeight = resolveControlHeight(controlSize, density);
     const controlLabelOffset =
       node.componentType === 'Input' ||
       node.componentType === 'Textarea' ||
       node.componentType === 'Select'
         ? this.getControlLabelOffset(String(node.props.label || ''))
-        : 0;
+        : (node.componentType === 'Button' || node.componentType === 'IconButton') &&
+            this.parseBooleanProp(node.props.labelSpace, false)
+          ? 18
+          : 0;
 
     // Image: calculate height based on aspect ratio and available width
     if (node.componentType === 'Image') {
@@ -815,12 +839,31 @@ export class LayoutEngine {
       }
       const rowCount = Number(node.props.rows || node.props.rowsMock || 5);
       const hasTitle = !!node.props.title;
-      const hasPagination = String(node.props.pagination) === 'true';
+      const hasPagination = this.parseBooleanProp(node.props.pagination, false);
+      const hasCaption = String(node.props.caption || '').trim().length > 0;
+      const paginationAlign = String(node.props.paginationAlign || 'right');
+      const captionAlign = String(node.props.captionAlign || '');
+      const effectiveCaptionAlign =
+        captionAlign === 'left' || captionAlign === 'center' || captionAlign === 'right'
+          ? captionAlign
+          : paginationAlign === 'left'
+            ? 'right'
+            : 'left';
+      const sameFooterAlign = hasCaption && hasPagination && effectiveCaptionAlign === paginationAlign;
       const headerHeight = 44;
       const rowHeight = 36;
       const titleHeight = hasTitle ? 32 : 0;
-      const paginationHeight = hasPagination ? 64 : 0; // 16px gap + 32px buttons + 16px bottom margin
-      return titleHeight + headerHeight + rowCount * rowHeight + paginationHeight;
+      let footerHeight = 0;
+      if (hasPagination || hasCaption) {
+        const footerBottomPadding = 12;
+        footerHeight += 16;
+        footerHeight += hasPagination ? 32 : 18;
+        if (sameFooterAlign) {
+          footerHeight += 8 + 18;
+        }
+        footerHeight += footerBottomPadding;
+      }
+      return titleHeight + headerHeight + rowCount * rowHeight + footerHeight;
     }
 
     if (node.componentType === 'Heading') {
@@ -912,8 +955,13 @@ export class LayoutEngine {
     if (node.componentType === 'Topbar') return 56;
     if (node.componentType === 'Divider') return 1;
     if (node.componentType === 'Separate') return this.getSeparateSize(node);
-    if (node.componentType === 'Input' || node.componentType === 'Select') {
-      return this.getComponentHeight() + controlLabelOffset;
+    if (
+      node.componentType === 'Input' ||
+      node.componentType === 'Select' ||
+      node.componentType === 'Button' ||
+      node.componentType === 'IconButton'
+    ) {
+      return controlHeight + controlLabelOffset;
     }
 
     // Default height
@@ -939,7 +987,10 @@ export class LayoutEngine {
     // IconButton: size + padding
     if (node.componentType === 'IconButton') {
       const size = String(node.props.size || 'md');
-      return resolveIconButtonSize(size, (this.style.density || 'normal') as DensityLevel);
+      const density = (this.style.density || 'normal') as DensityLevel;
+      const baseSize = resolveIconButtonSize(size, density);
+      const extraPadding = resolveControlHorizontalPadding(String(node.props.padding || 'none'), density);
+      return baseSize + extraPadding * 2;
     }
 
     // Checkbox, Radio: fixed width
@@ -954,8 +1005,10 @@ export class LayoutEngine {
     if (node.componentType === 'Button' || node.componentType === 'Link') {
       const text = String(node.props.text || '');
       const { fontSize, paddingX } = this.getButtonMetricsForDensity();
+      const density = (this.style.density || 'normal') as DensityLevel;
+      const extraPadding = resolveControlHorizontalPadding(String(node.props.padding || 'none'), density);
       const textWidth = this.estimateTextWidth(text, fontSize);
-      return Math.max(60, Math.ceil(textWidth + paddingX * 2));
+      return Math.max(60, Math.ceil(textWidth + (paddingX + extraPadding) * 2));
     }
 
     // Label, Text: content-based width (estimate)

@@ -622,6 +622,122 @@ describe('SVG Renderer', () => {
     expect(svg).toContain('Status');
   });
 
+  it('should render Table actions, caption and chevron pagination icons', () => {
+    const input = `
+      project "TableAdvanced" {
+        screen Main {
+          layout stack {
+            component Table
+              columns: "Name,Status"
+              rows: 2
+              actions: "eye,edit,trash"
+              caption: "Show 1 - 2 from 2 records"
+              captionAlign: left
+              pagination: true
+              paginationAlign: right
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    expect(svg).toContain('Show 1 - 2 from 2 records');
+    expect(svg).toContain('M1 12s4-8 11-8 11 8');
+    expect(svg).toContain('M11 4H4a2 2 0 0 0-2 2');
+    expect(svg).toContain('points="3 6 5 6 21 6"');
+    expect(svg).toContain('points="15 18 9 12 15 6"');
+    expect(svg).toContain('points="9 18 15 12 9 6"');
+  });
+
+  it('should not render Table outer frame by default', () => {
+    const input = `
+      project "TableDefaultFrame" {
+        screen Main {
+          layout stack {
+            component Table columns: "Name,Status" rows: 2
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+    const tableEntry = Object.entries(ir.project.nodes).find(
+      ([_, node]) => node.kind === 'component' && node.componentType === 'Table'
+    );
+
+    expect(tableEntry).toBeDefined();
+    const tablePos = layout[tableEntry![0]];
+    const outerFrameRegex = new RegExp(
+      `<rect x="${tablePos.x}" y="${tablePos.y}"\\s+width="${tablePos.width}" height="${tablePos.height}"\\s+rx="8"`,
+      'm'
+    );
+    expect(outerFrameRegex.test(svg)).toBe(false);
+  });
+
+  it('should render Table outer frame when border and backround are true', () => {
+    const input = `
+      project "TableWithFrame" {
+        screen Main {
+          layout stack {
+            component Table columns: "Name,Status" rows: 2 border: true backround: true
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+    const tableEntry = Object.entries(ir.project.nodes).find(
+      ([_, node]) => node.kind === 'component' && node.componentType === 'Table'
+    );
+
+    expect(tableEntry).toBeDefined();
+    const tablePos = layout[tableEntry![0]];
+    const outerFrameRegex = new RegExp(
+      `<rect x="${tablePos.x}" y="${tablePos.y}"\\s+width="${tablePos.width}" height="${tablePos.height}"\\s+rx="8"\\s+fill="[^"]+"\\s+stroke="[^"]+"\\s+stroke-width="1"`,
+      'm'
+    );
+    expect(outerFrameRegex.test(svg)).toBe(true);
+  });
+
+  it('should leave bottom spacing under table pagination footer', () => {
+    const input = `
+      project "TableFooterBottomSpacing" {
+        screen Main {
+          layout stack {
+            component Table columns: "Name,Status" rows: 2 pagination: true pages: 3
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+    const tableEntry = Object.entries(ir.project.nodes).find(
+      ([_, node]) => node.kind === 'component' && node.componentType === 'Table'
+    );
+
+    expect(tableEntry).toBeDefined();
+    const tablePos = layout[tableEntry![0]];
+    const paginationButtonMatch = svg.match(/<rect x="[^"]+" y="([^"]+)"\s+width="40" height="32"/);
+    expect(paginationButtonMatch).toBeTruthy();
+
+    const paginationY = Number(paginationButtonMatch![1]);
+    const bottomGap = tablePos.y + tablePos.height - (paginationY + 32);
+    expect(bottomGap).toBeGreaterThanOrEqual(10);
+  });
+
   it('should render chart placeholder', () => {
     const input = `
       project "Chart" {
@@ -1141,11 +1257,11 @@ describe('SVG Renderer', () => {
     expect(controlY).toBe(inputPos.y + 18);
   });
 
-  it('should render split layout with sidebar', () => {
+  it('should render split layout with fixed left panel', () => {
     const input = `
       project "Admin" {
         screen Dashboard {
-          layout split(sidebar: 240, gap: lg) {
+          layout split(left: 240, gap: lg) {
             layout stack(direction: vertical, gap: md) {
               component Heading text: "Menu"
               component SidebarMenu items: "Users,Settings"
@@ -1168,6 +1284,79 @@ describe('SVG Renderer', () => {
     expect(svg).toContain('Menu');
     expect(svg).toContain('Content');
     expect(svg).toContain('Main area');
+  });
+
+  it('should render split background on fixed right panel and divider when border is true', () => {
+    const input = `
+      project "SplitDecorations" {
+        colors {
+          rail: #112233
+        }
+        screen Main {
+          layout split(right: 220, gap: md, background: rail, border: true) {
+            layout stack {
+              component Heading text: "Content"
+            }
+            layout stack {
+              component Heading text: "Tools"
+            }
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    const splitEntry = Object.entries(ir.project.nodes).find(
+      ([_, node]) => node.kind === 'container' && node.containerType === 'split'
+    );
+    expect(splitEntry).toBeDefined();
+
+    const splitPos = layout[splitEntry![0]];
+    const expectedPanelX = splitPos.x + splitPos.width - 220;
+    const expectedDividerX = splitPos.x + splitPos.width - 220 - 8; // gap md / 2
+
+    const bgRectMatch = svg.match(
+      /<rect x="([^"]+)" y="([^"]+)" width="220" height="([^"]+)" fill="#112233" stroke="none"\/>/
+    );
+    expect(bgRectMatch).toBeTruthy();
+    expect(Number(bgRectMatch![1])).toBeCloseTo(expectedPanelX, 5);
+    expect(Number(bgRectMatch![2])).toBeCloseTo(splitPos.y, 5);
+
+    const dividerMatch = svg.match(
+      /<line x1="([^"]+)" y1="([^"]+)" x2="([^"]+)" y2="([^"]+)" stroke="#E2E8F0" stroke-width="1"\/>/
+    );
+    expect(dividerMatch).toBeTruthy();
+    expect(Number(dividerMatch![1])).toBeCloseTo(expectedDividerX, 5);
+    expect(Number(dividerMatch![2])).toBeCloseTo(splitPos.y, 5);
+  });
+
+  it('should apply custom variant colors to Heading, Icon and Topbar', () => {
+    const input = `
+      project "VariantComponents" {
+        colors {
+          brand: #AA00AA
+        }
+        screen Main {
+          layout stack(direction: vertical, gap: md) {
+            component Heading text: "Brand heading" variant: brand
+            component Icon type: "home" variant: brand
+            component Topbar title: "Dashboard" icon: "menu" actions: "Save,Export" variant: brand
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    expect(svg).toContain('fill="#AA00AA"');
+    expect(svg).toContain('stroke="#AA00AA"');
   });
 
   it('should render panel layout with border', () => {
@@ -1898,5 +2087,35 @@ describe('Sketch SVG Renderer', () => {
 
     expect(svg).toContain('fill="#222222"');
     expect(svg).toContain('fill="#7A7A7A"');
+  });
+
+  it('should render Table pagination chevrons and caption in sketch renderer', () => {
+    const input = `
+      project "SketchTableAdvanced" {
+        screen Main {
+          layout stack {
+            component Table
+              columns: "Name,Status"
+              rows: 2
+              actions: "eye,edit,trash"
+              caption: "Show 1 - 2 from 2 records"
+              pagination: true
+              paginationAlign: right
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+
+    const renderer = new SketchSVGRenderer(ir, layout);
+    const svg = renderer.render();
+
+    expect(svg).toContain('Show 1 - 2 from 2 records');
+    expect(svg).toContain('points="15 18 9 12 15 6"');
+    expect(svg).toContain('points="9 18 15 12 9 6"');
+    expect(svg).toContain('M1 12s4-8 11-8 11 8');
   });
 });

@@ -729,7 +729,7 @@ describe('IR Generator', () => {
     const input = `
       project "Admin" {
         screen Dashboard {
-          layout split(sidebar: 240, gap: lg) {
+          layout split(left: 240, gap: lg) {
             layout stack(direction: vertical, gap: md) {
               component SidebarMenu items: "Users,Roles,Settings" active: 1
             }
@@ -955,7 +955,7 @@ describe('IR Generator', () => {
     const input = `
       project "RequiredMissingBinding" {
         define Layout "screen_shell" {
-          layout split(sidebar: prop_sidebar) {
+          layout grid(columns: prop_columns) {
             component Children
           }
         }
@@ -1001,7 +1001,7 @@ describe('IR Generator', () => {
     const input = `
       project "DefinedLayoutExpansion" {
         define Layout "screen_default" {
-          layout split(sidebar: prop_sidebar) {
+          layout split(left: prop_left) {
             component SidebarMenu
               items: "Home,Users,Roles"
               active: prop_active
@@ -1010,7 +1010,7 @@ describe('IR Generator', () => {
         }
 
         screen Main {
-          layout screen_default(sidebar: 200, active: 1) {
+          layout screen_default(left: 200, active: 1) {
             layout stack {
               component Heading text: "Main Screen"
             }
@@ -1035,7 +1035,7 @@ describe('IR Generator', () => {
 
     expect(splitNode).toBeDefined();
     if (splitNode?.kind === 'container') {
-      expect(splitNode.params.sidebar).toBe(200);
+      expect(splitNode.params.left).toBe(200);
     }
     expect(sidebarMenu).toBeDefined();
     if (sidebarMenu?.kind === 'component') {

@@ -4,6 +4,7 @@
  *
  * Last synced: February 16, 2026
  */
+import { ICON_NAME_OPTIONS } from './icon-names';
 
 export interface PropertyMetadata {
   name: string;
@@ -57,6 +58,26 @@ const variantWithDefaultEnum: PropertyMetadata = {
   type: 'enum',
   options: ['default', 'primary', 'secondary', 'success', 'warning', 'danger', 'info'],
 };
+const iconNameEnum: PropertyMetadata = {
+  name: 'icon',
+  type: 'enum',
+  options: ICON_NAME_OPTIONS,
+};
+const controlSizeEnum: PropertyMetadata = {
+  name: 'size',
+  type: 'enum',
+  options: ['sm', 'md', 'lg'],
+};
+const alignEnum: PropertyMetadata = {
+  name: 'align',
+  type: 'enum',
+  options: ['left', 'center', 'right'],
+};
+const controlPaddingEnum: PropertyMetadata = {
+  name: 'padding',
+  type: 'enum',
+  options: ['none', 'xs', 'sm', 'md', 'lg', 'xl'],
+};
 const headingLevelEnum: PropertyMetadata = {
   name: 'level',
   type: 'enum',
@@ -82,6 +103,7 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
       text: { name: 'text', type: 'string' },
       level: headingLevelEnum,
       spacing: headingSpacingEnum,
+      variant: variantWithDefaultEnum,
     },
     example: 'component Heading text: "Users" level: h2 spacing: sm',
   },
@@ -110,6 +132,9 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     properties: {
       text: { name: 'text', type: 'string' },
       variant: variantWithDefaultEnum,
+      size: controlSizeEnum,
+      labelSpace: { name: 'labelSpace', type: 'boolean' },
+      padding: controlPaddingEnum,
       block: { name: 'block', type: 'boolean' },
     },
     example: 'component Button text: "Save" variant: primary block: true',
@@ -131,6 +156,7 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     properties: {
       label: { name: 'label', type: 'string' },
       placeholder: { name: 'placeholder', type: 'string' },
+      size: controlSizeEnum,
     },
     example: 'component Input label: "Email" placeholder: "you@example.com"',
   },
@@ -153,6 +179,7 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
       label: { name: 'label', type: 'string' },
       placeholder: { name: 'placeholder', type: 'string' },
       items: { name: 'items', type: 'string' },
+      size: controlSizeEnum,
     },
     example: 'component Select label: "Role" items: "Admin,User,Guest"',
   },
@@ -193,10 +220,11 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     properties: {
       title: { name: 'title', type: 'string' },
       subtitle: { name: 'subtitle', type: 'string' },
-      icon: { name: 'icon', type: 'string' },
+      icon: iconNameEnum,
       avatar: { name: 'avatar', type: 'boolean' },
       actions: { name: 'actions', type: 'string' },
       user: { name: 'user', type: 'string' },
+      variant: variantWithDefaultEnum,
     },
     example: 'component Topbar title: "Dashboard" subtitle: "Overview" icon: "menu" user: "john_doe" avatar: true',
   },
@@ -256,7 +284,14 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
       random: { name: 'random', type: 'boolean' },
       pagination: { name: 'pagination', type: 'boolean' },
       pages: { name: 'pages', type: 'number' },
-      paginationAlign: { name: 'paginationAlign', type: 'enum', options: ['left', 'center', 'right'] },
+      paginationAlign: alignEnum,
+      actions: { name: 'actions', type: 'string' },
+      caption: { name: 'caption', type: 'string' },
+      captionAlign: alignEnum,
+      border: { name: 'border', type: 'boolean' },
+      background: { name: 'background', type: 'boolean' },
+      // Backward-compatible alias (common typo) accepted by parser/renderers.
+      backround: { name: 'backround', type: 'boolean' },
     },
     example: 'component Table columns: "User,City,Amount" rows: 8 mock: "name,city,amount"',
   },
@@ -281,7 +316,7 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
       title: { name: 'title', type: 'string' },
       value: { name: 'value', type: 'string' },
       caption: { name: 'caption', type: 'string' },
-      icon: { name: 'icon', type: 'string' },
+      icon: iconNameEnum,
     },
     example: 'component StatCard title: "Users" value: "1,234" icon: "users"',
   },
@@ -330,7 +365,7 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     category: 'Media',
     properties: {
       placeholder: imagePlaceholderEnum,
-      icon: { name: 'icon', type: 'string' },
+      icon: iconNameEnum,
       height: { name: 'height', type: 'number' },
     },
     example: 'component Image placeholder: "icon" icon: "search" height: 220',
@@ -340,8 +375,9 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     description: 'Standalone icon component.',
     category: 'Media',
     properties: {
-      type: { name: 'type', type: 'string' },
+      type: { name: 'type', type: 'enum', options: ICON_NAME_OPTIONS },
       size: sizeEnum,
+      variant: variantWithDefaultEnum,
     },
     example: 'component Icon type: "home" size: md',
   },
@@ -350,10 +386,12 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     description: 'Button that renders an icon.',
     category: 'Action',
     properties: {
-      icon: { name: 'icon', type: 'string' },
-      size: sizeEnum,
+      icon: iconNameEnum,
+      size: controlSizeEnum,
       variant: variantWithDefaultEnum,
       disabled: { name: 'disabled', type: 'boolean' },
+      labelSpace: { name: 'labelSpace', type: 'boolean' },
+      padding: controlPaddingEnum,
     },
     example: 'component IconButton icon: "search" variant: default size: md',
   },
@@ -434,12 +472,14 @@ export const LAYOUTS: Record<string, LayoutMetadata> = {
     name: 'split',
     description: 'Two-column split layout.',
     properties: {
-      sidebar: { name: 'sidebar', type: 'number' },
+      left: { name: 'left', type: 'number' },
+      right: { name: 'right', type: 'number' },
+      background: { name: 'background', type: 'string' },
+      border: { name: 'border', type: 'boolean' },
       gap: { name: 'gap', type: 'enum', options: spacingEnum.options },
       padding: { name: 'padding', type: 'enum', options: spacingEnum.options },
     },
-    requiredProperties: ['sidebar'],
-    example: 'layout split(sidebar: 260, gap: md) { ... }',
+    example: 'layout split(left: 260, gap: md, border: true) { ... }',
   },
   panel: {
     name: 'panel',
@@ -482,5 +522,5 @@ export const KEYWORDS = {
   layout: ['layout'],
   component: ['component'],
   cell: ['cell'],
-  special: ['span', 'sidebar', 'columns', 'gap', 'padding', 'direction', 'Component'],
+  special: ['span', 'columns', 'left', 'right', 'gap', 'padding', 'direction', 'background', 'border', 'Component'],
 };

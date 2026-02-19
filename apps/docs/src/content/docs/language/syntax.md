@@ -130,6 +130,8 @@ You can override any of them in `colors`.
 - `accent`: used by `Topbar` icon/actions, active `Tabs`, `StatCard` highlighted value/icon, selected `SidebarMenu` item
 - `control`: used by selected/enabled states in `Checkbox`, `Radio`, `Toggle`
 - `chart`: used by `Chart` types `line`, `area`, and `bar`
+- `text`: default text color fallback (`#000000` light, `#FFFFFF` dark)
+- `muted`: default muted text color fallback (`#64748B` light, `#94A3B8` dark)
 
 **Note**:
 - `Chart` type `pie` keeps a fixed multi-color palette and does not use `chart` as single fill.
@@ -142,9 +144,9 @@ Defines a screen/page in the wireframe.
 
 ```wire
 screen UsersList {
-  layout split(sidebar: 260, gap: md) {
-    layout stack { ... }  // sidebar
-    layout stack { ... }  // main content
+  layout split(left: 260, gap: md) {
+    layout stack { ... }  // fixed panel
+    layout stack { ... }  // flexible panel
   }
 }
 ```
@@ -236,10 +238,10 @@ layout grid(columns: 12, gap: md) {
 
 ### Split Layout
 
-Two-panel layout (sidebar + main content).
+Two-panel layout with one fixed side and one flexible side.
 
 ```wire
-layout split(sidebar: 260, gap: md) {
+layout split(left: 260, gap: md) {
   layout stack {
     component SidebarMenu items: "Home,Users,Settings"
   }
@@ -251,8 +253,17 @@ layout split(sidebar: 260, gap: md) {
 ```
 
 **Properties**:
-- `sidebar`: width of left panel in pixels
+- `left`: fixed width for left panel (pixels)
+- `right`: fixed width for right panel (pixels)
+- `background`: color token/variant/hex applied to the fixed panel
+- `border`: `true` adds vertical divider between panels
 - `gap`: spacing between panels
+- `padding`: inner padding
+
+Rules:
+- provide exactly one of `left` or `right`
+- `split` requires exactly 2 children
+- legacy `sidebar` parameter is deprecated and reported as semantic error
 
 ---
 
@@ -362,7 +373,7 @@ Binding behavior:
 
 ```wire
 define Layout "screen_default" {
-  layout split(sidebar: prop_sidebar) {
+  layout split(left: prop_left) {
     component SidebarMenu
       items: "Home,Users,Permissions"
       active: prop_active
@@ -375,7 +386,7 @@ Usage:
 
 ```wire
 screen Main {
-  layout screen_default(sidebar: 220, active: 1) {
+  layout screen_default(left: 220, active: 1) {
     layout stack(gap: md) {
       component Heading text: "Main Screen"
     }
@@ -438,7 +449,7 @@ project "Admin Dashboard" {
   }
 
   screen UsersList {
-    layout split(sidebar: 260, gap: md) {
+    layout split(left: 260, gap: md) {
       layout stack(gap: lg, padding: lg) {
         component Topbar title: "Dashboard"
         component SidebarMenu items: "Users,Roles,Permissions,Audit" active: 0
@@ -497,7 +508,7 @@ project "Admin Dashboard" {
 1. A `project` must have at least one `screen`
 2. Each `screen` must have exactly one root layout
 3. `grid` layouts require `columns` property
-4. `split` layouts require `sidebar` property
+4. `split` layouts require exactly one of `left` or `right` and exactly 2 children
 5. `Table` components require `columns` property
 6. All identifiers must be unique within project scope
 7. Property values must match their defined types

@@ -202,7 +202,7 @@ ${components.join('\n')}
           }
           
           screen Main {
-            layout split(sidebar: 260, gap: md) {
+            layout split(left: 260, gap: md) {
               layout stack(gap: md, padding: lg) {
                 component Heading text: "Navigation"
                 component Button text: "Dashboard"

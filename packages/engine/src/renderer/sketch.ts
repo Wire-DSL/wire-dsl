@@ -17,6 +17,8 @@ import { SVGRenderer } from './index';
 import type { IRComponentNode } from '../ir';
 import { getIcon } from './icons/iconLibrary';
 import { MockDataGenerator } from './mock-data';
+import { resolveControlHeight, resolveControlHorizontalPadding } from '../shared/component-sizes';
+import type { DensityLevel } from '../shared/spacing';
 
 export class SketchSVGRenderer extends SVGRenderer {
   /**
@@ -82,6 +84,10 @@ export class SketchSVGRenderer extends SVGRenderer {
   protected renderButton(node: IRComponentNode, pos: any): string {
     const text = String(node.props.text || 'Button');
     const variant = String(node.props.variant || 'default');
+    const size = String(node.props.size || 'md');
+    const density = (this.ir.project.style.density || 'normal') as DensityLevel;
+    const extraPadding = resolveControlHorizontalPadding(String(node.props.padding || 'none'), density);
+    const labelOffset = this.parseBooleanProp(node.props.labelSpace, false) ? 18 : 0;
     const fullWidth = this.shouldButtonFillAvailableWidth(node);
 
     // Use same tokens as standard renderer
@@ -89,15 +95,18 @@ export class SketchSVGRenderer extends SVGRenderer {
     const fontSize = this.tokens.button.fontSize;
     const fontWeight = this.tokens.button.fontWeight;
     const paddingX = this.tokens.button.paddingX;
-    const paddingY = this.tokens.button.paddingY;
+    const buttonHeight = Math.max(
+      16,
+      Math.min(resolveControlHeight(size, density), pos.height - labelOffset)
+    );
+    const buttonY = pos.y + labelOffset;
 
     // Keep control inside layout bounds; truncate text if needed.
     const idealTextWidth = text.length * fontSize * 0.6;
     const buttonWidth = fullWidth
       ? Math.max(1, pos.width)
-      : this.clampControlWidth(Math.max(idealTextWidth + paddingX * 2, 60), pos.width);
-    const buttonHeight = fontSize + paddingY * 2;
-    const availableTextWidth = Math.max(0, buttonWidth - paddingX * 2);
+      : this.clampControlWidth(Math.max(idealTextWidth + (paddingX + extraPadding) * 2, 60), pos.width);
+    const availableTextWidth = Math.max(0, buttonWidth - (paddingX + extraPadding) * 2);
     const visibleText = this.truncateTextToWidth(text, availableTextWidth, fontSize);
 
     const semanticBase = this.getSemanticVariantColor(variant);
@@ -111,14 +120,14 @@ export class SketchSVGRenderer extends SVGRenderer {
     const strokeWidth = 0.5;
 
     return `<g${this.getDataNodeId(node)}>
-      <rect x="${pos.x}" y="${pos.y}"
+      <rect x="${pos.x}" y="${buttonY}"
             width="${buttonWidth}" height="${buttonHeight}"
             rx="${radius}"
             fill="none"
             stroke="${borderColor}"
             stroke-width="${strokeWidth}"
             filter="url(#sketch-rough)"/>
-      <text x="${pos.x + buttonWidth / 2}" y="${pos.y + buttonHeight / 2 + fontSize * 0.35}"
+      <text x="${pos.x + buttonWidth / 2}" y="${buttonY + buttonHeight / 2 + fontSize * 0.35}"
             font-family="${this.fontFamily}"
             font-size="${fontSize}"
             font-weight="${fontWeight}"
@@ -167,6 +176,9 @@ export class SketchSVGRenderer extends SVGRenderer {
     const iconName = String(node.props.icon || 'help-circle');
     const variant = String(node.props.variant || 'default');
     const size = String(node.props.size || 'md');
+    const density = (this.ir.project.style.density || 'normal') as DensityLevel;
+    const labelOffset = this.parseBooleanProp(node.props.labelSpace, false) ? 18 : 0;
+    const extraPadding = resolveControlHorizontalPadding(String(node.props.padding || 'none'), density);
 
     const semanticBase = this.getSemanticVariantColor(variant);
     const hasExplicitVariantColor =
@@ -176,15 +188,17 @@ export class SketchSVGRenderer extends SVGRenderer {
       : this.resolveTextColor();
     const borderColor = variantColor;
     const iconColor = variantColor;
-    const buttonSize = this.getIconButtonSize(size);
+    const buttonSize = Math.max(16, Math.min(resolveControlHeight(size, density), pos.height - labelOffset));
+    const buttonWidth = buttonSize + extraPadding * 2;
     const radius = 6;
+    const buttonY = pos.y + labelOffset;
 
     // Get icon from parent class
     const iconSvg = this.getIconSvg(iconName);
 
     let svg = `<g${this.getDataNodeId(node)}>
-      <rect x="${pos.x}" y="${pos.y}"
-            width="${buttonSize}" height="${buttonSize}"
+      <rect x="${pos.x}" y="${buttonY}"
+            width="${buttonWidth}" height="${buttonSize}"
             rx="${radius}"
             fill="none"
             stroke="${borderColor}"
@@ -194,8 +208,8 @@ export class SketchSVGRenderer extends SVGRenderer {
     // Icon inside button
     if (iconSvg) {
       const iconSize = buttonSize * 0.6;
-      const offsetX = pos.x + (buttonSize - iconSize) / 2;
-      const offsetY = pos.y + (buttonSize - iconSize) / 2;
+      const offsetX = pos.x + (buttonWidth - iconSize) / 2;
+      const offsetY = buttonY + (buttonSize - iconSize) / 2;
 
       svg += `
       <g transform="translate(${offsetX}, ${offsetY})">
@@ -368,6 +382,9 @@ export class SketchSVGRenderer extends SVGRenderer {
    */
   protected renderHeading(node: IRComponentNode, pos: any): string {
     const text = String(node.props.text || 'Heading');
+    const variant = String(node.props.variant || 'default');
+    const headingColor =
+      variant === 'default' ? this.resolveTextColor() : this.resolveVariantColor(variant, this.resolveTextColor());
     const headingTypography = this.getHeadingTypography(node);
     const fontSize = headingTypography.fontSize;
     const fontWeight = headingTypography.fontWeight;
@@ -381,7 +398,7 @@ export class SketchSVGRenderer extends SVGRenderer {
           font-family="${this.fontFamily}"
           font-size="${fontSize}"
           font-weight="${fontWeight}"
-          fill="${this.renderTheme.text}">${this.escapeXml(text)}</text>
+          fill="${headingColor}">${this.escapeXml(text)}</text>
   </g>`;
     }
 
@@ -397,7 +414,7 @@ export class SketchSVGRenderer extends SVGRenderer {
           font-family="${this.fontFamily}"
           font-size="${fontSize}"
           font-weight="${fontWeight}"
-          fill="${this.renderTheme.text}">${tspans}</text>
+          fill="${headingColor}">${tspans}</text>
   </g>`;
   }
 
@@ -409,7 +426,11 @@ export class SketchSVGRenderer extends SVGRenderer {
     const subtitle = String(node.props.subtitle || '');
     const actions = String(node.props.actions || '');
     const user = String(node.props.user || '');
-    const accentColor = this.resolveAccentColor();
+    const variant = String(node.props.variant || 'default');
+    const accentColor =
+      variant === 'default'
+        ? this.resolveAccentColor()
+        : this.resolveVariantColor(variant, this.resolveAccentColor());
     const topbar = this.calculateTopbarLayout(node, pos, title, subtitle, actions, user);
 
     let svg = `<g${this.getDataNodeId(node)}>
@@ -510,96 +531,8 @@ export class SketchSVGRenderer extends SVGRenderer {
    * Render table with sketch filter and Comic Sans
    */
   protected renderTable(node: IRComponentNode, pos: any): string {
-    const title = String(node.props.title || '');
-    const columnsStr = String(node.props.columns || 'Col1,Col2,Col3');
-    const columns = columnsStr.split(',').map((c) => c.trim());
-    const rowCount = Number(node.props.rows || node.props.rowsMock || 5);
-    const mockStr = String(node.props.mock || '');
-    const random = this.parseBooleanProp(node.props.random, false);
-
-    // Parse mock types by column. If not provided, infer from column names.
-    const mockTypes = mockStr
-      ? mockStr
-          .split(',')
-          .map((m) => m.trim())
-          .filter(Boolean)
-      : [];
-    while (mockTypes.length < columns.length) {
-      const inferred = MockDataGenerator.inferMockTypeFromColumn(columns[mockTypes.length] || 'item');
-      mockTypes.push(inferred);
-    }
-
-    const headerHeight = 44;
-    const rowHeight = 36;
-    const colWidth = pos.width / columns.length;
-
-    // Generate mock rows based on mock types
-    const mockRows: Record<string, string>[] = [];
-    for (let rowIdx = 0; rowIdx < rowCount; rowIdx++) {
-      const row: Record<string, string> = {};
-      columns.forEach((col, colIdx) => {
-        const mockType =
-          mockTypes[colIdx] || MockDataGenerator.inferMockTypeFromColumn(col) || 'item';
-        row[col] = MockDataGenerator.getMockValue(mockType, rowIdx, random);
-      });
-      mockRows.push(row);
-    }
-
-    let svg = `<g${this.getDataNodeId(node)}>
-    <rect x="${pos.x}" y="${pos.y}"
-          width="${pos.width}" height="${pos.height}"
-          rx="8"
-          fill="${this.renderTheme.cardBg}"
-          stroke="#2D3748"
-          stroke-width="0.5"
-          filter="url(#sketch-rough)"/>`;
-
-    if (title) {
-      svg += `
-    <text x="${pos.x + 16}" y="${pos.y + 24}"
-          font-family="${this.fontFamily}"
-          font-size="13"
-          font-weight="600"
-          fill="${this.renderTheme.text}">${this.escapeXml(title)}</text>`;
-    }
-
-    // Header row
-    const headerY = pos.y + (title ? 32 : 0);
-    svg += `
-    <line x1="${pos.x}" y1="${headerY + headerHeight}" x2="${pos.x + pos.width}" y2="${headerY + headerHeight}"
-          stroke="#2D3748" stroke-width="0.5" filter="url(#sketch-rough)"/>`;
-
-    columns.forEach((col, i) => {
-      svg += `
-    <text x="${pos.x + i * colWidth + 12}" y="${headerY + 26}"
-          font-family="${this.fontFamily}"
-          font-size="11"
-          font-weight="600"
-          fill="${this.renderTheme.textMuted}">${this.escapeXml(col)}</text>`;
-    });
-
-    // Data rows (render all, don't restrict by height)
-    mockRows.forEach((row, rowIdx) => {
-      const rowY = headerY + headerHeight + rowIdx * rowHeight;
-
-      // Row separator
-      svg += `
-    <line x1="${pos.x}" y1="${rowY + rowHeight}" x2="${pos.x + pos.width}" y2="${rowY + rowHeight}"
-          stroke="#2D3748" stroke-width="0.5" filter="url(#sketch-rough)"/>`;
-
-      // Row data
-      columns.forEach((col, colIdx) => {
-        const cellValue = row[col] || '';
-        svg += `
-    <text x="${pos.x + colIdx * colWidth + 12}" y="${rowY + 22}"
-          font-family="${this.fontFamily}"
-          font-size="12"
-          fill="${this.renderTheme.text}">${this.escapeXml(cellValue)}</text>`;
-      });
-    });
-
-    svg += '\n  </g>';
-    return svg;
+    const standard = super.renderTable(node, pos);
+    return standard.replace('<g', '<g filter="url(#sketch-rough)"');
   }
 
   /**
@@ -1307,6 +1240,7 @@ export class SketchSVGRenderer extends SVGRenderer {
   protected renderIcon(node: IRComponentNode, pos: any): string {
     const iconType = String(node.props.type || 'help-circle');
     const size = String(node.props.size || 'md');
+    const variant = String(node.props.variant || 'default');
     const iconSvg = getIcon(iconType);
 
     if (!iconSvg) {
@@ -1322,7 +1256,8 @@ export class SketchSVGRenderer extends SVGRenderer {
     }
 
     const iconSize = this.getIconSize(size);
-    const iconColor = this.resolveTextColor();
+    const iconColor =
+      variant === 'default' ? this.resolveTextColor() : this.resolveVariantColor(variant, this.resolveTextColor());
     const offsetX = pos.x + (pos.width - iconSize) / 2;
     const offsetY = pos.y + (pos.height - iconSize) / 2;
 

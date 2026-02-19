@@ -611,7 +611,7 @@ describe('Layout Engine', () => {
     const input = `
       project "Split" {
         screen Main {
-          layout split(sidebar: 260, gap: md) {
+          layout split(left: 260, gap: md) {
             layout stack {
               component Button text: "Sidebar"
             }
@@ -633,11 +633,36 @@ describe('Layout Engine', () => {
 
     expect(containers).toHaveLength(2);
 
-    // First container (sidebar) should be 260px wide
+    // First container (left fixed panel) should be 260px wide
     expect(containers[0].width).toBe(260);
 
     // Second container should be to the right
     expect(containers[1].x).toBeGreaterThan(containers[0].x);
+  });
+
+  it('should calculate split layout with fixed right panel', () => {
+    const input = `
+      project "SplitRight" {
+        screen Main {
+          layout split(right: 300, gap: md) {
+            layout stack { component Heading text: "Main" }
+            layout stack { component Heading text: "Right" }
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+
+    const containers = Object.entries(ir.project.nodes)
+      .filter(([_, n]) => n.kind === 'container' && n.containerType === 'stack')
+      .map(([id]) => layout[id]);
+
+    expect(containers).toHaveLength(2);
+    expect(containers[1].width).toBe(300);
+    expect(containers[0].x).toBeLessThan(containers[1].x);
   });
 
   it('should handle complete dashboard example', () => {
@@ -823,6 +848,110 @@ describe('Layout Engine', () => {
     expect(inputPositions).toHaveLength(2);
     expect(inputPositions[1].height).toBeGreaterThan(inputPositions[0].height);
     expect(inputPositions[1].height - inputPositions[0].height).toBe(18);
+  });
+
+  it('should reserve extra bottom padding when Table footer is enabled', () => {
+    const input = `
+      project "TableFooterPaddingHeight" {
+        screen Main {
+          layout stack(direction: vertical, gap: sm) {
+            component Table columns: "Name,Status" rows: 1
+            component Table columns: "Name,Status" rows: 1 pagination: true pages: 3
+            component Table columns: "Name,Status" rows: 1 caption: "Showing 1 - 1"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+
+    const tablePositions = Object.entries(ir.project.nodes)
+      .filter(([_, node]) => node.kind === 'component' && node.componentType === 'Table')
+      .map(([id]) => layout[id])
+      .sort((a, b) => a.y - b.y);
+
+    expect(tablePositions).toHaveLength(3);
+
+    const plain = tablePositions[0];
+    const withPagination = tablePositions[1];
+    const withCaption = tablePositions[2];
+
+    expect(withPagination.height - plain.height).toBe(60);
+    expect(withCaption.height - plain.height).toBe(46);
+  });
+
+  it('should align control heights for Input, Select, Button and IconButton when using size and labelSpace', () => {
+    const input = `
+      project "ControlHeightAlignment" {
+        screen Main {
+          layout stack(direction: horizontal, align: left, gap: sm) {
+            component Input label: "Email" placeholder: "user@example.com" size: md
+            component Select label: "Role" items: "Admin,User" size: md
+            component Button text: "Save" size: md labelSpace: true
+            component IconButton icon: "check" size: md labelSpace: true
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+
+    const inputPos = Object.entries(ir.project.nodes).find(
+      ([_, node]) => node.kind === 'component' && node.componentType === 'Input'
+    );
+    const selectPos = Object.entries(ir.project.nodes).find(
+      ([_, node]) => node.kind === 'component' && node.componentType === 'Select'
+    );
+    const buttonPos = Object.entries(ir.project.nodes).find(
+      ([_, node]) => node.kind === 'component' && node.componentType === 'Button'
+    );
+    const iconButtonPos = Object.entries(ir.project.nodes).find(
+      ([_, node]) => node.kind === 'component' && node.componentType === 'IconButton'
+    );
+
+    expect(inputPos).toBeDefined();
+    expect(selectPos).toBeDefined();
+    expect(buttonPos).toBeDefined();
+    expect(iconButtonPos).toBeDefined();
+
+    const inputHeight = layout[inputPos![0]].height;
+    const selectHeight = layout[selectPos![0]].height;
+    const buttonHeight = layout[buttonPos![0]].height;
+    const iconButtonHeight = layout[iconButtonPos![0]].height;
+
+    expect(inputHeight).toBe(selectHeight);
+    expect(inputHeight).toBe(buttonHeight);
+    expect(inputHeight).toBe(iconButtonHeight);
+  });
+
+  it('should increase Button width with padding without affecting control height', () => {
+    const input = `
+      project "ButtonPaddingSizing" {
+        screen Main {
+          layout stack(direction: horizontal, align: left, gap: sm) {
+            component Button text: "Save" size: md padding: none
+            component Button text: "Save" size: md padding: xl
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+
+    const buttons = Object.entries(ir.project.nodes)
+      .filter(([_, node]) => node.kind === 'component' && node.componentType === 'Button')
+      .map(([id]) => layout[id])
+      .sort((a, b) => a.x - b.x);
+
+    expect(buttons).toHaveLength(2);
+    expect(buttons[1].width).toBeGreaterThan(buttons[0].width);
+    expect(buttons[1].height).toBe(buttons[0].height);
   });
 
   it('should layout grid with stat cards', () => {
