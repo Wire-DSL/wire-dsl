@@ -7,15 +7,21 @@ const ICON_SIZES_BY_DENSITY: Record<DensityLevel, Record<string, number>> = {
 };
 
 const ICON_BUTTON_SIZES_BY_DENSITY: Record<DensityLevel, Record<string, number>> = {
-  compact: { sm: 28, md: 32, lg: 36 },
-  normal: { sm: 36, md: 40, lg: 48 },
-  comfortable: { sm: 40, md: 48, lg: 56 },
+  compact: { sm: 20, md: 24, lg: 32 },
+  normal: { sm: 24, md: 32, lg: 40 },
+  comfortable: { sm: 28, md: 40, lg: 48 },
 };
 
 const CONTROL_HEIGHTS_BY_DENSITY: Record<DensityLevel, Record<string, number>> = {
   compact: { sm: 28, md: 32, lg: 36 },
   normal: { sm: 36, md: 40, lg: 48 },
   comfortable: { sm: 40, md: 48, lg: 56 },
+};
+
+const ACTION_CONTROL_HEIGHTS_BY_DENSITY: Record<DensityLevel, Record<string, number>> = {
+  compact: { sm: 20, md: 24, lg: 32 },
+  normal: { sm: 24, md: 32, lg: 40 },
+  comfortable: { sm: 28, md: 40, lg: 48 },
 };
 
 const CONTROL_PADDING_BY_DENSITY: Record<DensityLevel, Record<string, number>> = {
@@ -36,6 +42,11 @@ export function resolveIconButtonSize(size?: string, density: DensityLevel = 'no
 
 export function resolveControlHeight(size?: string, density: DensityLevel = 'normal'): number {
   const map = CONTROL_HEIGHTS_BY_DENSITY[density] || CONTROL_HEIGHTS_BY_DENSITY.normal;
+  return map[size || 'md'] || map.md;
+}
+
+export function resolveActionControlHeight(size?: string, density: DensityLevel = 'normal'): number {
+  const map = ACTION_CONTROL_HEIGHTS_BY_DENSITY[density] || ACTION_CONTROL_HEIGHTS_BY_DENSITY.normal;
   return map[size || 'md'] || map.md;
 }
 

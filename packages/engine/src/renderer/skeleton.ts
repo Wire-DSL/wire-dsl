@@ -15,7 +15,10 @@
 
 import { SVGRenderer } from './index';
 import type { IRComponentNode } from '../ir';
-import { resolveControlHeight, resolveControlHorizontalPadding } from '../shared/component-sizes';
+import {
+  resolveActionControlHeight,
+  resolveControlHorizontalPadding,
+} from '../shared/component-sizes';
 import type { DensityLevel } from '../shared/spacing';
 
 export class SkeletonSVGRenderer extends SVGRenderer {
@@ -37,7 +40,7 @@ export class SkeletonSVGRenderer extends SVGRenderer {
     const paddingX = this.tokens.button.paddingX;
     const buttonHeight = Math.max(
       16,
-      Math.min(resolveControlHeight(size, density), pos.height - labelOffset)
+      Math.min(resolveActionControlHeight(size, density), pos.height - labelOffset)
     );
     const buttonY = pos.y + labelOffset;
 
@@ -74,14 +77,15 @@ export class SkeletonSVGRenderer extends SVGRenderer {
   protected renderLink(node: IRComponentNode, pos: any): string {
     const text = String(node.props.text || 'Link');
     const variant = String(node.props.variant || 'primary');
+    const size = String(node.props.size || 'md');
+    const density = (this.ir.project.style.density || 'normal') as DensityLevel;
     const fontSize = this.tokens.button.fontSize;
     const paddingX = this.tokens.button.paddingX;
-    const paddingY = this.tokens.button.paddingY;
     const linkColor = this.resolveVariantColor(variant, this.renderTheme.primary);
 
     const textWidth = this.estimateTextWidth(text, fontSize);
     const linkWidth = this.clampControlWidth(Math.max(textWidth + paddingX * 2, 60), pos.width);
-    const linkHeight = fontSize + paddingY * 2;
+    const linkHeight = Math.max(16, Math.min(resolveActionControlHeight(size, density), pos.height));
     const blockHeight = Math.max(8, Math.round(fontSize * 0.75));
     const blockWidth = Math.max(28, Math.min(textWidth, linkWidth - paddingX * 2));
     const blockX = pos.x + (linkWidth - blockWidth) / 2;
@@ -98,6 +102,66 @@ export class SkeletonSVGRenderer extends SVGRenderer {
             stroke="${this.hexToRgba(linkColor, 0.55)}"
             stroke-width="1"/>
     </g>`;
+  }
+
+  /**
+   * Render breadcrumbs as skeleton blocks: <rect> / <rect> / <rect accent>
+   */
+  protected renderBreadcrumbs(node: IRComponentNode, pos: any): string {
+    const itemsStr = String(node.props.items || 'Home');
+    const items = itemsStr
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const separator = String(node.props.separator || '/');
+    const blockColor = this.renderTheme.border;
+    const charWidth = 6.2;
+    const minBlockWidth = 28;
+    const maxBlockWidth = Math.max(minBlockWidth, Math.floor(pos.width * 0.4));
+    const blockHeight = 12;
+    const blockY = pos.y + (pos.height - blockHeight) / 2;
+    const blockRadius = 4;
+    const blockPaddingX = 10;
+    const itemSpacing = 8;
+    const separatorWidth = 12;
+    const contentRight = pos.x + pos.width;
+    let currentX = pos.x;
+
+    let svg = `<g${this.getDataNodeId(node)}>`;
+
+    items.forEach((item, index) => {
+      if (currentX >= contentRight) return;
+      const isLast = index === items.length - 1;
+      const estimatedTextWidth = item.length * charWidth;
+      let blockWidth = Math.max(
+        minBlockWidth,
+        Math.min(maxBlockWidth, Math.ceil(estimatedTextWidth + blockPaddingX * 2))
+      );
+      blockWidth = Math.min(blockWidth, Math.max(0, contentRight - currentX));
+      if (blockWidth < minBlockWidth) return;
+
+      const fillColor = blockColor;
+
+      svg += `
+      <rect x="${currentX}" y="${blockY}"
+            width="${blockWidth}" height="${blockHeight}"
+            rx="${blockRadius}"
+            fill="${fillColor}"
+            stroke="none"/>`;
+      currentX += blockWidth + itemSpacing;
+
+      if (!isLast && currentX + separatorWidth <= contentRight) {
+        svg += `
+      <text x="${currentX + 2}" y="${pos.y + pos.height / 2 + 4}"
+            font-family="system-ui, -apple-system, sans-serif"
+            font-size="12"
+            fill="${blockColor}">${this.escapeXml(separator)}</text>`;
+        currentX += separatorWidth;
+      }
+    });
+
+    svg += '\n    </g>';
+    return svg;
   }
 
   /**
@@ -414,6 +478,7 @@ export class SkeletonSVGRenderer extends SVGRenderer {
       node.props.background ?? node.props.backround,
       false
     );
+    const showInnerBorder = this.parseBooleanProp(node.props.innerBorder, true);
     const rawCaptionAlign = String(node.props.captionAlign || '');
     const captionAlign =
       rawCaptionAlign === 'left' || rawCaptionAlign === 'center' || rawCaptionAlign === 'right'
@@ -455,8 +520,10 @@ export class SkeletonSVGRenderer extends SVGRenderer {
 
     // Header row
     const headerY = pos.y + (title ? 32 : 0);
-    svg += `<line x1="${pos.x}" y1="${headerY + headerHeight}" x2="${pos.x + pos.width}" y2="${headerY + headerHeight}"
+    if (showInnerBorder) {
+      svg += `<line x1="${pos.x}" y1="${headerY + headerHeight}" x2="${pos.x + pos.width}" y2="${headerY + headerHeight}"
                   stroke="${this.renderTheme.border}" stroke-width="1"/>`;
+    }
 
     // Header cells as gray blocks
     safeColumns.forEach((_, i) => {
@@ -466,17 +533,19 @@ export class SkeletonSVGRenderer extends SVGRenderer {
                     fill="${this.renderTheme.border}"/>`;
     });
 
-    if (hasActions) {
+    if (hasActions && showInnerBorder) {
       const dividerX = pos.x + dataWidth;
-      svg += `<line x1="${dividerX}" y1="${headerY}" x2="${dividerX}" y2="${headerY + headerHeight + rowCount * rowHeight}"
+      svg += `<line x1="${dividerX}" y1="${headerY + headerHeight}" x2="${dividerX}" y2="${headerY + headerHeight + rowCount * rowHeight}"
                     stroke="${this.renderTheme.border}" stroke-width="1"/>`;
     }
 
     // Data rows as gray blocks
     for (let rowIdx = 0; rowIdx < rowCount; rowIdx++) {
       const rowY = headerY + headerHeight + rowIdx * rowHeight;
-      svg += `<line x1="${pos.x}" y1="${rowY + rowHeight}" x2="${pos.x + pos.width}" y2="${rowY + rowHeight}"
+      if (showInnerBorder) {
+        svg += `<line x1="${pos.x}" y1="${rowY + rowHeight}" x2="${pos.x + pos.width}" y2="${rowY + rowHeight}"
                     stroke="${this.renderTheme.border}" stroke-width="0.5"/>`;
+      }
 
       safeColumns.forEach((_, colIdx) => {
         const variance = ((rowIdx * 17 + colIdx * 11) % 5) * 10;
@@ -548,16 +617,32 @@ export class SkeletonSVGRenderer extends SVGRenderer {
       variant === 'default'
         ? this.renderTheme.border
         : this.hexToRgba(this.resolveVariantColor(variant, this.resolveAccentColor()), 0.35);
+    const showBorder = this.parseBooleanProp(node.props.border, false);
+    const showBackground = this.parseBooleanProp(node.props.background ?? node.props.backround, false);
+    const radiusMap: Record<string, number> = {
+      none: 0,
+      sm: 4,
+      md: this.tokens.card.radius,
+      lg: 12,
+      xl: 16,
+    };
+    const topbarRadius = radiusMap[String(node.props.radius || 'md')] ?? this.tokens.card.radius;
     const topbar = this.calculateTopbarLayout(node, pos, title, subtitle, actions, user);
     const titleWidth = Math.max(56, Math.min(topbar.titleMaxWidth * 0.55, topbar.titleMaxWidth));
     const subtitleWidth = Math.max(48, Math.min(topbar.titleMaxWidth * 0.4, topbar.titleMaxWidth));
 
-    let svg = `<g${this.getDataNodeId(node)}>
+    let svg = `<g${this.getDataNodeId(node)}>`;
+    if (showBorder || showBackground) {
+      const bg = showBackground ? this.renderTheme.cardBg : 'none';
+      const stroke = showBorder ? this.renderTheme.border : 'none';
+      svg += `
       <rect x="${pos.x}" y="${pos.y}"
             width="${pos.width}" height="${pos.height}"
-            fill="${this.renderTheme.cardBg}"
-            stroke="${this.renderTheme.border}"
-            stroke-width="0 0 1 0"/>`;
+            rx="${topbarRadius}"
+            fill="${bg}"
+            stroke="${stroke}"
+            stroke-width="1"/>`;
+    }
 
     if (topbar.leftIcon) {
       svg += `
@@ -706,7 +791,10 @@ export class SkeletonSVGRenderer extends SVGRenderer {
     const borderColor = hasExplicitVariantColor
       ? this.hexToRgba(resolvedBase, 0.7)
       : 'rgba(100, 116, 139, 0.4)';
-    const buttonSize = Math.max(16, Math.min(resolveControlHeight(size, density), pos.height - labelOffset));
+    const buttonSize = Math.max(
+      16,
+      Math.min(resolveActionControlHeight(size, density), pos.height - labelOffset)
+    );
     const buttonWidth = buttonSize + extraPadding * 2;
     const buttonY = pos.y + labelOffset;
 

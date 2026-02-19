@@ -1,6 +1,7 @@
 import type { IRContract, IRNode, IRStyle } from '../ir/index';
 import { resolveSpacingToken, type DensityLevel } from '../shared/spacing';
 import {
+  resolveActionControlHeight,
   resolveControlHeight,
   resolveControlHorizontalPadding,
   resolveIconButtonSize,
@@ -792,7 +793,8 @@ export class LayoutEngine {
     if (node.kind !== 'component') return this.getComponentHeight();
     const controlSize = String(node.props.size || 'md');
     const density = (this.style.density || 'normal') as DensityLevel;
-    const controlHeight = resolveControlHeight(controlSize, density);
+    const inputControlHeight = resolveControlHeight(controlSize, density);
+    const actionControlHeight = resolveActionControlHeight(controlSize, density);
     const controlLabelOffset =
       node.componentType === 'Input' ||
       node.componentType === 'Textarea' ||
@@ -957,11 +959,16 @@ export class LayoutEngine {
     if (node.componentType === 'Separate') return this.getSeparateSize(node);
     if (
       node.componentType === 'Input' ||
-      node.componentType === 'Select' ||
-      node.componentType === 'Button' ||
-      node.componentType === 'IconButton'
+      node.componentType === 'Select'
     ) {
-      return controlHeight + controlLabelOffset;
+      return inputControlHeight + controlLabelOffset;
+    }
+    if (
+      node.componentType === 'Button' ||
+      node.componentType === 'IconButton' ||
+      node.componentType === 'Link'
+    ) {
+      return actionControlHeight + controlLabelOffset;
     }
 
     // Default height

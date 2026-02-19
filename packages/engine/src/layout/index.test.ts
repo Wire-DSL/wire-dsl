@@ -882,15 +882,15 @@ describe('Layout Engine', () => {
     expect(withCaption.height - plain.height).toBe(46);
   });
 
-  it('should align control heights for Input, Select, Button and IconButton when using size and labelSpace', () => {
+  it('should align control heights for Input/Select with Button/IconButton when actions use size lg + labelSpace', () => {
     const input = `
       project "ControlHeightAlignment" {
         screen Main {
           layout stack(direction: horizontal, align: left, gap: sm) {
             component Input label: "Email" placeholder: "user@example.com" size: md
             component Select label: "Role" items: "Admin,User" size: md
-            component Button text: "Save" size: md labelSpace: true
-            component IconButton icon: "check" size: md labelSpace: true
+            component Button text: "Save" size: lg labelSpace: true
+            component IconButton icon: "check" size: lg labelSpace: true
           }
         }
       }
@@ -926,6 +926,34 @@ describe('Layout Engine', () => {
     expect(inputHeight).toBe(selectHeight);
     expect(inputHeight).toBe(buttonHeight);
     expect(inputHeight).toBe(iconButtonHeight);
+  });
+
+  it('should keep default Button and Link heights aligned', () => {
+    const input = `
+      project "ButtonLinkHeightAlignment" {
+        screen Main {
+          layout stack(direction: horizontal, align: left, gap: sm) {
+            component Button text: "Save"
+            component Link text: "Learn more"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+
+    const buttonPos = Object.entries(ir.project.nodes).find(
+      ([_, node]) => node.kind === 'component' && node.componentType === 'Button'
+    );
+    const linkPos = Object.entries(ir.project.nodes).find(
+      ([_, node]) => node.kind === 'component' && node.componentType === 'Link'
+    );
+
+    expect(buttonPos).toBeDefined();
+    expect(linkPos).toBeDefined();
+    expect(layout[buttonPos![0]].height).toBe(layout[linkPos![0]].height);
   });
 
   it('should increase Button width with padding without affecting control height', () => {

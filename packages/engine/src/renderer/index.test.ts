@@ -601,6 +601,62 @@ describe('SVG Renderer', () => {
     expect(userRight).toBeLessThanOrEqual(avatarLeft - 4);
   });
 
+  it('should not render Topbar outer frame by default', () => {
+    const input = `
+      project "TopbarDefaultFrame" {
+        screen Main {
+          layout stack {
+            component Topbar title: "Dashboard"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+    const topbarEntry = Object.entries(ir.project.nodes).find(
+      ([_, node]) => node.kind === 'component' && node.componentType === 'Topbar'
+    );
+
+    expect(topbarEntry).toBeDefined();
+    const topbarPos = layout[topbarEntry![0]];
+    const outerFrameRegex = new RegExp(
+      `<rect x="${topbarPos.x}" y="${topbarPos.y}"\\s+width="${topbarPos.width}" height="${topbarPos.height}"`,
+      'm'
+    );
+    expect(outerFrameRegex.test(svg)).toBe(false);
+  });
+
+  it('should render Topbar frame when border/background are enabled and apply radius', () => {
+    const input = `
+      project "TopbarFrameRadius" {
+        screen Main {
+          layout stack {
+            component Topbar title: "Dashboard" border: true background: true radius: lg
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+    const topbarEntry = Object.entries(ir.project.nodes).find(
+      ([_, node]) => node.kind === 'component' && node.componentType === 'Topbar'
+    );
+
+    expect(topbarEntry).toBeDefined();
+    const topbarPos = layout[topbarEntry![0]];
+    const outerFrameRegex = new RegExp(
+      `<rect x="${topbarPos.x}" y="${topbarPos.y}"\\s+width="${topbarPos.width}" height="${topbarPos.height}"\\s+rx="12"\\s+fill="[^"]+"\\s+stroke="[^"]+"\\s+stroke-width="1"`,
+      'm'
+    );
+    expect(outerFrameRegex.test(svg)).toBe(true);
+  });
+
   it('should render table component', () => {
     const input = `
       project "Table" {
@@ -651,6 +707,68 @@ describe('SVG Renderer', () => {
     expect(svg).toContain('points="3 6 5 6 21 6"');
     expect(svg).toContain('points="15 18 9 12 15 6"');
     expect(svg).toContain('points="9 18 15 12 9 6"');
+  });
+
+  it('should not render Table internal borders by default', () => {
+    const input = `
+      project "TableNoInnerBorders" {
+        screen Main {
+          layout stack {
+            component Table columns: "Name,Status" rows: 2 actions: "eye,edit"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+    const tableEntry = Object.entries(ir.project.nodes).find(
+      ([_, node]) => node.kind === 'component' && node.componentType === 'Table'
+    );
+
+    expect(tableEntry).toBeDefined();
+    const tablePos = layout[tableEntry![0]];
+    const actionColumnWidth = 96;
+    const dividerX = tablePos.x + (tablePos.width - actionColumnWidth);
+    const dividerRegex = new RegExp(
+      `<line x1="${dividerX}" y1="${tablePos.y}" x2="${dividerX}" y2="${tablePos.y + 116}"\\s+stroke="[^"]+"\\s+stroke-width="1"`,
+      'm'
+    );
+    expect(dividerRegex.test(svg)).toBe(false);
+    expect(svg).not.toContain('stroke-width="0.5"');
+  });
+
+  it('should render Table internal borders when innerBorder is true', () => {
+    const input = `
+      project "TableWithInnerBorders" {
+        screen Main {
+          layout stack {
+            component Table columns: "Name,Status" rows: 2 actions: "eye,edit" innerBorder: true
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+    const tableEntry = Object.entries(ir.project.nodes).find(
+      ([_, node]) => node.kind === 'component' && node.componentType === 'Table'
+    );
+
+    expect(tableEntry).toBeDefined();
+    const tablePos = layout[tableEntry![0]];
+    const actionColumnWidth = 96;
+    const dividerX = tablePos.x + (tablePos.width - actionColumnWidth);
+    const dividerRegex = new RegExp(
+      `<line x1="${dividerX}" y1="${tablePos.y}" x2="${dividerX}" y2="${tablePos.y + 116}"\\s+stroke="[^"]+"\\s+stroke-width="1"`,
+      'm'
+    );
+    expect(dividerRegex.test(svg)).toBe(true);
+    expect(svg).toContain('stroke-width="0.5"');
   });
 
   it('should not render Table outer frame by default', () => {
@@ -1990,6 +2108,32 @@ describe('Skeleton SVG Renderer', () => {
     expect(svg).not.toContain('>Delete account<');
     expect(svg).toContain('<line');
     expect(svg).toContain('rgba(239, 68, 68, 0.55)');
+  });
+
+  it('should render breadcrumbs in skeleton as blocks with muted previous crumbs and emphasized last crumb', () => {
+    const input = `
+      project "Test" {
+        screen Main {
+          layout stack {
+            component Breadcrumbs items: "Home,Users,Details"
+          }
+        }
+      }
+    `;
+
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+
+    const renderer = new SkeletonSVGRenderer(ir, layout);
+    const svg = renderer.render();
+
+    expect(svg).not.toContain('>Home<');
+    expect(svg).not.toContain('>Users<');
+    expect(svg).not.toContain('>Details<');
+    expect(svg).toContain('>/>');
+    expect(svg).toContain('rgba(100, 116, 139, 0.35)');
+    expect(svg).toContain('rgba(15, 23, 42, 0.8)');
   });
 
   it('should render StatCard icon as a skeleton placeholder block', () => {

@@ -568,7 +568,7 @@ component Button text: "Click me" variant: primary
 
 | Component | Properties | Example |
 |-----------|-----------|---------|
-| `Topbar` | `title`, `subtitle`, `icon`, `actions`, `user`, `avatar`, `variant` | `component Topbar title: "Dashboard" variant: primary` |
+| `Topbar` | `title`, `subtitle`, `icon`, `actions`, `user`, `avatar`, `variant`, `border`, `background`, `radius` | `component Topbar title: "Dashboard" variant: primary border: true background: true radius: md` |
 | `SidebarMenu` | `items`, `active` | `component SidebarMenu items: "Home,Users,Settings" active: 0` |
 | `Breadcrumbs` | `items` | `component Breadcrumbs items: "Home,Users,Detail"` |
 | `Tabs` | `items`, `active` | `component Tabs items: "Profile,Settings" active: 0` |
@@ -593,7 +593,7 @@ component Button text: "Click me" variant: primary
 |-----------|-----------|---------|
 | `Divider` | - | `component Divider` |
 | `Badge` | `text`, `variant` | `component Badge text: "New" variant: primary` |
-| `Link` | `text`, `variant` | `component Link text: "Click here" variant: primary` |
+| `Link` | `text`, `variant`, `size` | `component Link text: "Click here" variant: primary size: lg` |
 | `Chart` | `type`, `height` | `component Chart type: "bar" height: 200` |
 | `Alert` | `variant`, `title`, `text` | `component Alert variant: "danger" title: "Error" text: "Something went wrong"` |
 | `StatCard` | `title`, `value`, `caption`, `icon` | `component StatCard title: "Total Users" value: "1,234" icon: "users"` |

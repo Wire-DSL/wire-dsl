@@ -146,6 +146,7 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     properties: {
       text: { name: 'text', type: 'string' },
       variant: variantEnum,
+      size: controlSizeEnum,
     },
     example: 'component Link text: "Learn more" variant: info',
   },
@@ -225,6 +226,9 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
       actions: { name: 'actions', type: 'string' },
       user: { name: 'user', type: 'string' },
       variant: variantWithDefaultEnum,
+      border: { name: 'border', type: 'boolean' },
+      background: { name: 'background', type: 'boolean' },
+      radius: { name: 'radius', type: 'enum', options: ['none', 'sm', 'md', 'lg', 'xl'] },
     },
     example: 'component Topbar title: "Dashboard" subtitle: "Overview" icon: "menu" user: "john_doe" avatar: true',
   },
@@ -289,6 +293,7 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
       caption: { name: 'caption', type: 'string' },
       captionAlign: alignEnum,
       border: { name: 'border', type: 'boolean' },
+      innerBorder: { name: 'innerBorder', type: 'boolean' },
       background: { name: 'background', type: 'boolean' },
       // Backward-compatible alias (common typo) accepted by parser/renderers.
       backround: { name: 'backround', type: 'boolean' },

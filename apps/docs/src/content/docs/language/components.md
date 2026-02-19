@@ -240,6 +240,7 @@ component Button text: "Aligned" size: md labelSpace: true padding: md
 ```
 
 **Rendering**: Rectangular button with text, styled according to variant
+Size note: For action controls, `lg` aligns with the base `Input`/`Select` height.
 
 ---
 
@@ -264,6 +265,7 @@ component IconButton icon: "check" size: md labelSpace: true padding: md
 ```
 
 **Rendering**: Square button containing icon symbol
+Size note: Uses the same action size scale as `Button` and `Link`.
 
 ---
 
@@ -281,6 +283,9 @@ Top navigation bar/header.
 - `user` (string, optional): User name or identifier for badge
 - `actions` (string, optional): Action items (comma-separated)
 - `variant` (string, optional): Accent color variant for left icon/actions (`default` or custom/built-in key)
+- `border` (boolean, optional): Draws container border (default: `false`)
+- `background` (boolean, optional): Draws container background fill (default: `false`)
+- `radius` (enum, optional): Corner radius - `none` | `sm` | `md` | `lg` | `xl` (default: `md`)
 
 **Example**:
 ```wire
@@ -290,6 +295,7 @@ component Topbar title: "Settings" user: "john_doe"
 component Topbar title: "Admin" actions: "Help,Logout"
 component Topbar title: "Workspace" subtitle: "Overview" icon: "menu" actions: "Help,Logout" user: "john_doe" avatar: true
 component Topbar title: "Workspace" icon: "menu" actions: "Save,Export" variant: primary
+component Topbar title: "Workspace" border: true background: true radius: lg
 ```
 
 **Rendering**: Horizontal bar at top of screen with optional left icon, title/subtitle, right actions, user badge, and avatar. When `user` is present, `actions` are shifted left to avoid overlap.
@@ -541,14 +547,17 @@ Hyperlink text.
 **Properties**:
 - `text` (string): Link text
 - `variant` (string): Link color variant - `primary` | `secondary` | `success` | `warning` | `danger` | `info` (default: `primary`)
+- `size` (enum): `sm` | `md` | `lg` (default: `md`)
 
 **Example**:
 ```wire
 component Link text: "Click here" variant: primary
 component Link text: "Learn more" variant: info
+component Link text: "Read docs" variant: primary size: lg
 ```
 
 **Rendering**: Underlined text using the selected variant color
+Size note: Uses the same action size scale as `Button` and `IconButton`.
 
 ---
 

@@ -6,6 +6,7 @@ import { getIcon } from './icons/iconLibrary';
 import { resolveTokens, type DesignTokens } from './tokens';
 import { resolveSpacingToken, type DensityLevel } from '../shared/spacing';
 import {
+  resolveActionControlHeight,
   resolveControlHeight,
   resolveControlHorizontalPadding,
   resolveIconButtonSize,
@@ -397,7 +398,7 @@ export class SVGRenderer {
     const fontSize = this.tokens.button.fontSize;
     const fontWeight = this.tokens.button.fontWeight;
     const paddingX = this.tokens.button.paddingX;
-    const controlHeight = resolveControlHeight(size, density);
+    const controlHeight = resolveActionControlHeight(size, density);
     const buttonY = pos.y + labelOffset;
     const buttonHeight = Math.max(16, Math.min(controlHeight, pos.height - labelOffset));
 
@@ -443,10 +444,11 @@ export class SVGRenderer {
   protected renderLink(node: IRComponentNode, pos: any): string {
     const text = String(node.props.text || 'Link');
     const variant = String(node.props.variant || 'primary');
+    const size = String(node.props.size || 'md');
+    const density = (this.ir.project.style.density || 'normal') as DensityLevel;
     const fontSize = this.tokens.button.fontSize;
     const fontWeight = this.tokens.button.fontWeight;
     const paddingX = this.tokens.button.paddingX;
-    const paddingY = this.tokens.button.paddingY;
     const linkColor = this.resolveVariantColor(variant, this.renderTheme.primary);
 
     // Match Button sizing so Link can align beside regular buttons.
@@ -455,7 +457,7 @@ export class SVGRenderer {
       Math.max(Math.ceil(idealTextWidth + paddingX * 2), 60),
       pos.width
     );
-    const linkHeight = fontSize + paddingY * 2;
+    const linkHeight = Math.max(16, Math.min(resolveActionControlHeight(size, density), pos.height));
     const availableTextWidth = Math.max(0, linkWidth - paddingX * 2);
     const visibleText = this.truncateTextToWidth(text, availableTextWidth, fontSize);
     const visibleTextWidth = Math.min(
@@ -523,15 +525,31 @@ export class SVGRenderer {
       variant === 'default'
         ? this.resolveAccentColor()
         : this.resolveVariantColor(variant, this.resolveAccentColor());
+    const showBorder = this.parseBooleanProp(node.props.border, false);
+    const showBackground = this.parseBooleanProp(node.props.background ?? node.props.backround, false);
+    const radiusMap: Record<string, number> = {
+      none: 0,
+      sm: 4,
+      md: this.tokens.card.radius,
+      lg: 12,
+      xl: 16,
+    };
+    const topbarRadius = radiusMap[String(node.props.radius || 'md')] ?? this.tokens.card.radius;
     const topbar = this.calculateTopbarLayout(node, pos, title, subtitle, actions, user);
 
-    let svg = `<g${this.getDataNodeId(node)}>
+    let svg = `<g${this.getDataNodeId(node)}>`;
+    if (showBorder || showBackground) {
+      const bg = showBackground ? this.renderTheme.cardBg : 'none';
+      const stroke = showBorder ? this.renderTheme.border : 'none';
+      svg += `
     <rect x="${pos.x}" y="${pos.y}" 
           width="${pos.width}" height="${pos.height}" 
-          fill="${this.renderTheme.cardBg}" 
-          stroke="${this.renderTheme.border}" 
-          stroke-width="1"/>
-    
+          rx="${topbarRadius}"
+          fill="${bg}" 
+          stroke="${stroke}" 
+          stroke-width="1"/>`;
+    }
+    svg += `
     <!-- Title -->
     <text x="${topbar.textX}" y="${topbar.titleY}" 
           font-family="system-ui, -apple-system, sans-serif" 
@@ -734,6 +752,7 @@ export class SVGRenderer {
       node.props.background ?? node.props.backround,
       false
     );
+    const showInnerBorder = this.parseBooleanProp(node.props.innerBorder, true);
     const rawCaptionAlign = String(node.props.captionAlign || '');
     const captionAlign =
       rawCaptionAlign === 'left' || rawCaptionAlign === 'center' || rawCaptionAlign === 'right'
@@ -801,9 +820,11 @@ export class SVGRenderer {
 
     // Header row
     const headerY = pos.y + (title ? 32 : 0);
-    svg += `
+    if (showInnerBorder) {
+      svg += `
     <line x1="${pos.x}" y1="${headerY + headerHeight}" x2="${pos.x + pos.width}" y2="${headerY + headerHeight}" 
           stroke="${this.renderTheme.border}" stroke-width="1"/>`;
+    }
 
     safeColumns.forEach((col, i) => {
       svg += `
@@ -814,10 +835,10 @@ export class SVGRenderer {
           fill="${this.renderTheme.textMuted}">${this.escapeXml(col)}</text>`;
     });
 
-    if (hasActions) {
+    if (hasActions && showInnerBorder) {
       const dividerX = pos.x + dataWidth;
       svg += `
-    <line x1="${dividerX}" y1="${headerY}" x2="${dividerX}" y2="${headerY + headerHeight + mockRows.length * rowHeight}" 
+    <line x1="${dividerX}" y1="${headerY + headerHeight}" x2="${dividerX}" y2="${headerY + headerHeight + mockRows.length * rowHeight}"
           stroke="${this.renderTheme.border}" stroke-width="1"/>`;
     }
 
@@ -826,9 +847,11 @@ export class SVGRenderer {
       const rowY = headerY + headerHeight + rowIdx * rowHeight;
 
       // Row separator
-      svg += `
+      if (showInnerBorder) {
+        svg += `
     <line x1="${pos.x}" y1="${rowY + rowHeight}" x2="${pos.x + pos.width}" y2="${rowY + rowHeight}" 
           stroke="${this.renderTheme.border}" stroke-width="0.5"/>`;
+      }
 
       // Row data
       safeColumns.forEach((col, colIdx) => {
@@ -853,7 +876,7 @@ export class SVGRenderer {
           const iconY = buttonY + (buttonSize - iconSize) / 2;
           svg += `
     <rect x="${currentX}" y="${buttonY}" width="${buttonSize}" height="${buttonSize}" rx="4"
-          fill="${this.renderTheme.cardBg}" stroke="${this.renderTheme.border}" stroke-width="1"/>`;
+          fill="${this.renderTheme.cardBg}" stroke="${showInnerBorder ? this.renderTheme.border : 'none'}" stroke-width="1"/>`;
           if (iconSvg) {
             svg += `
     <g transform="translate(${iconX}, ${iconY})">
@@ -2046,7 +2069,7 @@ export class SVGRenderer {
 
     const buttonSize = Math.max(
       16,
-      Math.min(resolveControlHeight(size, density), pos.height - labelOffset)
+      Math.min(resolveActionControlHeight(size, density), pos.height - labelOffset)
     );
     const buttonWidth = buttonSize + extraPadding * 2;
     const radius = 6;
