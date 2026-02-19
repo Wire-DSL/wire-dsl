@@ -153,7 +153,7 @@ export class SkeletonSVGRenderer extends SVGRenderer {
       if (!isLast && currentX + separatorWidth <= contentRight) {
         svg += `
       <text x="${currentX + 2}" y="${pos.y + pos.height / 2 + 4}"
-            font-family="system-ui, -apple-system, sans-serif"
+            font-family="Arial, Helvetica, sans-serif"
             font-size="12"
             fill="${blockColor}">${this.escapeXml(separator)}</text>`;
         currentX += separatorWidth;

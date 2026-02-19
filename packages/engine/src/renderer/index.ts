@@ -80,7 +80,7 @@ export class SVGRenderer {
   private selectedScreenName?: string;
   protected renderedNodeIds: Set<string> = new Set(); // Track nodes rendered in current pass
   protected colorResolver: ColorResolver;
-  protected fontFamily: string = 'system-ui, -apple-system, sans-serif';
+  protected fontFamily: string = 'Arial, Helvetica, sans-serif';
   private parentContainerByChildId: Map<string, IRContainerNode> = new Map();
 
   constructor(ir: IRContract, layout: LayoutResult, options?: SVGRenderOptions) {
@@ -361,7 +361,7 @@ export class SVGRenderer {
     if (lines.length <= 1) {
       return `<g${this.getDataNodeId(node)}>
     <text x="${pos.x}" y="${firstLineY}"
-          font-family="system-ui, -apple-system, sans-serif"
+          font-family="Arial, Helvetica, sans-serif"
           font-size="${fontSize}"
           font-weight="${fontWeight}"
           fill="${headingColor}">${this.escapeXml(text)}</text>
@@ -377,7 +377,7 @@ export class SVGRenderer {
 
     return `<g${this.getDataNodeId(node)}>
     <text x="${pos.x}" y="${firstLineY}"
-          font-family="system-ui, -apple-system, sans-serif"
+          font-family="Arial, Helvetica, sans-serif"
           font-size="${fontSize}"
           font-weight="${fontWeight}"
           fill="${headingColor}">${tspans}</text>
@@ -433,7 +433,7 @@ export class SVGRenderer {
           stroke="${borderColor}"
           stroke-width="1"/>
     <text x="${pos.x + buttonWidth / 2}" y="${buttonY + buttonHeight / 2 + fontSize * 0.35}"
-          font-family="system-ui, -apple-system, sans-serif"
+          font-family="Arial, Helvetica, sans-serif"
           font-size="${fontSize}"
           font-weight="${fontWeight}"
           fill="${textColor}"
@@ -469,7 +469,7 @@ export class SVGRenderer {
 
     return `<g${this.getDataNodeId(node)}>
     <text x="${pos.x + linkWidth / 2}" y="${centerY}"
-          font-family="system-ui, -apple-system, sans-serif"
+          font-family="Arial, Helvetica, sans-serif"
           font-size="${fontSize}"
           font-weight="${fontWeight}"
           fill="${linkColor}"
@@ -497,7 +497,7 @@ export class SVGRenderer {
     ${
       label
         ? `<text x="${pos.x + paddingX}" y="${this.getControlLabelBaselineY(pos.y)}"
-          font-family="system-ui, -apple-system, sans-serif"
+          font-family="Arial, Helvetica, sans-serif"
           font-size="12"
           fill="${this.renderTheme.text}">${this.escapeXml(label)}</text>`
         : ''
@@ -509,7 +509,7 @@ export class SVGRenderer {
           stroke="${this.renderTheme.border}"
           stroke-width="1"/>
     <text x="${pos.x + paddingX}" y="${controlY + controlHeight / 2 + 5}"
-          font-family="system-ui, -apple-system, sans-serif"
+          font-family="Arial, Helvetica, sans-serif"
           font-size="${fontSize}"
           fill="${this.renderTheme.textMuted}">${this.escapeXml(placeholder)}</text>
   </g>`;
@@ -552,7 +552,7 @@ export class SVGRenderer {
     svg += `
     <!-- Title -->
     <text x="${topbar.textX}" y="${topbar.titleY}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="18" 
           font-weight="600" 
           fill="${this.renderTheme.text}">${this.escapeXml(topbar.visibleTitle)}</text>`;
@@ -561,7 +561,7 @@ export class SVGRenderer {
     if (topbar.hasSubtitle) {
       svg += `
     <text x="${topbar.textX}" y="${topbar.subtitleY}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="13" 
           fill="${this.renderTheme.textMuted}">${this.escapeXml(topbar.visibleSubtitle)}</text>`;
     }
@@ -592,7 +592,7 @@ export class SVGRenderer {
           fill="${accentColor}" 
           stroke="none"/>
     <text x="${action.x + action.width / 2}" y="${action.y + action.height / 2 + 4}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="12" 
           font-weight="600" 
           fill="white" 
@@ -609,7 +609,7 @@ export class SVGRenderer {
           stroke="${this.renderTheme.border}" 
           stroke-width="1"/>
     <text x="${topbar.userBadge.x + topbar.userBadge.width / 2}" y="${topbar.userBadge.y + topbar.userBadge.height / 2 + 4}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="12" 
           fill="${this.renderTheme.text}" 
           text-anchor="middle">${this.escapeXml(topbar.userBadge.label)}</text>`;
@@ -812,7 +812,7 @@ export class SVGRenderer {
     if (title) {
       svg += `
     <text x="${pos.x + 16}" y="${pos.y + 24}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="13" 
           font-weight="600" 
           fill="${this.renderTheme.text}">${this.escapeXml(title)}</text>`;
@@ -829,7 +829,7 @@ export class SVGRenderer {
     safeColumns.forEach((col, i) => {
       svg += `
     <text x="${pos.x + i * dataColWidth + 12}" y="${headerY + 26}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="11" 
           font-weight="600" 
           fill="${this.renderTheme.textMuted}">${this.escapeXml(col)}</text>`;
@@ -858,7 +858,7 @@ export class SVGRenderer {
         const cellValue = row[col] || '';
         svg += `
     <text x="${pos.x + colIdx * dataColWidth + 12}" y="${rowY + 22}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="12" 
           fill="${this.renderTheme.text}">${this.escapeXml(cellValue)}</text>`;
       });
@@ -947,7 +947,7 @@ export class SVGRenderer {
           stroke="${this.renderTheme.border}" 
           stroke-width="1"/>
     <text x="${btnX + buttonWidth / 2}" y="${paginationY + buttonHeight / 2 + 4}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="14" 
           fill="${textColor}" 
           text-anchor="middle">${i}</text>`;
@@ -989,7 +989,7 @@ export class SVGRenderer {
       }
       svg += `
     <text x="${captionX}" y="${captionY}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="12" 
           fill="${this.hexToRgba(this.resolveTextColor(), 0.75)}"
           text-anchor="${textAnchor}">${this.escapeXml(caption)}</text>`;
@@ -1139,7 +1139,7 @@ export class SVGRenderer {
 
     return `<g${this.getDataNodeId(node)}>
     <text x="${pos.x}" y="${firstLineY}"
-          font-family="system-ui, -apple-system, sans-serif"
+          font-family="Arial, Helvetica, sans-serif"
           font-size="${fontSize}"
           fill="${this.renderTheme.text}">${tspans}</text>
   </g>`;
@@ -1150,7 +1150,7 @@ export class SVGRenderer {
 
     return `<g${this.getDataNodeId(node)}>
     <text x="${pos.x}" y="${pos.y + 12}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="12" 
           fill="${this.renderTheme.textMuted}">${this.escapeXml(text)}</text>
   </g>`;
@@ -1191,7 +1191,7 @@ export class SVGRenderer {
     ${
       label
         ? `<text x="${pos.x}" y="${this.getControlLabelBaselineY(pos.y)}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="12" 
           fill="${this.renderTheme.text}">${this.escapeXml(label)}</text>`
         : ''
@@ -1203,7 +1203,7 @@ export class SVGRenderer {
           stroke="${this.renderTheme.border}" 
           stroke-width="1"/>
     <text x="${pos.x + paddingX}" y="${placeholderY}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="${fontSize}" 
           fill="${this.renderTheme.textMuted}">${this.escapeXml(placeholder)}</text>
   </g>`;
@@ -1221,7 +1221,7 @@ export class SVGRenderer {
     ${
       label
         ? `<text x="${pos.x}" y="${this.getControlLabelBaselineY(pos.y)}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="12" 
           fill="${this.renderTheme.text}">${this.escapeXml(label)}</text>`
         : ''
@@ -1233,11 +1233,11 @@ export class SVGRenderer {
           stroke="${this.renderTheme.border}" 
           stroke-width="1"/>
     <text x="${pos.x + 12}" y="${centerY}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="14" 
           fill="${this.renderTheme.textMuted}">${this.escapeXml(placeholder)}</text>
     <text x="${pos.x + pos.width - 20}" y="${centerY}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="16" 
           fill="${this.renderTheme.textMuted}">▼</text>
   </g>`;
@@ -1261,14 +1261,14 @@ export class SVGRenderer {
     ${
       checked
         ? `<text x="${pos.x + checkboxSize / 2}" y="${checkboxY + 14}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="12" 
           fill="white" 
           text-anchor="middle">✓</text>`
         : ''
     }
     <text x="${pos.x + checkboxSize + 12}" y="${pos.y + pos.height / 2 + 5}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="14" 
           fill="${this.renderTheme.text}">${this.escapeXml(label)}</text>
   </g>`;
@@ -1296,7 +1296,7 @@ export class SVGRenderer {
         : ''
     }
     <text x="${pos.x + radioSize + 12}" y="${pos.y + pos.height / 2 + 5}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="14" 
           fill="${this.renderTheme.text}">${this.escapeXml(label)}</text>
   </g>`;
@@ -1321,7 +1321,7 @@ export class SVGRenderer {
             r="8" 
             fill="white"/>
     <text x="${pos.x + toggleWidth + 12}" y="${pos.y + pos.height / 2 + 5}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="14" 
           fill="${this.renderTheme.text}">${this.escapeXml(label)}</text>
   </g>`;
@@ -1357,7 +1357,7 @@ export class SVGRenderer {
           stroke-width="1"/>
     <!-- Title -->
     <text x="${pos.x + padding}" y="${pos.y + padding + 8}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="14" 
           font-weight="600" 
           fill="${this.renderTheme.text}">${this.escapeXml(title)}</text>
@@ -1376,7 +1376,7 @@ export class SVGRenderer {
           fill="${isActive ? this.renderTheme.primary : 'transparent'}" 
           stroke="none"/>
     <text x="${pos.x + 16}" y="${itemY + 22}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="13" 
           fill="${isActive ? 'white' : this.renderTheme.textMuted}">${this.escapeXml(item)}</text>`;
     });
@@ -1410,7 +1410,7 @@ export class SVGRenderer {
           stroke="${isActive ? 'none' : this.renderTheme.border}" 
           stroke-width="1"/>
     <text x="${tabX + tabWidth / 2}" y="${pos.y + 28}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="13" 
           font-weight="${isActive ? '600' : '500'}" 
           fill="${isActive ? 'white' : this.renderTheme.text}" 
@@ -1488,14 +1488,14 @@ export class SVGRenderer {
     ${
       hasTitle
         ? `<text x="${contentX}" y="${titleStartY}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="${fontSize}" 
           font-weight="700"
           fill="${bgColor}">${titleTspans}</text>`
         : ''
     }
     <text x="${contentX}" y="${textStartY}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="${fontSize}" 
           fill="${bgColor}">${textTspans}</text>
   </g>`;
@@ -1525,7 +1525,7 @@ export class SVGRenderer {
           fill="${bgColor}"
           stroke="none"/>
     <text x="${pos.x + pos.width / 2}" y="${pos.y + pos.height / 2 + 4}"
-          font-family="system-ui, -apple-system, sans-serif"
+          font-family="Arial, Helvetica, sans-serif"
           font-size="${fontSize}"
           font-weight="600"
           fill="${textColor}"
@@ -1570,20 +1570,20 @@ export class SVGRenderer {
           stroke-width="1"/>
     
       <text x="${modalX + padding}" y="${modalY + padding + 16}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="16" 
           font-weight="600" 
           fill="${this.renderTheme.text}">${this.escapeXml(title)}</text>
     
     <!-- Close button -->
       <text x="${modalX + pos.width - 16}" y="${modalY + padding + 12}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="18" 
           fill="${this.renderTheme.textMuted}">✕</text>
     
     <!-- Content placeholder -->
       <text x="${modalX + pos.width / 2}" y="${modalY + headerHeight + (pos.height - headerHeight) / 2}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="13" 
           fill="${this.renderTheme.textMuted}" 
           text-anchor="middle">Modal content</text>
@@ -1628,7 +1628,7 @@ export class SVGRenderer {
     if (title) {
       svg += `
     <text x="${pos.x + padding}" y="${pos.y + 26}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="13" 
           font-weight="600" 
           fill="${this.renderTheme.text}">${this.escapeXml(title)}</text>
@@ -1646,7 +1646,7 @@ export class SVGRenderer {
           stroke="${this.renderTheme.border}" 
           stroke-width="0.5"/>
     <text x="${pos.x + padding}" y="${itemY + 24}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="13" 
           fill="${this.renderTheme.text}">${this.escapeXml(item)}</text>`;
       }
@@ -1666,7 +1666,7 @@ export class SVGRenderer {
           stroke-width="1" 
           stroke-dasharray="4 4"/>
     <text x="${pos.x + pos.width / 2}" y="${pos.y + pos.height / 2}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="12" 
           fill="${this.renderTheme.textMuted}" 
           text-anchor="middle">${node.componentType}</text>
@@ -1725,14 +1725,14 @@ export class SVGRenderer {
     
     <!-- Title -->
     <text x="${innerX}" y="${titleY}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="${titleSize}" 
           font-weight="500" 
           fill="${this.renderTheme.textMuted}">${this.escapeXml(visibleTitle)}</text>
     
     <!-- Value (Large) -->
     <text x="${innerX}" y="${valueY}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="${valueSize}" 
           font-weight="700" 
           fill="${accentColor}">${this.escapeXml(value)}</text>`;
@@ -1757,7 +1757,7 @@ export class SVGRenderer {
       svg += `
     <!-- Caption -->
     <text x="${innerX}" y="${captionY}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="${captionSize}" 
           fill="${this.renderTheme.textMuted}">${this.escapeXml(visibleCaption)}</text>`;
     }
@@ -1923,7 +1923,7 @@ export class SVGRenderer {
 
       svg += `
     <text x="${currentX}" y="${pos.y + pos.height / 2 + 4}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="${fontSize}" 
           font-weight="${fontWeight}" 
           fill="${textColor}">${this.escapeXml(item)}</text>`;
@@ -1936,7 +1936,7 @@ export class SVGRenderer {
       if (!isLast) {
         svg += `
     <text x="${currentX + 4}" y="${pos.y + pos.height / 2 + 4}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="${fontSize}" 
           fill="${this.renderTheme.textMuted}">${this.escapeXml(separator)}</text>`;
         currentX += separatorWidth;
@@ -1998,7 +1998,7 @@ export class SVGRenderer {
       // Item text
       svg += `
     <text x="${currentX}" y="${itemY + itemHeight / 2 + 5}" 
-          font-family="system-ui, -apple-system, sans-serif" 
+          font-family="Arial, Helvetica, sans-serif" 
           font-size="${fontSize}" 
           font-weight="${fontWeight}" 
           fill="${textColor}">${this.escapeXml(item)}</text>`;
@@ -2023,7 +2023,7 @@ export class SVGRenderer {
       return `<g${this.getDataNodeId(node)}>
     <!-- Icon not found: ${iconType} -->
     <circle cx="${pos.x + pos.width / 2}" cy="${pos.y + pos.height / 2}" r="${Math.min(pos.width, pos.height) / 2 - 2}" fill="none" stroke="${this.hexToRgba(this.resolveMutedColor(), 0.4)}" stroke-width="1"/>
-    <text x="${pos.x + pos.width / 2}" y="${pos.y + pos.height / 2 + 4}" font-family="system-ui, -apple-system, sans-serif" font-size="12" fill="${this.hexToRgba(this.resolveMutedColor(), 0.7)}" text-anchor="middle">?</text>
+    <text x="${pos.x + pos.width / 2}" y="${pos.y + pos.height / 2 + 4}" font-family="Arial, Helvetica, sans-serif" font-size="12" fill="${this.hexToRgba(this.resolveMutedColor(), 0.7)}" text-anchor="middle">?</text>
   </g>`;
     }
 
