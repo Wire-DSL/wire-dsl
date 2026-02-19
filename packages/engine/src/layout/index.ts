@@ -403,6 +403,53 @@ export class LayoutEngine {
       return totalHeight;
     }
 
+    // Split places children side by side — height = tallest child (like horizontal stack)
+    if (node.containerType === 'split') {
+      const splitGap = this.resolveSpacing(node.style.gap);
+      const leftParam = node.params.left;
+      const rightParam = node.params.right;
+      const leftWidthRaw = Number(leftParam);
+      const rightWidthRaw = Number(rightParam);
+      const hasLeft = leftParam !== undefined;
+      const hasRight = rightParam !== undefined;
+      const leftWidth =
+        Number.isFinite(leftWidthRaw) && leftWidthRaw > 0 ? leftWidthRaw : availableWidth / 2;
+      const rightWidth =
+        Number.isFinite(rightWidthRaw) && rightWidthRaw > 0 ? rightWidthRaw : availableWidth / 2;
+
+      let maxHeight = 0;
+      node.children.forEach((childRef, index) => {
+        const child = this.nodes[childRef.ref];
+        let childHeight = this.getComponentHeight();
+        const isFirst = index === 0;
+        let childWidth: number;
+        if (node.children.length >= 2) {
+          if (hasRight && !hasLeft) {
+            childWidth = isFirst
+              ? Math.max(1, availableWidth - rightWidth - splitGap)
+              : rightWidth;
+          } else {
+            childWidth = isFirst
+              ? leftWidth
+              : Math.max(1, availableWidth - leftWidth - splitGap);
+          }
+        } else {
+          childWidth = availableWidth;
+        }
+        if (child?.kind === 'component') {
+          childHeight = child.props.height
+            ? Number(child.props.height)
+            : this.getIntrinsicComponentHeight(child, childWidth);
+        } else if (child?.kind === 'container') {
+          childHeight = this.calculateContainerHeight(child, childWidth);
+        }
+        maxHeight = Math.max(maxHeight, childHeight);
+      });
+
+      totalHeight += maxHeight;
+      return totalHeight;
+    }
+
     // For stacks and other containers
     const direction = node.params.direction || 'vertical';
 
