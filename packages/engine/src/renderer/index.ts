@@ -1123,7 +1123,7 @@ export class SVGRenderer {
   // ============================================================================
 
   protected renderText(node: IRComponentNode, pos: any): string {
-    const text = String(node.props.content || 'Text content');
+    const text = String(node.props.text || 'Text content');
 
     // Use tokens from density configuration
     const fontSize = this.tokens.text.fontSize;
@@ -2009,7 +2009,7 @@ export class SVGRenderer {
   }
 
   protected renderIcon(node: IRComponentNode, pos: any): string {
-    const iconType = String(node.props.type || 'help-circle');
+    const iconType = String(node.props.icon || 'help-circle');
     const size = String(node.props.size || 'md');
     const variant = String(node.props.variant || 'default');
     const iconSvg = getIcon(iconType);

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Skeleton SVG Renderer
  *
  * Renders wireframes in a skeleton/loading state style:
@@ -191,7 +191,7 @@ export class SkeletonSVGRenderer extends SVGRenderer {
     return this.renderTextBlock(
       node,
       pos,
-      String(node.props.content || 'Text content'),
+      String(node.props.text || 'Text content'),
       this.tokens.text.fontSize,
       this.tokens.text.lineHeight
     );

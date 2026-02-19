@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Sketch SVG Renderer
  *
  * Renders wireframes in a hand-drawn/sketch style:
@@ -539,7 +539,7 @@ export class SketchSVGRenderer extends SVGRenderer {
    * Render text with Comic Sans
    */
   protected renderText(node: IRComponentNode, pos: any): string {
-    const text = String(node.props.content || 'Text content');
+    const text = String(node.props.text || 'Text content');
     const fontSize = this.tokens.text.fontSize;
     const lineHeightPx = Math.ceil(fontSize * this.tokens.text.lineHeight);
     const lines = this.wrapTextToLines(text, pos.width, fontSize);
@@ -1238,7 +1238,7 @@ export class SketchSVGRenderer extends SVGRenderer {
    * Render icon (same as base, icons don't need filter)
    */
   protected renderIcon(node: IRComponentNode, pos: any): string {
-    const iconType = String(node.props.type || 'help-circle');
+    const iconType = String(node.props.icon || 'help-circle');
     const size = String(node.props.size || 'md');
     const variant = String(node.props.variant || 'default');
     const iconSvg = getIcon(iconType);

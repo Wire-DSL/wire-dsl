@@ -1,4 +1,4 @@
-import type { IRContract, IRNode, IRStyle } from '../ir/index';
+﻿import type { IRContract, IRNode, IRStyle } from '../ir/index';
 import { resolveSpacingToken, type DensityLevel } from '../shared/spacing';
 import {
   resolveActionControlHeight,
@@ -932,7 +932,7 @@ export class LayoutEngine {
     }
 
     if (node.componentType === 'Text') {
-      const content = String(node.props.content || '');
+      const content = String(node.props.text || '');
       const { fontSize, lineHeight } = this.getTextMetricsForDensity();
       const lineHeightPx = Math.ceil(fontSize * lineHeight);
       const maxWidth = availableWidth && availableWidth > 0 ? availableWidth : 200;
@@ -1065,9 +1065,9 @@ export class LayoutEngine {
       return Math.max(60, Math.ceil(textWidth + (paddingX + extraPadding) * 2));
     }
 
-    // Label, Text: content-based width (estimate)
+    // Label, Text: text-based width (estimate)
     if (node.componentType === 'Label' || node.componentType === 'Text') {
-      const text = String(node.props.content || node.props.text || '');
+      const text = String(node.props.text || '');
       return Math.max(60, text.length * 8 + 16);
     }
 
