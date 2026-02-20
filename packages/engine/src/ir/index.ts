@@ -64,7 +64,7 @@ export interface IRScreen {
   root: { ref: string };
 }
 
-export type IRNode = IRContainerNode | IRComponentNode;
+export type IRNode = IRContainerNode | IRComponentNode | IRInstanceNode;
 
 export interface IRContainerNode {
   id: string;
@@ -96,6 +96,27 @@ export interface IRNodeStyle {
 export interface IRMeta {
   source?: string;
   nodeId?: string;  // SourceMap nodeId for bidirectional selection
+}
+
+/**
+ * Wraps an expanded user-defined component or layout instance.
+ * Preserves the call-site identity (nodeId) in the SVG so the canvas
+ * can select and edit the instance independently from its definition.
+ */
+export interface IRInstanceNode {
+  id: string;
+  kind: 'instance';
+  /** Name of the user-defined component or layout (e.g. "MyComp") */
+  definitionName: string;
+  /** Whether it originated from a `define Component` or `define Layout` */
+  definitionKind: 'component' | 'layout';
+  /** Props/params passed at the call site (e.g. { text: "Hello" }) */
+  invocationProps: Record<string, string | number>;
+  /** Reference to the root IR node produced by expanding the definition */
+  expandedRoot: { ref: string };
+  style: IRNodeStyle;
+  /** meta.nodeId = SourceMap nodeId of the call-site AST node */
+  meta: IRMeta;
 }
 
 // Zod validation schemas
@@ -142,7 +163,22 @@ const IRComponentNodeSchema = z.object({
   meta: IRMetaSchema,
 });
 
-const IRNodeSchema = z.union([IRContainerNodeSchema, IRComponentNodeSchema]);
+const IRInstanceNodeSchema = z.object({
+  id: z.string(),
+  kind: z.literal('instance'),
+  definitionName: z.string(),
+  definitionKind: z.enum(['component', 'layout']),
+  invocationProps: z.record(z.string(), z.union([z.string(), z.number()])),
+  expandedRoot: z.object({ ref: z.string() }),
+  style: IRNodeStyleSchema,
+  meta: IRMetaSchema,
+});
+
+const IRNodeSchema = z.discriminatedUnion('kind', [
+  IRContainerNodeSchema,
+  IRComponentNodeSchema,
+  IRInstanceNodeSchema,
+]);
 
 const IRScreenSchema = z.object({
   id: z.string(),
@@ -200,6 +236,12 @@ interface ExpansionContext {
   definitionKind: 'component' | 'layout';
   allowChildrenSlot: boolean;
   childrenSlot?: ASTComponent | ASTLayout | ASTCell;
+  /**
+   * SourceMap nodeId of the call-site AST node that triggered this expansion.
+   * Used to scope internal meta.nodeIds as `definitionNodeId@instanceScope`
+   * so that each instance's internal nodes are uniquely identifiable.
+   */
+  instanceScope?: string;
 }
 
 export class IRGenerator {
@@ -440,7 +482,7 @@ export class IRGenerator {
 
     const layoutDefinition = this.definedLayouts.get(layout.layoutType);
     if (layoutDefinition) {
-      return this.expandDefinedLayout(layoutDefinition, layoutParams, layoutChildren, context);
+      return this.expandDefinedLayout(layoutDefinition, layoutParams, layoutChildren, context, layout._meta?.nodeId);
     }
 
     const nodeId = this.idGen.generate('node');
@@ -486,7 +528,10 @@ export class IRGenerator {
       children: childRefs,
       style,
       meta: {
-        nodeId: layout._meta?.nodeId,  // Pass SourceMap nodeId from AST
+        // Scope nodeId per instance so each expansion gets a unique identifier
+        nodeId: context?.instanceScope
+          ? `${layout._meta?.nodeId}@${context.instanceScope}`
+          : layout._meta?.nodeId,
       },
     };
 
@@ -519,7 +564,9 @@ export class IRGenerator {
       style: { padding: 'none' }, // Cells have no padding by default - grid gap handles spacing
       meta: { 
         source: 'cell',
-        nodeId: cell._meta?.nodeId,  // Pass SourceMap nodeId from AST
+        nodeId: context?.instanceScope
+          ? `${cell._meta?.nodeId}@${context.instanceScope}`
+          : cell._meta?.nodeId,
       },
     };
 
@@ -551,8 +598,7 @@ export class IRGenerator {
     // Check if this component is a defined component (should be expanded)
     const definition = this.definedComponents.get(component.componentType);
     if (definition) {
-      // Expand the defined component
-      return this.expandDefinedComponent(definition, resolvedProps, context);
+      return this.expandDefinedComponent(definition, resolvedProps, component._meta?.nodeId, context);
     }
 
     // Check if it's a known built-in component
@@ -578,7 +624,10 @@ export class IRGenerator {
       props: resolvedProps,
       style: {},
       meta: {
-        nodeId: component._meta?.nodeId,  // Pass SourceMap nodeId from AST
+        // Scope nodeId per instance so each expansion gets a unique identifier
+        nodeId: context?.instanceScope
+          ? `${component._meta?.nodeId}@${context.instanceScope}`
+          : component._meta?.nodeId,
       },
     };
 
@@ -589,6 +638,7 @@ export class IRGenerator {
   private expandDefinedComponent(
     definition: ASTDefinedComponent,
     invocationArgs: Record<string, string | number>,
+    callSiteNodeId: string | undefined,
     parentContext?: ExpansionContext
   ): string | null {
     const context: ExpansionContext = {
@@ -598,28 +648,46 @@ export class IRGenerator {
       definitionName: definition.name,
       definitionKind: 'component',
       allowChildrenSlot: false,
+      // Scope internal nodeIds using the call-site nodeId
+      instanceScope: callSiteNodeId,
     };
 
-    // A defined component's body is either a layout or a component
-    // We need to expand it recursively
+    let expandedRootId: string | null = null;
     if (definition.body.type === 'layout') {
-      const result = this.convertLayout(definition.body, context);
-      this.reportUnusedArguments(context);
-      return result;
+      expandedRootId = this.convertLayout(definition.body, context);
     } else if (definition.body.type === 'component') {
-      const result = this.convertComponent(definition.body, context);
-      this.reportUnusedArguments(context);
-      return result;
+      expandedRootId = this.convertComponent(definition.body, context);
     } else {
       throw new Error(`Invalid defined component body type for "${definition.name}"`);
     }
+
+    this.reportUnusedArguments(context);
+
+    if (!expandedRootId) return null;
+
+    // Wrap the expanded content in an IRInstanceNode so the call-site identity
+    // (nodeId = "component-mycomp-0") is preserved in the SVG for canvas selection
+    const instanceNodeId = this.idGen.generate('node');
+    const instanceNode: IRInstanceNode = {
+      id: instanceNodeId,
+      kind: 'instance',
+      definitionName: definition.name,
+      definitionKind: 'component',
+      invocationProps: invocationArgs,
+      expandedRoot: { ref: expandedRootId },
+      style: {},
+      meta: { nodeId: callSiteNodeId },
+    };
+    this.nodes[instanceNodeId] = instanceNode;
+    return instanceNodeId;
   }
 
   private expandDefinedLayout(
     definition: ASTDefinedLayout,
     invocationParams: Record<string, string | number>,
     invocationChildren: (ASTComponent | ASTLayout | ASTCell)[],
-    parentContext?: ExpansionContext
+    parentContext?: ExpansionContext,
+    callSiteNodeId?: string
   ): string {
     if (invocationChildren.length !== 1) {
       this.errors.push({
@@ -641,11 +709,29 @@ export class IRGenerator {
       definitionKind: 'layout',
       allowChildrenSlot: true,
       childrenSlot: resolvedSlot,
+      // Scope internal nodeIds using the call-site nodeId
+      instanceScope: callSiteNodeId,
     };
 
-    const nodeId = this.convertLayout(definition.body, context);
+    const expandedRootId = this.convertLayout(definition.body, context);
     this.reportUnusedArguments(context);
-    return nodeId;
+
+    if (!callSiteNodeId) return expandedRootId;
+
+    // Wrap in an IRInstanceNode to preserve call-site identity in the SVG
+    const instanceNodeId = this.idGen.generate('node');
+    const instanceNode: IRInstanceNode = {
+      id: instanceNodeId,
+      kind: 'instance',
+      definitionName: definition.name,
+      definitionKind: 'layout',
+      invocationProps: invocationParams,
+      expandedRoot: { ref: expandedRootId },
+      style: {},
+      meta: { nodeId: callSiteNodeId },
+    };
+    this.nodes[instanceNodeId] = instanceNode;
+    return instanceNodeId;
   }
 
   private resolveChildrenSlot(

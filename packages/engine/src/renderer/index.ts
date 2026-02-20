@@ -1,4 +1,4 @@
-import type { IRContract, IRNode, IRComponentNode, IRContainerNode } from '../ir/index';
+import type { IRContract, IRNode, IRComponentNode, IRContainerNode, IRInstanceNode } from '../ir/index';
 import type { LayoutResult } from '../layout/index';
 import { MockDataGenerator } from './mock-data';
 import { ColorResolver } from './colors';
@@ -255,8 +255,28 @@ export class SVGRenderer {
 
       // Add container output to main output
       output.push(...containerGroup);
+    } else if (node.kind === 'instance') {
+      // Render a user-defined component/layout instance.
+      // Only data-node-id is emitted — the canvas resolves everything else
+      // (definition name, invocation props, source range) via the SourceMap.
+      // The renderer has no business encoding SourceMap data into SVG attributes.
+      const instanceGroup: string[] = [];
+      if (node.meta.nodeId) {
+        instanceGroup.push(`<g data-node-id="${node.meta.nodeId}">`);
+      }
+      // Transparent rect for hit-testing in the canvas
+      instanceGroup.push(
+        `<rect x="${pos.x}" y="${pos.y}" width="${pos.width}" height="${pos.height}" ` +
+        `fill="transparent" stroke="none" pointer-events="all"/>`
+      );
+      // Render the expanded definition content
+      this.renderNode(node.expandedRoot.ref, instanceGroup);
+      if (node.meta.nodeId) {
+        instanceGroup.push('</g>');
+      }
+      output.push(...instanceGroup);
     } else if (node.kind === 'component') {
-      // Render component
+      // Render built-in component
       const componentSvg = this.renderComponent(node, pos);
       if (componentSvg) {
         output.push(componentSvg);
@@ -2668,10 +2688,14 @@ export class SVGRenderer {
   private buildParentContainerIndex(): void {
     this.parentContainerByChildId.clear();
     Object.values(this.ir.project.nodes).forEach((node) => {
-      if (node.kind !== 'container') return;
-      node.children.forEach((childRef) => {
-        this.parentContainerByChildId.set(childRef.ref, node);
-      });
+      if (node.kind === 'container') {
+        node.children.forEach((childRef) => {
+          this.parentContainerByChildId.set(childRef.ref, node);
+        });
+      }
+      // For instance nodes, map the expandedRoot to this instance's parent container
+      // so that button-width lookups traverse through the instance boundary correctly
+      // (the expandedRoot's own container children will be indexed when that container runs)
     });
   }
 
@@ -2688,7 +2712,7 @@ export class SVGRenderer {
    * Get data-node-id attribute string for SVG elements
    * Enables bidirectional selection between code and canvas
    */
-  protected getDataNodeId(node: IRComponentNode | IRContainerNode): string {
+  protected getDataNodeId(node: IRComponentNode | IRContainerNode | IRInstanceNode): string {
     return node.meta.nodeId ? ` data-node-id="${node.meta.nodeId}"` : '';
   }
 

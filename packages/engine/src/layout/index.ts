@@ -1,4 +1,4 @@
-﻿import type { IRContract, IRNode, IRStyle } from '../ir/index';
+﻿import type { IRContract, IRNode, IRInstanceNode, IRStyle } from '../ir/index';
 import { resolveSpacingToken, type DensityLevel } from '../shared/spacing';
 import {
   resolveActionControlHeight,
@@ -93,6 +93,8 @@ export class LayoutEngine {
 
     if (node.kind === 'container') {
       this.calculateContainer(node, nodeId, x, y, width, height);
+    } else if (node.kind === 'instance') {
+      this.calculateInstance(node as IRInstanceNode, nodeId, x, y, width, height, parentContainerType);
     } else {
       this.calculateComponent(node, nodeId, x, y, width, height);
     }
@@ -692,6 +694,29 @@ export class LayoutEngine {
         currentY += gap;
       }
     });
+  }
+
+  /**
+   * Calculate layout for an instance node.
+   * The instance is a transparent wrapper — its bounding box equals the
+   * expanded root's bounding box. We calculate the expanded root first and
+   * then copy its position to the instance nodeId so the renderer can use it.
+   */
+  private calculateInstance(
+    node: IRInstanceNode,
+    nodeId: string,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    parentContainerType?: string
+  ): void {
+    const expandedRootId = node.expandedRoot.ref;
+    this.calculateNode(expandedRootId, x, y, width, height, parentContainerType);
+    const expandedPos = this.result[expandedRootId];
+    if (expandedPos) {
+      this.result[nodeId] = { ...expandedPos };
+    }
   }
 
   private calculateComponent(

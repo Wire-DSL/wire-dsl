@@ -60,6 +60,11 @@ Each element gets a **stable, semantic ID** with format `{type}-{subtype}-{count
 "layout-grid-1"        // Second grid layout
 "component-button-0"   // First button
 "component-button-1"   // Second button
+// User-defined instances:
+"component-mycomp-0"   // Call-site of first `component MyComp ...` usage
+// Internal scoped IDs (inside expanded definitions):
+"layout-stack-0@component-mycomp-0"    // layout-stack-0 inside first MyComp instance
+"component-heading-0@component-mycomp-0"  // heading inside first MyComp instance
 ```
 
 **Benefits**:
@@ -67,6 +72,27 @@ Each element gets a **stable, semantic ID** with format `{type}-{subtype}-{count
 - ✅ **Human-readable** - Easy to debug
 - ✅ **Sequential** - Predictable ordering
 - ✅ **Type-informative** - Know what element is without lookup
+- ✅ **Instance-scoped** - Internal nodes of user-defined components are unique per instance
+
+### User-Defined Component and Layout Instance Nodes
+
+When a `define Component` or `define Layout` is used at a call site, the SourceMap records the **call-site node** (e.g. `component-mycomp-0`). The IR generator wraps the expansion in an `IRInstanceNode`, and the SVG renderer emits a wrapper `<g>` with just `data-node-id` — no extra attributes. The SVG is not a metadata store.
+
+```xml
+<g data-node-id="component-mycomp-0">
+  <rect fill="transparent" pointer-events="all" .../>
+  <g data-node-id="layout-stack-0@component-mycomp-0"> ... </g>
+</g>
+```
+
+The canvas resolves everything from the SourceMap using the `nodeId` as the key:
+
+| Operation | How | SourceMap lookup |
+|---|---|---|
+| **Select instance** | Click on `data-node-id` | `sourceMap["component-mycomp-0"].range` → call-site line |
+| **Edit invocation props** | `nodeId` → SourceMap | `.properties.text` → value ranges |
+| **Navigate to definition** | `nodeId` → `.componentType` → find `define-MyComp` | Definition body range |
+| **Drill-in (internal edit)** | Click scoped child `layout-stack-0@component-mycomp-0` | Definition body nodes |
 
 ---
 

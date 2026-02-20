@@ -110,7 +110,7 @@ The IR transforms raw DSL into an unambiguous, renderable format:
 | Field | Type | Description |
 |-------|------|-------------|
 | `id` | string | Unique node ID |
-| `kind` | string | `container` or `component` |
+| `kind` | string | `container`, `component`, or `instance` |
 | `type` | string | Layout/component type |
 | `properties` | object | Type-specific properties |
 | `children` | array | Child node references (containers only) |
@@ -135,6 +135,35 @@ The IR transforms raw DSL into an unambiguous, renderable format:
 | `kind` | string | Always `component` |
 | `type` | string | Component name (e.g., `Button`, `Input`) |
 | `properties` | object | Component-specific properties |
+
+### Node Object (Instance)
+
+Produced when a `define Component` or `define Layout` is used in a screen. Wraps the expanded content and preserves the call-site identity for canvas interaction.
+
+```json
+{
+  "id": "node_12",
+  "kind": "instance",
+  "definitionName": "MyComp",
+  "definitionKind": "component",
+  "invocationProps": { "text": "Hello" },
+  "expandedRoot": { "ref": "node_11" },
+  "style": {},
+  "meta": { "nodeId": "component-mycomp-0" }
+}
+```
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `id` | string | Unique node ID |
+| `kind` | string | Always `instance` |
+| `definitionName` | string | Name of the user-defined component/layout |
+| `definitionKind` | string | `component` or `layout` |
+| `invocationProps` | object | Props provided at the call site (editable by canvas) |
+| `expandedRoot` | ref | Root node of the expanded definition content |
+| `meta.nodeId` | string | SourceMap nodeId of the call-site (mapped to SVG `data-node-id`) |
+
+Internal nodes inside the expansion have scoped IDs (`definitionNodeId@callSiteNodeId`) to ensure uniqueness when the same component is used multiple times.
 
 ## Layout Type Properties
 
