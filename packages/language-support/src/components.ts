@@ -135,6 +135,7 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
       size: controlSizeEnum,
       icon: iconNameEnum,
       iconAlign: { name: 'iconAlign', type: 'enum', options: ['left', 'right'] },
+      align: alignEnum,
       labelSpace: { name: 'labelSpace', type: 'boolean' },
       padding: controlPaddingEnum,
       block: { name: 'block', type: 'boolean' },

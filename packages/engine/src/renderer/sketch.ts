@@ -106,15 +106,16 @@ export class SketchSVGRenderer extends SVGRenderer {
     // Icon support
     const iconSvg = iconName ? getIcon(iconName) : null;
     const iconSize = iconSvg ? Math.round(fontSize * 1.1) : 0;
-    const iconGap = iconSvg ? 6 : 0;
-    const iconTotalWidth = iconSize + iconGap;
+    const iconGap = iconSvg ? 8 : 0;
+    const edgePad = 12; // icon distance from button border
+    const textPad = paddingX + extraPadding;
 
     // Keep control inside layout bounds; truncate text if needed.
     const idealTextWidth = text.length * fontSize * 0.6;
     const buttonWidth = fullWidth
       ? Math.max(1, pos.width)
-      : this.clampControlWidth(Math.max(idealTextWidth + iconTotalWidth + (paddingX + extraPadding) * 2, 60), pos.width);
-    const availableTextWidth = Math.max(0, buttonWidth - (paddingX + extraPadding) * 2 - iconTotalWidth);
+      : this.clampControlWidth(Math.max(idealTextWidth + (iconSvg ? iconSize + iconGap : 0) + textPad * 2, 60), pos.width);
+    const availableTextWidth = Math.max(0, buttonWidth - textPad * 2 - (iconSvg ? iconSize + iconGap : 0));
     const visibleText = this.truncateTextToWidth(text, availableTextWidth, fontSize);
 
     const semanticBase = this.getSemanticVariantColor(variant);
@@ -127,12 +128,31 @@ export class SketchSVGRenderer extends SVGRenderer {
     const textColor = variantColor;
     const strokeWidth = 0.5;
 
-    // Compute content layout (icon + text centered inside button)
-    const visibleTextWidth = visibleText.length * fontSize * 0.6;
-    const contentWidth = iconTotalWidth + visibleTextWidth;
-    const contentStartX = pos.x + (buttonWidth - contentWidth) / 2;
-    const iconX = iconAlign === 'right' ? contentStartX + visibleTextWidth + iconGap : contentStartX;
-    const textX = iconAlign === 'right' ? contentStartX : contentStartX + iconTotalWidth;
+    // Icon pinned to its edge with edgePad breathing room
+    const iconOffsetY = buttonY + (buttonHeight - iconSize) / 2;
+    const iconX = iconAlign === 'right'
+      ? pos.x + buttonWidth - edgePad - iconSize
+      : pos.x + edgePad;
+
+    // Text position based on align prop (default: center)
+    const textAlign = String(node.props.align || 'center').toLowerCase();
+    const sidePad = textPad + 4; // extra breathing room for left/right aligned text
+    let textX: number;
+    let textAnchor: string;
+    if (textAlign === 'left') {
+      textX = iconSvg && iconAlign === 'left'
+        ? pos.x + edgePad + iconSize + iconGap
+        : pos.x + sidePad;
+      textAnchor = 'start';
+    } else if (textAlign === 'right') {
+      textX = iconSvg && iconAlign === 'right'
+        ? pos.x + buttonWidth - edgePad - iconSize - iconGap
+        : pos.x + buttonWidth - sidePad;
+      textAnchor = 'end';
+    } else {
+      textX = pos.x + buttonWidth / 2;
+      textAnchor = 'middle';
+    }
 
     let svg = `<g${this.getDataNodeId(node)}>
       <rect x="${pos.x}" y="${buttonY}"
@@ -144,7 +164,6 @@ export class SketchSVGRenderer extends SVGRenderer {
             filter="url(#sketch-rough)"/>`;
 
     if (iconSvg) {
-      const iconOffsetY = buttonY + (buttonHeight - iconSize) / 2;
       svg += `
       <g transform="translate(${iconX}, ${iconOffsetY})">
         <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${textColor}" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round">
@@ -154,12 +173,12 @@ export class SketchSVGRenderer extends SVGRenderer {
     }
 
     svg += `
-      <text x="${iconSvg ? textX : pos.x + buttonWidth / 2}" y="${buttonY + buttonHeight / 2 + fontSize * 0.35}"
+      <text x="${textX}" y="${buttonY + buttonHeight / 2 + fontSize * 0.35}"
             font-family="${this.fontFamily}"
             font-size="${fontSize}"
             font-weight="${fontWeight}"
             fill="${textColor}"
-            text-anchor="${iconSvg ? 'start' : 'middle'}">${this.escapeXml(visibleText)}</text>
+            text-anchor="${textAnchor}">${this.escapeXml(visibleText)}</text>
     </g>`;
     return svg;
   }
@@ -327,12 +346,13 @@ export class SketchSVGRenderer extends SVGRenderer {
     const controlHeight = Math.max(16, pos.height - labelOffset);
 
     const iconSize = 16;
-    const iconPad = 4;
+    const iconPad = 12;  // breathing room between icon and box border
+    const iconInnerGap = 8; // gap between icon and text
     const iconLeftSvg = iconLeftName ? getIcon(iconLeftName) : null;
     const iconRightSvg = iconRightName ? getIcon(iconRightName) : null;
-    const leftOffset = iconLeftSvg ? iconSize + iconPad * 2 : 0;
-    const rightOffset = iconRightSvg ? iconSize + iconPad * 2 : 0;
-    const textX = pos.x + paddingX + leftOffset;
+    const leftOffset = iconLeftSvg ? iconPad + iconSize + iconInnerGap : 0;
+    const rightOffset = iconRightSvg ? iconPad + iconSize + iconInnerGap : 0;
+    const textX = pos.x + (iconLeftSvg ? leftOffset : paddingX);
     const iconColor = '#888888';
     const iconCenterY = controlY + (controlHeight - iconSize) / 2;
 
@@ -369,7 +389,7 @@ export class SketchSVGRenderer extends SVGRenderer {
       </g>`;
     }
     if (placeholder) {
-      const availWidth = pos.width - paddingX - leftOffset - rightOffset - paddingX;
+      const availWidth = pos.width - (iconLeftSvg ? leftOffset : paddingX) - (iconRightSvg ? rightOffset : paddingX);
       const visiblePh = this.truncateTextToWidth(placeholder, Math.max(0, availWidth), fontSize);
       svg += `
       <text x="${textX}" y="${controlY + controlHeight / 2 + 5}"
@@ -674,10 +694,11 @@ export class SketchSVGRenderer extends SVGRenderer {
     const centerY = controlY + controlHeight / 2 + 5;
 
     const iconSize = 16;
-    const iconPad = 4;
+    const iconPad = 12;  // breathing room between icon and box border
+    const iconInnerGap = 8; // gap between icon and text
     const iconLeftSvg = iconLeftName ? getIcon(iconLeftName) : null;
     const iconRightSvg = iconRightName ? getIcon(iconRightName) : null;
-    const leftOffset = iconLeftSvg ? iconSize + iconPad * 2 : 0;
+    const leftOffset = iconLeftSvg ? iconPad + iconSize + iconInnerGap : 0;
     const chevronWidth = 20;
     const iconColor = '#888888';
     const iconCenterY = controlY + (controlHeight - iconSize) / 2;
@@ -714,8 +735,8 @@ export class SketchSVGRenderer extends SVGRenderer {
       </svg>
     </g>`;
     }
-    const textX = pos.x + 12 + leftOffset;
-    const availWidth = pos.width - textX + pos.x - chevronWidth - (iconRightSvg ? iconSize + iconPad * 2 : 0);
+    const textX = pos.x + (iconLeftSvg ? leftOffset : 12);
+    const availWidth = pos.width - (iconLeftSvg ? leftOffset : 12) - chevronWidth - (iconRightSvg ? iconPad + iconSize + iconInnerGap : 0);
     const visiblePh = this.truncateTextToWidth(placeholder, Math.max(0, availWidth), 14);
     svg += `
     <text x="${textX}" y="${centerY}"
