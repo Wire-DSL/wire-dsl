@@ -1,5 +1,16 @@
 # @wire-dsl/core
 
+## 0.2.0
+
+### Minor Changes
+
+- [#67](https://github.com/Wire-DSL/wire-dsl/pull/67) [`0539e1d`](https://github.com/Wire-DSL/wire-dsl/commit/0539e1d51b12189f01fcd081117fcc522e01dce8) Thanks [@roxguel](https://github.com/roxguel)! - Improvement engine
+
+### Patch Changes
+
+- Updated dependencies [[`0539e1d`](https://github.com/Wire-DSL/wire-dsl/commit/0539e1d51b12189f01fcd081117fcc522e01dce8), [`0539e1d`](https://github.com/Wire-DSL/wire-dsl/commit/0539e1d51b12189f01fcd081117fcc522e01dce8), [`0539e1d`](https://github.com/Wire-DSL/wire-dsl/commit/0539e1d51b12189f01fcd081117fcc522e01dce8)]:
+  - @wire-dsl/engine@0.4.0
+
 ## 0.1.0
 
 ### Minor Changes
