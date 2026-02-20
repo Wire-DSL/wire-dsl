@@ -423,15 +423,16 @@ export class SVGRenderer {
     const hasExplicitVariantColor =
       semanticBase !== undefined || this.colorResolver.hasColor(variant);
     const resolvedBase = this.resolveVariantColor(variant, this.renderTheme.primary);
+    const isDarkMode = this.options.theme === 'dark';
     const bgColor = hasExplicitVariantColor
       ? this.hexToRgba(resolvedBase, 0.85)
-      : 'rgba(226, 232, 240, 0.9)';
+      : (isDarkMode ? 'rgba(48, 48, 55, 0.9)' : 'rgba(226, 232, 240, 0.9)');
     const textColor = hasExplicitVariantColor
       ? '#FFFFFF'
       : this.hexToRgba(this.resolveTextColor(), 0.85);
     const borderColor = hasExplicitVariantColor
       ? this.hexToRgba(resolvedBase, 0.7)
-      : 'rgba(100, 116, 139, 0.4)';
+      : (isDarkMode ? 'rgba(75, 75, 88, 0.8)' : 'rgba(100, 116, 139, 0.4)');
 
     // Compute content layout (icon + text centered inside button)
     const visibleTextWidth = this.estimateTextWidth(visibleText, fontSize);
@@ -2162,15 +2163,16 @@ export class SVGRenderer {
     const hasExplicitVariantColor =
       semanticBase !== undefined || this.colorResolver.hasColor(variant);
     const resolvedBase = this.resolveVariantColor(variant, this.renderTheme.primary);
+    const isDarkMode = this.options.theme === 'dark';
     const bgColor = hasExplicitVariantColor
       ? this.hexToRgba(resolvedBase, 0.85)
-      : 'rgba(226, 232, 240, 0.9)';
+      : (isDarkMode ? 'rgba(48, 48, 55, 0.9)' : 'rgba(226, 232, 240, 0.9)');
     const iconColor = hasExplicitVariantColor
       ? '#FFFFFF'
       : this.hexToRgba(this.resolveTextColor(), 0.75);
     const borderColor = hasExplicitVariantColor
       ? this.hexToRgba(resolvedBase, 0.7)
-      : 'rgba(100, 116, 139, 0.4)';
+      : (isDarkMode ? 'rgba(75, 75, 88, 0.8)' : 'rgba(100, 116, 139, 0.4)');
 
     const opacity = disabled ? '0.5' : '1';
     const iconSvg = getIcon(iconName);
@@ -2244,15 +2246,28 @@ export class SVGRenderer {
   }
 
   protected getSemanticVariantColor(variant: string): string | undefined {
-    const semantic: Record<string, string> = {
-      primary: this.renderTheme.primary,
-      secondary: '#64748B',
-      success: '#10B981',
-      warning: '#F59E0B',
-      danger: '#EF4444',
-      error: '#EF4444',
-      info: '#0EA5E9',
-    };
+    const isDark = this.options.theme === 'dark';
+    const semantic: Record<string, string> = isDark
+      ? {
+          // Muted mid-range — readable on #111111 without being neon
+          primary: this.renderTheme.primary, // already theme-aware (#60A5FA)
+          secondary: '#7E8EA2',              // desaturated slate
+          success: '#22A06B',                // muted emerald
+          warning: '#B38010',                // deep amber
+          danger: '#CC4444',                 // muted red
+          error: '#CC4444',
+          info: '#2485AF',                   // muted sky
+        }
+      : {
+          // Tailwind 500-level — works on white/light backgrounds
+          primary: this.renderTheme.primary, // #3B82F6
+          secondary: '#64748B',              // Slate 500
+          success: '#10B981',                // Emerald 500
+          warning: '#F59E0B',                // Amber 500
+          danger: '#EF4444',                 // Red 500
+          error: '#EF4444',
+          info: '#0EA5E9',                   // Sky 500
+        };
     return semantic[variant];
   }
 
