@@ -56,14 +56,14 @@ const THEMES = {
     primaryLight: '#EFF6FF',
   },
   dark: {
-    bg: '#0F172A',
-    cardBg: '#1E293B',
-    border: '#334155',
-    text: '#FFFFFF',
-    textMuted: '#94A3B8',
+    bg: '#111111',
+    cardBg: '#1C1C1C',
+    border: '#303030',
+    text: '#F0F0F0',
+    textMuted: '#808080',
     primary: '#60A5FA',
     primaryHover: '#3B82F6',
-    primaryLight: '#1E3A8A',
+    primaryLight: '#1C2A3A',
   },
 };
 
@@ -392,6 +392,8 @@ export class SVGRenderer {
     const extraPadding = resolveControlHorizontalPadding(String(node.props.padding || 'none'), density);
     const labelOffset = this.parseBooleanProp(node.props.labelSpace, false) ? 18 : 0;
     const fullWidth = this.shouldButtonFillAvailableWidth(node);
+    const iconName = String(node.props.icon || '').trim();
+    const iconAlign = String(node.props.iconAlign || 'left').toLowerCase();
 
     // Use tokens from density configuration
     const radius = this.tokens.button.radius;
@@ -402,12 +404,19 @@ export class SVGRenderer {
     const buttonY = pos.y + labelOffset;
     const buttonHeight = Math.max(16, Math.min(controlHeight, pos.height - labelOffset));
 
+    // Icon support
+    const iconSvg = iconName ? getIcon(iconName) : null;
+    const iconSize = iconSvg ? Math.round(fontSize * 1.1) : 0;
+    const iconGap = iconSvg ? 8 : 0;
+    const edgePad = 12; // icon distance from button border
+    const textPad = paddingX + extraPadding;
+
     // Keep control inside layout bounds; truncate text if needed.
     const idealTextWidth = this.estimateTextWidth(text, fontSize);
     const buttonWidth = fullWidth
       ? Math.max(1, pos.width)
-      : this.clampControlWidth(Math.max(Math.ceil(idealTextWidth + (paddingX + extraPadding) * 2), 60), pos.width);
-    const availableTextWidth = Math.max(0, buttonWidth - (paddingX + extraPadding) * 2);
+      : this.clampControlWidth(Math.max(Math.ceil(idealTextWidth + (iconSvg ? iconSize + iconGap : 0) + textPad * 2), 60), pos.width);
+    const availableTextWidth = Math.max(0, buttonWidth - textPad * 2 - (iconSvg ? iconSize + iconGap : 0));
     const visibleText = this.truncateTextToWidth(text, availableTextWidth, fontSize);
 
     // Color configuration with variant override support from colors block.
@@ -415,30 +424,69 @@ export class SVGRenderer {
     const hasExplicitVariantColor =
       semanticBase !== undefined || this.colorResolver.hasColor(variant);
     const resolvedBase = this.resolveVariantColor(variant, this.renderTheme.primary);
+    const isDarkMode = this.options.theme === 'dark';
     const bgColor = hasExplicitVariantColor
       ? this.hexToRgba(resolvedBase, 0.85)
-      : 'rgba(226, 232, 240, 0.9)';
+      : (isDarkMode ? 'rgba(48, 48, 55, 0.9)' : 'rgba(226, 232, 240, 0.9)');
     const textColor = hasExplicitVariantColor
       ? '#FFFFFF'
       : this.hexToRgba(this.resolveTextColor(), 0.85);
     const borderColor = hasExplicitVariantColor
       ? this.hexToRgba(resolvedBase, 0.7)
-      : 'rgba(100, 116, 139, 0.4)';
+      : (isDarkMode ? 'rgba(75, 75, 88, 0.8)' : 'rgba(100, 116, 139, 0.4)');
 
-    return `<g${this.getDataNodeId(node)}>
+    // Icon pinned to its edge with edgePad breathing room
+    const iconOffsetY = buttonY + (buttonHeight - iconSize) / 2;
+    const iconX = iconAlign === 'right'
+      ? pos.x + buttonWidth - edgePad - iconSize
+      : pos.x + edgePad;
+
+    // Text position based on align prop (default: center)
+    const textAlign = String(node.props.align || 'center').toLowerCase();
+    const sidePad = textPad + 4; // extra breathing room for left/right aligned text
+    let textX: number;
+    let textAnchor: string;
+    if (textAlign === 'left') {
+      textX = iconSvg && iconAlign === 'left'
+        ? pos.x + edgePad + iconSize + iconGap
+        : pos.x + sidePad;
+      textAnchor = 'start';
+    } else if (textAlign === 'right') {
+      textX = iconSvg && iconAlign === 'right'
+        ? pos.x + buttonWidth - edgePad - iconSize - iconGap
+        : pos.x + buttonWidth - sidePad;
+      textAnchor = 'end';
+    } else {
+      textX = pos.x + buttonWidth / 2;
+      textAnchor = 'middle';
+    }
+
+    let svg = `<g${this.getDataNodeId(node)}>
     <rect x="${pos.x}" y="${buttonY}"
           width="${buttonWidth}" height="${buttonHeight}"
           rx="${radius}"
           fill="${bgColor}"
           stroke="${borderColor}"
-          stroke-width="1"/>
-    <text x="${pos.x + buttonWidth / 2}" y="${buttonY + buttonHeight / 2 + fontSize * 0.35}"
+          stroke-width="1"/>`;
+
+    if (iconSvg) {
+      svg += `
+    <g transform="translate(${iconX}, ${iconOffsetY})">
+      <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${textColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        ${this.extractSvgContent(iconSvg)}
+      </svg>
+    </g>`;
+    }
+
+    svg += `
+    <text x="${textX}" y="${buttonY + buttonHeight / 2 + fontSize * 0.35}"
           font-family="Arial, Helvetica, sans-serif"
           font-size="${fontSize}"
           font-weight="${fontWeight}"
           fill="${textColor}"
-          text-anchor="middle">${this.escapeXml(visibleText)}</text>
+          text-anchor="${textAnchor}">${this.escapeXml(visibleText)}</text>
   </g>`;
+    return svg;
   }
 
   protected renderLink(node: IRComponentNode, pos: any): string {
@@ -484,6 +532,8 @@ export class SVGRenderer {
   protected renderInput(node: IRComponentNode, pos: any): string {
     const label = String(node.props.label || '');
     const placeholder = String(node.props.placeholder || '');
+    const iconLeftName = String(node.props.iconLeft || '').trim();
+    const iconRightName = String(node.props.iconRight || '').trim();
 
     // Use tokens from density configuration
     const radius = this.tokens.input.radius;
@@ -493,26 +543,59 @@ export class SVGRenderer {
     const controlY = pos.y + labelOffset;
     const controlHeight = Math.max(16, pos.height - labelOffset);
 
-    return `<g${this.getDataNodeId(node)}>
-    ${
-      label
-        ? `<text x="${pos.x + paddingX}" y="${this.getControlLabelBaselineY(pos.y)}"
+    const iconSize = 16;
+    const iconPad = 12;  // breathing room between icon and box border
+    const iconInnerGap = 8; // gap between icon and text
+    const iconLeftSvg = iconLeftName ? getIcon(iconLeftName) : null;
+    const iconRightSvg = iconRightName ? getIcon(iconRightName) : null;
+    const leftOffset = iconLeftSvg ? iconPad + iconSize + iconInnerGap : 0;
+    const rightOffset = iconRightSvg ? iconPad + iconSize + iconInnerGap : 0;
+    const textX = pos.x + (iconLeftSvg ? leftOffset : paddingX);
+    const iconColor = this.hexToRgba(this.resolveMutedColor(), 0.8);
+    const iconCenterY = controlY + (controlHeight - iconSize) / 2;
+
+    let svg = `<g${this.getDataNodeId(node)}>`;
+    if (label) {
+      svg += `
+    <text x="${pos.x + paddingX}" y="${this.getControlLabelBaselineY(pos.y)}"
           font-family="Arial, Helvetica, sans-serif"
           font-size="12"
-          fill="${this.renderTheme.text}">${this.escapeXml(label)}</text>`
-        : ''
+          fill="${this.renderTheme.text}">${this.escapeXml(label)}</text>`;
     }
+    svg += `
     <rect x="${pos.x}" y="${controlY}"
           width="${pos.width}" height="${controlHeight}"
           rx="${radius}"
           fill="${this.renderTheme.cardBg}"
           stroke="${this.renderTheme.border}"
-          stroke-width="1"/>
-    <text x="${pos.x + paddingX}" y="${controlY + controlHeight / 2 + 5}"
+          stroke-width="1"/>`;
+    if (iconLeftSvg) {
+      svg += `
+    <g transform="translate(${pos.x + iconPad}, ${iconCenterY})">
+      <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        ${this.extractSvgContent(iconLeftSvg)}
+      </svg>
+    </g>`;
+    }
+    if (iconRightSvg) {
+      svg += `
+    <g transform="translate(${pos.x + pos.width - iconPad - iconSize}, ${iconCenterY})">
+      <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        ${this.extractSvgContent(iconRightSvg)}
+      </svg>
+    </g>`;
+    }
+    if (placeholder) {
+      const availPlaceholderWidth = pos.width - (iconLeftSvg ? leftOffset : paddingX) - (iconRightSvg ? rightOffset : paddingX);
+      const visiblePlaceholder = this.truncateTextToWidth(placeholder, Math.max(0, availPlaceholderWidth), fontSize);
+      svg += `
+    <text x="${textX}" y="${controlY + controlHeight / 2 + 5}"
           font-family="Arial, Helvetica, sans-serif"
           font-size="${fontSize}"
-          fill="${this.renderTheme.textMuted}">${this.escapeXml(placeholder)}</text>
-  </g>`;
+          fill="${this.renderTheme.textMuted}">${this.escapeXml(visiblePlaceholder)}</text>`;
+    }
+    svg += '\n  </g>';
+    return svg;
   }
 
   protected renderTopbar(node: IRComponentNode, pos: any): string {
@@ -1212,35 +1295,68 @@ export class SVGRenderer {
   protected renderSelect(node: IRComponentNode, pos: any): string {
     const label = String(node.props.label || '');
     const placeholder = String(node.props.placeholder || 'Select...');
+    const iconLeftName = String(node.props.iconLeft || '').trim();
+    const iconRightName = String(node.props.iconRight || '').trim();
     const labelOffset = this.getControlLabelOffset(label);
     const controlY = pos.y + labelOffset;
     const controlHeight = Math.max(16, pos.height - labelOffset);
     const centerY = controlY + controlHeight / 2 + 5;
 
-    return `<g${this.getDataNodeId(node)}>
-    ${
-      label
-        ? `<text x="${pos.x}" y="${this.getControlLabelBaselineY(pos.y)}" 
-          font-family="Arial, Helvetica, sans-serif" 
-          font-size="12" 
-          fill="${this.renderTheme.text}">${this.escapeXml(label)}</text>`
-        : ''
+    const iconSize = 16;
+    const iconPad = 12;  // breathing room between icon and box border
+    const iconInnerGap = 8; // gap between icon and text
+    const iconLeftSvg = iconLeftName ? getIcon(iconLeftName) : null;
+    const iconRightSvg = iconRightName ? getIcon(iconRightName) : null;
+    const leftOffset = iconLeftSvg ? iconPad + iconSize + iconInnerGap : 0;
+    const chevronWidth = 20;
+    const iconColor = this.hexToRgba(this.resolveMutedColor(), 0.8);
+    const iconCenterY = controlY + (controlHeight - iconSize) / 2;
+
+    let svg = `<g${this.getDataNodeId(node)}>`;
+    if (label) {
+      svg += `
+    <text x="${pos.x}" y="${this.getControlLabelBaselineY(pos.y)}"
+          font-family="Arial, Helvetica, sans-serif"
+          font-size="12"
+          fill="${this.renderTheme.text}">${this.escapeXml(label)}</text>`;
     }
-    <rect x="${pos.x}" y="${controlY}" 
-          width="${pos.width}" height="${controlHeight}" 
-          rx="6" 
-          fill="${this.renderTheme.cardBg}" 
-          stroke="${this.renderTheme.border}" 
-          stroke-width="1"/>
-    <text x="${pos.x + 12}" y="${centerY}" 
-          font-family="Arial, Helvetica, sans-serif" 
-          font-size="14" 
-          fill="${this.renderTheme.textMuted}">${this.escapeXml(placeholder)}</text>
-    <text x="${pos.x + pos.width - 20}" y="${centerY}" 
-          font-family="Arial, Helvetica, sans-serif" 
-          font-size="16" 
+    svg += `
+    <rect x="${pos.x}" y="${controlY}"
+          width="${pos.width}" height="${controlHeight}"
+          rx="6"
+          fill="${this.renderTheme.cardBg}"
+          stroke="${this.renderTheme.border}"
+          stroke-width="1"/>`;
+    if (iconLeftSvg) {
+      svg += `
+    <g transform="translate(${pos.x + iconPad}, ${iconCenterY})">
+      <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        ${this.extractSvgContent(iconLeftSvg)}
+      </svg>
+    </g>`;
+    }
+    if (iconRightSvg) {
+      svg += `
+    <g transform="translate(${pos.x + pos.width - chevronWidth - iconPad - iconSize}, ${iconCenterY})">
+      <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        ${this.extractSvgContent(iconRightSvg)}
+      </svg>
+    </g>`;
+    }
+    const textX = pos.x + (iconLeftSvg ? leftOffset : 12);
+    const availPlaceholderWidth = pos.width - (iconLeftSvg ? leftOffset : 12) - chevronWidth - (iconRightSvg ? iconPad + iconSize + iconInnerGap : 0);
+    const visiblePlaceholder = this.truncateTextToWidth(placeholder, Math.max(0, availPlaceholderWidth), 14);
+    svg += `
+    <text x="${textX}" y="${centerY}"
+          font-family="Arial, Helvetica, sans-serif"
+          font-size="14"
+          fill="${this.renderTheme.textMuted}">${this.escapeXml(visiblePlaceholder)}</text>
+    <text x="${pos.x + pos.width - 20}" y="${centerY}"
+          font-family="Arial, Helvetica, sans-serif"
+          font-size="16"
           fill="${this.renderTheme.textMuted}">▼</text>
   </g>`;
+    return svg;
   }
 
   protected renderCheckbox(node: IRComponentNode, pos: any): string {
@@ -1770,8 +1886,12 @@ export class SVGRenderer {
   protected renderImage(node: IRComponentNode, pos: any): string {
     const placeholder = String(node.props.placeholder || 'landscape').toLowerCase();
     const placeholderIcon = String(node.props.icon || '').trim();
+    const variant = String(node.props.variant || '').trim();
     const placeholderIconSvg =
       placeholder === 'icon' && placeholderIcon ? getIcon(placeholderIcon) : null;
+
+    // Theme-aware image background
+    const imageBg = this.options.theme === 'dark' ? '#2A2A2A' : '#E8E8E8';
 
     // Determine aspect ratio based on placeholder type
     const aspectRatios: Record<string, number> = {
@@ -1783,52 +1903,53 @@ export class SVGRenderer {
     };
 
     const ratio = aspectRatios[placeholder] || 16 / 9;
-    
+
     // Calculate max size without stretching (constrain to smallest dimension)
-    const maxSize = Math.min(pos.width, pos.height) * 0.8; // 80% of available space
+    const maxSize = Math.min(pos.width, pos.height) * 0.8;
     let iconWidth = maxSize;
     let iconHeight = maxSize / ratio;
-    
+
     // If height is still too large, constrain by height instead
     if (iconHeight > pos.height * 0.8) {
       iconHeight = pos.height * 0.8;
       iconWidth = iconHeight * ratio;
     }
-    
+
     // Center the icon in the available space
     const offsetX = pos.x + (pos.width - iconWidth) / 2;
     const offsetY = pos.y + (pos.height - iconHeight) / 2;
 
+    // Custom icon placeholder for "icon" variant when icon prop is provided.
+    // No inner badge rect — icon fills the available space directly.
+    if (placeholder === 'icon' && placeholderIconSvg) {
+      const semanticBase = variant ? this.getSemanticVariantColor(variant) : undefined;
+      const hasVariant = variant.length > 0 && (semanticBase !== undefined || this.colorResolver.hasColor(variant));
+      const variantColor = hasVariant ? this.resolveVariantColor(variant, this.renderTheme.primary) : null;
+
+      const bgColor = hasVariant ? this.hexToRgba(variantColor!, 0.12) : imageBg;
+      const iconColor = hasVariant ? variantColor! : (this.options.theme === 'dark' ? '#888888' : '#666666');
+      const iconSize = Math.max(16, Math.min(pos.width, pos.height) * 0.6);
+      const iconOffsetX = pos.x + (pos.width - iconSize) / 2;
+      const iconOffsetY = pos.y + (pos.height - iconSize) / 2;
+
+      return `<g${this.getDataNodeId(node)}>
+    <rect x="${pos.x}" y="${pos.y}" width="${pos.width}" height="${pos.height}" fill="${bgColor}" rx="4"/>
+    <g transform="translate(${iconOffsetX}, ${iconOffsetY})">
+      <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        ${this.extractSvgContent(placeholderIconSvg)}
+      </svg>
+    </g>
+    <rect x="${pos.x}" y="${pos.y}" width="${pos.width}" height="${pos.height}" fill="none" stroke="${this.renderTheme.border}" stroke-width="1" rx="4"/>
+  </g>`;
+    }
+
     // Background
     let svg = `<g${this.getDataNodeId(node)}>
     <!-- Image Background -->
-    <rect x="${pos.x}" y="${pos.y}" width="${pos.width}" height="${pos.height}" fill="#E8E8E8"/>`;
+    <rect x="${pos.x}" y="${pos.y}" width="${pos.width}" height="${pos.height}" fill="${imageBg}"/>`;
 
-    // Custom icon placeholder for "icon" variant when icon prop is provided.
-    if (placeholder === 'icon' && placeholderIconSvg) {
-      const badgeSize = Math.max(24, Math.min(iconWidth, iconHeight) * 0.78);
-      const badgeX = pos.x + (pos.width - badgeSize) / 2;
-      const badgeY = pos.y + (pos.height - badgeSize) / 2;
-      const iconSize = badgeSize * 0.62;
-      const iconOffsetX = badgeX + (badgeSize - iconSize) / 2;
-      const iconOffsetY = badgeY + (badgeSize - iconSize) / 2;
-
-      svg += `
-    <!-- Custom Icon Placeholder -->
-    <rect x="${badgeX}" y="${badgeY}"
-          width="${badgeSize}" height="${badgeSize}"
-          rx="${Math.max(4, badgeSize * 0.2)}"
-          fill="rgba(255, 255, 255, 0.6)"
-          stroke="#888"
-          stroke-width="1"/>
-    <g transform="translate(${iconOffsetX}, ${iconOffsetY})">
-      <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="#555" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        ${this.extractSvgContent(placeholderIconSvg)}
-      </svg>
-    </g>`;
-    }
     // Camera icon for landscape, portrait, square
-    else if (['landscape', 'portrait', 'square'].includes(placeholder)) {
+    if (['landscape', 'portrait', 'square'].includes(placeholder)) {
       // Modern digital camera design based on contemporary camera icon
       const cameraCx = offsetX + iconWidth / 2;
       const cameraCy = offsetY + iconHeight / 2;
@@ -1877,7 +1998,7 @@ export class SVGRenderer {
     <circle cx="${lensCx - lensRadius * 0.25}" cy="${lensCy - lensRadius * 0.25}" 
             r="${lensRadius * 0.25}" 
             fill="#E0E0E0" opacity="0.6"/>`;
-    } 
+    }
     // Person silhouette for avatar and icon fallback
     else if (['avatar', 'icon'].includes(placeholder)) {
       const personWidth = iconWidth * 0.5;
@@ -1952,29 +2073,35 @@ export class SVGRenderer {
     const iconsStr = String(node.props.icons || '');
     const items = itemsStr.split(',').map((s) => s.trim());
     const icons = iconsStr ? iconsStr.split(',').map((s) => s.trim()) : [];
-    
+
     const itemHeight = 40;
     const fontSize = 14;
     const activeIndex = Number(node.props.active || 0);
     const accentColor = this.resolveAccentColor();
+
+    // variant prop overrides the active color (accent is fallback)
+    const variantProp = String(node.props.variant || '').trim();
+    const semanticVariant = variantProp ? this.getSemanticVariantColor(variantProp) : undefined;
+    const hasVariant = variantProp.length > 0 && (semanticVariant !== undefined || this.colorResolver.hasColor(variantProp));
+    const activeColor = hasVariant ? this.resolveVariantColor(variantProp, accentColor) : accentColor;
 
     let svg = `<g${this.getDataNodeId(node)}>`;
 
     items.forEach((item, index) => {
       const itemY = pos.y + index * itemHeight;
       const isActive = index === activeIndex;
-      const bgColor = isActive ? this.hexToRgba(accentColor, 0.15) : 'transparent';
+      const bgColor = isActive ? this.hexToRgba(activeColor, 0.15) : 'transparent';
       const textColor = isActive
-        ? this.hexToRgba(accentColor, 0.9)
+        ? this.hexToRgba(activeColor, 0.9)
         : this.hexToRgba(this.resolveTextColor(), 0.75);
       const fontWeight = isActive ? '500' : '400';
 
       // Item background (only if active)
       if (isActive) {
         svg += `
-    <rect x="${pos.x}" y="${itemY}" 
-          width="${pos.width}" height="${itemHeight}" 
-          rx="6" 
+    <rect x="${pos.x}" y="${itemY}"
+          width="${pos.width}" height="${itemHeight}"
+          rx="6"
           fill="${bgColor}"/>`;
       }
 
@@ -1985,9 +2112,12 @@ export class SVGRenderer {
         if (iconSvg) {
           const iconSize = 16;
           const iconY = itemY + (itemHeight - iconSize) / 2;
+          const iconColor = isActive
+            ? this.hexToRgba(activeColor, 0.9)
+            : this.hexToRgba(this.resolveMutedColor(), 0.9);
           svg += `
     <g transform="translate(${currentX}, ${iconY})">
-      <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${this.hexToRgba(this.resolveMutedColor(), 0.9)}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         ${this.extractSvgContent(iconSvg)}
       </svg>
     </g>`;
@@ -1997,10 +2127,10 @@ export class SVGRenderer {
 
       // Item text
       svg += `
-    <text x="${currentX}" y="${itemY + itemHeight / 2 + 5}" 
-          font-family="Arial, Helvetica, sans-serif" 
-          font-size="${fontSize}" 
-          font-weight="${fontWeight}" 
+    <text x="${currentX}" y="${itemY + itemHeight / 2 + 5}"
+          font-family="Arial, Helvetica, sans-serif"
+          font-size="${fontSize}"
+          font-weight="${fontWeight}"
           fill="${textColor}">${this.escapeXml(item)}</text>`;
     });
 
@@ -2054,15 +2184,16 @@ export class SVGRenderer {
     const hasExplicitVariantColor =
       semanticBase !== undefined || this.colorResolver.hasColor(variant);
     const resolvedBase = this.resolveVariantColor(variant, this.renderTheme.primary);
+    const isDarkMode = this.options.theme === 'dark';
     const bgColor = hasExplicitVariantColor
       ? this.hexToRgba(resolvedBase, 0.85)
-      : 'rgba(226, 232, 240, 0.9)';
+      : (isDarkMode ? 'rgba(48, 48, 55, 0.9)' : 'rgba(226, 232, 240, 0.9)');
     const iconColor = hasExplicitVariantColor
       ? '#FFFFFF'
       : this.hexToRgba(this.resolveTextColor(), 0.75);
     const borderColor = hasExplicitVariantColor
       ? this.hexToRgba(resolvedBase, 0.7)
-      : 'rgba(100, 116, 139, 0.4)';
+      : (isDarkMode ? 'rgba(75, 75, 88, 0.8)' : 'rgba(100, 116, 139, 0.4)');
 
     const opacity = disabled ? '0.5' : '1';
     const iconSvg = getIcon(iconName);
@@ -2136,15 +2267,28 @@ export class SVGRenderer {
   }
 
   protected getSemanticVariantColor(variant: string): string | undefined {
-    const semantic: Record<string, string> = {
-      primary: this.renderTheme.primary,
-      secondary: '#64748B',
-      success: '#10B981',
-      warning: '#F59E0B',
-      danger: '#EF4444',
-      error: '#EF4444',
-      info: '#0EA5E9',
-    };
+    const isDark = this.options.theme === 'dark';
+    const semantic: Record<string, string> = isDark
+      ? {
+          // Muted mid-range — readable on #111111 without being neon
+          primary: this.renderTheme.primary, // already theme-aware (#60A5FA)
+          secondary: '#7E8EA2',              // desaturated slate
+          success: '#22A06B',                // muted emerald
+          warning: '#B38010',                // deep amber
+          danger: '#CC4444',                 // muted red
+          error: '#CC4444',
+          info: '#2485AF',                   // muted sky
+        }
+      : {
+          // Tailwind 500-level — works on white/light backgrounds
+          primary: this.renderTheme.primary, // #3B82F6
+          secondary: '#64748B',              // Slate 500
+          success: '#10B981',                // Emerald 500
+          warning: '#F59E0B',                // Amber 500
+          danger: '#EF4444',                 // Red 500
+          error: '#EF4444',
+          info: '#0EA5E9',                   // Sky 500
+        };
     return semantic[variant];
   }
 

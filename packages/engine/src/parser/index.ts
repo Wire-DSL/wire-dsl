@@ -1689,7 +1689,8 @@ function validateSemanticDiagnostics(ast: AST, sourceMap: SourceMapEntry[]): Par
           propName === 'variant' &&
           !enumValues.includes(normalizedValue) &&
           Object.prototype.hasOwnProperty.call(ast.colors || {}, normalizedValue);
-        if (!enumValues.includes(normalizedValue) && !isCustomVariantFromColors) {
+        const isPropReference = normalizedValue.startsWith('prop_');
+        if (!enumValues.includes(normalizedValue) && !isCustomVariantFromColors && !isPropReference) {
           emitWarning(
             `Invalid value "${normalizedValue}" for property "${propName}" in component "${componentType}".`,
             'COMPONENT_INVALID_PROPERTY_VALUE',
@@ -1818,7 +1819,7 @@ function validateSemanticDiagnostics(ast: AST, sourceMap: SourceMapEntry[]): Par
         const enumValues = rules.enumParams?.[paramName];
         if (enumValues) {
           const normalizedValue = String(paramValue);
-          if (!enumValues.includes(normalizedValue)) {
+          if (!enumValues.includes(normalizedValue) && !normalizedValue.startsWith('prop_')) {
             emitWarning(
               `Invalid value "${normalizedValue}" for parameter "${paramName}" in layout "${layout.layoutType}".`,
               'LAYOUT_INVALID_PARAMETER_VALUE',

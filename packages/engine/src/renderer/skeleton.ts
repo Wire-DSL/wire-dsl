@@ -205,6 +205,20 @@ export class SkeletonSVGRenderer extends SVGRenderer {
   }
 
   /**
+   * Render image as a plain skeleton rectangle — no icon, no placeholder label,
+   * just a filled block with the correct dimensions (aspect-ratio is preserved
+   * by the layout engine, so pos already has the right size).
+   */
+  protected renderImage(node: IRComponentNode, pos: any): string {
+    return `<g${this.getDataNodeId(node)}>
+      <rect x="${pos.x}" y="${pos.y}"
+            width="${pos.width}" height="${pos.height}"
+            rx="4"
+            fill="${this.renderTheme.border}"/>
+    </g>`;
+  }
+
+  /**
    * Render badge as shape only (no text)
    */
   protected renderBadge(node: IRComponentNode, pos: any): string {

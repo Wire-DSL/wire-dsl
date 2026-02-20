@@ -686,6 +686,20 @@ export class IRGenerator {
         key
       );
       if (resolvedValue !== undefined) {
+        const wasPropReference = typeof value === 'string' && value.startsWith('prop_');
+        if (wasPropReference) {
+          const layoutMetadata = LAYOUTS[layoutType as keyof typeof LAYOUTS] as LayoutMetadata | undefined;
+          const property = layoutMetadata?.properties?.[key] as PropertyMetadata | undefined;
+          if (property?.type === 'enum' && Array.isArray(property.options)) {
+            const normalizedValue = String(resolvedValue);
+            if (!property.options.includes(normalizedValue)) {
+              this.warnings.push({
+                type: 'invalid-bound-enum-value',
+                message: `Invalid value "${normalizedValue}" for parameter "${key}" in layout "${layoutType}". Expected one of: ${property.options.join(', ')}.`,
+              });
+            }
+          }
+        }
         resolved[key] = resolvedValue;
       }
     }
@@ -770,6 +784,20 @@ export class IRGenerator {
         key
       );
       if (resolvedValue !== undefined) {
+        const wasPropReference = typeof value === 'string' && value.startsWith('prop_');
+        if (wasPropReference) {
+          const metadata = COMPONENTS[componentType as keyof typeof COMPONENTS] as ComponentMetadata | undefined;
+          const property = metadata?.properties?.[key] as PropertyMetadata | undefined;
+          if (property?.type === 'enum' && Array.isArray(property.options)) {
+            const normalizedValue = String(resolvedValue);
+            if (!property.options.includes(normalizedValue)) {
+              this.warnings.push({
+                type: 'invalid-bound-enum-value',
+                message: `Invalid value "${normalizedValue}" for property "${key}" in component "${componentType}". Expected one of: ${property.options.join(', ')}.`,
+              });
+            }
+          }
+        }
         resolved[key] = resolvedValue;
       }
     }
