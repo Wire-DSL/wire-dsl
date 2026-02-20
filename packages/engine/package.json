@@ -1,6 +1,6 @@
 {
   "name": "@wire-dsl/engine",
-  "version": "0.2.4",
+  "version": "0.3.0",
   "description": "WireDSL engine - Parser, IR generator, layout engine, and SVG renderer (browser-safe, pure JS/TS)",
   "type": "module",
   "exports": {
