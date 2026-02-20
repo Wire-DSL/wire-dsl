@@ -1,5 +1,17 @@
 # @wire-dsl/cli
 
+## 0.3.6
+
+### Patch Changes
+
+- [#67](https://github.com/Wire-DSL/wire-dsl/pull/67) [`0539e1d`](https://github.com/Wire-DSL/wire-dsl/commit/0539e1d51b12189f01fcd081117fcc522e01dce8) Thanks [@roxguel](https://github.com/roxguel)! - Improvement engine
+
+- [#67](https://github.com/Wire-DSL/wire-dsl/pull/67) [`0539e1d`](https://github.com/Wire-DSL/wire-dsl/commit/0539e1d51b12189f01fcd081117fcc522e01dce8) Thanks [@roxguel](https://github.com/roxguel)! - Add support for user-defined layouts and custom properties for custom layouts/components
+
+- Updated dependencies [[`0539e1d`](https://github.com/Wire-DSL/wire-dsl/commit/0539e1d51b12189f01fcd081117fcc522e01dce8), [`0539e1d`](https://github.com/Wire-DSL/wire-dsl/commit/0539e1d51b12189f01fcd081117fcc522e01dce8), [`0539e1d`](https://github.com/Wire-DSL/wire-dsl/commit/0539e1d51b12189f01fcd081117fcc522e01dce8)]:
+  - @wire-dsl/exporters@0.2.0
+  - @wire-dsl/engine@0.4.0
+
 ## 0.3.5
 
 ### Patch Changes
