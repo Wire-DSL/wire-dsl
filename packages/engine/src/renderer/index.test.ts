@@ -801,12 +801,12 @@ describe('SVG Renderer', () => {
     expect(outerFrameRegex.test(svg)).toBe(false);
   });
 
-  it('should render Table outer frame when border and backround are true', () => {
+  it('should render Table outer frame when border and background are true', () => {
     const input = `
       project "TableWithFrame" {
         screen Main {
           layout stack {
-            component Table columns: "Name,Status" rows: 2 border: true backround: true
+            component Table columns: "Name,Status" rows: 2 border: true background: true
           }
         }
       }

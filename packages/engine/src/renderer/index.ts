@@ -609,7 +609,7 @@ export class SVGRenderer {
         ? this.resolveAccentColor()
         : this.resolveVariantColor(variant, this.resolveAccentColor());
     const showBorder = this.parseBooleanProp(node.props.border, false);
-    const showBackground = this.parseBooleanProp(node.props.background ?? node.props.backround, false);
+    const showBackground = this.parseBooleanProp(node.props.background, false);
     const radiusMap: Record<string, number> = {
       none: 0,
       sm: 4,
@@ -832,7 +832,7 @@ export class SVGRenderer {
     const hasCaption = caption.length > 0;
     const showOuterBorder = this.parseBooleanProp(node.props.border, false);
     const showOuterBackground = this.parseBooleanProp(
-      node.props.background ?? node.props.backround,
+      node.props.background,
       false
     );
     const showInnerBorder = this.parseBooleanProp(node.props.innerBorder, true);

@@ -303,8 +303,6 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
       border: { name: 'border', type: 'boolean' },
       innerBorder: { name: 'innerBorder', type: 'boolean' },
       background: { name: 'background', type: 'boolean' },
-      // Backward-compatible alias (common typo) accepted by parser/renderers.
-      backround: { name: 'backround', type: 'boolean' },
     },
     example: 'component Table columns: "User,City,Amount" rows: 8 mock: "name,city,amount"',
   },

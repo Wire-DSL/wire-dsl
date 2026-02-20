@@ -417,7 +417,6 @@ Data table with rows and columns.
 - `captionAlign` (enum): `left` | `center` | `right` (auto-default based on pagination alignment)
 - `border` (boolean): Draws the outer table border (default: `false`)
 - `background` (boolean): Draws outer table background fill (default: `false`)
-- `backround` (boolean): Alias accepted for backwards compatibility/typo tolerance
 
 **Example**:
 ```wire
