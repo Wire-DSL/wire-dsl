@@ -100,11 +100,16 @@ Single-line text input field.
 - `label` (string): Field label
 - `placeholder` (string): Placeholder text
 - `size` (enum): Control size - `sm` | `md` | `lg` (default: `md`)
+- `iconLeft` (enum, optional): Icon name rendered on the left side of the field (e.g., `search`, `mail`)
+- `iconRight` (enum, optional): Icon name rendered on the right side of the field (e.g., `eye`, `x`)
+
+> Both `iconLeft` and `iconRight` can be active simultaneously.
 
 **Example**:
 ```wire
 component Input label: "Email" placeholder: "you@example.com"
-component Input label: "Search" placeholder: "Type to search..."
+component Input label: "Search" placeholder: "Type to search..." iconLeft: "search"
+component Input label: "Password" placeholder: "••••••••" iconLeft: "lock" iconRight: "eye"
 component Input label: "Compact" placeholder: "..." size: sm
 ```
 
@@ -139,11 +144,17 @@ Dropdown selection field.
 - `label` (string): Field label
 - `items` (string, CSV): Comma-separated list of options
 - `size` (enum): Control size - `sm` | `md` | `lg` (default: `md`)
+- `iconLeft` (enum, optional): Icon name rendered on the left side of the field
+- `iconRight` (enum, optional): Icon name rendered to the left of the chevron, on the right side
+
+> Both `iconLeft` and `iconRight` can be active simultaneously.
 
 **Example**:
 ```wire
 component Select label: "Role" items: "Admin,User,Guest"
 component Select label: "Status" items: "Active,Inactive,Pending"
+component Select label: "Country" iconLeft: "globe" items: "Spain,France,Germany"
+component Select label: "Category" iconLeft: "tag" iconRight: "filter" items: "A,B,C"
 component Select label: "Size" items: "S,M,L" size: lg
 ```
 
@@ -218,6 +229,8 @@ Clickable action button.
 - `text` (string): Button label
 - `variant` (string): Visual style - `default` | `primary` | `secondary` | `success` | `warning` | `danger` | `info` (default: `default`)
 - `size` (enum): `sm` | `md` | `lg` (default: `md`)
+- `icon` (enum, optional): Icon name to render alongside the text (e.g., `check`, `trash-2`, `plus`)
+- `iconAlign` (enum, optional): Icon placement - `left` | `right` (default: `left`)
 - `labelSpace` (boolean): Adds top offset to align with labeled `Input`/`Select` controls
 - `padding` (enum): Horizontal inset - `none` | `xs` | `sm` | `md` | `lg` | `xl`
 - `block` (boolean): Expands button width in compatible horizontal layouts
@@ -236,10 +249,13 @@ Clickable action button.
 component Button text: "Save" variant: primary
 component Button text: "Cancel" variant: secondary
 component Button text: "Delete" variant: danger
+component Button text: "Confirm" variant: success icon: "check"
+component Button text: "Remove" variant: danger icon: "trash-2" iconAlign: right
+component Button text: "Add Item" icon: "plus"
 component Button text: "Aligned" size: md labelSpace: true padding: md
 ```
 
-**Rendering**: Rectangular button with text, styled according to variant
+**Rendering**: Rectangular button with text (and optional leading/trailing icon), styled according to variant
 Size note: For action controls, `lg` aligns with the base `Input`/`Select` height.
 
 ---
@@ -309,14 +325,20 @@ Vertical menu for navigation.
 **Properties**:
 - `items` (string, CSV): Menu item labels
 - `active` (number): Index of active item (default: 0)
+- `icons` (string, CSV, optional): Icon names per menu item (same order as `items`)
+- `variant` (string, optional): Color applied to the active item and its icon. If omitted, falls back to the `accent` color. Accepts semantic variants (`primary`, `success`, etc.) or custom color names from the `colors` block.
+
+> When `icons` are set, the active item's icon is automatically colored using the same active color as the text.
 
 **Example**:
 ```wire
 component SidebarMenu items: "Home,Users,Settings,Help" active: 0
 component SidebarMenu items: "Dashboard,Analytics,Reports,Admin" active: 1
+component SidebarMenu items: "Dashboard,Users,Settings" icons: "home,users,settings" active: 0
+component SidebarMenu items: "Dashboard,Users,Settings" icons: "home,users,settings" active: 1 variant: primary
 ```
 
-**Rendering**: Vertical list of menu items, with one highlighted as active
+**Rendering**: Vertical list of menu items with one highlighted as active; icons (if provided) match the active color for the selected item
 
 ---
 
@@ -450,18 +472,23 @@ Placeholder for image content.
 
 **Properties**:
 - `placeholder` (string): Shape - `square` | `landscape` | `portrait` | `avatar` | `icon`
-- `icon` (string, optional): Icon name used when `placeholder: "icon"`
+- `icon` (enum, optional): Icon name used when `placeholder: "icon"`. The icon fills the component area directly, without an inner border box.
+- `variant` (string, optional): When `placeholder: icon`, tints the background and icon with the specified color (e.g., `primary`, `success`, `danger`, or a custom key from `colors`). Behaves similarly to `IconButton` variants.
 - `height` (number, optional): Height in pixels (default: 200)
+
+> The background color adapts to the active theme — light gray in `light` mode, dark gray in `dark` mode.
 
 **Example**:
 ```wire
 component Image placeholder: "square" height: 250
 component Image placeholder: "landscape" height: 300
 component Image placeholder: "avatar" height: 100
-component Image placeholder: "icon" icon: "search" height: 120
+component Image placeholder: "icon" icon: "image" height: 120
+component Image placeholder: "icon" icon: "user" variant: primary height: 80
+component Image placeholder: "icon" icon: "shield" variant: success height: 80
 ```
 
-**Rendering**: Rectangular placeholder image with appropriate aspect ratio
+**Rendering**: Rectangular placeholder with appropriate aspect ratio; when `placeholder: icon`, the specified icon is centered and fills the available space
 
 ---
 

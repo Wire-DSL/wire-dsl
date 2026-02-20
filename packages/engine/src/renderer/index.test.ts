@@ -1125,7 +1125,7 @@ describe('SVG Renderer', () => {
     const layout = calculateLayout(ir);
     const svg = renderToSVG(ir, layout, { theme: 'dark' });
 
-    expect(svg).toContain('#0F172A'); // Dark theme background
+    expect(svg).toContain('#111111'); // Dark theme background
   });
 
   it('should fallback text color to black in light theme and white in dark theme', () => {
@@ -1709,7 +1709,8 @@ describe('SVG Renderer', () => {
     const layout = calculateLayout(ir);
     const svg = renderToSVG(ir, layout);
 
-    expect(svg).toContain('Custom Icon Placeholder');
+    // Image with placeholder: icon now renders actual SVG icon, not a text label
+    expect(svg).toContain('viewBox="0 0 24 24"'); // icon SVG was rendered
     expect(svg).not.toContain('Person Silhouette');
   });
 

@@ -89,6 +89,8 @@ export class SketchSVGRenderer extends SVGRenderer {
     const extraPadding = resolveControlHorizontalPadding(String(node.props.padding || 'none'), density);
     const labelOffset = this.parseBooleanProp(node.props.labelSpace, false) ? 18 : 0;
     const fullWidth = this.shouldButtonFillAvailableWidth(node);
+    const iconName = String(node.props.icon || '').trim();
+    const iconAlign = String(node.props.iconAlign || 'left').toLowerCase();
 
     // Use same tokens as standard renderer
     const radius = this.tokens.button.radius;
@@ -101,12 +103,18 @@ export class SketchSVGRenderer extends SVGRenderer {
     );
     const buttonY = pos.y + labelOffset;
 
+    // Icon support
+    const iconSvg = iconName ? getIcon(iconName) : null;
+    const iconSize = iconSvg ? Math.round(fontSize * 1.1) : 0;
+    const iconGap = iconSvg ? 6 : 0;
+    const iconTotalWidth = iconSize + iconGap;
+
     // Keep control inside layout bounds; truncate text if needed.
     const idealTextWidth = text.length * fontSize * 0.6;
     const buttonWidth = fullWidth
       ? Math.max(1, pos.width)
-      : this.clampControlWidth(Math.max(idealTextWidth + (paddingX + extraPadding) * 2, 60), pos.width);
-    const availableTextWidth = Math.max(0, buttonWidth - (paddingX + extraPadding) * 2);
+      : this.clampControlWidth(Math.max(idealTextWidth + iconTotalWidth + (paddingX + extraPadding) * 2, 60), pos.width);
+    const availableTextWidth = Math.max(0, buttonWidth - (paddingX + extraPadding) * 2 - iconTotalWidth);
     const visibleText = this.truncateTextToWidth(text, availableTextWidth, fontSize);
 
     const semanticBase = this.getSemanticVariantColor(variant);
@@ -119,21 +127,41 @@ export class SketchSVGRenderer extends SVGRenderer {
     const textColor = variantColor;
     const strokeWidth = 0.5;
 
-    return `<g${this.getDataNodeId(node)}>
+    // Compute content layout (icon + text centered inside button)
+    const visibleTextWidth = visibleText.length * fontSize * 0.6;
+    const contentWidth = iconTotalWidth + visibleTextWidth;
+    const contentStartX = pos.x + (buttonWidth - contentWidth) / 2;
+    const iconX = iconAlign === 'right' ? contentStartX + visibleTextWidth + iconGap : contentStartX;
+    const textX = iconAlign === 'right' ? contentStartX : contentStartX + iconTotalWidth;
+
+    let svg = `<g${this.getDataNodeId(node)}>
       <rect x="${pos.x}" y="${buttonY}"
             width="${buttonWidth}" height="${buttonHeight}"
             rx="${radius}"
             fill="none"
             stroke="${borderColor}"
             stroke-width="${strokeWidth}"
-            filter="url(#sketch-rough)"/>
-      <text x="${pos.x + buttonWidth / 2}" y="${buttonY + buttonHeight / 2 + fontSize * 0.35}"
+            filter="url(#sketch-rough)"/>`;
+
+    if (iconSvg) {
+      const iconOffsetY = buttonY + (buttonHeight - iconSize) / 2;
+      svg += `
+      <g transform="translate(${iconX}, ${iconOffsetY})">
+        <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${textColor}" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round">
+          ${this.extractSvgContent(iconSvg)}
+        </svg>
+      </g>`;
+    }
+
+    svg += `
+      <text x="${iconSvg ? textX : pos.x + buttonWidth / 2}" y="${buttonY + buttonHeight / 2 + fontSize * 0.35}"
             font-family="${this.fontFamily}"
             font-size="${fontSize}"
             font-weight="${fontWeight}"
             fill="${textColor}"
-            text-anchor="middle">${this.escapeXml(visibleText)}</text>
+            text-anchor="${iconSvg ? 'start' : 'middle'}">${this.escapeXml(visibleText)}</text>
     </g>`;
+    return svg;
   }
 
   /**
@@ -288,6 +316,8 @@ export class SketchSVGRenderer extends SVGRenderer {
   protected renderInput(node: IRComponentNode, pos: any): string {
     const label = String(node.props.label || '');
     const placeholder = String(node.props.placeholder || '');
+    const iconLeftName = String(node.props.iconLeft || '').trim();
+    const iconRightName = String(node.props.iconRight || '').trim();
 
     const radius = this.tokens.input.radius;
     const fontSize = this.tokens.input.fontSize;
@@ -296,23 +326,59 @@ export class SketchSVGRenderer extends SVGRenderer {
     const controlY = pos.y + labelOffset;
     const controlHeight = Math.max(16, pos.height - labelOffset);
 
-    return `<g${this.getDataNodeId(node)}>
-      ${label ? `<text x="${pos.x}" y="${this.getControlLabelBaselineY(pos.y)}"
+    const iconSize = 16;
+    const iconPad = 4;
+    const iconLeftSvg = iconLeftName ? getIcon(iconLeftName) : null;
+    const iconRightSvg = iconRightName ? getIcon(iconRightName) : null;
+    const leftOffset = iconLeftSvg ? iconSize + iconPad * 2 : 0;
+    const rightOffset = iconRightSvg ? iconSize + iconPad * 2 : 0;
+    const textX = pos.x + paddingX + leftOffset;
+    const iconColor = '#888888';
+    const iconCenterY = controlY + (controlHeight - iconSize) / 2;
+
+    let svg = `<g${this.getDataNodeId(node)}>`;
+    if (label) {
+      svg += `
+      <text x="${pos.x}" y="${this.getControlLabelBaselineY(pos.y)}"
             font-family="${this.fontFamily}"
             font-size="12"
-            fill="${this.renderTheme.text}">${this.escapeXml(label)}</text>` : ''}
+            fill="${this.renderTheme.text}">${this.escapeXml(label)}</text>`;
+    }
+    svg += `
       <rect x="${pos.x}" y="${controlY}"
             width="${pos.width}" height="${controlHeight}"
             rx="${radius}"
             fill="${this.renderTheme.cardBg}"
             stroke="#2D3748"
             stroke-width="0.5"
-            filter="url(#sketch-rough)"/>
-      ${placeholder ? `<text x="${pos.x + paddingX}" y="${controlY + controlHeight / 2 + 5}"
+            filter="url(#sketch-rough)"/>`;
+    if (iconLeftSvg) {
+      svg += `
+      <g transform="translate(${pos.x + iconPad}, ${iconCenterY})">
+        <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          ${this.extractSvgContent(iconLeftSvg)}
+        </svg>
+      </g>`;
+    }
+    if (iconRightSvg) {
+      svg += `
+      <g transform="translate(${pos.x + pos.width - iconPad - iconSize}, ${iconCenterY})">
+        <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          ${this.extractSvgContent(iconRightSvg)}
+        </svg>
+      </g>`;
+    }
+    if (placeholder) {
+      const availWidth = pos.width - paddingX - leftOffset - rightOffset - paddingX;
+      const visiblePh = this.truncateTextToWidth(placeholder, Math.max(0, availWidth), fontSize);
+      svg += `
+      <text x="${textX}" y="${controlY + controlHeight / 2 + 5}"
             font-family="${this.fontFamily}"
             font-size="${fontSize}"
-            fill="${this.renderTheme.textMuted}">${this.escapeXml(placeholder)}</text>` : ''}
-    </g>`;
+            fill="${this.renderTheme.textMuted}">${this.escapeXml(visiblePh)}</text>`;
+    }
+    svg += '\n    </g>';
+    return svg;
   }
 
   /**
@@ -600,36 +666,68 @@ export class SketchSVGRenderer extends SVGRenderer {
   protected renderSelect(node: IRComponentNode, pos: any): string {
     const label = String(node.props.label || '');
     const placeholder = String(node.props.placeholder || 'Select...');
+    const iconLeftName = String(node.props.iconLeft || '').trim();
+    const iconRightName = String(node.props.iconRight || '').trim();
     const labelOffset = this.getControlLabelOffset(label);
     const controlY = pos.y + labelOffset;
     const controlHeight = Math.max(16, pos.height - labelOffset);
     const centerY = controlY + controlHeight / 2 + 5;
 
-    return `<g${this.getDataNodeId(node)}>
-    ${
-      label
-        ? `<text x="${pos.x}" y="${this.getControlLabelBaselineY(pos.y)}"
+    const iconSize = 16;
+    const iconPad = 4;
+    const iconLeftSvg = iconLeftName ? getIcon(iconLeftName) : null;
+    const iconRightSvg = iconRightName ? getIcon(iconRightName) : null;
+    const leftOffset = iconLeftSvg ? iconSize + iconPad * 2 : 0;
+    const chevronWidth = 20;
+    const iconColor = '#888888';
+    const iconCenterY = controlY + (controlHeight - iconSize) / 2;
+
+    let svg = `<g${this.getDataNodeId(node)}>`;
+    if (label) {
+      svg += `
+    <text x="${pos.x}" y="${this.getControlLabelBaselineY(pos.y)}"
           font-family="${this.fontFamily}"
           font-size="12"
-          fill="${this.renderTheme.text}">${this.escapeXml(label)}</text>`
-        : ''
+          fill="${this.renderTheme.text}">${this.escapeXml(label)}</text>`;
     }
+    svg += `
     <rect x="${pos.x}" y="${controlY}"
           width="${pos.width}" height="${controlHeight}"
           rx="6"
           fill="${this.renderTheme.cardBg}"
           stroke="#2D3748"
           stroke-width="0.5"
-          filter="url(#sketch-rough)"/>
-    <text x="${pos.x + 12}" y="${centerY}"
+          filter="url(#sketch-rough)"/>`;
+    if (iconLeftSvg) {
+      svg += `
+    <g transform="translate(${pos.x + iconPad}, ${iconCenterY})">
+      <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        ${this.extractSvgContent(iconLeftSvg)}
+      </svg>
+    </g>`;
+    }
+    if (iconRightSvg) {
+      svg += `
+    <g transform="translate(${pos.x + pos.width - chevronWidth - iconPad - iconSize}, ${iconCenterY})">
+      <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        ${this.extractSvgContent(iconRightSvg)}
+      </svg>
+    </g>`;
+    }
+    const textX = pos.x + 12 + leftOffset;
+    const availWidth = pos.width - textX + pos.x - chevronWidth - (iconRightSvg ? iconSize + iconPad * 2 : 0);
+    const visiblePh = this.truncateTextToWidth(placeholder, Math.max(0, availWidth), 14);
+    svg += `
+    <text x="${textX}" y="${centerY}"
           font-family="${this.fontFamily}"
           font-size="14"
-          fill="${this.renderTheme.textMuted}">${this.escapeXml(placeholder)}</text>
+          fill="${this.renderTheme.textMuted}">${this.escapeXml(visiblePh)}</text>
     <text x="${pos.x + pos.width - 20}" y="${centerY}"
           font-family="${this.fontFamily}"
           font-size="16"
           fill="${this.renderTheme.textMuted}">▼</text>
   </g>`;
+    return svg;
   }
 
   /**
@@ -1093,40 +1191,43 @@ export class SketchSVGRenderer extends SVGRenderer {
   protected renderImage(node: IRComponentNode, pos: any): string {
     const placeholder = String(node.props.placeholder || 'landscape').toLowerCase();
     const iconType = String(node.props.icon || '').trim();
+    const variant = String(node.props.variant || '').trim();
     const iconSvg =
       placeholder === 'icon' && iconType.length > 0 ? getIcon(iconType) : null;
 
+    // Theme-aware image background
+    const imageBg = this.options.theme === 'dark' ? '#2A2A2A' : '#E8E8E8';
+
+    // Custom icon placeholder — no inner badge rect; icon fills the space
     if (iconSvg) {
-      const badgeSize = Math.max(24, Math.min(pos.width, pos.height) * 0.6);
-      const badgeX = pos.x + (pos.width - badgeSize) / 2;
-      const badgeY = pos.y + (pos.height - badgeSize) / 2;
-      const iconSize = badgeSize * 0.62;
-      const iconOffsetX = badgeX + (badgeSize - iconSize) / 2;
-      const iconOffsetY = badgeY + (badgeSize - iconSize) / 2;
+      const semanticBase = variant ? this.getSemanticVariantColor(variant) : undefined;
+      const hasVariant = variant.length > 0 && (semanticBase !== undefined || this.colorResolver.hasColor(variant));
+      const variantColor = hasVariant ? this.resolveVariantColor(variant, this.renderTheme.primary) : null;
+
+      const bgColor = hasVariant ? this.hexToRgba(variantColor!, 0.12) : imageBg;
+      const iconColor = hasVariant ? variantColor! : '#666666';
+      const iconSize = Math.max(16, Math.min(pos.width, pos.height) * 0.6);
+      const iconOffsetX = pos.x + (pos.width - iconSize) / 2;
+      const iconOffsetY = pos.y + (pos.height - iconSize) / 2;
 
       return `<g${this.getDataNodeId(node)}>
-    <!-- Image Background -->
     <rect x="${pos.x}" y="${pos.y}"
           width="${pos.width}" height="${pos.height}"
-          fill="#E8E8E8"
+          fill="${bgColor}"
+          rx="4"
+          filter="url(#sketch-rough)"/>
+    <g transform="translate(${iconOffsetX}, ${iconOffsetY})">
+      <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        ${this.extractSvgContent(iconSvg)}
+      </svg>
+    </g>
+    <rect x="${pos.x}" y="${pos.y}"
+          width="${pos.width}" height="${pos.height}"
+          fill="none"
           stroke="#2D3748"
           stroke-width="0.5"
           rx="4"
           filter="url(#sketch-rough)"/>
-
-    <!-- Custom Icon Placeholder -->
-    <rect x="${badgeX}" y="${badgeY}"
-          width="${badgeSize}" height="${badgeSize}"
-          rx="${Math.max(4, badgeSize * 0.2)}"
-          fill="none"
-          stroke="#2D3748"
-          stroke-width="0.5"
-          filter="url(#sketch-rough)"/>
-    <g transform="translate(${iconOffsetX}, ${iconOffsetY})">
-      <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="#2D3748" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-        ${this.extractSvgContent(iconSvg)}
-      </svg>
-    </g>
   </g>`;
     }
 
@@ -1134,7 +1235,7 @@ export class SketchSVGRenderer extends SVGRenderer {
     <!-- Image Background -->
     <rect x="${pos.x}" y="${pos.y}"
           width="${pos.width}" height="${pos.height}"
-          fill="#E8E8E8"
+          fill="${imageBg}"
           stroke="#2D3748"
           stroke-width="0.5"
           rx="4"
@@ -1197,20 +1298,28 @@ export class SketchSVGRenderer extends SVGRenderer {
    */
   protected renderSidebarMenu(node: IRComponentNode, pos: any): string {
     const itemsStr = String(node.props.items || 'Item 1,Item 2,Item 3');
+    const iconsStr = String(node.props.icons || '');
     const items = itemsStr.split(',').map((s) => s.trim());
+    const icons = iconsStr ? iconsStr.split(',').map((s) => s.trim()) : [];
 
     const itemHeight = 40;
     const fontSize = 14;
     const activeIndex = Number(node.props.active || 0);
     const accentColor = this.resolveAccentColor();
 
+    // variant prop overrides the active color (accent is fallback)
+    const variantProp = String(node.props.variant || '').trim();
+    const semanticVariant = variantProp ? this.getSemanticVariantColor(variantProp) : undefined;
+    const hasVariant = variantProp.length > 0 && (semanticVariant !== undefined || this.colorResolver.hasColor(variantProp));
+    const activeColor = hasVariant ? this.resolveVariantColor(variantProp, accentColor) : accentColor;
+
     let svg = `<g${this.getDataNodeId(node)}>`;
 
     items.forEach((item, index) => {
       const itemY = pos.y + index * itemHeight;
       const isActive = index === activeIndex;
-      const bgColor = isActive ? this.hexToRgba(accentColor, 0.15) : 'transparent';
-      const textColor = isActive ? accentColor : this.resolveTextColor();
+      const bgColor = isActive ? this.hexToRgba(activeColor, 0.15) : 'transparent';
+      const textColor = isActive ? activeColor : this.resolveTextColor();
       const fontWeight = isActive ? '500' : '400';
 
       if (isActive) {
@@ -1222,8 +1331,26 @@ export class SketchSVGRenderer extends SVGRenderer {
           filter="url(#sketch-rough)"/>`;
       }
 
+      // Icon if provided
+      let currentX = pos.x + 12;
+      if (icons[index]) {
+        const iconSvg = getIcon(icons[index]);
+        if (iconSvg) {
+          const iconSize = 16;
+          const iconY = itemY + (itemHeight - iconSize) / 2;
+          const iconColor = isActive ? activeColor : this.resolveMutedColor();
+          svg += `
+    <g transform="translate(${currentX}, ${iconY})">
+      <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        ${this.extractSvgContent(iconSvg)}
+      </svg>
+    </g>`;
+          currentX += iconSize + 8;
+        }
+      }
+
       svg += `
-    <text x="${pos.x + 12}" y="${itemY + itemHeight / 2 + 5}"
+    <text x="${currentX}" y="${itemY + itemHeight / 2 + 5}"
           font-family="${this.fontFamily}"
           font-size="${fontSize}"
           font-weight="${fontWeight}"
