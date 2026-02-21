@@ -8,7 +8,7 @@ concurrency: ${{ github.workflow }}-${{ github.ref }}
 
 jobs:
   snapshot:
-    if: "${{ github.event.label.name == 'action: release-snapshot' }}"
+    if: "${{ contains(github.event.pull_request.labels.*.name, 'action: release-snapshot') }}"
     name: Snapshot Release
     runs-on: ubuntu-latest
 
