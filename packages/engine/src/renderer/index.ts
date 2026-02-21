@@ -31,6 +31,12 @@ export interface SVGRenderOptions {
   theme?: 'light' | 'dark';
   includeLabels?: boolean;
   screenName?: string; // Select specific screen by name
+  /**
+   * When true, renders visual diagnostic overlays for invalid DSL states
+   * (e.g. empty containers). Enable in editor/canvas mode; leave false for
+   * clean exports (CLI, PDF, PNG).
+   */
+  showDiagnostics?: boolean;
 }
 
 export interface SVGComponent {
@@ -100,6 +106,7 @@ export class SVGRenderer {
       theme: colorScheme as 'light' | 'dark',
       includeLabels: options?.includeLabels ?? true,
       screenName: options?.screenName,
+      showDiagnostics: options?.showDiagnostics ?? false,
     };
 
     this.colorResolver = new ColorResolver();
@@ -243,10 +250,14 @@ export class SVGRenderer {
         this.renderSplitDecoration(node, pos, containerGroup);
       }
 
-      // Render container children
-      node.children.forEach((childRef) => {
-        this.renderNode(childRef.ref, containerGroup);
-      });
+      // Render container children, or a diagnostic placeholder when empty
+      if (node.children.length === 0 && this.options.showDiagnostics) {
+        containerGroup.push(this.renderEmptyContainerDiagnostic(pos));
+      } else {
+        node.children.forEach((childRef) => {
+          this.renderNode(childRef.ref, containerGroup);
+        });
+      }
 
       // Close wrapper group
       if (hasNodeId) {
@@ -790,6 +801,34 @@ export class SVGRenderer {
           stroke-width="${strokeWidth}"/>
     </g>`;
     output.push(svg);
+  }
+
+  /**
+   * Renders a yellow warning placeholder for containers with no children.
+   * Only shown when `showDiagnostics` is enabled (editor/canvas mode).
+   */
+  protected renderEmptyContainerDiagnostic(
+    pos: { x: number; y: number; width: number; height: number }
+  ): string {
+    const diagColor = '#F59E0B';       // amber-500 — warning yellow
+    const diagBg    = '#FFFBEB';       // amber-50  — very light yellow fill
+    const diagText  = '#92400E';       // amber-900 — readable dark label
+    const minHeight = 40;
+    const h = Math.max(pos.height, minHeight);
+    const cx = pos.x + pos.width / 2;
+    const cy = pos.y + h / 2;
+
+    return (
+      `<g>` +
+      `<rect x="${pos.x}" y="${pos.y}" width="${pos.width}" height="${h}" ` +
+        `rx="4" fill="${diagBg}" stroke="${diagColor}" stroke-width="1.5" stroke-dasharray="6 3"/>` +
+      `<text x="${cx}" y="${cy}" ` +
+        `font-family="Arial, Helvetica, sans-serif" font-size="12" fill="${diagText}" ` +
+        `text-anchor="middle" dominant-baseline="middle">` +
+        `⚠ Empty layout` +
+      `</text>` +
+      `</g>`
+    );
   }
 
   protected renderSplitDecoration(node: IRNode, pos: any, output: string[]): void {

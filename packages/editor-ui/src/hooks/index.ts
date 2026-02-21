@@ -100,7 +100,7 @@ export function useWireParser(code: string) {
 
         const ir = parseWire(code);
         const layout = new LayoutEngine().layout(ir);
-        const svg = renderToSVG(ir, layout);
+        const svg = renderToSVG(ir, layout, { showDiagnostics: true });
 
         setRenderResult({
           svg,
