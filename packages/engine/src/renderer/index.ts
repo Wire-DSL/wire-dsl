@@ -821,11 +821,11 @@ export class SVGRenderer {
     return (
       `<g>` +
       `<rect x="${pos.x}" y="${pos.y}" width="${pos.width}" height="${h}" ` +
-        `rx="4" fill="${diagBg}" stroke="${diagColor}" stroke-width="1.5" stroke-dasharray="6 3"/>` +
+        `rx="4" fill="${diagBg}" stroke="${diagColor}" stroke-width="1" stroke-dasharray="6 3"/>` +
       `<text x="${cx}" y="${cy}" ` +
         `font-family="Arial, Helvetica, sans-serif" font-size="12" fill="${diagText}" ` +
         `text-anchor="middle" dominant-baseline="middle">` +
-        `⚠ Empty layout` +
+        `Empty layout` +
       `</text>` +
       `</g>`
     );

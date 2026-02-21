@@ -350,6 +350,12 @@ export class LayoutEngine {
     const padding = this.resolveSpacing(node.style.padding);
     let totalHeight = padding * 2;
 
+    // Empty containers always occupy a minimum height so that siblings are
+    // positioned correctly and the diagnostic placeholder has room to render.
+    const EMPTY_CONTAINER_MIN_HEIGHT = 40;
+    if (node.children.length === 0) {
+      return Math.max(totalHeight, EMPTY_CONTAINER_MIN_HEIGHT);
+    }
     // For grids, calculate height based on row layout, not linear sum
     if (node.containerType === 'grid') {
       const columns = Number(node.params.columns) || 12;
