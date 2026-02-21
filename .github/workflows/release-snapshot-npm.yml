@@ -2,7 +2,7 @@ name: Publish snapshot to npm
 
 on:
   pull_request:
-    types: [labeled]
+    types: [labeled, synchronize]
 
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 
