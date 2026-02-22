@@ -97,7 +97,7 @@ Common fields for all nodes:
 ```json
 {
   "id": "node_users_root",
-  "kind": "container" | "component",
+  "kind": "container" | "component" | "instance",
   "style": { ... },
   "meta": { ... }
 }
@@ -105,9 +105,9 @@ Common fields for all nodes:
 
 **Properties**:
 - `id`: Unique node identifier
-- `kind`: Node type (`container` | `component`)
+- `kind`: Node type (`container` | `component` | `instance`)
 - `style`: Applied styles (optional)
-- `meta`: Metadata for tooling/AI (optional)
+- `meta.nodeId`: SourceMap nodeId of the AST node that produced this IR node (enables bidirectional canvas↔code selection)
 
 ---
 
@@ -282,6 +282,55 @@ Common fields for all nodes:
 - `kind`: Always `"component"`
 - `componentType`: Component type
 - `props`: Component-specific properties
+
+---
+
+## Instance Nodes
+
+When a user-defined component or layout (`define Component` / `define Layout`) is used in a screen, the IR generator produces an **instance node** that wraps the expanded content. This preserves the call-site identity so the canvas can select, inspect, and edit the invocation independently from the definition.
+
+```json
+{
+  "id": "node_12",
+  "kind": "instance",
+  "definitionName": "MyComp",
+  "definitionKind": "component",
+  "invocationProps": { "text": "Hello" },
+  "expandedRoot": { "ref": "node_11" },
+  "style": {},
+  "meta": { "nodeId": "component-mycomp-0" }
+}
+```
+
+**Properties**:
+- `id`: Unique identifier
+- `kind`: Always `"instance"`
+- `definitionName`: Name of the user-defined component or layout (e.g. `"MyComp"`)
+- `definitionKind`: `"component"` or `"layout"`, matching the `define` keyword used
+- `invocationProps`: The props/params passed at the call site (e.g. `{ text: "Hello" }`). These are what the canvas property editor should surface for editing.
+- `expandedRoot.ref`: Reference to the root IR node produced by expanding the definition. Internal nodes have scoped IDs (`layout-stack-0@component-mycomp-0`) to ensure uniqueness across multiple instances.
+- `meta.nodeId`: SourceMap nodeId of the call-site AST node (e.g. `"component-mycomp-0"`). Present in the SVG as `data-node-id`.
+
+### SVG Output for Instance Nodes
+
+The SVG renderer emits a wrapper `<g>` with only `data-node-id`, identical to any other node. The canvas resolves everything else (definition name, invocation props, source range) via the SourceMap — the SVG is not a metadata store.
+
+```xml
+<g data-node-id="component-mycomp-0">
+  <rect x="0" y="0" width="375" height="40"
+        fill="transparent" stroke="none" pointer-events="all"/>
+  <!-- expanded content with scoped IDs -->
+  <g data-node-id="layout-stack-0@component-mycomp-0"> ... </g>
+</g>
+```
+
+| What the canvas needs | Where it lives |
+|---|---|
+| Definition name | `sourceMap["component-mycomp-0"].componentType` |
+| Whether it is user-defined | `sourceMap["component-mycomp-0"].isUserDefined` |
+| Invocation prop values | `sourceMap["component-mycomp-0"].properties.text.value` |
+| Call-site source range | `sourceMap["component-mycomp-0"].range` |
+| Definition source range | SourceMap entry where `nodeId === "define-MyComp"` |
 
 ---
 

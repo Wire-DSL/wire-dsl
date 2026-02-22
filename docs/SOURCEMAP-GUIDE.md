@@ -96,13 +96,41 @@ Each entry contains:
 
 ### Data Attributes
 
-Rendered SVG includes `data-node-id`:
+Rendered SVG includes `data-node-id` on all elements:
 
 ```xml
 <rect data-node-id="component-button-0" .../>
 ```
 
 Enables click handling on canvas elements.
+
+### User-Defined Component and Layout Instances
+
+When a `define Component` or `define Layout` is used, the renderer emits a wrapper `<g data-node-id="...">` — identical in structure to any other node. The SVG carries **no extra metadata**: the canvas resolves the definition name, invocation props, and source ranges via the SourceMap using the `nodeId` as the key.
+
+```xml
+<!-- component MyComp text: "Hello" -->
+<g data-node-id="component-mycomp-0">
+  <rect x="0" y="0" width="375" height="40"
+        fill="transparent" stroke="none" pointer-events="all"/>
+  <!-- internal nodes use scoped IDs: definitionNodeId@callSiteNodeId -->
+  <g data-node-id="layout-stack-0@component-mycomp-0"> ... </g>
+</g>
+
+<!-- component MyComp text: "World" -->
+<g data-node-id="component-mycomp-1">
+  <g data-node-id="layout-stack-0@component-mycomp-1"> ... </g>
+</g>
+```
+
+**Canvas interaction model** — all data comes from the SourceMap, not the SVG:
+
+| Action | nodeId resolution | SourceMap lookup |
+|---|---|---|
+| Click on instance | `component-mycomp-0` | `sourceMap["component-mycomp-0"].range` → call-site line |
+| Show property panel | `component-mycomp-0` | `.properties.text.value` → `"Hello"` |
+| Navigate to definition | `component-mycomp-0` | `.componentType` → `"MyComp"` → find `define-MyComp` entry |
+| Drill-in (internal edit) | `layout-stack-0@component-mycomp-0` | Scoped ID resolves to definition body |
 
 ---
 

@@ -133,10 +133,13 @@ AST is converted to **stable IR**, applying:
 - Semantic validations
 - Schema validation with Zod
 - Expansion of custom definitions:
-  - `define Component` expansion
-  - `define Layout` expansion to built-in layout tree
-  - `prop_*` dynamic binding substitution
+  - `define Component` expansion → produces an **`IRInstanceNode`** wrapper that preserves the call-site identity
+  - `define Layout` expansion → similarly wrapped by an `IRInstanceNode`
+  - `prop_*` dynamic binding substitution (resolved inside the expansion)
+  - Internal nodeIds are scoped per instance: `layout-stack-0@component-mycomp-0`
 - Warning/error policy for missing/unused dynamic arguments
+
+IR node kinds: `container` | `component` | `instance`.
 
 IR is the **technical source of truth** for rendering.
 
@@ -169,7 +172,7 @@ Responsible for calculating final positions and sizes from declarative constrain
 
 Layout engine operates on IR and produces **Render Tree** with concrete bounding boxes.
 
-Custom layouts are fully expanded before this layer. At layout-engine time, container types are only built-in (`stack`, `grid`, `split`, `panel`, `card`).
+Instance nodes (kind `instance`) are transparent wrappers: the layout engine calculates positions for the expanded content and copies the bounding box to the instance node itself. Built-in container types at computation time are still only `stack`, `grid`, `split`, `panel`, `card`.
 
 **Algorithm**:
 1. Traverse IR nodes top-down

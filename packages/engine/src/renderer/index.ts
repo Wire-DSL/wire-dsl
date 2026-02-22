@@ -1,4 +1,4 @@
-import type { IRContract, IRNode, IRComponentNode, IRContainerNode } from '../ir/index';
+import type { IRContract, IRNode, IRComponentNode, IRContainerNode, IRInstanceNode } from '../ir/index';
 import type { LayoutResult } from '../layout/index';
 import { MockDataGenerator } from './mock-data';
 import { ColorResolver } from './colors';
@@ -31,6 +31,12 @@ export interface SVGRenderOptions {
   theme?: 'light' | 'dark';
   includeLabels?: boolean;
   screenName?: string; // Select specific screen by name
+  /**
+   * When true, renders visual diagnostic overlays for invalid DSL states
+   * (e.g. empty containers). Enable in editor/canvas mode; leave false for
+   * clean exports (CLI, PDF, PNG).
+   */
+  showDiagnostics?: boolean;
 }
 
 export interface SVGComponent {
@@ -100,6 +106,7 @@ export class SVGRenderer {
       theme: colorScheme as 'light' | 'dark',
       includeLabels: options?.includeLabels ?? true,
       screenName: options?.screenName,
+      showDiagnostics: options?.showDiagnostics ?? false,
     };
 
     this.colorResolver = new ColorResolver();
@@ -243,10 +250,14 @@ export class SVGRenderer {
         this.renderSplitDecoration(node, pos, containerGroup);
       }
 
-      // Render container children
-      node.children.forEach((childRef) => {
-        this.renderNode(childRef.ref, containerGroup);
-      });
+      // Render container children, or a diagnostic placeholder when empty
+      if (node.children.length === 0 && this.options.showDiagnostics) {
+        containerGroup.push(this.renderEmptyContainerDiagnostic(pos, node.containerType));
+      } else {
+        node.children.forEach((childRef) => {
+          this.renderNode(childRef.ref, containerGroup);
+        });
+      }
 
       // Close wrapper group
       if (hasNodeId) {
@@ -255,8 +266,28 @@ export class SVGRenderer {
 
       // Add container output to main output
       output.push(...containerGroup);
+    } else if (node.kind === 'instance') {
+      // Render a user-defined component/layout instance.
+      // Only data-node-id is emitted — the canvas resolves everything else
+      // (definition name, invocation props, source range) via the SourceMap.
+      // The renderer has no business encoding SourceMap data into SVG attributes.
+      const instanceGroup: string[] = [];
+      if (node.meta.nodeId) {
+        instanceGroup.push(`<g data-node-id="${node.meta.nodeId}">`);
+      }
+      // Transparent rect for hit-testing in the canvas
+      instanceGroup.push(
+        `<rect x="${pos.x}" y="${pos.y}" width="${pos.width}" height="${pos.height}" ` +
+        `fill="transparent" stroke="none" pointer-events="all"/>`
+      );
+      // Render the expanded definition content
+      this.renderNode(node.expandedRoot.ref, instanceGroup);
+      if (node.meta.nodeId) {
+        instanceGroup.push('</g>');
+      }
+      output.push(...instanceGroup);
     } else if (node.kind === 'component') {
-      // Render component
+      // Render built-in component
       const componentSvg = this.renderComponent(node, pos);
       if (componentSvg) {
         output.push(componentSvg);
@@ -770,6 +801,36 @@ export class SVGRenderer {
           stroke-width="${strokeWidth}"/>
     </g>`;
     output.push(svg);
+  }
+
+  /**
+   * Renders a yellow warning placeholder for containers with no children.
+   * Only shown when `showDiagnostics` is enabled (editor/canvas mode).
+   */
+  protected renderEmptyContainerDiagnostic(
+    pos: { x: number; y: number; width: number; height: number },
+    containerType?: string
+  ): string {
+    const diagColor = '#F59E0B';       // amber-500 — warning yellow
+    const diagBg    = '#FFFBEB';       // amber-50  — very light yellow fill
+    const diagText  = '#92400E';       // amber-900 — readable dark label
+    const minHeight = 40;
+    const h = Math.max(pos.height, minHeight);
+    const cx = pos.x + pos.width / 2;
+    const cy = pos.y + h / 2;
+    const label = containerType ? `Empty ${containerType}` : 'Empty layout';
+
+    return (
+      `<g>` +
+      `<rect x="${pos.x}" y="${pos.y}" width="${pos.width}" height="${h}" ` +
+        `rx="4" fill="${diagBg}" stroke="${diagColor}" stroke-width="1" stroke-dasharray="6 3"/>` +
+      `<text x="${cx}" y="${cy}" ` +
+        `font-family="Arial, Helvetica, sans-serif" font-size="12" fill="${diagText}" ` +
+        `text-anchor="middle" dominant-baseline="middle">` +
+        `${label}` +
+      `</text>` +
+      `</g>`
+    );
   }
 
   protected renderSplitDecoration(node: IRNode, pos: any, output: string[]): void {
@@ -2668,10 +2729,14 @@ export class SVGRenderer {
   private buildParentContainerIndex(): void {
     this.parentContainerByChildId.clear();
     Object.values(this.ir.project.nodes).forEach((node) => {
-      if (node.kind !== 'container') return;
-      node.children.forEach((childRef) => {
-        this.parentContainerByChildId.set(childRef.ref, node);
-      });
+      if (node.kind === 'container') {
+        node.children.forEach((childRef) => {
+          this.parentContainerByChildId.set(childRef.ref, node);
+        });
+      }
+      // For instance nodes, map the expandedRoot to this instance's parent container
+      // so that button-width lookups traverse through the instance boundary correctly
+      // (the expandedRoot's own container children will be indexed when that container runs)
     });
   }
 
@@ -2688,7 +2753,7 @@ export class SVGRenderer {
    * Get data-node-id attribute string for SVG elements
    * Enables bidirectional selection between code and canvas
    */
-  protected getDataNodeId(node: IRComponentNode | IRContainerNode): string {
+  protected getDataNodeId(node: IRComponentNode | IRContainerNode | IRInstanceNode): string {
     return node.meta.nodeId ? ` data-node-id="${node.meta.nodeId}"` : '';
   }
 

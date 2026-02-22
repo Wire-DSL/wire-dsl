@@ -1,4 +1,4 @@
-﻿import type { IRContract, IRNode, IRStyle } from '../ir/index';
+﻿import type { IRContract, IRNode, IRInstanceNode, IRStyle } from '../ir/index';
 import { resolveSpacingToken, type DensityLevel } from '../shared/spacing';
 import {
   resolveActionControlHeight,
@@ -93,6 +93,8 @@ export class LayoutEngine {
 
     if (node.kind === 'container') {
       this.calculateContainer(node, nodeId, x, y, width, height);
+    } else if (node.kind === 'instance') {
+      this.calculateInstance(node as IRInstanceNode, nodeId, x, y, width, height, parentContainerType);
     } else {
       this.calculateComponent(node, nodeId, x, y, width, height);
     }
@@ -143,8 +145,10 @@ export class LayoutEngine {
         break;
     }
 
-    // For vertical stacks and cards, recalculate container height based on actual children positions
-    if (isVerticalStack || node.containerType === 'card') {
+    // For vertical stacks and cards, recalculate container height based on actual children positions.
+    // When empty, preserve the height assigned by the parent — collapsing to just `padding` would
+    // place the container at the wrong size (and effectively at 0,0 visually).
+    if ((isVerticalStack || node.containerType === 'card') && node.children.length > 0) {
       let containerMaxY = y;
       node.children.forEach((childRef) => {
         const childPos = this.result[childRef.ref];
@@ -346,6 +350,12 @@ export class LayoutEngine {
     const padding = this.resolveSpacing(node.style.padding);
     let totalHeight = padding * 2;
 
+    // Empty containers always occupy a minimum height so that siblings are
+    // positioned correctly and the diagnostic placeholder has room to render.
+    const EMPTY_CONTAINER_MIN_HEIGHT = 40;
+    if (node.children.length === 0) {
+      return Math.max(totalHeight, EMPTY_CONTAINER_MIN_HEIGHT);
+    }
     // For grids, calculate height based on row layout, not linear sum
     if (node.containerType === 'grid') {
       const columns = Number(node.params.columns) || 12;
@@ -692,6 +702,29 @@ export class LayoutEngine {
         currentY += gap;
       }
     });
+  }
+
+  /**
+   * Calculate layout for an instance node.
+   * The instance is a transparent wrapper — its bounding box equals the
+   * expanded root's bounding box. We calculate the expanded root first and
+   * then copy its position to the instance nodeId so the renderer can use it.
+   */
+  private calculateInstance(
+    node: IRInstanceNode,
+    nodeId: string,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    parentContainerType?: string
+  ): void {
+    const expandedRootId = node.expandedRoot.ref;
+    this.calculateNode(expandedRootId, x, y, width, height, parentContainerType);
+    const expandedPos = this.result[expandedRootId];
+    if (expandedPos) {
+      this.result[nodeId] = { ...expandedPos };
+    }
   }
 
   private calculateComponent(
