@@ -252,7 +252,7 @@ export class SVGRenderer {
 
       // Render container children, or a diagnostic placeholder when empty
       if (node.children.length === 0 && this.options.showDiagnostics) {
-        containerGroup.push(this.renderEmptyContainerDiagnostic(pos));
+        containerGroup.push(this.renderEmptyContainerDiagnostic(pos, node.containerType));
       } else {
         node.children.forEach((childRef) => {
           this.renderNode(childRef.ref, containerGroup);
@@ -808,7 +808,8 @@ export class SVGRenderer {
    * Only shown when `showDiagnostics` is enabled (editor/canvas mode).
    */
   protected renderEmptyContainerDiagnostic(
-    pos: { x: number; y: number; width: number; height: number }
+    pos: { x: number; y: number; width: number; height: number },
+    containerType?: string
   ): string {
     const diagColor = '#F59E0B';       // amber-500 — warning yellow
     const diagBg    = '#FFFBEB';       // amber-50  — very light yellow fill
@@ -817,6 +818,7 @@ export class SVGRenderer {
     const h = Math.max(pos.height, minHeight);
     const cx = pos.x + pos.width / 2;
     const cy = pos.y + h / 2;
+    const label = containerType ? `Empty ${containerType}` : 'Empty layout';
 
     return (
       `<g>` +
@@ -825,7 +827,7 @@ export class SVGRenderer {
       `<text x="${cx}" y="${cy}" ` +
         `font-family="Arial, Helvetica, sans-serif" font-size="12" fill="${diagText}" ` +
         `text-anchor="middle" dominant-baseline="middle">` +
-        `Empty layout` +
+        `${label}` +
       `</text>` +
       `</g>`
     );
