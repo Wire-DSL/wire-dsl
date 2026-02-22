@@ -1,5 +1,11 @@
 # @wire-dsl/core
 
+## 0.4.1
+
+### Patch Changes
+
+- [#69](https://github.com/Wire-DSL/wire-dsl/pull/69) [`87561b5`](https://github.com/Wire-DSL/wire-dsl/commit/87561b560868c24e1057a12a9138d94468473d72) Thanks [@roxguel](https://github.com/roxguel)! - Identificate instances user-defined elements (components and layouts)
+
 ## 0.4.0
 
 ### Minor Changes
