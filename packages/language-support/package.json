@@ -1,6 +1,6 @@
 {
   "name": "@wire-dsl/language-support",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Wire DSL language definitions for Monaco, VS Code, and other editors. Keywords, components, properties, autocompletion, grammar, and document parsing.",
   "type": "module",
   "main": "./dist-cjs/index.js",
