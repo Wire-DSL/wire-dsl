@@ -1,5 +1,15 @@
 # @wire-dsl/web
 
+## 0.3.3
+
+### Patch Changes
+
+- [#73](https://github.com/Wire-DSL/wire-dsl/pull/73) [`a1e30c6`](https://github.com/Wire-DSL/wire-dsl/commit/a1e30c6be0e6df3d71ce7aadb933d1bd2828ee74) Thanks [@roxguel](https://github.com/roxguel)! - Justify and align children stack layout
+
+- Updated dependencies [[`a1e30c6`](https://github.com/Wire-DSL/wire-dsl/commit/a1e30c6be0e6df3d71ce7aadb933d1bd2828ee74)]:
+  - @wire-dsl/language-support@0.6.0
+  - @wire-dsl/engine@0.6.0
+
 ## 0.3.2
 
 ### Patch Changes
