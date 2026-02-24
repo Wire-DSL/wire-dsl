@@ -193,11 +193,17 @@ layout stack(direction: vertical, gap: md, padding: lg) {
 - `direction`: `vertical` (default) | `horizontal`
 - `gap`: spacing between children (`xs`=4px, `sm`=8px, `md`=16px, `lg`=24px, `xl`=32px)
 - `padding`: internal padding (`xs`/`sm`/`md`/`lg`/`xl`; default: none)
-- `align`: horizontal alignment for `direction: horizontal` only
-  - `justify` (default): Equal width, fills 100%
-  - `left`: Natural width, grouped left
+- `justify`: main-axis distribution for `direction: horizontal` only
+  - `stretch` (default): Equal width, fills 100%
+  - `start`: Natural width, grouped left
   - `center`: Natural width, centered
-  - `right`: Natural width, grouped right
+  - `end`: Natural width, grouped right
+  - `spaceBetween`: First child left, last child right, space distributed between
+  - `spaceAround`: Equal space wraps each child
+- `align`: cross-axis (vertical) alignment for `direction: horizontal` only
+  - `start` (default): Children aligned to top of row
+  - `center`: Children vertically centered in row
+  - `end`: Children aligned to bottom of row
 
 **Examples**:
 
@@ -210,9 +216,9 @@ layout stack(direction: horizontal, gap: md) {
 }
 ```
 
-Horizontal stack with right-aligned buttons:
+Horizontal stack with end-aligned buttons:
 ```
-layout stack(direction: horizontal, gap: md, align: "right") {
+layout stack(direction: horizontal, gap: md, justify: end) {
   component Button text: "Back"
   component Button text: "Next" variant: primary
 }
@@ -220,9 +226,17 @@ layout stack(direction: horizontal, gap: md, align: "right") {
 
 Horizontal stack with centered content:
 ```
-layout stack(direction: horizontal, gap: md, align: "center") {
+layout stack(direction: horizontal, gap: md, justify: center) {
   component Button text: "Agree"
   component Button text: "Disagree"
+}
+```
+
+Toolbar with space between + vertical centering:
+```
+layout stack(direction: horizontal, gap: md, justify: spaceBetween, align: center) {
+  component Heading text: "Users"
+  component Button text: "New user" variant: primary icon: "plus"
 }
 ```
 

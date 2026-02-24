@@ -1,4 +1,4 @@
-﻿import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { parseWireDSL, parseWireDSLWithSourceMap } from '../parser/index';
 import { generateIR } from '../ir/index';
 import { calculateLayout } from '../layout/index';
@@ -136,7 +136,7 @@ describe('SVG Renderer', () => {
     const input = `
       project "ButtonJustifyWidth" {
         screen Main {
-          layout stack(direction: horizontal, align: justify, gap: md) {
+          layout stack(direction: horizontal, justify: stretch, gap: md) {
             component Button text: "Back"
             component Button text: "Continue"
           }
@@ -1584,7 +1584,7 @@ describe('SVG Renderer', () => {
           density: "comfortable"
         }
         screen Main {
-          layout stack(direction: horizontal, align: left, gap: md) {
+          layout stack(direction: horizontal, justify: start, gap: md) {
             component Button text: "Notification preferences center"
             component Button text: "Secondary action"
           }

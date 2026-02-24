@@ -223,11 +223,13 @@ export class LayoutEngine {
         }
       });
     } else {
-      // horizontal - apply align property
-      const align = node.style.align || 'justify';
-      
-      if (align === 'justify') {
-        // Default behavior: equal width distribution (100% width)
+      // horizontal - apply justify (main axis) and align (cross axis)
+      const justify = node.style.justify || 'stretch';
+      const crossAlign = node.style.align || 'start';
+
+      if (justify === 'stretch') {
+        // Default behavior: equal width distribution — all children fill the same width.
+        // Cross-axis align is a no-op here since all children receive stackHeight.
         let currentX = x;
         const childWidth = this.calculateChildWidth(children.length, width, gap);
 
@@ -248,65 +250,73 @@ export class LayoutEngine {
           stackHeight = Math.max(stackHeight, childHeight);
         });
 
-        // Position children with calculated height
+        // Position children with equal widths
         children.forEach((childRef) => {
           this.calculateNode(childRef.ref, currentX, y, childWidth, stackHeight, 'stack');
           currentX += childWidth + gap;
         });
       } else {
-        // Custom alignment: left, center, right with natural widths
-        // Calculate natural widths for all children.
-        // `Button block: true` behaves like a flex item that grows to fill
-        // the remaining horizontal space in non-justify stacks.
+        // Natural widths: start, center, end, spaceBetween, spaceAround.
+        // "Flex" children absorb remaining space proportionally:
+        //   • Button with block: true
+        //   • Any container that has no calculable intrinsic width (vertical stacks,
+        //     cards, panels, etc.) — they behave like flex-grow:1
         const childWidths: number[] = [];
+        const childHeights: number[] = [];
         const explicitHeightFlags: boolean[] = [];
-        const blockButtonIndices = new Set<number>();
+        const flexIndices = new Set<number>();
         let stackHeight = 0;
 
         children.forEach((childRef, index) => {
           const childNode = this.nodes[childRef.ref];
-          let childWidth = this.getIntrinsicComponentWidth(childNode);
-          let childHeight = this.getComponentHeight();
           const hasExplicitHeight = childNode?.kind === 'component' && !!childNode.props.height;
           const hasExplicitWidth = childNode?.kind === 'component' && !!childNode.props.width;
+
           const isBlockButton =
             childNode?.kind === 'component' &&
             childNode.componentType === 'Button' &&
             !hasExplicitWidth &&
             this.parseBooleanProp(childNode.props.block, false);
 
-          if (isBlockButton) {
-            childWidth = 0;
-            blockButtonIndices.add(index);
-          } else if (hasExplicitWidth) {
-            childWidth = Number(childNode.props.width);
-          }
+          // A container is "flex" when it has no useful intrinsic width on its own —
+          // i.e. it is not a horizontal non-stretch stack (those can be summed).
+          const isFlexContainer =
+            !hasExplicitWidth &&
+            childNode?.kind === 'container' &&
+            !this.containerHasIntrinsicWidth(childNode);
 
-          if (hasExplicitHeight) {
-            childHeight = Number(childNode.props.height);
+          let childWidth: number;
+          if (isBlockButton || isFlexContainer) {
+            childWidth = 0; // resolved later
+            flexIndices.add(index);
+          } else if (hasExplicitWidth) {
+            childWidth = Number(childNode!.props.width);
+          } else {
+            childWidth = this.getIntrinsicWidth(childNode, width);
           }
 
           childWidths.push(childWidth);
+          childHeights.push(this.getComponentHeight());
           explicitHeightFlags.push(hasExplicitHeight);
         });
 
         const totalGapWidth = gap * Math.max(0, children.length - 1);
-        if (blockButtonIndices.size > 0) {
+        if (flexIndices.size > 0) {
           const fixedWidth = childWidths.reduce((sum, w, idx) => {
-            return blockButtonIndices.has(idx) ? sum : sum + w;
+            return flexIndices.has(idx) ? sum : sum + w;
           }, 0);
           const remainingWidth = width - totalGapWidth - fixedWidth;
-          const widthPerBlock = Math.max(1, remainingWidth / blockButtonIndices.size);
-          blockButtonIndices.forEach((index) => {
-            childWidths[index] = widthPerBlock;
+          const widthPerFlex = Math.max(1, remainingWidth / flexIndices.size);
+          flexIndices.forEach((idx) => {
+            childWidths[idx] = widthPerFlex;
           });
         }
 
         // Resolve final heights after widths are finalized.
         children.forEach((childRef, index) => {
           const childNode = this.nodes[childRef.ref];
-          let childHeight = this.getComponentHeight();
           const childWidth = childWidths[index];
+          let childHeight = this.getComponentHeight();
 
           if (explicitHeightFlags[index] && childNode?.kind === 'component') {
             childHeight = Number(childNode.props.height);
@@ -316,28 +326,52 @@ export class LayoutEngine {
             childHeight = this.getIntrinsicComponentHeight(childNode, childWidth);
           }
 
+          childHeights[index] = childHeight;
           stackHeight = Math.max(stackHeight, childHeight);
         });
 
-        // Calculate total content width needed
+        // Calculate total natural content width
         const totalChildWidth = childWidths.reduce((sum, w) => sum + w, 0);
         const totalContentWidth = totalChildWidth + totalGapWidth;
 
-        // Calculate starting X based on alignment
+        // Determine starting X and dynamic inter-child gap based on justify
         let startX = x;
-        if (align === 'center') {
-          startX = x + (width - totalContentWidth) / 2;
-        } else if (align === 'right') {
-          startX = x + width - totalContentWidth;
-        }
-        // 'left' uses startX = x (no adjustment)
+        let dynamicGap = gap;
 
-        // Position children with natural widths
+        if (justify === 'center') {
+          startX = x + (width - totalContentWidth) / 2;
+        } else if (justify === 'end') {
+          startX = x + width - totalContentWidth;
+        } else if (justify === 'spaceBetween') {
+          startX = x;
+          dynamicGap = children.length > 1
+            ? (width - totalChildWidth) / (children.length - 1)
+            : 0;
+        } else if (justify === 'spaceAround') {
+          const spacing = children.length > 0
+            ? (width - totalChildWidth) / children.length
+            : 0;
+          startX = x + spacing / 2;
+          dynamicGap = spacing;
+        }
+        // 'start' uses startX = x, dynamicGap = gap (no adjustment)
+
+        // Position children applying cross-axis alignment per child
         let currentX = startX;
         children.forEach((childRef, index) => {
           const childWidth = childWidths[index];
-          this.calculateNode(childRef.ref, currentX, y, childWidth, stackHeight, 'stack');
-          currentX += childWidth + gap;
+          const childHeight = childHeights[index];
+
+          // Cross-axis (Y) offset within the row
+          let childY = y;
+          if (crossAlign === 'center') {
+            childY = y + Math.round((stackHeight - childHeight) / 2);
+          } else if (crossAlign === 'end') {
+            childY = y + stackHeight - childHeight;
+          }
+
+          this.calculateNode(childRef.ref, currentX, childY, childWidth, childHeight, 'stack');
+          currentX += childWidth + dynamicGap;
         });
       }
     }
@@ -1057,6 +1091,59 @@ export class LayoutEngine {
 
   private getControlLabelOffset(label: string): number {
     return label.trim().length > 0 ? 18 : 0;
+  }
+
+  /**
+   * Returns true when a container's width can be calculated from its children
+   * (i.e. it is a horizontal non-stretch stack). False means the container
+   * behaves like `flex-grow:1` and should absorb remaining space.
+   */
+  private containerHasIntrinsicWidth(node: IRNode): boolean {
+    if (node.kind !== 'container') return false;
+    return (
+      node.containerType === 'stack' &&
+      String(node.params.direction || 'vertical') === 'horizontal' &&
+      (node.style.justify || 'stretch') !== 'stretch'
+    );
+  }
+
+  /**
+   * Returns the natural (intrinsic) width of any node — component or container.
+   * For horizontal non-stretch containers the width is the sum of their children's
+   * intrinsic widths plus gaps, capped at `availableWidth`. All other containers
+   * are assumed to take the full available width (they stretch or grow).
+   */
+  private getIntrinsicWidth(node: IRNode | undefined, availableWidth: number): number {
+    if (!node) return 120;
+
+    if (node.kind === 'component') {
+      return this.getIntrinsicComponentWidth(node);
+    }
+
+    if (node.kind === 'container') {
+      // Only horizontal non-stretch stacks have a calculable intrinsic width.
+      if (this.containerHasIntrinsicWidth(node)) {
+        const gap = this.resolveSpacing(node.style.gap);
+        const padding = this.resolveSpacing(node.style.padding);
+        const innerAvailable = Math.max(0, availableWidth - padding * 2);
+        const children = node.children ?? [];
+        let total = padding * 2;
+        children.forEach((childRef, idx) => {
+          const child = this.nodes[childRef.ref];
+          total += this.getIntrinsicWidth(child, innerAvailable);
+          if (idx < children.length - 1) total += gap;
+        });
+        return Math.min(total, availableWidth);
+      }
+      // All other containers expand to the available width.
+      return availableWidth;
+    }
+
+    if (node.kind === 'instance') {
+      return availableWidth;
+    }
+
+    return 120;
   }
 
   private getIntrinsicComponentWidth(node: IRNode | undefined): number {

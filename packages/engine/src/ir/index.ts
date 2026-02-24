@@ -88,8 +88,8 @@ export interface IRComponentNode {
 export interface IRNodeStyle {
   padding?: string;
   gap?: string;
-  align?: 'left' | 'center' | 'right' | 'justify';
-  justify?: 'start' | 'center' | 'end';
+  justify?: 'start' | 'center' | 'end' | 'stretch' | 'spaceBetween' | 'spaceAround';
+  align?: 'start' | 'center' | 'end';
   background?: string;
 }
 
@@ -134,8 +134,8 @@ const IRStyleSchema = z.object({
 const IRNodeStyleSchema = z.object({
   padding: z.string().optional(),
   gap: z.string().optional(),
-  align: z.enum(['left', 'center', 'right', 'justify']).optional(),
-  justify: z.enum(['start', 'center', 'end']).optional(),
+  justify: z.enum(['start', 'center', 'end', 'stretch', 'spaceBetween', 'spaceAround']).optional(),
+  align: z.enum(['start', 'center', 'end']).optional(),
   background: z.string().optional(),
 });
 
@@ -512,6 +512,9 @@ export class IRGenerator {
     }
     if (layoutParams.gap !== undefined) {
       style.gap = String(layoutParams.gap);
+    }
+    if (layoutParams.justify !== undefined) {
+      style.justify = layoutParams.justify as IRNodeStyle['justify'];
     }
     if (layoutParams.align !== undefined) {
       style.align = layoutParams.align as IRNodeStyle['align'];
