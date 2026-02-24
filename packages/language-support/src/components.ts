@@ -462,7 +462,8 @@ export const LAYOUTS: Record<string, LayoutMetadata> = {
     description: 'Linear layout container.',
     properties: {
       direction: { name: 'direction', type: 'enum', options: ['horizontal', 'vertical'], required: true },
-      align: { name: 'align', type: 'enum', options: ['justify', 'left', 'center', 'right'] },
+      justify: { name: 'justify', type: 'enum', options: ['stretch', 'start', 'center', 'end', 'spaceBetween', 'spaceAround'] },
+      align: { name: 'align', type: 'enum', options: ['start', 'center', 'end'] },
       gap: { name: 'gap', type: 'enum', options: spacingEnum.options },
       padding: { name: 'padding', type: 'enum', options: spacingEnum.options },
     },
@@ -474,7 +475,7 @@ export const LAYOUTS: Record<string, LayoutMetadata> = {
     properties: {
       columns: { name: 'columns', type: 'number' },
       gap: { name: 'gap', type: 'enum', options: spacingEnum.options },
-      align: { name: 'align', type: 'enum', options: ['justify', 'left', 'center', 'right'] },
+      justify: { name: 'justify', type: 'enum', options: ['stretch', 'start', 'center', 'end', 'spaceBetween', 'spaceAround'] },
       padding: { name: 'padding', type: 'enum', options: spacingEnum.options },
     },
     requiredProperties: ['columns'],
@@ -520,7 +521,8 @@ export const LAYOUTS: Record<string, LayoutMetadata> = {
 export const PROPERTY_VALUES: Record<string, string[]> = {
   size: ['none', 'xs', 'sm', 'md', 'lg', 'xl'],
   variant: variantWithDefaultEnum.options!,
-  align: ['justify', 'left', 'center', 'right'],
+  justify: ['stretch', 'start', 'center', 'end', 'spaceBetween', 'spaceAround'],
+  align: ['start', 'center', 'end'],
   padding: spacingEnum.options!,
   gap: spacingEnum.options!,
   direction: ['horizontal', 'vertical'],

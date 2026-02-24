@@ -1,0 +1,163 @@
+project "Stack Justify & Align Demo" {
+
+  screen JustifyModes {
+    layout stack(direction: vertical, gap: lg, padding: lg) {
+      component Heading text: "justify: stretch (default)" level: h3
+
+      // All children receive equal width
+      layout stack(direction: horizontal, justify: stretch, gap: md) {
+        component Button text: "Cancel"
+        component Button text: "Save" variant: primary
+        component Button text: "Save & Continue" variant: primary
+      }
+
+      component Heading text: "justify: start" level: h3
+
+      // Children use natural widths, anchored to left
+      layout stack(direction: horizontal, justify: start, gap: md) {
+        component Button text: "Cancel"
+        component Button text: "Save" variant: primary
+        component Button text: "Save & Continue" variant: primary
+      }
+
+      component Heading text: "justify: center" level: h3
+
+      // Children grouped in the horizontal center
+      layout stack(direction: horizontal, justify: center, gap: md) {
+        component Button text: "Cancel"
+        component Button text: "Save" variant: primary
+        component Button text: "Save & Continue" variant: primary
+      }
+
+      component Heading text: "justify: end" level: h3
+
+      // Children anchored to right edge
+      layout stack(direction: horizontal, justify: end, gap: md) {
+        component Button text: "Cancel"
+        component Button text: "Save" variant: primary
+        component Button text: "Save & Continue" variant: primary
+      }
+
+      component Heading text: "justify: spaceBetween" level: h3
+
+      // First child at left, last at right, space distributed between
+      layout stack(direction: horizontal, justify: spaceBetween) {
+        component Button text: "Back"
+        component Button text: "Next" variant: primary
+      }
+
+      component Heading text: "justify: spaceAround" level: h3
+
+      // Equal margin around each child (half-margin at edges)
+      layout stack(direction: horizontal, justify: spaceAround) {
+        component Button text: "Step 1"
+        component Button text: "Step 2"
+        component Button text: "Step 3"
+      }
+    }
+  }
+
+  screen AlignModes {
+    layout stack(direction: vertical, gap: lg, padding: lg) {
+      component Heading text: "align: start (default, top)" level: h3
+      component Text text: "The tall card and the short button both start at the top of the row."
+
+      // Tall card sits next to short Button + Badge — all top-aligned (default)
+      layout card(padding: sm, gap: md) {
+        layout stack(direction: horizontal, justify: spaceBetween, align: start) {
+          layout card(padding: md, gap: sm) {
+            component Heading text: "Newsletter" level: h4
+            component Text text: "Get weekly updates"
+            component Input label: "Email" placeholder: "user@example.com"
+          }
+          layout stack(direction: vertical, justify: start, gap: sm) {
+            component Button text: "Subscribe" variant: primary
+            component Badge text: "Free"
+          }
+        }
+      }
+
+      component Heading text: "align: center (vertical middle)" level: h3
+      component Text text: "The short button stack is vertically centered relative to the tall card."
+
+      layout card(padding: sm, gap: md) {
+        layout stack(direction: horizontal, justify: spaceBetween, align: center) {
+          layout card(padding: md, gap: sm) {
+            component Heading text: "Newsletter" level: h4
+            component Text text: "Get weekly updates"
+            component Input label: "Email" placeholder: "user@example.com"
+          }
+          layout stack(direction: vertical, justify: start, gap: sm) {
+            component Button text: "Subscribe" variant: primary
+            component Badge text: "Free"
+          }
+        }
+      }
+
+      component Heading text: "align: end (bottom)" level: h3
+      component Text text: "The short button stack is aligned to the bottom of the tall card."
+
+      layout card(padding: sm, gap: md) {
+        layout stack(direction: horizontal, justify: spaceBetween, align: end) {
+          layout card(padding: md, gap: sm) {
+            component Heading text: "Newsletter" level: h4
+            component Text text: "Get weekly updates"
+            component Input label: "Email" placeholder: "user@example.com"
+          }
+          layout stack(direction: vertical, justify: start, gap: sm) {
+            component Button text: "Subscribe" variant: primary
+            component Badge text: "Free"
+          }
+        }
+      }
+    }
+  }
+
+  screen RealWorldExamples {
+    layout stack(direction: vertical, gap: lg, padding: lg) {
+      component Heading text: "Toolbar: title left, actions right" level: h3
+
+      layout card(padding: sm, gap: none) {
+        layout stack(direction: horizontal, justify: spaceBetween, align: center) {
+          component Heading text: "Users" level: h4
+          layout stack(direction: horizontal, justify: start, gap: sm) {
+            component IconButton icon: "search" variant: default
+            component IconButton icon: "filter" variant: default
+            component Button text: "New user" variant: primary icon: "plus"
+          }
+        }
+      }
+
+      component Heading text: "Form row: label + field + action" level: h3
+
+      layout card(padding: md, gap: none) {
+        layout stack(direction: horizontal, justify: start, align: center, gap: md) {
+          component Label text: "Coupon"
+          component Input placeholder: "Enter code"
+          component Button text: "Apply" variant: secondary
+        }
+      }
+
+      component Heading text: "Footer: cancel left, save right" level: h3
+
+      layout card(padding: md, gap: none) {
+        layout stack(direction: horizontal, justify: spaceBetween, align: center) {
+          component Button text: "Cancel"
+          layout stack(direction: horizontal, justify: start, gap: sm) {
+            component Button text: "Save draft"
+            component Button text: "Publish" variant: primary
+          }
+        }
+      }
+
+      component Heading text: "Stat row with spaceAround" level: h3
+
+      layout stack(direction: horizontal, justify: spaceAround) {
+        // component Stat title: "Users" value: "1,284" icon: "users"
+        // component Stat title: "Revenue" value: "$48.2K" icon: "trending-up" variant: success
+        // component Stat title: "Issues" value: "12" icon: "alert-circle" variant: warning
+        // component Stat title: "Uptime" value: "99.9%" icon: "activity" variant: info
+      }
+    }
+  }
+}

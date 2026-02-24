@@ -1,4 +1,4 @@
-project "Stack Alignment Demo" {
+project "Stack Justify & Align Demo" {
   style {
     spacing: "md"
     density: "normal"
@@ -7,37 +7,37 @@ project "Stack Alignment Demo" {
     font: "base"
   }
 
-  screen StackAlignment {
+  screen StackJustifyAlignDemo {
     layout stack(direction: vertical, gap: 24, padding: 16) {
-      component Heading text: "Horizontal Stack Alignment"
-      component Text text: "Demonstrate the 4 alignment modes: justify (default), left, center, right"
+      component Heading text: "Horizontal Stack — justify & align"
+      component Text text: "justify controls main-axis distribution; align controls cross-axis (vertical) positioning"
 
       // ============================================================
-      // 1. JUSTIFY (Default) - Equal width, fills 100%
+      // 1. STRETCH (Default) - Equal width, fills 100%
       // ============================================================
       layout panel(padding: md) {
         layout stack(direction: vertical, gap: 12) {
-          component Heading text: "align: \"justify\" (Default)"
-          component Text text: "Elements divided equally, filling 100% of width"
+          component Heading text: "justify: stretch (Default)"
+          component Text text: "Children divided equally, filling 100% of width"
           
-          layout stack(direction: horizontal, gap: 12, align: "justify") {
-            component Button text: "Button 1" variant: "primary"
-            component Button text: "Button 2" variant: "primary"
-            component Button text: "Button 3" variant: "primary"
+          layout stack(direction: horizontal, gap: 12) {
+            component Button text: "Button 1" variant: primary
+            component Button text: "Button 2" variant: primary
+            component Button text: "Button 3" variant: primary
           }
         }
       }
 
       // ============================================================
-      // 2. LEFT - Elements grouped on the left
+      // 2. START - Elements grouped on the left
       // ============================================================
       layout panel(padding: md) {
         layout stack(direction: vertical, gap: 12) {
-          component Heading text: "align: \"left\""
+          component Heading text: "justify: start"
           component Text text: "Elements grouped to the left with their natural width"
           
-          layout stack(direction: horizontal, gap: 12, align: "left") {
-            component Button text: "Save" variant: "primary"
+          layout stack(direction: horizontal, gap: 12, justify: start) {
+            component Button text: "Save" variant: primary
             component Button text: "Cancel"
             component Button text: "Reset"
           }
@@ -49,106 +49,143 @@ project "Stack Alignment Demo" {
       // ============================================================
       layout panel(padding: md) {
         layout stack(direction: vertical, gap: 12) {
-          component Heading text: "align: \"center\""
+          component Heading text: "justify: center"
           component Text text: "Elements centered horizontally with their natural width"
           
-          layout stack(direction: horizontal, gap: 12, align: "center") {
-            component Button text: "Agree" variant: "primary"
+          layout stack(direction: horizontal, gap: 12, justify: center) {
+            component Button text: "Agree" variant: primary
             component Button text: "Disagree"
           }
         }
       }
 
       // ============================================================
-      // 4. RIGHT - Elements grouped on the right
+      // 4. END - Elements grouped on the right
       // ============================================================
       layout panel(padding: md) {
         layout stack(direction: vertical, gap: 12) {
-          component Heading text: "align: \"right\""
+          component Heading text: "justify: end"
           component Text text: "Elements grouped to the right with their natural width"
           
-          layout stack(direction: horizontal, gap: 12, align: "right") {
+          layout stack(direction: horizontal, gap: 12, justify: end) {
             component Button text: "Back"
-            component Button text: "Next" variant: "primary"
+            component Button text: "Next" variant: primary
           }
         }
       }
 
       // ============================================================
-      // Icon Examples - Shows how Icons look with different alignments
+      // 5. SPACE BETWEEN - First left, last right
       // ============================================================
       layout panel(padding: md) {
         layout stack(direction: vertical, gap: 12) {
-          component Heading text: "Icons with Different Alignments"
+          component Heading text: "justify: spaceBetween"
+          component Text text: "First child left, last child right — classic toolbar pattern"
           
-          component Text text: "Left aligned icons:"
-          layout stack(direction: horizontal, gap: 8, align: "left") {
-            component Icon icon: "home"
-            component Icon icon: "search"
-            component Icon icon: "settings"
-          }
-
-          component Text text: "Center aligned icons:"
-          layout stack(direction: horizontal, gap: 8, align: "center") {
-            component Icon icon: "heart"
-            component Icon icon: "star"
-            component Icon icon: "bell"
-          }
-
-          component Text text: "Right aligned icons:"
-          layout stack(direction: horizontal, gap: 8, align: "right") {
-            component Icon icon: "download"
-            component Icon icon: "upload"
-            component Icon icon: "share"
+          layout stack(direction: horizontal, gap: 12, justify: spaceBetween) {
+            component Heading text: "Users"
+            component Button text: "New user" variant: primary icon: plus
           }
         }
       }
 
       // ============================================================
-      // Icon Buttons Examples
+      // 6. SPACE AROUND - Equal space around each child
       // ============================================================
       layout panel(padding: md) {
         layout stack(direction: vertical, gap: 12) {
-          component Heading text: "Icon Buttons with Different Alignments"
+          component Heading text: "justify: spaceAround"
+          component Text text: "Equal space wraps each child — navigation bar pattern"
           
-          component Text text: "Left aligned:"
-          layout stack(direction: horizontal, gap: 12, align: "left") {
-            component IconButton icon: "plus" variant: "primary"
-            component IconButton icon: "minus" variant: "primary"
-            component IconButton icon: "edit" variant: "primary"
-          }
-
-          component Text text: "Center aligned:"
-          layout stack(direction: horizontal, gap: 12, align: "center") {
-            component IconButton icon: "check" variant: "primary"
-            component IconButton icon: "x" variant: "danger"
-          }
-
-          component Text text: "Right aligned:"
-          layout stack(direction: horizontal, gap: 12, align: "right") {
-            component IconButton icon: "settings" variant: "default"
-            component IconButton icon: "menu" variant: "default"
+          layout stack(direction: horizontal, gap: 12, justify: spaceAround) {
+            component Button text: "Home"
+            component Button text: "Profile"
+            component Button text: "Settings"
           }
         }
       }
 
       // ============================================================
-      // Mixed Components - Shows flexibility
+      // 7. ALIGN (cross-axis) — start / center / end
       // ============================================================
       layout panel(padding: md) {
         layout stack(direction: vertical, gap: 12) {
-          component Heading text: "Mixed Components with Alignment"
-          
-          component Text text: "Left aligned mixed:"
-          layout stack(direction: horizontal, gap: 8, align: "left") {
-            component Checkbox label: "Accept"
-            component Text text: "terms and conditions"
+          component Heading text: "align: start / center / end (cross-axis)"
+          component Text text: "Vertical alignment of children with different heights in a row"
+
+          component Text text: "align: start (default)"
+          layout stack(direction: horizontal, gap: 12, justify: spaceBetween, align: start) {
+            layout card(padding: md) {
+              layout stack(direction: vertical, gap: 8) {
+                component Heading text: "Newsletter"
+                component Text text: "Subscribe for updates"
+                component Input placeholder: "your@email.com"
+              }
+            }
+            layout stack(direction: vertical, gap: 8, justify: start) {
+              component Button text: "Subscribe" variant: primary
+              component Badge text: "Free"
+            }
           }
 
-          component Text text: "Right aligned action row:"
-          layout stack(direction: horizontal, gap: 12, align: "right") {
-            component IconButton icon: "help-circle" variant: "default"
-            component Button text: "Submit" variant: "primary"
+          component Text text: "align: center"
+          layout stack(direction: horizontal, gap: 12, justify: spaceBetween, align: center) {
+            layout card(padding: md) {
+              layout stack(direction: vertical, gap: 8) {
+                component Heading text: "Newsletter"
+                component Text text: "Subscribe for updates"
+                component Input placeholder: "your@email.com"
+              }
+            }
+            layout stack(direction: vertical, gap: 8, justify: start) {
+              component Button text: "Subscribe" variant: primary
+              component Badge text: "Free"
+            }
+          }
+
+          component Text text: "align: end"
+          layout stack(direction: horizontal, gap: 12, justify: spaceBetween, align: end) {
+            layout card(padding: md) {
+              layout stack(direction: vertical, gap: 8) {
+                component Heading text: "Newsletter"
+                component Text text: "Subscribe for updates"
+                component Input placeholder: "your@email.com"
+              }
+            }
+            layout stack(direction: vertical, gap: 8, justify: start) {
+              component Button text: "Subscribe" variant: primary
+              component Badge text: "Free"
+            }
+          }
+        }
+      }
+
+      // ============================================================
+      // Icon Examples
+      // ============================================================
+      layout panel(padding: md) {
+        layout stack(direction: vertical, gap: 12) {
+          component Heading text: "Icons with Different justify Values"
+          
+          component Text text: "justify: start"
+          layout stack(direction: horizontal, gap: 8, justify: start) {
+            component Icon icon: home
+            component Icon icon: search
+            component Icon icon: settings
+          }
+
+          component Text text: "justify: center"
+          layout stack(direction: horizontal, gap: 8, justify: center) {
+            component Icon icon: heart
+            component Icon icon: star
+            component Icon icon: bell
+          }
+
+          component Text text: "justify: end"
+          layout stack(direction: horizontal, gap: 8, justify: end) {
+            component Icon icon: download
+            component Icon icon: upload
+            component Icon icon: share
           }
         }
       }
@@ -164,12 +201,12 @@ project "Stack Alignment Demo" {
           component Input placeholder: "enter email"
           
           component Text text: "Password:"
-          component Input placeholder: "enter password" 
+          component Input placeholder: "enter password"
           
           component Text text: "Dialog actions (buttons on right):"
-          layout stack(direction: horizontal, gap: 12, align: "right") {
-            component Button text: "Cancel" variant: "default"
-            component Button text: "Login" variant: "primary"
+          layout stack(direction: horizontal, gap: 12, justify: end) {
+            component Button text: "Cancel" variant: default
+            component Button text: "Login" variant: primary
           }
         }
       }

@@ -1273,7 +1273,12 @@ export class SVGRenderer {
     const fontSize = this.tokens.text.fontSize;
     const lineHeightPx = Math.ceil(fontSize * this.tokens.text.lineHeight);
     const lines = this.wrapTextToLines(text, pos.width, fontSize);
-    const firstLineY = pos.y + fontSize;
+    // Center lines vertically within the bounding box. When the text fills the
+    // box (multi-line), (pos.height - totalTextHeight) ≈ 0, so this is a no-op.
+    // For single-line text, this aligns the baseline with adjacent controls
+    // (Input, Button) that also center their text within the control height.
+    const totalTextHeight = lines.length * lineHeightPx;
+    const firstLineY = pos.y + Math.round(Math.max(0, (pos.height - totalTextHeight) / 2)) + fontSize;
     const tspans = lines
       .map(
         (line, index) =>
@@ -1291,9 +1296,13 @@ export class SVGRenderer {
 
   protected renderLabel(node: IRComponentNode, pos: any): string {
     const text = String(node.props.text || 'Label');
+    // Vertically center the text within the bounding box so that Label aligns
+    // with Input / Button text when used in a horizontal stack row.
+    // Formula matches Input placeholder: controlHeight / 2 + ~5 (font baseline offset).
+    const textY = pos.y + Math.round(pos.height / 2) + 4;
 
     return `<g${this.getDataNodeId(node)}>
-    <text x="${pos.x}" y="${pos.y + 12}" 
+    <text x="${pos.x}" y="${textY}" 
           font-family="Arial, Helvetica, sans-serif" 
           font-size="12" 
           fill="${this.renderTheme.textMuted}">${this.escapeXml(text)}</text>
@@ -2722,8 +2731,8 @@ export class SVGRenderer {
     }
 
     const direction = String(parent.params.direction || 'vertical');
-    const align = parent.style.align || 'justify';
-    return direction === 'horizontal' && align === 'justify';
+    const justify = parent.style.justify || 'stretch';
+    return direction === 'horizontal' && justify === 'stretch';
   }
 
   private buildParentContainerIndex(): void {

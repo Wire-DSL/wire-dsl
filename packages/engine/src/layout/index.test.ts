@@ -1,4 +1,4 @@
-﻿import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { parseWireDSL } from '../parser/index';
 import { generateIR } from '../ir/index';
 import { calculateLayout } from './index';
@@ -107,7 +107,7 @@ describe('Layout Engine', () => {
       project "ButtonWidthCompact" {
         style { density: "compact" }
         screen Main {
-          layout stack(direction: horizontal, align: left, gap: md) {
+          layout stack(direction: horizontal, justify: start, gap: md) {
             component Button text: "Notification preferences center"
             component Button text: "Secondary"
           }
@@ -118,7 +118,7 @@ describe('Layout Engine', () => {
       project "ButtonWidthComfortable" {
         style { density: "comfortable" }
         screen Main {
-          layout stack(direction: horizontal, align: left, gap: md) {
+          layout stack(direction: horizontal, justify: start, gap: md) {
             component Button text: "Notification preferences center"
             component Button text: "Secondary"
           }
@@ -177,7 +177,7 @@ describe('Layout Engine', () => {
     const input = `
       project "ButtonBlockHorizontal" {
         screen Main {
-          layout stack(direction: horizontal, align: left, gap: md, padding: md) {
+          layout stack(direction: horizontal, justify: start, gap: md, padding: md) {
             component Button text: "Continue" block: true
             component Button text: "Cancel"
           }
@@ -210,7 +210,7 @@ describe('Layout Engine', () => {
     const input = `
       project "LinkWidth" {
         screen Main {
-          layout stack(direction: horizontal, align: left, gap: md) {
+          layout stack(direction: horizontal, justify: start, gap: md) {
             component Link text: "Short"
             component Link text: "This is a much longer link"
           }
@@ -331,7 +331,7 @@ describe('Layout Engine', () => {
       project "IconBtnCompact" {
         style { density: "compact" }
         screen Main {
-          layout stack(direction: horizontal, align: left) {
+          layout stack(direction: horizontal, justify: start) {
             component IconButton icon: "menu" size: md
           }
         }
@@ -341,7 +341,7 @@ describe('Layout Engine', () => {
       project "IconBtnComfortable" {
         style { density: "comfortable" }
         screen Main {
-          layout stack(direction: horizontal, align: left) {
+          layout stack(direction: horizontal, justify: start) {
             component IconButton icon: "menu" size: md
           }
         }
@@ -886,7 +886,7 @@ describe('Layout Engine', () => {
     const input = `
       project "ControlHeightAlignment" {
         screen Main {
-          layout stack(direction: horizontal, align: left, gap: sm) {
+          layout stack(direction: horizontal, justify: start, gap: sm) {
             component Input label: "Email" placeholder: "user@example.com" size: md
             component Select label: "Role" items: "Admin,User" size: md
             component Button text: "Save" size: lg labelSpace: true
@@ -932,7 +932,7 @@ describe('Layout Engine', () => {
     const input = `
       project "ButtonLinkHeightAlignment" {
         screen Main {
-          layout stack(direction: horizontal, align: left, gap: sm) {
+          layout stack(direction: horizontal, justify: start, gap: sm) {
             component Button text: "Save"
             component Link text: "Learn more"
           }
@@ -960,7 +960,7 @@ describe('Layout Engine', () => {
     const input = `
       project "ButtonPaddingSizing" {
         screen Main {
-          layout stack(direction: horizontal, align: left, gap: sm) {
+          layout stack(direction: horizontal, justify: start, gap: sm) {
             component Button text: "Save" size: md padding: none
             component Button text: "Save" size: md padding: xl
           }
@@ -1345,5 +1345,264 @@ describe('Layout Engine', () => {
     // comfortable density + md stack gap => 20px effective gap (16 * 1.25).
     const expectedStackGap = 20;
     expect(dividerPos.y).toBeGreaterThanOrEqual(gridPos.y + gridPos.height + expectedStackGap);
+  });
+
+  describe('stack justify (main axis)', () => {
+    it('justify: start positions children from left edge with natural widths', () => {
+      const input = `
+        project "JustifyStart" {
+          screen Main {
+            layout stack(direction: horizontal, justify: start, gap: sm) {
+              component Button text: "A"
+              component Button text: "B"
+            }
+          }
+        }
+      `;
+      const ir = generateIR(parseWireDSL(input));
+      const layout = calculateLayout(ir);
+      const stack = Object.entries(ir.project.nodes).find(([_, n]) => n.kind === 'container')!;
+      const buttons = Object.entries(ir.project.nodes)
+        .filter(([_, n]) => n.kind === 'component')
+        .map(([id]) => layout[id])
+        .sort((a, b) => a.x - b.x);
+
+      expect(buttons).toHaveLength(2);
+      // First button anchored at stack left edge (x of stack)
+      expect(buttons[0].x).toBe(layout[stack[0]].x);
+      // Buttons use natural widths — total width is less than container
+      expect(buttons[1].x + buttons[1].width).toBeLessThan(layout[stack[0]].x + layout[stack[0]].width);
+    });
+
+    it('justify: end positions children flush to right edge', () => {
+      const input = `
+        project "JustifyEnd" {
+          screen Main {
+            layout stack(direction: horizontal, justify: end, gap: sm) {
+              component Button text: "Cancel"
+              component Button text: "Save"
+            }
+          }
+        }
+      `;
+      const ir = generateIR(parseWireDSL(input));
+      const layout = calculateLayout(ir);
+      const stack = Object.entries(ir.project.nodes).find(([_, n]) => n.kind === 'container')!;
+      const buttons = Object.entries(ir.project.nodes)
+        .filter(([_, n]) => n.kind === 'component')
+        .map(([id]) => layout[id])
+        .sort((a, b) => a.x - b.x);
+
+      const stackRight = layout[stack[0]].x + layout[stack[0]].width;
+      const lastButton = buttons[buttons.length - 1];
+      // Last child's right edge should equal stack right edge
+      expect(lastButton.x + lastButton.width).toBe(stackRight);
+    });
+
+    it('justify: center positions children in horizontal center', () => {
+      const input = `
+        project "JustifyCenter" {
+          screen Main {
+            layout stack(direction: horizontal, justify: center, gap: sm) {
+              component Button text: "OK"
+            }
+          }
+        }
+      `;
+      const ir = generateIR(parseWireDSL(input));
+      const layout = calculateLayout(ir);
+      const stack = Object.entries(ir.project.nodes).find(([_, n]) => n.kind === 'container')!;
+      const button = Object.entries(ir.project.nodes)
+        .find(([_, n]) => n.kind === 'component')!;
+
+      const stackMidX = layout[stack[0]].x + layout[stack[0]].width / 2;
+      const btnMidX = layout[button[0]].x + layout[button[0]].width / 2;
+      expect(Math.round(btnMidX)).toBe(Math.round(stackMidX));
+    });
+
+    it('justify: spaceBetween spreads children to fill container - first at left, last at right', () => {
+      const input = `
+        project "JustifySpaceBetween" {
+          screen Main {
+            layout stack(direction: horizontal, justify: spaceBetween) {
+              component Button text: "Cancel"
+              component Button text: "Save"
+            }
+          }
+        }
+      `;
+      const ir = generateIR(parseWireDSL(input));
+      const layout = calculateLayout(ir);
+      const stack = Object.entries(ir.project.nodes).find(([_, n]) => n.kind === 'container')!;
+      const buttons = Object.entries(ir.project.nodes)
+        .filter(([_, n]) => n.kind === 'component')
+        .map(([id]) => layout[id])
+        .sort((a, b) => a.x - b.x);
+
+      const stackLeft = layout[stack[0]].x;
+      const stackRight = layout[stack[0]].x + layout[stack[0]].width;
+      // First child starts at left edge
+      expect(buttons[0].x).toBe(stackLeft);
+      // Last child ends at right edge
+      expect(buttons[buttons.length - 1].x + buttons[buttons.length - 1].width).toBe(stackRight);
+    });
+
+    it('justify: spaceBetween with single child behaves like start', () => {
+      const input = `
+        project "SpaceBetweenSingle" {
+          screen Main {
+            layout stack(direction: horizontal, justify: spaceBetween) {
+              component Button text: "Only"
+            }
+          }
+        }
+      `;
+      const ir = generateIR(parseWireDSL(input));
+      const layout = calculateLayout(ir);
+      const stack = Object.entries(ir.project.nodes).find(([_, n]) => n.kind === 'container')!;
+      const button = Object.entries(ir.project.nodes)
+        .find(([_, n]) => n.kind === 'component')!;
+
+      // Single child: no gap to distribute, starts at left
+      expect(layout[button[0]].x).toBe(layout[stack[0]].x);
+    });
+
+    it('justify: spaceAround distributes equal margins around each child', () => {
+      const input = `
+        project "JustifySpaceAround" {
+          screen Main {
+            layout stack(direction: horizontal, justify: spaceAround) {
+              component Button text: "A"
+              component Button text: "B"
+            }
+          }
+        }
+      `;
+      const ir = generateIR(parseWireDSL(input));
+      const layout = calculateLayout(ir);
+      const stack = Object.entries(ir.project.nodes).find(([_, n]) => n.kind === 'container')!;
+      const buttons = Object.entries(ir.project.nodes)
+        .filter(([_, n]) => n.kind === 'component')
+        .map(([id]) => layout[id])
+        .sort((a, b) => a.x - b.x);
+
+      const stackLeft = layout[stack[0]].x;
+      const stackRight = layout[stack[0]].x + layout[stack[0]].width;
+      const leftMargin = buttons[0].x - stackLeft;
+      const rightMargin = stackRight - (buttons[1].x + buttons[1].width);
+      // Left and right outer margins should be equal
+      expect(leftMargin).toBeCloseTo(rightMargin, 0);
+      // Each child has equal margin on both sides
+      expect(leftMargin).toBeGreaterThan(0);
+    });
+
+    it('justify: stretch (default) gives all children equal widths', () => {
+      const input = `
+        project "JustifyStretch" {
+          screen Main {
+            layout stack(direction: horizontal, justify: stretch, gap: md) {
+              component Button text: "A"
+              component Button text: "B"
+              component Button text: "C"
+            }
+          }
+        }
+      `;
+      const ir = generateIR(parseWireDSL(input));
+      const layout = calculateLayout(ir);
+      const buttons = Object.entries(ir.project.nodes)
+        .filter(([_, n]) => n.kind === 'component')
+        .map(([id]) => layout[id]);
+
+      expect(buttons).toHaveLength(3);
+      expect(buttons[0].width).toBe(buttons[1].width);
+      expect(buttons[1].width).toBe(buttons[2].width);
+    });
+  });
+
+  describe('stack align (cross axis)', () => {
+    it('align: start (default) - all children top-aligned in row', () => {
+      const input = `
+        project "AlignStart" {
+          screen Main {
+            layout stack(direction: horizontal, justify: start, align: start, gap: sm) {
+              component Button text: "Tall" height: 80
+              component Button text: "Short"
+            }
+          }
+        }
+      `;
+      const ir = generateIR(parseWireDSL(input));
+      const layout = calculateLayout(ir);
+      const stack = Object.entries(ir.project.nodes).find(([_, n]) => n.kind === 'container')!;
+      const children = Object.entries(ir.project.nodes)
+        .filter(([_, n]) => n.kind === 'component')
+        .map(([id]) => layout[id]);
+
+      const stackY = layout[stack[0]].y;
+      // Both children start at the top of the row
+      children.forEach((c) => expect(c.y).toBe(stackY));
+    });
+
+    it('align: center - shorter child vertically centered within row height', () => {
+      const input = `
+        project "AlignCenter" {
+          screen Main {
+            layout stack(direction: horizontal, justify: start, align: center, gap: sm) {
+              component Button text: "Tall" height: 80
+              component Button text: "Short"
+            }
+          }
+        }
+      `;
+      const ir = generateIR(parseWireDSL(input));
+      const layout = calculateLayout(ir);
+      const stack = Object.entries(ir.project.nodes).find(([_, n]) => n.kind === 'container')!;
+      const components = Object.entries(ir.project.nodes)
+        .filter(([_, n]) => n.kind === 'component')
+        .map(([id]) => ({ id, ...layout[id] }))
+        .sort((a, b) => a.height - b.height);
+
+      const taller = components[components.length - 1];
+      const shorter = components[0];
+      const stackY = layout[stack[0]].y;
+      const stackHeight = taller.height; // row height = max child height
+
+      // Shorter child should not start at top
+      expect(shorter.y).toBeGreaterThan(stackY);
+      // Shorter child should be vertically centered
+      const expectedY = stackY + Math.round((stackHeight - shorter.height) / 2);
+      expect(shorter.y).toBe(expectedY);
+    });
+
+    it('align: end - shorter child bottom-aligned within row height', () => {
+      const input = `
+        project "AlignEnd" {
+          screen Main {
+            layout stack(direction: horizontal, justify: start, align: end, gap: sm) {
+              component Button text: "Tall" height: 80
+              component Button text: "Short"
+            }
+          }
+        }
+      `;
+      const ir = generateIR(parseWireDSL(input));
+      const layout = calculateLayout(ir);
+      const stack = Object.entries(ir.project.nodes).find(([_, n]) => n.kind === 'container')!;
+      const components = Object.entries(ir.project.nodes)
+        .filter(([_, n]) => n.kind === 'component')
+        .map(([id]) => ({ id, ...layout[id] }))
+        .sort((a, b) => a.height - b.height);
+
+      const taller = components[components.length - 1];
+      const shorter = components[0];
+      const stackY = layout[stack[0]].y;
+      const stackHeight = taller.height;
+
+      // Shorter child bottom edge should equal taller child bottom edge
+      const expectedY = stackY + stackHeight - shorter.height;
+      expect(shorter.y).toBe(expectedY);
+      expect(shorter.y + shorter.height).toBe(taller.y + taller.height);
+    });
   });
 });
