@@ -37,21 +37,21 @@ project "Interactive Dashboard" {
         span: 12
       
       // Stats section
-      component StatCard
+      component Stat
         title: "Revenue"
         value: "$45,230"
         change: "+12.5%"
         variant: success
         span: 4
       
-      component StatCard
+      component Stat
         title: "Users"
         value: "1,234"
         change: "+5.2%"
         variant: info
         span: 4
       
-      component StatCard
+      component Stat
         title: "Orders"
         value: "856"
         change: "-2.1%"
@@ -113,7 +113,7 @@ console.log('\n' + '='.repeat(80));
 console.log('EXAMPLE 3: Code → Canvas Mapping');
 console.log('='.repeat(80));
 
-// Simulate clicking at line 24 (first StatCard component)
+// Simulate clicking at line 24 (first Stat component)
 const clickLine = 24;
 const clickColumn = 8;
 console.log(`\n🖱️  User clicks in editor at line ${clickLine}, column ${clickColumn}`);
@@ -140,7 +140,7 @@ if (nodeAtClick) {
   const layout = calculateLayout(ir);
   
   // Find corresponding IR node (by type and index)
-  const irNodeId = `component-statcard-${0}`; // First StatCard
+  const irNodeId = `component-stat-${0}`; // First Stat
   const canvasPos = layout[irNodeId];
   
   if (canvasPos) {
@@ -160,27 +160,27 @@ console.log('\n' + '='.repeat(80));
 console.log('EXAMPLE 4: Canvas → Code Mapping');
 console.log('='.repeat(80));
 
-// Simulate clicking on SVG element with data-node-id="component-statcard-1"
-const canvasClickNodeId = 'component-statcard-1';  // Second StatCard
+// Simulate clicking on SVG element with data-node-id="component-stat-1"
+const canvasClickNodeId = 'component-stat-1';  // Second Stat
 console.log(`\n🖱️  User clicks on canvas element: ${canvasClickNodeId}`);
 
 // Find in SourceMap (use component type search)
-const statCards = resolver.getNodesByType('component', 'StatCard');
-const secondStatCard = statCards.find((node) => 
-  node.range.start.line > 24  // After first StatCard (get second one)
+const statsComponents = resolver.getNodesByType('component', 'Stat');
+const secondStat = statsComponents.find((node) => 
+  node.range.start.line > 24  // After first Stat (get second one)
 );
 
-if (secondStatCard) {
+if (secondStat) {
   console.log(`\n✓ Found in source code:`);
-  console.log(`  File:       ${secondStatCard.filePath}`);
-  console.log(`  Lines:      ${secondStatCard.range.start.line}-${secondStatCard.range.end.line}`);
-  console.log(`  Column:     ${secondStatCard.range.start.column}`);
-  console.log(`  Node ID:    ${secondStatCard.nodeId}`);
+  console.log(`  File:       ${secondStat.filePath}`);
+  console.log(`  Lines:      ${secondStat.range.start.line}-${secondStat.range.end.line}`);
+  console.log(`  Column:     ${secondStat.range.start.column}`);
+  console.log(`  Node ID:    ${secondStat.nodeId}`);
   
   // Extract code snippet
   const lines = wireCode.split('\n');
   const codeSnippet = lines
-    .slice(secondStatCard.range.start.line - 1, secondStatCard.range.end.line)
+    .slice(secondStat.range.start.line - 1, secondStat.range.end.line)
     .join('\n');
   
   console.log(`\n📝 Source code:`);
@@ -195,15 +195,15 @@ console.log('\n' + '='.repeat(80));
 console.log('EXAMPLE 5: Property-Level Source Tracking');
 console.log('='.repeat(80));
 
-// Find first StatCard again
-const firstStatCard = resolver.getNodesByType('component', 'StatCard')[0];
+// Find first Stat again
+const firstStat = resolver.getNodesByType('component', 'Stat')[0];
 
-if (firstStatCard && firstStatCard.type === 'component') {
-  console.log(`\n🔍 Inspecting StatCard properties:`);
-  console.log(`   Node: ${firstStatCard.nodeId}`);
+if (firstStat && firstStat.type === 'component') {
+  console.log(`\n🔍 Inspecting Stat properties:`);
+  console.log(`   Node: ${firstStat.nodeId}`);
   
   // Access properties from SourceMapEntry.properties (PropertySourceMap)
-  const props = firstStatCard.properties || {};
+  const props = firstStat.properties || {};
   console.log(`\n   Properties (${Object.keys(props).length}):`);
   
   Object.entries(props).forEach(([key, propMap]) => {
@@ -297,7 +297,7 @@ console.log('EXAMPLE 8: Round-Trip Verification (Code → Canvas → Code)');
 console.log('='.repeat(80));
 
 // Pick a component from SourceMap
-const testComponent = statCards[0];
+const testComponent = statsComponents[0];
 
 console.log(`\n🔄 Round-trip test:`);
 console.log(`   1. Start:        Line ${testComponent.range.start.line} (${testComponent.nodeId})`);
@@ -307,8 +307,8 @@ console.log(`   2. SourceMap:    type=${testComponent.type}, componentType=${tes
 
 // Find in IR (by matching component type and position)
 const irComponents = Object.entries(ir.project.nodes)
-  .filter(([, node]) => node.kind === 'component' && node.componentType === 'StatCard');
-console.log(`   3. IR Nodes:     ${irComponents.length} StatCard components found`);
+  .filter(([, node]) => node.kind === 'component' && node.componentType === 'Stat');
+console.log(`   3. IR Nodes:     ${irComponents.length} Stat components found`);
 
 // Find in Layout
 if (irComponents.length > 0) {

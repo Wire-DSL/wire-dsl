@@ -407,7 +407,7 @@ component Alert type: "info" message: "New updates are available"
 
 ## Information Display Components (3)
 
-### StatCard
+### Stat
 Statistics card with title and value.
 
 **Properties:**
@@ -416,10 +416,10 @@ Statistics card with title and value.
 
 **Example:**
 ```wire
-component StatCard title: "Total Users" value: "2,543"
-component StatCard title: "Revenue" value: "$45,230"
-component StatCard title: "Growth Rate" value: "+12.5%"
-component StatCard title: "Active Now" value: "892"
+component Stat title: "Total Users" value: "2,543"
+component Stat title: "Revenue" value: "$45,230"
+component Stat title: "Growth Rate" value: "+12.5%"
+component Stat title: "Active Now" value: "892"
 ```
 
 ---
@@ -498,7 +498,7 @@ component Spinner
 | **Data** | Table, List | 2 |
 | **Media** | Image, Icon | 2 |
 | **Display** | Divider, Badge, Link, Alert | 4 |
-| **Info** | StatCard, Code, ChartPlaceholder | 3 |
+| **Info** | Stat, Code, ChartPlaceholder | 3 |
 | **Modal** | Modal, Spinner | 2 |
 | **TOTAL** | | **21** |
 
@@ -520,16 +520,16 @@ layout stack(direction: vertical, gap: md, padding: lg) {
 ```wire
 layout grid(columns: 12, gap: md) {
   cell span: 3 {
-    component StatCard title: "Total Sales" value: "$45,230"
+    component Stat title: "Total Sales" value: "$45,230"
   }
   cell span: 3 {
-    component StatCard title: "Orders" value: "1,234"
+    component Stat title: "Orders" value: "1,234"
   }
   cell span: 3 {
-    component StatCard title: "Customers" value: "892"
+    component Stat title: "Customers" value: "892"
   }
   cell span: 3 {
-    component StatCard title: "Growth" value: "+12.5%"
+    component Stat title: "Growth" value: "+12.5%"
   }
 }
 ```

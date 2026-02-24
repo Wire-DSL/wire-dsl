@@ -305,7 +305,7 @@ describe('SVG Renderer', () => {
           layout stack {
             component Topbar title: "Dashboard" icon: "menu" actions: "Save"
             component Tabs items: "Overview,Activity" active: 0
-            component StatCard title: "Users" value: "1,024" icon: "users"
+            component Stat title: "Users" value: "1,024" icon: "users"
             component SidebarMenu items: "Users,Settings" active: 0
             component Checkbox label: "Accept" checked: true
             component Radio label: "Choice" checked: true
@@ -1264,16 +1264,16 @@ describe('SVG Renderer', () => {
     expect(svg).toContain('xmlns="http://www.w3.org/2000/svg"');
   });
 
-  it('should render StatCard components', () => {
+  it('should render Stat components', () => {
     const input = `
       project "Dashboard" {
         screen Analytics {
           layout grid(columns: 3, gap: lg) {
             cell span: 1 {
-              component StatCard title: "Total Users" value: "2,543" color: "#3B82F6"
+              component Stat title: "Total Users" value: "2,543"
             }
             cell span: 1 {
-              component StatCard title: "Revenue" value: "$45.2K" color: "#10B981"
+              component Stat title: "Revenue" value: "$45.2K"
             }
           }
         }
@@ -1291,12 +1291,12 @@ describe('SVG Renderer', () => {
     expect(svg).toContain('$45.2K');
   });
 
-  it('should render StatCard icon when provided', () => {
+  it('should render Stat icon when provided', () => {
     const input = `
-      project "StatCardIcon" {
+      project "StatIcon" {
         screen Main {
           layout stack {
-            component StatCard title: "Users" value: "1,234" icon: "users"
+            component Stat title: "Users" value: "1,234" icon: "users"
           }
         }
       }
@@ -2138,12 +2138,12 @@ describe('Skeleton SVG Renderer', () => {
     expect(svg).toContain('font-size="12"');
   });
 
-  it('should render StatCard icon as a skeleton placeholder block', () => {
+  it('should render Stat icon as a skeleton placeholder block', () => {
     const input = `
       project "Test" {
         screen Main {
           layout stack {
-            component StatCard title: "Users" value: "1,234" icon: "users"
+            component Stat title: "Users" value: "1,234" icon: "users"
           }
         }
       }

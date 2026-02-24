@@ -141,7 +141,7 @@ You can override any of them in `colors`.
 
 **Semantic keys**:
 
-- `accent`: used by `Topbar` icon/actions, active `Tabs`, `StatCard` highlighted value/icon, selected `SidebarMenu` item
+- `accent`: used by `Topbar` icon/actions, active `Tabs`, `Stat` highlighted value/icon, selected `SidebarMenu` item
 - `control`: used by selected/enabled states in `Checkbox`, `Radio`, `Toggle`
 - `chart`: used by `Chart` types `line`, `area`, and `bar`
 - `text`: default text color fallback (`#000000` light, `#FFFFFF` dark)
@@ -610,7 +610,7 @@ component Button text: "Click me" variant: primary
 | `Link` | `text`, `variant`, `size` | `component Link text: "Click here" variant: primary size: lg` |
 | `Chart` | `type`, `height` | `component Chart type: "bar" height: 200` |
 | `Alert` | `variant`, `title`, `text` | `component Alert variant: "danger" title: "Error" text: "Something went wrong"` |
-| `StatCard` | `title`, `value`, `caption`, `icon` | `component StatCard title: "Total Users" value: "1,234" icon: "users"` |
+| `Stat` | `title`, `value`, `caption`, `icon` | `component Stat title: "Total Users" value: "1,234" icon: "users"` |
 | `Separate` | `size` | `component Separate size: md` |
 | `Code` | `code` | `component Code code: "const x = 10;"` |
 | `Modal` | `title`, `visible` | `component Modal title: "Confirm?" visible: false` |

@@ -105,7 +105,7 @@ Choose from 21 available components organized in categories:
 **Data:** Table, List
 **Media:** Image, Icon
 **Display:** Divider, Badge, Link, Alert
-**Info:** StatCard, Code, ChartPlaceholder
+**Info:** Stat, Code, ChartPlaceholder
 **Modal:** Modal, Spinner
 
 ### Step 5: Validate Syntax
@@ -180,16 +180,16 @@ project "Admin Dashboard" {
 
         layout grid(columns: 12, gap: md) {
           cell span: 3 {
-            component StatCard title: "Total Users" value: "2,543"
+            component Stat title: "Total Users" value: "2,543"
           }
           cell span: 3 {
-            component StatCard title: "Revenue" value: "$45,230"
+            component Stat title: "Revenue" value: "$45,230"
           }
           cell span: 3 {
-            component StatCard title: "Growth" value: "+12.5%"
+            component Stat title: "Growth" value: "+12.5%"
           }
           cell span: 3 {
-            component StatCard title: "Active Now" value: "892"
+            component Stat title: "Active Now" value: "892"
           }
         }
 

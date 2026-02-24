@@ -136,7 +136,7 @@ style {
 | Component | Key Properties | Example |
 |---|---|---|
 | `Table` | `columns`, `rows` | `actions`, `caption`, `pagination`, `paginationAlign`, `captionAlign` | `component Table columns: "Name,Email,Status" rows: 8 actions: "eye,edit"` |
-| `StatCard` | `title`, `value` | `component StatCard title: "Total Users" value: "1,234"` |
+| `Stat` | `title`, `value` | `component Stat title: "Total Users" value: "1,234"` |
 | `List` | `items`, `title` | `component List items: "Item 1,Item 2,Item 3"` |
 
 ---
@@ -183,7 +183,7 @@ style {
 - `Alert` - Information message
 
 ### Information Components (4)
-- `StatCard` - Metric display
+- `Stat` - Metric display
 - `Card` - Generic content card
 - `Code` - Code snippet
 - `Chart` - Chart area
@@ -281,19 +281,19 @@ project "Admin Dashboard" {
           cell span: 4 {
             layout card(padding: md, gap: md) {
               component Heading text: "Total Users"
-              component StatCard value: "1,234"
+              component Stat value: "1,234"
             }
           }
           cell span: 4 {
             layout card(padding: md, gap: md) {
               component Heading text: "Revenue"
-              component StatCard value: "$45.2K"
+              component Stat value: "$45.2K"
             }
           }
           cell span: 4 {
             layout card(padding: md, gap: md) {
               component Heading text: "Growth"
-              component StatCard value: "12%"
+              component Stat value: "12%"
             }
           }
         }
@@ -389,19 +389,19 @@ layout stack(direction: vertical, gap: md, padding: lg) {
     cell span: 4 {
       layout card(padding: md, gap: md) {
         component Heading text: "Users"
-        component StatCard title: "Total" value: "1,234"
+        component Stat title: "Total" value: "1,234"
       }
     }
     cell span: 4 {
       layout card(padding: md, gap: md) {
         component Heading text: "Revenue"
-        component StatCard title: "Monthly" value: "$45.2K"
+        component Stat title: "Monthly" value: "$45.2K"
       }
     }
     cell span: 4 {
       layout card(padding: md, gap: md) {
         component Heading text: "Growth"
-        component StatCard title: "YoY" value: "12%"
+        component Stat title: "YoY" value: "12%"
       }
     }
   }
@@ -489,7 +489,7 @@ layout grid(columns: 12, gap: md, padding: lg) {
       component Image placeholder: "square" height: 200
       component Heading text: "Premium Item"
       component Text text: "High-quality product"
-      component StatCard title: "Price" value: "$99.99"
+      component Stat title: "Price" value: "$99.99"
       component Button text: "Add to Cart" variant: primary
     }
   }
@@ -498,7 +498,7 @@ layout grid(columns: 12, gap: md, padding: lg) {
       component Image placeholder: "square" height: 200
       component Heading text: "Standard Item"
       component Text text: "Good value option"
-      component StatCard title: "Price" value: "$49.99"
+      component Stat title: "Price" value: "$49.99"
       component Button text: "Add to Cart" variant: primary
     }
   }

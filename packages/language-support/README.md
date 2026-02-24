@@ -50,7 +50,7 @@ Subpath exports:
 ## Notes
 
 - `COMPONENTS` / `LAYOUTS` include the latest DSL metadata (for example `split` with `left`/`right`, `background`, `border`).
-- Icon properties (`Icon.type`, `IconButton.icon`, `Topbar.icon`, `Image.icon`, `StatCard.icon`) are backed by a shared icon catalog.
+- Icon properties (`Icon.type`, `IconButton.icon`, `Topbar.icon`, `Image.icon`, `Stat.icon`) are backed by a shared icon catalog.
 
 ## Documentation
 

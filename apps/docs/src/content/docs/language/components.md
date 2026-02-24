@@ -610,7 +610,7 @@ component Alert variant: "info" title: "Info" text: "New updates available"
 
 ## Information Display
 
-### StatCard
+### Stat
 
 Statistics card displaying metric and value.
 
@@ -622,9 +622,9 @@ Statistics card displaying metric and value.
 
 **Example**:
 ```wire
-component StatCard title: "Total Users" value: "1,234"
-component StatCard title: "Revenue" value: "$45,678" caption: "vs last month"
-component StatCard title: "Growth" value: "+12.5%" icon: "trending-up"
+component Stat title: "Total Users" value: "1,234"
+component Stat title: "Revenue" value: "$45,678" caption: "vs last month"
+component Stat title: "Growth" value: "+12.5%" icon: "trending-up"
 ```
 
 **Rendering**: Card with large value and small label below
@@ -737,7 +737,7 @@ component Modal title: "Delete User" visible: false
 | Badge | Display | Status label |
 | Link | Display | Underlined action |
 | Alert | Display | Alert message |
-| StatCard | Info | Metric display |
+| Stat | Info | Metric display |
 | Card | Info | Generic content card |
 | Code | Info | Code block |
 | Chart | Info | Chart area |

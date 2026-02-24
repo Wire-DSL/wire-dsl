@@ -1049,7 +1049,7 @@ export class LayoutEngine {
     if (node.componentType === 'Textarea') return 100 + controlLabelOffset;
     if (node.componentType === 'Modal') return 300;
     if (node.componentType === 'Card') return 120;
-    if (node.componentType === 'StatCard') return 120;
+    if (node.componentType === 'Stat') return 120;
     if (node.componentType === 'Chart' || node.componentType === 'ChartPlaceholder') return 250;
     if (node.componentType === 'List') {
       const itemsFromProps = String(node.props.items || '')
@@ -1176,13 +1176,18 @@ export class LayoutEngine {
     if (node.componentType === 'Separate') return this.getSeparateSize(node);
 
     // Button, Link: text width + padding (estimate)
+    // Account for icon when present; without this the layout allocates too little width
+    // which causes clampControlWidth to truncate the button and show "..." on the text.
     if (node.componentType === 'Button' || node.componentType === 'Link') {
       const text = String(node.props.text || '');
       const { fontSize, paddingX } = this.getButtonMetricsForDensity();
       const density = (this.style.density || 'normal') as DensityLevel;
       const extraPadding = resolveControlHorizontalPadding(String(node.props.padding || 'none'), density);
       const textWidth = this.estimateTextWidth(text, fontSize);
-      return Math.max(60, Math.ceil(textWidth + (paddingX + extraPadding) * 2));
+      const iconName = String(node.props.icon || '').trim();
+      const iconSize = iconName ? Math.round(fontSize * 1.1) : 0;
+      const iconGap = iconName ? 8 : 0;
+      return Math.max(60, Math.ceil(textWidth + iconSize + iconGap + (paddingX + extraPadding) * 2));
     }
 
     // Label, Text: text-based width (estimate)
@@ -1225,8 +1230,8 @@ export class LayoutEngine {
       return 400;
     }
 
-    // StatCard, Card: fixed width
-    if (node.componentType === 'StatCard' || node.componentType === 'Card') {
+    // Stat, Card: fixed width
+    if (node.componentType === 'Stat' || node.componentType === 'Card') {
       return 280;
     }
 

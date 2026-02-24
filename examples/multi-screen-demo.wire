@@ -13,13 +13,13 @@ project "Multi-Screen Demo" {
       
       layout grid(columns: 3, gap: lg) {
         cell {
-          component StatCard title: "Users" value: "2,543"
+          component Stat title: "Users" value: "2,543"
         }
         cell {
-          component StatCard title: "Revenue" value: "$125K"
+          component Stat title: "Revenue" value: "$125K"
         }
         cell {
-          component StatCard title: "Sessions" value: "842"
+          component Stat title: "Sessions" value: "842"
         }
       }
       
@@ -50,10 +50,10 @@ project "Multi-Screen Demo" {
       
       layout grid(columns: 2, gap: lg) {
         cell {
-          component StatCard title: "Total Sales" value: "$45,200"
+          component Stat title: "Total Sales" value: "$45,200"
         }
         cell {
-          component StatCard title: "Growth Rate" value: "+12.5%"
+          component Stat title: "Growth Rate" value: "+12.5%"
         }
       }
       

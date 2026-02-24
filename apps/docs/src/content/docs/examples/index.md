@@ -26,7 +26,7 @@ Explore complete, working Wire-DSL examples. All examples are available in the `
 
 ### Components
 
-- **[Card & StatCard Demo](../../examples/card-and-stat-card-demo.wire)** - Card container examples
+- **[Card & Stat Demo](../../examples/card-and-stat-card-demo.wire)** - Card container examples
 - **[Component Composition Demo](../../examples/component-composition-demo.wire)** - Custom component usage
 - **[Components Catalog](../../examples/components-catalog.wire)** - All components displayed
 - **[Icon Demo](../../examples/icon-demo-simple.wire)** - Icon and IconButton examples
@@ -90,8 +90,8 @@ layout split(sidebar: 260, gap: md) {
   
   layout stack(gap: md, padding: lg) {
     layout grid(columns: 12, gap: md) {
-      cell span: 3 { component StatCard ... }
-      cell span: 3 { component StatCard ... }
+      cell span: 3 { component Stat ... }
+      cell span: 3 { component Stat ... }
     }
     
     component Table columns: "..." rows: 10

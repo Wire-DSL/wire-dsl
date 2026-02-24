@@ -1109,7 +1109,7 @@ export class SketchSVGRenderer extends SVGRenderer {
   /**
    * Render stat card with sketch filter and Comic Sans
    */
-  protected renderStatCard(node: IRComponentNode, pos: any): string {
+  protected renderStat(node: IRComponentNode, pos: any): string {
     const title = String(node.props.title || 'Metric');
     const value = String(node.props.value || '0');
     const rawCaption = String(node.props.caption || '');
@@ -1117,7 +1117,11 @@ export class SketchSVGRenderer extends SVGRenderer {
     const hasCaption = caption.trim().length > 0;
     const iconName = String(node.props.icon || '').trim();
     const iconSvg = iconName ? getIcon(iconName) : null;
-    const accentColor = this.resolveAccentColor();
+    const variant = String(node.props.variant || 'default');
+    const baseAccent = this.resolveAccentColor();
+    const accentColor = variant !== 'default'
+      ? this.resolveVariantColor(variant, baseAccent)
+      : baseAccent;
 
     // Inline spacing resolution
     const padding = this.resolveSpacing(node.style.padding);
@@ -1152,7 +1156,7 @@ export class SketchSVGRenderer extends SVGRenderer {
       : '';
 
     let svg = `<g${this.getDataNodeId(node)}>
-    <!-- StatCard Background -->
+    <!-- Stat Background -->
     <rect x="${pos.x}" y="${pos.y}"
           width="${pos.width}" height="${pos.height}"
           rx="8"

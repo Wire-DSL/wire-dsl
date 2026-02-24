@@ -1,5 +1,16 @@
 # @wire-dsl/core
 
+## 0.5.0
+
+### Minor Changes
+
+- [#71](https://github.com/Wire-DSL/wire-dsl/pull/71) [`64dda99`](https://github.com/Wire-DSL/wire-dsl/commit/64dda999df084743a4fd43b5c87fa58f7305d365) Thanks [@roxguel](https://github.com/roxguel)! - Refactor StatCard to Stat and add disabled property to user control components
+
+### Patch Changes
+
+- Updated dependencies [[`64dda99`](https://github.com/Wire-DSL/wire-dsl/commit/64dda999df084743a4fd43b5c87fa58f7305d365)]:
+  - @wire-dsl/language-support@0.5.0
+
 ## 0.4.1
 
 ### Patch Changes

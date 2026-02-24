@@ -115,8 +115,8 @@ actions: "Edit,Delete,View"
 ### Component Names
 - Use exact PascalCase matching
 - Case-sensitive (must match exactly)
-- Examples: `Button`, `Input`, `Heading`, `StatCard`
-- ❌ Wrong: `button`, `INPUT`, `heading`, `statcard`
+- Examples: `Button`, `Input`, `Heading`, `Stat`
+- ❌ Wrong: `button`, `INPUT`, `heading`, `stat`
 
 ### Property Names
 - Use lowercase

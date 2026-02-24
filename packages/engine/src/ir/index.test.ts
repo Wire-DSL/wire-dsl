@@ -656,7 +656,7 @@ describe('IR Generator', () => {
     expect(ir.project.screens).toHaveLength(1);
   });
 
-  it('should expand StatCard with default styling', () => {
+  it('should expand Stat with default styling', () => {
     const input = `
       project "Dashboard" {
         style {
@@ -666,7 +666,7 @@ describe('IR Generator', () => {
         screen Main {
           layout grid(columns: 3) {
             cell span: 1 {
-              component StatCard title: "Total Users" value: "2,543" color: "#3B82F6"
+              component Stat title: "Total Users" value: "2,543" color: "#3B82F6"
             }
           }
         }
@@ -676,12 +676,12 @@ describe('IR Generator', () => {
     const ast = parseWireDSL(input);
     const ir = generateIR(ast);
 
-    const statCard = Object.entries(ir.project.nodes)
-      .find(([_, n]) => n.kind === 'component' && n.componentType === 'StatCard');
+    const stat = Object.entries(ir.project.nodes)
+      .find(([_, n]) => n.kind === 'component' && n.componentType === 'Stat');
 
-    expect(statCard).toBeDefined();
-    if (statCard) {
-      const [id, node] = statCard;
+    expect(stat).toBeDefined();
+    if (stat) {
+      const [id, node] = stat;
       if (node.kind === 'component') {
         expect(node.props.title).toBe('Total Users');
         expect(node.props.value).toBe('2,543');

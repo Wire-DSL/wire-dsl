@@ -128,7 +128,7 @@ const examples = [
   {
     title: 'Simple Dashboard — Grid + stat cards',
     path: 'examples/simple-dashboard.wire',
-    note: 'Shows: topbar, grid of cards with statcards, chart, table',
+    note: 'Shows: topbar, grid of cards with stats, chart, table',
   },
   {
     title: 'Form Example — All input components',
@@ -136,7 +136,7 @@ const examples = [
     note: 'Shows: Input, Textarea, Select, Checkbox, Radio, Toggle — all input types in a single form',
   },
   {
-    title: 'Card & StatCard Demo — Multi-screen',
+    title: 'Card & Stat Demo — Multi-screen',
     path: 'examples/card-and-stat-card-demo.wire',
     note: 'Shows: stat card grid, product cards, profile card with avatar, horizontal stack in card',
   },

@@ -136,7 +136,7 @@ Output (SVG / IR / AST)
 | **Button** | Button, IconButton |
 | **Navigation** | Topbar, SidebarMenu, Breadcrumbs, Tabs |
 | **Data Display** | Table, List |
-| **Media & Display** | Image, Icon, Avatar, Divider, Badge, Link, Alert, StatCard, Code, ChartPlaceholder |
+| **Media & Display** | Image, Icon, Avatar, Divider, Badge, Link, Alert, Stat, Code, ChartPlaceholder |
 | **Modal & Feedback** | Modal, Spinner |
 
 **5 Layout Containers:**
@@ -243,7 +243,7 @@ All `.wire` files must comply with:
 - **Build System:** Turbo (monorepo task execution)
 
 ### Naming Conventions
-- **Components:** PascalCase (e.g., `TextInput`, `StatCard`)
+- **Components:** PascalCase (e.g., `TextInput`, `Stat`)
 - **Functions/Methods:** camelCase (e.g., `parseProject`, `calculateLayout`)
 - **Constants:** UPPER_SNAKE_CASE (e.g., `MAX_COMPONENTS`)
 - **Files:** kebab-case (e.g., `component-parser.ts`)

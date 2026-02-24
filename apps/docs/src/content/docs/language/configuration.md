@@ -85,7 +85,7 @@ project "ThemedApp" {
 
 - Variant-driven components (`Button`, `Badge`, `Link`, `Alert`, `IconButton`, etc.) through `primary`, `secondary`, `success`, `warning`, `danger`, `info` (and `error`)
 - Semantic renderer tokens:
-  - `accent`: Topbar icon/actions, active Tabs, StatCard highlighted value/icon, selected SidebarMenu item
+  - `accent`: Topbar icon/actions, active Tabs, Stat highlighted value/icon, selected SidebarMenu item
   - `control`: selected/enabled states for Checkbox, Radio, Toggle
   - `chart`: Chart types line/area/bar
 
@@ -381,16 +381,16 @@ project "AdminPortal" {
       layout stack(gap: md, padding: lg) {
         layout grid(columns: 12, gap: md) {
           cell span: 3 {
-            component StatCard title: "Users" value: "1,234"
+            component Stat title: "Users" value: "1,234"
           }
           cell span: 3 {
-            component StatCard title: "Orders" value: "5,678"
+            component Stat title: "Orders" value: "5,678"
           }
           cell span: 3 {
-            component StatCard title: "Revenue" value: "$45K"
+            component Stat title: "Revenue" value: "$45K"
           }
           cell span: 3 {
-            component StatCard title: "Growth" value: "+12%"
+            component Stat title: "Growth" value: "+12%"
           }
         }
         

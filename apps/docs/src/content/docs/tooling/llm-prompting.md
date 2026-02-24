@@ -158,7 +158,7 @@ component Alert variant: "danger" title: "Error" text: "Error message"
 
 ### Information (4)
 ```wire
-component StatCard title: "Users" value: "1,234"
+component Stat title: "Users" value: "1,234"
 component Card title: "Plan" text: "Summary details"
 component Code code: "const x = 10;"
 component Chart type: "bar" height: 300
@@ -204,9 +204,9 @@ layout stack(direction: horizontal, gap: md, align: "right") {
 ### Grid (Responsive)
 ```wire
 layout grid(columns: 12, gap: md) {
-  cell span: 4 { component StatCard title: "Users" value: "1,234" }
-  cell span: 4 { component StatCard title: "Orders" value: "5,678" }
-  cell span: 4 { component StatCard title: "Revenue" value: "$45K" }
+  cell span: 4 { component Stat title: "Users" value: "1,234" }
+  cell span: 4 { component Stat title: "Orders" value: "5,678" }
+  cell span: 4 { component Stat title: "Revenue" value: "$45K" }
 }
 ```
 
@@ -286,9 +286,9 @@ screen Dashboard {
 
     layout stack(gap: md, padding: lg) {
       layout grid(columns: 12, gap: md) {
-        cell span: 4 { component StatCard title: "Users" value: "1,234" }
-        cell span: 4 { component StatCard title: "Orders" value: "5,678" }
-        cell span: 4 { component StatCard title: "Revenue" value: "$45K" }
+        cell span: 4 { component Stat title: "Users" value: "1,234" }
+        cell span: 4 { component Stat title: "Orders" value: "5,678" }
+        cell span: 4 { component Stat title: "Revenue" value: "$45K" }
       }
       component Table columns: "ID,Name,Status" rows: 10
     }

@@ -53,7 +53,7 @@ Wire-DSL is actively maintained with a clear evolution path. This roadmap descri
   - Data: Table, List
   - Media: Image, Icon
   - Display: Divider, Separate, Badge, Link, Alert
-  - Info: StatCard, Card, Code, Chart
+  - Info: Stat, Card, Code, Chart
   - Overlay: Modal
 
 **Renderer**

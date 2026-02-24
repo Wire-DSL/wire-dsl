@@ -31,8 +31,8 @@ project "Component Composition Demo" {
     }
   }
 
-  define Component "StatCardBadge" {
-    component StatCard title: "Total Users" value: "2,543"
+  define Component "StatBadge" {
+    component Stat title: "Total Users" value: "2,543"
   }
 
   // Use the defined components
@@ -77,10 +77,10 @@ project "Component Composition Demo" {
       component Topbar title: "Dashboard"
 
       layout grid(columns: 12, gap: md) {
-        // Reuse StatCardBadge multiple times
-        cell span: 4 { component StatCardBadge }
-        cell span: 4 { component StatCardBadge }
-        cell span: 4 { component StatCardBadge }
+        // Reuse StatBadge multiple times
+        cell span: 4 { component StatBadge }
+        cell span: 4 { component StatBadge }
+        cell span: 4 { component StatBadge }
       }
 
       component Table columns: "Name,Email,Status,Role" rows: 8

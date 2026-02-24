@@ -78,12 +78,12 @@ project "Dashboard" {
     layout grid(columns: 2, gap: md) {
       cell span: 1 {
         layout card(padding: lg, gap: md, radius: md, border: true) {
-          component StatCard title: "Q4 Revenue" value: "$2.5M"
+          component Stat title: "Q4 Revenue" value: "$2.5M"
         }
       }
       cell span: 1 {
         layout card(padding: lg, gap: md, radius: md, border: true) {
-          component StatCard title: "Active Users" value: "1.2K"
+          component Stat title: "Active Users" value: "1.2K"
         }
       }
     }
