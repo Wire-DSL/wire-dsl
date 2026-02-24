@@ -135,7 +135,7 @@ project "Hello" {
 | **Data** | Table, List |
 | **Media** | Image, Icon |
 | **Display** | Divider, Separate, Badge, Link, Alert |
-| **Information** | StatCard, Card, Code, Chart |
+| **Information** | Stat, Card, Code, Chart |
 | **Modal & Overlay** | Modal |
 
 ---
@@ -155,7 +155,7 @@ project "Hello" {
 ### 📊 Dashboards
 ```wire
 layout grid(columns: 12, gap: lg) {
-  cell span: 4 { component StatCard title: "Users" value: "1,234" }
+  cell span: 4 { component Stat title: "Users" value: "1,234" }
   cell span: 8 { component Table columns: "ID,Name,Status" rows: 5 }
 }
 ```

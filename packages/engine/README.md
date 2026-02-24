@@ -92,7 +92,7 @@ validateIR(ir); // Throws if invalid
 
 **Display**: Divider, Badge, Link, Alert
 
-**Info**: StatCard, Code, ChartPlaceholder
+**Info**: Stat, Code, ChartPlaceholder
 
 **Feedback**: Modal, Spinner
 

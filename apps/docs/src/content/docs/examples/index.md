@@ -90,8 +90,8 @@ layout split(sidebar: 260, gap: md) {
   
   layout stack(gap: md, padding: lg) {
     layout grid(columns: 12, gap: md) {
-      cell span: 3 { component StatCard ... }
-      cell span: 3 { component StatCard ... }
+      cell span: 3 { component Stat ... }
+      cell span: 3 { component Stat ... }
     }
     
     component Table columns: "..." rows: 10

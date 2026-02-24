@@ -127,7 +127,7 @@ project "App" {
 You can override any of them in `colors`.
 
 **Semantic keys**:
-- `accent`: used by `Topbar` icon/actions, active `Tabs`, `StatCard` highlighted value/icon, selected `SidebarMenu` item
+- `accent`: used by `Topbar` icon/actions, active `Tabs`, `Stat` highlighted value/icon, selected `SidebarMenu` item
 - `control`: used by selected/enabled states in `Checkbox`, `Radio`, `Toggle`
 - `chart`: used by `Chart` types `line`, `area`, and `bar`
 - `text`: default text color fallback (`#000000` light, `#FFFFFF` dark)

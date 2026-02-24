@@ -88,7 +88,7 @@ layout stack(direction: horizontal, gap: 8) {
 ## Available Icons (287)
 
 Wire-DSL currently bundles **287 icons** from **Feather Icons v4.29.0**.
-These names are valid for `Icon.type`, `IconButton.icon`, `Topbar.icon`, `Image icon` (when `placeholder: "icon"`), and `StatCard.icon`.
+These names are valid for `Icon.type`, `IconButton.icon`, `Topbar.icon`, `Image icon` (when `placeholder: "icon"`), and `Stat.icon`.
 
 In `@wire-dsl/language-support`, the same catalog is exposed as:
 - `ICON_NAMES` (typed list)

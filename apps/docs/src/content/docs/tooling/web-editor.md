@@ -70,10 +70,10 @@ project "My Wireframe" {
       
       layout grid(columns: 12, gap: md) {
         cell span: 6 {
-          component StatCard title: "Users" value: "1,234"
+          component Stat title: "Users" value: "1,234"
         }
         cell span: 6 {
-          component StatCard title: "Revenue" value: "$12.5K"
+          component Stat title: "Revenue" value: "$12.5K"
         }
       }
     }
