@@ -120,8 +120,8 @@ describe('SourceMap E2E Integration', () => {
       const screen = resolver.getNodeById('screen-0');
       expect(screen).toBeDefined();
 
-      const statCards = resolver.getNodesByType('component', 'Stat');
-      expect(statCards.length).toBe(4);
+      const stats = resolver.getNodesByType('component', 'Stat');
+      expect(stats.length).toBe(4);
 
       const table = resolver.getNodesByType('component', 'Table');
       expect(table.length).toBe(1);

@@ -16,20 +16,20 @@ import type {
  * Converts .wire files to AST using Chevrotain
  *
  * Supported layout types: stack, grid, split, panel, card
- * Component example: StatCard, Image, Button, Heading, Text, etc.
+ * Component example: Stat, Image, Button, Heading, Text, etc.
  *
  * Example:
  * ```
  * project "Dashboard" {
  *   screen Main {
  *     layout grid(columns: 3) {
- *       component StatCard
+ *       component Stat
  *         title: "Revenue"
  *         value: "45,230"
  *         padding: lg
  *         gap: md
  *       
- *       component StatCard
+ *       component Stat
  *         title: "Users"
  *         value: "1,234"
  *     }

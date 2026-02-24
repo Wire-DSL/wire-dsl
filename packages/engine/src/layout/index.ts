@@ -1015,7 +1015,7 @@ export class LayoutEngine {
     if (node.componentType === 'Textarea') return 100 + controlLabelOffset;
     if (node.componentType === 'Modal') return 300;
     if (node.componentType === 'Card') return 120;
-    if (node.componentType === 'StatCard') return 120;
+    if (node.componentType === 'Stat') return 120;
     if (node.componentType === 'Chart' || node.componentType === 'ChartPlaceholder') return 250;
     if (node.componentType === 'List') {
       const itemsFromProps = String(node.props.items || '')
@@ -1143,8 +1143,8 @@ export class LayoutEngine {
       return 400;
     }
 
-    // StatCard, Card: fixed width
-    if (node.componentType === 'StatCard' || node.componentType === 'Card') {
+    // Stat, Card: fixed width
+    if (node.componentType === 'Stat' || node.componentType === 'Card') {
       return 280;
     }
 

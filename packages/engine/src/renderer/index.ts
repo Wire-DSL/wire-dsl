@@ -1875,7 +1875,7 @@ export class SVGRenderer {
     const innerY = pos.y + padding;
     const innerWidth = pos.width - padding * 2;
 
-    // StatCard layout: vertically center title/value/caption block (icon stays fixed).
+    // Stat layout: vertically center title/value/caption block (icon stays fixed).
     const valueSize = 32;
     const titleSize = 14;
     const captionSize = 12;
