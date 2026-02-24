@@ -197,7 +197,7 @@ describe('SourceMap Config Support', () => {
         }
         screen Analytics {
           layout stack {
-            component StatCard title: "Users" value: "1234"
+            component Stat title: "Users" value: "1234"
           }
         }
       }

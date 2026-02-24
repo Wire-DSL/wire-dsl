@@ -26,7 +26,7 @@ Explore complete, working Wire-DSL examples. All examples are available in the `
 
 ### Components
 
-- **[Card & StatCard Demo](../../examples/card-and-stat-card-demo.wire)** - Card container examples
+- **[Card & Stat Demo](../../examples/card-and-stat-card-demo.wire)** - Card container examples
 - **[Component Composition Demo](../../examples/component-composition-demo.wire)** - Custom component usage
 - **[Components Catalog](../../examples/components-catalog.wire)** - All components displayed
 - **[Icon Demo](../../examples/icon-demo-simple.wire)** - Icon and IconButton examples

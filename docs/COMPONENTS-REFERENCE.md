@@ -95,8 +95,7 @@ Single-line text input field.
 - `placeholder` (string): Placeholder text
 - `iconLeft` (string, optional): Icon name rendered on the left side of the field (e.g., `"search"`, `"mail"`)
 - `iconRight` (string, optional): Icon name rendered on the right side of the field (e.g., `"eye"`, `"x"`)
-
-> Both `iconLeft` and `iconRight` can be active simultaneously.
+- `disabled` (boolean, optional): Visually dims the field to indicate it is non-interactive (default: `false`)
 
 **Example**:
 ```wire
@@ -137,6 +136,7 @@ Dropdown selection field.
 - `items` (string, CSV): Comma-separated list of options
 - `iconLeft` (string, optional): Icon name rendered on the left side of the field
 - `iconRight` (string, optional): Icon name rendered to the left of the chevron, on the right side
+- `disabled` (boolean, optional): Visually dims the field to indicate it is non-interactive (default: `false`)
 
 > Both `iconLeft` and `iconRight` can be active simultaneously.
 
@@ -159,6 +159,7 @@ Boolean checkbox input.
 **Properties**:
 - `label` (string): Checkbox label
 - `checked` (boolean, optional): Whether checkbox is checked (default: false)
+- `disabled` (boolean, optional): Visually dims the checkbox (default: false)
 
 **Example**:
 ```wire
@@ -178,6 +179,7 @@ Single-select radio button (typically used in groups).
 **Properties**:
 - `label` (string): Radio button label
 - `checked` (boolean, optional): Whether radio is selected (default: false)
+- `disabled` (boolean, optional): Visually dims the radio button (default: false)
 
 **Example**:
 ```wire
@@ -197,6 +199,7 @@ Boolean toggle switch.
 **Properties**:
 - `label` (string): Toggle label
 - `enabled` (boolean, optional): Whether toggle is enabled (default: false)
+- `disabled` (boolean, optional): Visually dims the toggle (default: false)
 
 **Example**:
 ```wire
@@ -220,6 +223,7 @@ Clickable action button.
 - `variant` (string): Visual style - `default` | `primary` | `secondary` | `success` | `warning` | `danger` | `info` (default: `default`)
 - `icon` (string, optional): Icon name to render alongside the text (e.g., `"check"`, `"trash"`, `"plus"`)
 - `iconAlign` (string, optional): Icon placement - `left` | `right` (default: `left`)
+- `disabled` (boolean, optional): Visually dims the button (default: `false`)
 
 **Variants**:
 - `default`: Neutral button style
@@ -560,24 +564,25 @@ component Alert variant: "info" title: "Info" text: "New updates available"
 
 ## Information Display
 
-### StatCard
+### Stat
 
-Statistics card displaying metric and value.
+Statistics card displaying a metric and value.
 
 **Properties**:
 - `title` (string): Metric label/title
 - `value` (string): Metric value to display
 - `caption` (string, optional): Secondary text shown below value
 - `icon` (string, optional): Icon name rendered in the top-right badge
+- `variant` (enum, optional): Color accent for the value — `default`, `primary`, `secondary`, `success`, `warning`, `danger`, `info`
 
 **Example**:
 ```wire
-component StatCard title: "Total Users" value: "1,234"
-component StatCard title: "Revenue" value: "$45,678" caption: "vs last month"
-component StatCard title: "Growth" value: "+12.5%" icon: "trending-up"
+component Stat title: "Total Users" value: "1,234"
+component Stat title: "Revenue" value: "$45,678" caption: "vs last month"
+component Stat title: "Growth" value: "+12.5%" icon: "trending-up" variant: success
 ```
 
-**Rendering**: Card with large value and small label below
+**Rendering**: Card with large value text, optional icon badge top-right, and optional caption
 
 ---
 
@@ -687,7 +692,7 @@ component Modal title: "Delete User" visible: false
 | Badge | Display | Status label |
 | Link | Display | Underlined action |
 | Alert | Display | Alert message |
-| StatCard | Info | Metric display |
+| Stat | Info | Metric display |
 | Card | Info | Generic content card |
 | Code | Info | Code block |
 | Chart | Info | Chart area |

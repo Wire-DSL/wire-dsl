@@ -355,32 +355,32 @@ project "Wire-DSL Complete Components Catalog" {
 
         layout grid(columns: 4, gap: md) {
           cell span: 1 {
-            component StatCard
+            component Stat
               title: "Total Users"
               value: "12,345"
               caption: "Active in last 30 days"
               icon: "user"
           }
           cell span: 1 {
-            component StatCard title: "Revenue (MTD)" value: "$89,012"
+            component Stat title: "Revenue (MTD)" value: "$89,012"
           }
           cell span: 1 {
-            component StatCard title: "Growth Rate" value: "+23.5%"
+            component Stat title: "Growth Rate" value: "+23.5%"
           }
           cell span: 1 {
-            component StatCard title: "Active Sessions" value: "4,567"
+            component Stat title: "Active Sessions" value: "4,567"
           }
         }
 
         layout grid(columns: 3, gap: md) {
           cell span: 1 {
-            component StatCard title: "Total Downloads" value: "1.2M"
+            component Stat title: "Total Downloads" value: "1.2M"
           }
           cell span: 1 {
-            component StatCard title: "Average Rating" value: "4.8/5.0"
+            component Stat title: "Average Rating" value: "4.8/5.0"
           }
           cell span: 1 {
-            component StatCard title: "System Uptime" value: "99.9%"
+            component Stat title: "System Uptime" value: "99.9%"
           }
         }
 
@@ -536,39 +536,39 @@ project "Wire-DSL Complete Components Catalog" {
         component Label text: "Grid: 2 Columns Equal Width"
         layout grid(columns: 2, gap: md) {
           cell span: 1 {
-            component StatCard title: "Column 1" value: "50%"
+            component Stat title: "Column 1" value: "50%"
           }
           cell span: 1 {
-            component StatCard title: "Column 2" value: "50%"
+            component Stat title: "Column 2" value: "50%"
           }
         }
 
         component Label text: "Grid: 3 Columns Equal Width"
         layout grid(columns: 3, gap: md) {
           cell span: 1 {
-            component StatCard title: "Col 1" value: "33.3%"
+            component Stat title: "Col 1" value: "33.3%"
           }
           cell span: 1 {
-            component StatCard title: "Col 2" value: "33.3%"
+            component Stat title: "Col 2" value: "33.3%"
           }
           cell span: 1 {
-            component StatCard title: "Col 3" value: "33.3%"
+            component Stat title: "Col 3" value: "33.3%"
           }
         }
 
         component Label text: "Grid: 4 Columns Equal Width"
         layout grid(columns: 4, gap: md) {
           cell span: 1 {
-            component StatCard title: "A" value: "25%"
+            component Stat title: "A" value: "25%"
           }
           cell span: 1 {
-            component StatCard title: "B" value: "25%"
+            component Stat title: "B" value: "25%"
           }
           cell span: 1 {
-            component StatCard title: "C" value: "25%"
+            component Stat title: "C" value: "25%"
           }
           cell span: 1 {
-            component StatCard title: "D" value: "25%"
+            component Stat title: "D" value: "25%"
           }
         }
 
@@ -703,16 +703,16 @@ project "Wire-DSL Complete Components Catalog" {
 
             layout grid(columns: 4, gap: md) {
               cell span: 1 {
-                component StatCard title: "Total Users" value: "1,234"
+                component Stat title: "Total Users" value: "1,234"
               }
               cell span: 1 {
-                component StatCard title: "Revenue" value: "$45,678"
+                component Stat title: "Revenue" value: "$45,678"
               }
               cell span: 1 {
-                component StatCard title: "Orders" value: "567"
+                component Stat title: "Orders" value: "567"
               }
               cell span: 1 {
-                component StatCard title: "Growth" value: "+12.3%"
+                component Stat title: "Growth" value: "+12.3%"
               }
             }
 

@@ -97,10 +97,10 @@ describe('SourceMap E2E Integration', () => {
                 component Heading text: "Analytics Dashboard"
                 
                 layout grid(columns: 12, gap: md) {
-                  component StatCard title: "Users" value: "1,234" span: 3
-                  component StatCard title: "Revenue" value: "$12.3K" span: 3
-                  component StatCard title: "Active" value: "89%" span: 3
-                  component StatCard title: "Growth" value: "+12%" span: 3
+                  component Stat title: "Users" value: "1,234" span: 3
+                  component Stat title: "Revenue" value: "$12.3K" span: 3
+                  component Stat title: "Active" value: "89%" span: 3
+                  component Stat title: "Growth" value: "+12%" span: 3
                 }
                 
                 component Table columns: "Name,Status,Date" rows: 8
@@ -120,7 +120,7 @@ describe('SourceMap E2E Integration', () => {
       const screen = resolver.getNodeById('screen-0');
       expect(screen).toBeDefined();
 
-      const statCards = resolver.getNodesByType('component', 'StatCard');
+      const statCards = resolver.getNodesByType('component', 'Stat');
       expect(statCards.length).toBe(4);
 
       const table = resolver.getNodesByType('component', 'Table');
@@ -349,7 +349,7 @@ describe('SourceMap E2E Integration', () => {
               }
               component Divider
               layout card(padding: md) {
-                component StatCard title: "Stats" value: "100"
+                component Stat title: "Stats" value: "100"
               }
             }
           }

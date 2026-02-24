@@ -1,4 +1,4 @@
-project "Card & StatCard Demo" {
+project "Card & Stat Demo" {
   style {
     spacing: "md"
     density: "normal"
@@ -15,42 +15,42 @@ project "Card & StatCard Demo" {
         cell span: 2 {
           layout card(padding: md, gap: sm) {
             component Heading text: "Revenue"
-            component StatCard title: "Last 30 days" value: "45,230"
+            component Stat title: "Last 30 days" value: "45,230"
           }
         }
 
         cell span: 2 {
           layout card(padding: md, gap: sm) {
             component Heading text: "Active Users"
-            component StatCard title: "Total registered" value: "1,234"
+            component Stat title: "Total registered" value: "1,234"
           }
         }
 
         cell span: 2 {
           layout card(padding: md, gap: sm) {
             component Heading text: "Conversion"
-            component StatCard title: "This month" value: "8.2%"
+            component Stat title: "This month" value: "8.2%"
           }
         }
 
         cell span: 2 {
           layout card(padding: md, gap: sm) {
             component Heading text: "Growth Rate"
-            component StatCard title: "Month over month" value: "23.5%"
+            component Stat title: "Month over month" value: "23.5%"
           }
         }
 
         cell span: 2 {
           layout card(padding: md, gap: sm) {
             component Heading text: "New Leads"
-            component StatCard title: "This week" value: "142"
+            component Stat title: "This week" value: "142"
           }
         }
 
         cell span: 2 {
           layout card(padding: md, gap: sm) {
             component Heading text: "Avg Order"
-            component StatCard title: "Last quarter" value: "$1,825"
+            component Stat title: "Last quarter" value: "$1,825"
           }
         }
       }

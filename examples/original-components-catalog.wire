@@ -325,9 +325,9 @@ project "Complete Components Catalog" {
       component Text text: "Components for displaying metrics and information"
 
       layout stack(direction: horizontal, gap: md, padding: md) {
-        component StatCard title: "Total Users" value: "2,543"
-        component StatCard title: "Revenue" value: "$125,680"
-        component StatCard title: "Growth" value: "+23.5%"
+        component Stat title: "Total Users" value: "2,543"
+        component Stat title: "Revenue" value: "$125,680"
+        component Stat title: "Growth" value: "+23.5%"
       }
 
       layout stack(direction: vertical, gap: sm, padding: md) {
