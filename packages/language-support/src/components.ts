@@ -88,6 +88,12 @@ const headingSpacingEnum: PropertyMetadata = {
   type: 'enum',
   options: spacingEnum.options,
 };
+const disabledProp: PropertyMetadata = {
+  name: 'disabled',
+  type: 'boolean',
+  description: 'Visually dims the component to indicate it is non-interactive.',
+  defaultValue: false,
+};
 const imagePlaceholderEnum: PropertyMetadata = {
   name: 'placeholder',
   type: 'enum',
@@ -139,6 +145,7 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
       labelSpace: { name: 'labelSpace', type: 'boolean' },
       padding: controlPaddingEnum,
       block: { name: 'block', type: 'boolean' },
+      disabled: disabledProp,
     },
     example: 'component Button text: "Confirm" variant: primary icon: "check" iconAlign: left',
   },
@@ -163,6 +170,7 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
       size: controlSizeEnum,
       iconLeft: { ...iconNameEnum, name: 'iconLeft' },
       iconRight: { ...iconNameEnum, name: 'iconRight' },
+      disabled: disabledProp,
     },
     example: 'component Input label: "Search" placeholder: "Type..." iconLeft: "search"',
   },
@@ -188,6 +196,7 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
       size: controlSizeEnum,
       iconLeft: { ...iconNameEnum, name: 'iconLeft' },
       iconRight: { ...iconNameEnum, name: 'iconRight' },
+      disabled: disabledProp,
     },
     example: 'component Select label: "Country" iconLeft: "globe" items: "Spain,France,Germany"',
   },
@@ -198,6 +207,7 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     properties: {
       label: { name: 'label', type: 'string', required: true },
       checked: { name: 'checked', type: 'boolean' },
+      disabled: disabledProp,
     },
     example: 'component Checkbox label: "I agree" checked: true',
   },
@@ -208,6 +218,7 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     properties: {
       label: { name: 'label', type: 'string', required: true },
       checked: { name: 'checked', type: 'boolean' },
+      disabled: disabledProp,
     },
     example: 'component Radio label: "Option A" checked: true',
   },
@@ -218,6 +229,7 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     properties: {
       label: { name: 'label', type: 'string', required: true },
       enabled: { name: 'enabled', type: 'boolean' },
+      disabled: disabledProp,
     },
     example: 'component Toggle label: "Dark mode" enabled: true',
   },
@@ -319,17 +331,18 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     },
     example: 'component List title: "Cities" itemsMock: 6 mock: "city"',
   },
-  StatCard: {
-    name: 'StatCard',
-    description: 'Metric card with optional caption and icon.',
+  Stat: {
+    name: 'Stat',
+    description: 'Metric card with optional caption, icon, and variant color.',
     category: 'Data',
     properties: {
       title: { name: 'title', type: 'string', required: true },
       value: { name: 'value', type: 'string', required: true },
       caption: { name: 'caption', type: 'string' },
       icon: iconNameEnum,
+      variant: variantWithDefaultEnum,
     },
-    example: 'component StatCard title: "Users" value: "1,234" icon: "users"',
+    example: 'component Stat title: "Users" value: "1,234" icon: "users" variant: primary',
   },
   Card: {
     name: 'Card',

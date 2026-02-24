@@ -41,7 +41,7 @@ Complete catalog of all component types with:
 - **Data Display**: Table, List
 - **Media**: Image, Icon
 - **Display Elements**: Divider, Separate, Badge, Link, Alert
-- **Information**: StatCard, Card, Code, Chart
+- **Information**: Stat, Card, Code, Chart
 - **Overlay**: Modal
 
 Each component includes:
@@ -156,7 +156,7 @@ Project
 | **Media** | Image, Icon | Visual content |
 | **Display** | Divider, Separate, Badge, Link, Alert | Visual elements |
 | **Overlay** | Modal | Dialog overlays |
-| **Info** | StatCard, Card, Code, Chart | Information placeholders |
+| **Info** | Stat, Card, Code, Chart | Information placeholders |
 
 ### Total: 30 Components
 

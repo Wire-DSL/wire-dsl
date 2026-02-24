@@ -44,7 +44,7 @@ This roadmap describes the development phases of Wire-DSL from MVP through advan
   - Data: Table, List
   - Media: Image, Icon
   - Display: Divider, Separate, Badge, Link, Alert
-  - Info: StatCard, Card, Code, Chart
+  - Info: Stat, Card, Code, Chart
   - Overlay: Modal
 
 #### 1.5 Renderer ✅

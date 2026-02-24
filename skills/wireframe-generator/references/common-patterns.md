@@ -188,16 +188,16 @@ project "Admin Dashboard" {
         // Stats Grid
         layout grid(columns: 12, gap: md) {
           cell span: 3 {
-            component StatCard title: "Total Users" value: "2,543"
+            component Stat title: "Total Users" value: "2,543"
           }
           cell span: 3 {
-            component StatCard title: "Revenue" value: "$45,230"
+            component Stat title: "Revenue" value: "$45,230"
           }
           cell span: 3 {
-            component StatCard title: "Active Orders" value: "892"
+            component Stat title: "Active Orders" value: "892"
           }
           cell span: 3 {
-            component StatCard title: "Growth" value: "+12.5%"
+            component Stat title: "Growth" value: "+12.5%"
           }
         }
 
@@ -259,28 +259,28 @@ project "Metrics Dashboard" {
         cell span: 3 {
           layout card(padding: lg, gap: sm) {
             component Icon name: "users"
-            component StatCard title: "Active Users" value: "1,234"
+            component Stat title: "Active Users" value: "1,234"
             component Badge text: "+15% vs last week" variant: success
           }
         }
         cell span: 3 {
           layout card(padding: lg, gap: sm) {
             component Icon name: "dollar-sign"
-            component StatCard title: "Revenue" value: "$45,230"
+            component Stat title: "Revenue" value: "$45,230"
             component Badge text: "+8% vs last week" variant: success
           }
         }
         cell span: 3 {
           layout card(padding: lg, gap: sm) {
             component Icon name: "shopping-cart"
-            component StatCard title: "Orders" value: "892"
+            component Stat title: "Orders" value: "892"
             component Badge text: "-3% vs last week" variant: warning
           }
         }
         cell span: 3 {
           layout card(padding: lg, gap: sm) {
             component Icon name: "trending-up"
-            component StatCard title: "Conversion" value: "3.2%"
+            component Stat title: "Conversion" value: "3.2%"
             component Badge text: "+0.5% vs last week" variant: success
           }
         }
@@ -443,7 +443,7 @@ project "Product Detail" {
             component Heading text: "Premium Wireless Headphones"
             component Badge text: "In Stock" variant: success
 
-            component StatCard title: "Price" value: "$129.99"
+            component Stat title: "Price" value: "$129.99"
 
             component Text content: "Experience superior sound quality with our premium wireless headphones featuring active noise cancellation and 30-hour battery life."
 
@@ -552,9 +552,9 @@ project "User Profile" {
           layout stack(direction: vertical, gap: md) {
             layout card(padding: md, gap: sm) {
               component Heading text: "Stats"
-              component StatCard title: "Projects" value: "47"
-              component StatCard title: "Contributions" value: "1,234"
-              component StatCard title: "Followers" value: "892"
+              component Stat title: "Projects" value: "47"
+              component Stat title: "Contributions" value: "1,234"
+              component Stat title: "Followers" value: "892"
             }
 
             layout card(padding: md, gap: sm) {

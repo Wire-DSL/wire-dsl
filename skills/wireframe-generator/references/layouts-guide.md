@@ -213,16 +213,16 @@ layout grid(columns: 12, gap: lg) {
 ```wire
 layout grid(columns: 12, gap: md) {
   cell span: 3 {
-    component StatCard title: "Total Users" value: "2,543"
+    component Stat title: "Total Users" value: "2,543"
   }
   cell span: 3 {
-    component StatCard title: "Revenue" value: "$45,230"
+    component Stat title: "Revenue" value: "$45,230"
   }
   cell span: 3 {
-    component StatCard title: "Active" value: "892"
+    component Stat title: "Active" value: "892"
   }
   cell span: 3 {
-    component StatCard title: "Growth" value: "+12.5%"
+    component Stat title: "Growth" value: "+12.5%"
   }
 }
 ```
@@ -335,16 +335,16 @@ layout split(sidebar: 240, gap: md) {
 
     layout grid(columns: 12, gap: md) {
       cell span: 3 {
-        component StatCard title: "Users" value: "1,234"
+        component Stat title: "Users" value: "1,234"
       }
       cell span: 3 {
-        component StatCard title: "Revenue" value: "$45K"
+        component Stat title: "Revenue" value: "$45K"
       }
       cell span: 3 {
-        component StatCard title: "Orders" value: "892"
+        component Stat title: "Orders" value: "892"
       }
       cell span: 3 {
-        component StatCard title: "Growth" value: "+12%"
+        component Stat title: "Growth" value: "+12%"
       }
     }
 
@@ -520,7 +520,7 @@ layout card(padding: lg, gap: sm, radius: md, border: true) {
 layout card(padding: xl, gap: lg, radius: lg, border: true) {
   component Badge text: "Popular" variant: primary
   component Heading text: "Pro Plan"
-  component StatCard title: "Price" value: "$29/month"
+  component Stat title: "Price" value: "$29/month"
   component Divider
   layout stack(direction: vertical, gap: xs) {
     component Text content: "✓ Unlimited projects"
@@ -563,10 +563,10 @@ layout stack(direction: vertical, gap: xl, padding: lg) {
 
   layout grid(columns: 12, gap: md) {
     cell span: 3 {
-      component StatCard title: "Metric 1" value: "100"
+      component Stat title: "Metric 1" value: "100"
     }
     cell span: 3 {
-      component StatCard title: "Metric 2" value: "200"
+      component Stat title: "Metric 2" value: "200"
     }
   }
 

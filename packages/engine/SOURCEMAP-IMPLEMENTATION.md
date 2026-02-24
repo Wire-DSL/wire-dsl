@@ -49,7 +49,7 @@ Complete implementation of bidirectional code↔canvas selection for Wire DSL En
 **Component Coverage:**
 - ✅ Button, Input, Heading, Text, Label
 - ✅ Code, Textarea, Select, Checkbox, Radio, Toggle
-- ✅ Alert, Badge, Modal, List, StatCard
+- ✅ Alert, Badge, Modal, List, Stat
 - ✅ Icon, IconButton, Image, Divider, Topbar
 - ✅ Table, Breadcrumbs, ChartPlaceholder
 

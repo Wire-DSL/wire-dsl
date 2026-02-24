@@ -505,12 +505,12 @@ screen SettingsPage { }
 ```wire
 screen Dashboard {
   layout stack {
-    component StatCard title: "Users" value: "100"
+    component Stat title: "Users" value: "100"
   }
 }
 screen Analytics {
   layout stack {
-    component StatCard title: "Revenue" value: "$5K"
+    component Stat title: "Revenue" value: "$5K"
   }
 }
 ```
@@ -536,10 +536,10 @@ screen Dashboard {
 
     layout grid(columns: 12, gap: md) {
       cell span: 3 {
-        component StatCard title: "Users" value: "100"
+        component Stat title: "Users" value: "100"
       }
       cell span: 3 {
-        component StatCard title: "Revenue" value: "$5K"
+        component Stat title: "Revenue" value: "$5K"
       }
     }
 
@@ -601,16 +601,16 @@ layout stack(direction: vertical, gap: md, padding: lg) {
 ```wire
 layout grid(columns: 12, gap: md) {
   cell span: 3 {
-    component StatCard title: "Users" value: "2,543"
+    component Stat title: "Users" value: "2,543"
   }
   cell span: 3 {
-    component StatCard title: "Revenue" value: "$45K"
+    component Stat title: "Revenue" value: "$45K"
   }
   cell span: 3 {
-    component StatCard title: "Orders" value: "892"
+    component Stat title: "Orders" value: "892"
   }
   cell span: 3 {
-    component StatCard title: "Growth" value: "+12%"
+    component Stat title: "Growth" value: "+12%"
   }
 }
 ```

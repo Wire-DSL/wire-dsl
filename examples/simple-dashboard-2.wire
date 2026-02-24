@@ -15,25 +15,25 @@ project "Simple Dashboard" {
         cell span: 3 {
           layout card(padding: md, gap: md) {
             component Heading text: "Total Users"
-            component StatCard title: "Count" value: "2,543"
+            component Stat title: "Count" value: "2,543"
           }
         }
         cell span: 3 {
           layout card(padding: md, gap: md) {
             component Heading text: "Active Sessions"
-            component StatCard title: "Active" value: "856"
+            component Stat title: "Active" value: "856"
           }
         }
         cell span: 3 {
           layout card(padding: md, gap: md) {
             component Heading text: "Revenue"
-            component StatCard title: "Total" value: "$45.2K"
+            component Stat title: "Total" value: "$45.2K"
           }
         }
         cell span: 3 {
           layout card(padding: md, gap: md) {
             component Heading text: "Growth"
-            component StatCard title: "This month" value: "+12%"
+            component Stat title: "This month" value: "+12%"
           }
         }
       }

@@ -995,13 +995,13 @@ describe('Layout Engine', () => {
             
             layout grid(columns: 3, gap: lg) {
               cell span: 1 {
-                component StatCard title: "Total Users" value: "2,543" color: "#3B82F6"
+                component Stat title: "Total Users" value: "2,543" color: "#3B82F6"
               }
               cell span: 1 {
-                component StatCard title: "Revenue" value: "$45.2K" color: "#10B981"
+                component Stat title: "Revenue" value: "$45.2K" color: "#10B981"
               }
               cell span: 1 {
-                component StatCard title: "Active Sessions" value: "856" color: "#F59E0B"
+                component Stat title: "Active Sessions" value: "856" color: "#F59E0B"
               }
             }
             
@@ -1015,10 +1015,10 @@ describe('Layout Engine', () => {
     const ir = generateIR(ast);
     const layout = calculateLayout(ir);
 
-    const statCards = Object.entries(ir.project.nodes)
-      .filter(([_, n]) => n.kind === 'component' && n.componentType === 'StatCard');
+    const stats = Object.entries(ir.project.nodes)
+      .filter(([_, n]) => n.kind === 'component' && n.componentType === 'Stat');
 
-    expect(statCards).toHaveLength(3);
+    expect(stats).toHaveLength(3);
 
     const positions = Object.values(layout);
     expect(positions.length).toBeGreaterThan(5);

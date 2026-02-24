@@ -660,10 +660,10 @@ Defines dimensions flexibly.
 
 ### Information Components (3)
 
-**StatCard**
+**Stat**
 ```json
 {
-  "componentType": "StatCard",
+  "componentType": "Stat",
   "props": {
     "label": "Total Users",
     "value": "1,234"

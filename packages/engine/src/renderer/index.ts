@@ -360,8 +360,8 @@ export class SVGRenderer {
         return this.renderModal(node, pos);
       case 'List':
         return this.renderList(node, pos);
-      case 'StatCard':
-        return this.renderStatCard(node, pos);
+      case 'Stat':
+        return this.renderStat(node, pos);
       case 'Image':
         return this.renderImage(node, pos);
 
@@ -419,6 +419,7 @@ export class SVGRenderer {
     const text = String(node.props.text || 'Button');
     const variant = String(node.props.variant || 'default');
     const size = String(node.props.size || 'md');
+    const disabled = this.parseBooleanProp(node.props.disabled, false);
     const density = (this.ir.project.style.density || 'normal') as DensityLevel;
     const extraPadding = resolveControlHorizontalPadding(String(node.props.padding || 'none'), density);
     const labelOffset = this.parseBooleanProp(node.props.labelSpace, false) ? 18 : 0;
@@ -492,7 +493,7 @@ export class SVGRenderer {
       textAnchor = 'middle';
     }
 
-    let svg = `<g${this.getDataNodeId(node)}>
+    let svg = `<g${this.getDataNodeId(node)}${disabled ? ' opacity="0.45"' : ''}>
     <rect x="${pos.x}" y="${buttonY}"
           width="${buttonWidth}" height="${buttonHeight}"
           rx="${radius}"
@@ -565,6 +566,7 @@ export class SVGRenderer {
     const placeholder = String(node.props.placeholder || '');
     const iconLeftName = String(node.props.iconLeft || '').trim();
     const iconRightName = String(node.props.iconRight || '').trim();
+    const disabled = this.parseBooleanProp(node.props.disabled, false);
 
     // Use tokens from density configuration
     const radius = this.tokens.input.radius;
@@ -585,7 +587,7 @@ export class SVGRenderer {
     const iconColor = this.hexToRgba(this.resolveMutedColor(), 0.8);
     const iconCenterY = controlY + (controlHeight - iconSize) / 2;
 
-    let svg = `<g${this.getDataNodeId(node)}>`;
+    let svg = `<g${this.getDataNodeId(node)}${disabled ? ' opacity="0.45"' : ''}>`;
     if (label) {
       svg += `
     <text x="${pos.x + paddingX}" y="${this.getControlLabelBaselineY(pos.y)}"
@@ -1358,6 +1360,7 @@ export class SVGRenderer {
     const placeholder = String(node.props.placeholder || 'Select...');
     const iconLeftName = String(node.props.iconLeft || '').trim();
     const iconRightName = String(node.props.iconRight || '').trim();
+    const disabled = this.parseBooleanProp(node.props.disabled, false);
     const labelOffset = this.getControlLabelOffset(label);
     const controlY = pos.y + labelOffset;
     const controlHeight = Math.max(16, pos.height - labelOffset);
@@ -1373,7 +1376,7 @@ export class SVGRenderer {
     const iconColor = this.hexToRgba(this.resolveMutedColor(), 0.8);
     const iconCenterY = controlY + (controlHeight - iconSize) / 2;
 
-    let svg = `<g${this.getDataNodeId(node)}>`;
+    let svg = `<g${this.getDataNodeId(node)}${disabled ? ' opacity="0.45"' : ''}>`;
     if (label) {
       svg += `
     <text x="${pos.x}" y="${this.getControlLabelBaselineY(pos.y)}"
@@ -1423,12 +1426,13 @@ export class SVGRenderer {
   protected renderCheckbox(node: IRComponentNode, pos: any): string {
     const label = String(node.props.label || 'Checkbox');
     const checked = String(node.props.checked || 'false').toLowerCase() === 'true';
+    const disabled = this.parseBooleanProp(node.props.disabled, false);
     const controlColor = this.resolveControlColor();
 
     const checkboxSize = 18;
     const checkboxY = pos.y + pos.height / 2 - checkboxSize / 2;
 
-    return `<g${this.getDataNodeId(node)}>
+    return `<g${this.getDataNodeId(node)}${disabled ? ' opacity="0.45"' : ''}>
     <rect x="${pos.x}" y="${checkboxY}" 
           width="${checkboxSize}" height="${checkboxSize}" 
           rx="4" 
@@ -1454,12 +1458,13 @@ export class SVGRenderer {
   protected renderRadio(node: IRComponentNode, pos: any): string {
     const label = String(node.props.label || 'Radio');
     const checked = String(node.props.checked || 'false').toLowerCase() === 'true';
+    const disabled = this.parseBooleanProp(node.props.disabled, false);
     const controlColor = this.resolveControlColor();
 
     const radioSize = 16;
     const radioY = pos.y + pos.height / 2 - radioSize / 2;
 
-    return `<g${this.getDataNodeId(node)}>
+    return `<g${this.getDataNodeId(node)}${disabled ? ' opacity="0.45"' : ''}>
     <circle cx="${pos.x + radioSize / 2}" cy="${radioY + radioSize / 2}" 
             r="${radioSize / 2}" 
             fill="${this.renderTheme.cardBg}" 
@@ -1482,13 +1487,14 @@ export class SVGRenderer {
   protected renderToggle(node: IRComponentNode, pos: any): string {
     const label = String(node.props.label || 'Toggle');
     const enabled = String(node.props.enabled || 'false').toLowerCase() === 'true';
+    const disabled = this.parseBooleanProp(node.props.disabled, false);
     const controlColor = this.resolveControlColor();
 
     const toggleWidth = 40;
     const toggleHeight = 20;
     const toggleY = pos.y + pos.height / 2 - toggleHeight / 2;
 
-    return `<g${this.getDataNodeId(node)}>
+    return `<g${this.getDataNodeId(node)}${disabled ? ' opacity="0.45"' : ''}>
     <rect x="${pos.x}" y="${toggleY}" 
           width="${toggleWidth}" height="${toggleHeight}" 
           rx="10" 
@@ -1850,7 +1856,7 @@ export class SVGRenderer {
   </g>`;
   }
 
-  protected renderStatCard(node: IRComponentNode, pos: any): string {
+  protected renderStat(node: IRComponentNode, pos: any): string {
     const title = String(node.props.title || 'Metric');
     const value = String(node.props.value || '0');
     const rawCaption = String(node.props.caption || '');
@@ -1858,14 +1864,18 @@ export class SVGRenderer {
     const hasCaption = caption.trim().length > 0;
     const iconName = String(node.props.icon || '').trim();
     const iconSvg = iconName ? getIcon(iconName) : null;
-    const accentColor = this.resolveAccentColor();
+    const variant = String(node.props.variant || 'default');
+    const baseAccent = this.resolveAccentColor();
+    const accentColor = variant !== 'default'
+      ? this.resolveVariantColor(variant, baseAccent)
+      : baseAccent;
 
     const padding = this.resolveSpacing(node.style.padding) || 16;
     const innerX = pos.x + padding;
     const innerY = pos.y + padding;
     const innerWidth = pos.width - padding * 2;
 
-    // StatCard layout: vertically center title/value/caption block (icon stays fixed).
+    // Stat layout: vertically center title/value/caption block (icon stays fixed).
     const valueSize = 32;
     const titleSize = 14;
     const captionSize = 12;
@@ -1892,7 +1902,7 @@ export class SVGRenderer {
       : '';
 
     let svg = `<g${this.getDataNodeId(node)}>
-    <!-- StatCard Background -->
+    <!-- Stat Background -->
     <rect x="${pos.x}" y="${pos.y}" 
           width="${pos.width}" height="${pos.height}" 
           rx="8" 

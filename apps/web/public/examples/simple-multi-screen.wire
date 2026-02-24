@@ -10,7 +10,7 @@ project "Admin Dashboard Simple" {
   screen Dashboard {
     layout stack(direction: vertical, gap: lg, padding: lg) {
       component Topbar title: "Dashboard" subtitle: "Main view"
-      component StatCard title: "Count" value: "42"
+      component Stat title: "Count" value: "42"
     }
   }
 

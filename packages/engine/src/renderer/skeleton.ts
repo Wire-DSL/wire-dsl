@@ -707,9 +707,9 @@ export class SkeletonSVGRenderer extends SVGRenderer {
   }
 
   /**
-   * Render StatCard with gray blocks instead of values
+   * Render Stat with gray blocks instead of values
    */
-  protected renderStatCard(node: IRComponentNode, pos: any): string {
+  protected renderStat(node: IRComponentNode, pos: any): string {
     const hasIcon = String(node.props.icon || '').trim().length > 0;
     const hasCaption = String(node.props.caption || '').trim().length > 0;
     const iconSize = 20;

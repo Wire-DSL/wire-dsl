@@ -179,16 +179,16 @@ layout grid(columns: 12, gap: md) {
 ```wire
 layout grid(columns: 12, gap: md) {
   cell span: 3 {
-    component StatCard title: "Total Users" value: "1,234"
+    component Stat title: "Total Users" value: "1,234"
   }
   cell span: 3 {
-    component StatCard title: "Active" value: "890"
+    component Stat title: "Active" value: "890"
   }
   cell span: 3 {
-    component StatCard title: "Inactive" value: "344"
+    component Stat title: "Inactive" value: "344"
   }
   cell span: 3 {
-    component StatCard title: "Pending" value: "100"
+    component Stat title: "Pending" value: "100"
   }
 }
 ```
@@ -287,10 +287,10 @@ layout split(sidebar: 260, gap: md) {
     component Heading text: "Dashboard"
     layout grid(columns: 12, gap: md) {
       cell span: 6 {
-        component StatCard title: "Total Users" value: "1,234"
+        component Stat title: "Total Users" value: "1,234"
       }
       cell span: 6 {
-        component StatCard title: "Revenue" value: "$89,012"
+        component Stat title: "Revenue" value: "$89,012"
       }
     }
   }

@@ -488,19 +488,19 @@ describe('WireDSL Parser', () => {
     expect(ast.definedComponents).toHaveLength(3);
   });
 
-  it('should parse StatCard component', () => {
+  it('should parse Stat component', () => {
     const input = `
-      project "StatCards" {
+      project "Stats" {
         screen Dashboard {
           layout grid(columns: 3) {
             cell span: 1 {
-              component StatCard title: "Total Users" value: "2,543"
+              component Stat title: "Total Users" value: "2,543"
             }
             cell span: 1 {
-              component StatCard title: "Revenue" value: "$45.2K"
+              component Stat title: "Revenue" value: "$45.2K"
             }
             cell span: 1 {
-              component StatCard title: "Active" value: "856" color: "#3B82F6"
+              component Stat title: "Active" value: "856" color: "#3B82F6"
             }
           }
         }
@@ -513,12 +513,12 @@ describe('WireDSL Parser', () => {
     
     expect(cell1.type).toBe('cell');
     if (cell1.type === 'cell') {
-      const statCard = cell1.children[0];
-      expect(statCard.type).toBe('component');
-      if (statCard.type === 'component') {
-        expect(statCard.componentType).toBe('StatCard');
-        expect(statCard.props.title).toBe('Total Users');
-        expect(statCard.props.value).toBe('2,543');
+      const stat = cell1.children[0];
+      expect(stat.type).toBe('component');
+      if (stat.type === 'component') {
+        expect(stat.componentType).toBe('Stat');
+        expect(stat.props.title).toBe('Total Users');
+        expect(stat.props.value).toBe('2,543');
       }
     }
   });

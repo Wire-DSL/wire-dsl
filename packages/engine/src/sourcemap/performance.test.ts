@@ -215,10 +215,10 @@ ${components.join('\n')}
                 component Topbar
                 
                 layout grid(columns: 12, gap: md) {
-                  component StatCard title: "Users" value: "1,234" span: 3
-                  component StatCard title: "Revenue" value: "$12.3K" span: 3
-                  component StatCard title: "Active" value: "89%" span: 3
-                  component StatCard title: "Growth" value: "+12%" span: 3
+                  component Stat title: "Users" value: "1,234" span: 3
+                  component Stat title: "Revenue" value: "$12.3K" span: 3
+                  component Stat title: "Active" value: "89%" span: 3
+                  component Stat title: "Growth" value: "+12%" span: 3
                 }
                 
                 layout grid(columns: 12, gap: md) {
