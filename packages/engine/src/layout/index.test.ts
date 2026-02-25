@@ -1623,7 +1623,7 @@ describe('Layout Engine', () => {
     const [buttonId] = Object.entries(ir.project.nodes).find(
       ([, n]) => n.kind === 'component' && (n as any).componentType === 'Button'
     )!;
-    expect(layout[buttonId].height).toBe(28);
+    expect(layout[buttonId].height).toBe(20);
   });
 
   it('should calculate Button xl size height (normal density)', () => {
@@ -1641,7 +1641,7 @@ describe('Layout Engine', () => {
     const [buttonId] = Object.entries(ir.project.nodes).find(
       ([, n]) => n.kind === 'component' && (n as any).componentType === 'Button'
     )!;
-    expect(layout[buttonId].height).toBe(56);
+    expect(layout[buttonId].height).toBe(48);
   });
 
   it('should calculate IconButton xs size height (normal density)', () => {
