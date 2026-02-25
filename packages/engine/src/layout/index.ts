@@ -998,9 +998,12 @@ export class LayoutEngine {
       return Math.max(1, Math.ceil(wrappedHeight + verticalPadding * 2));
     }
 
-    if (node.componentType === 'Text') {
+    if (node.componentType === 'Text' || node.componentType === 'Paragraph') {
       const content = String(node.props.text || '');
-      const { fontSize, lineHeight } = this.getTextMetricsForDensity();
+      const { fontSize: defaultFontSize, lineHeight } = this.getTextMetricsForDensity();
+      const sizeProp = String(node.props.size || '');
+      const textFontSizeMap: Record<string, number> = { xs: 10, sm: 12, lg: 16, xl: 20 };
+      const fontSize = textFontSizeMap[sizeProp] ?? defaultFontSize;
       const lineHeightPx = Math.ceil(fontSize * lineHeight);
       const maxWidth = availableWidth && availableWidth > 0 ? availableWidth : 200;
       const lines = this.wrapTextToLines(content, maxWidth, fontSize);

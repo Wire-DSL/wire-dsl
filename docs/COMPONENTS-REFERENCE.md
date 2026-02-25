@@ -56,14 +56,40 @@ Standard body text for content and descriptions.
 
 **Properties**:
 - `text` (string): The text content
+- `size` (enum, optional): Font size — `xs` | `sm` | `md` | `lg` | `xl` (default: `md`, ~14px)
+- `bold` (boolean, optional): Render text in bold (default: `false`)
+- `italic` (boolean, optional): Render text in italic (default: `false`)
 
 **Example**:
 ```wire
 component Text text: "This is body text"
-component Text text: "User profile information goes here"
+component Text text: "Important notice" bold: true
+component Text text: "Side note" size: sm italic: true
 ```
 
-**Rendering**: Regular text at 14-16px font size
+**Rendering**: Regular text at the specified size, with optional bold and italic styling
+
+---
+
+### Paragraph
+
+Multi-line body text block with alignment control. Suitable for longer prose content.
+
+**Properties**:
+- `text` (string): The text content (may wrap across multiple lines)
+- `align` (enum, optional): Text alignment — `left` | `center` | `right` (default: `left`)
+- `size` (enum, optional): Font size — `xs` | `sm` | `md` | `lg` | `xl` (default: `md`)
+- `bold` (boolean, optional): Render text in bold (default: `false`)
+- `italic` (boolean, optional): Render text in italic (default: `false`)
+
+**Example**:
+```wire
+component Paragraph text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+component Paragraph text: "Centered caption" align: center size: sm
+component Paragraph text: "Quote text" italic: true align: center
+```
+
+**Rendering**: Wrapped text block respecting alignment and font styling options
 
 ---
 
@@ -220,19 +246,16 @@ Clickable action button.
 
 **Properties**:
 - `text` (string): Button label
-- `variant` (string): Visual style - `default` | `primary` | `secondary` | `success` | `warning` | `danger` | `info` (default: `default`)
+- `variant` (string): Visual style (default: `default`). Accepts semantic names or Material Design color families.
 - `icon` (string, optional): Icon name to render alongside the text (e.g., `"check"`, `"trash"`, `"plus"`)
 - `iconAlign` (string, optional): Icon placement - `left` | `right` (default: `left`)
 - `disabled` (boolean, optional): Visually dims the button (default: `false`)
 
-**Variants**:
-- `default`: Neutral button style
-- `primary`: Prominent filled button (usually blue)
-- `secondary`: Neutral action
-- `success`: Positive action
-- `warning`: Caution action
-- `danger`: Destructive action
-- `info`: Informational action
+**Semantic variants**: `default` | `primary` | `secondary` | `success` | `warning` | `danger` | `info`
+
+**Material Design color variants**: `red` | `pink` | `purple` | `deep_purple` | `indigo` | `blue` | `light_blue` | `cyan` | `teal` | `green` | `light_green` | `lime` | `yellow` | `amber` | `orange` | `deep_orange` | `brown` | `grey` | `blue_grey`
+
+You can also specify a specific shade such as `red_400`, `purple_A200`, `teal_700`, etc.
 
 **Example**:
 ```wire

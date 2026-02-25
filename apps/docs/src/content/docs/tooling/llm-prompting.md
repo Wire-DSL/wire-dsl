@@ -95,12 +95,13 @@ border: false
 
 ---
 
-## The 30 Components
+## The 22 Components
 
-### Text (3)
+### Text (4)
 ```wire
 component Heading text: "Title"
-component Text content: "Body text"
+component Text text: "Body text" size: md bold: false italic: false
+component Paragraph text: "Longer body text" align: left size: md
 component Label text: "Field label"
 ```
 

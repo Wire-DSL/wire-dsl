@@ -61,15 +61,41 @@ component Heading text: "Brand Title" variant: primary
 Standard body text for content and descriptions.
 
 **Properties**:
-- `content` (string): The text content
+- `text` (string): The text content
+- `size` (enum, optional): Font size — `xs` | `sm` | `md` | `lg` | `xl` (default: `md`, ~14px)
+- `bold` (boolean, optional): Render text in bold (default: `false`)
+- `italic` (boolean, optional): Render text in italic (default: `false`)
 
 **Example**:
 ```wire
-component Text content: "This is body text"
-component Text content: "User profile information goes here"
+component Text text: "This is body text"
+component Text text: "Important notice" bold: true
+component Text text: "Side note" size: sm italic: true
 ```
 
-**Rendering**: Regular text at 14-16px font size
+**Rendering**: Regular text at the specified size, with optional bold and italic styling
+
+---
+
+### Paragraph
+
+Multi-line body text block with alignment control. Suitable for longer prose content.
+
+**Properties**:
+- `text` (string): The text content (may wrap across multiple lines)
+- `align` (enum, optional): Text alignment — `left` | `center` | `right` (default: `left`)
+- `size` (enum, optional): Font size — `xs` | `sm` | `md` | `lg` | `xl` (default: `md`)
+- `bold` (boolean, optional): Render text in bold (default: `false`)
+- `italic` (boolean, optional): Render text in italic (default: `false`)
+
+**Example**:
+```wire
+component Paragraph text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+component Paragraph text: "Centered caption" align: center size: sm
+component Paragraph text: "Quote text" italic: true align: center
+```
+
+**Rendering**: Wrapped text block respecting alignment and font styling options
 
 ---
 

@@ -43,6 +43,7 @@ export type ComponentCategory =
 
 // Reusable Enum Definitions
 const sizeEnum: PropertyMetadata = { name: 'size', type: 'enum', options: ['sm', 'md', 'lg'] };
+const textSizeEnum: PropertyMetadata = { name: 'size', type: 'enum', options: ['xs', 'sm', 'md', 'lg', 'xl'] };
 const spacingEnum: PropertyMetadata = {
   name: 'spacing',
   type: 'enum',
@@ -51,12 +52,25 @@ const spacingEnum: PropertyMetadata = {
 const variantEnum: PropertyMetadata = {
   name: 'variant',
   type: 'enum',
-  options: ['primary', 'secondary', 'success', 'warning', 'danger', 'info'],
+  options: [
+    'primary', 'secondary', 'success', 'warning', 'danger', 'info',
+    // Material Design base families
+    'red', 'pink', 'purple', 'deep_purple', 'indigo', 'blue', 'light_blue',
+    'cyan', 'teal', 'green', 'light_green', 'lime', 'yellow', 'amber',
+    'orange', 'deep_orange', 'brown', 'grey', 'blue_grey',
+  ],
 };
 const variantWithDefaultEnum: PropertyMetadata = {
   name: 'variant',
   type: 'enum',
-  options: ['default', 'primary', 'secondary', 'success', 'warning', 'danger', 'info'],
+  options: [
+    'default',
+    'primary', 'secondary', 'success', 'warning', 'danger', 'info',
+    // Material Design base families
+    'red', 'pink', 'purple', 'deep_purple', 'indigo', 'blue', 'light_blue',
+    'cyan', 'teal', 'green', 'light_green', 'lime', 'yellow', 'amber',
+    'orange', 'deep_orange', 'brown', 'grey', 'blue_grey',
+  ],
 };
 const iconNameEnum: PropertyMetadata = {
   name: 'icon',
@@ -119,8 +133,11 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     category: 'Text',
     properties: {
       text: { name: 'text', type: 'string', required: true },
+      size: textSizeEnum,
+      bold: { name: 'bold', type: 'boolean', description: 'Applies bold weight to the text.' },
+      italic: { name: 'italic', type: 'boolean', description: 'Applies italic style to the text.' },
     },
-    example: 'component Text text: "Lorem ipsum dolor sit amet"',
+    example: 'component Text text: "Lorem ipsum dolor sit amet" bold: true',
   },
   Label: {
     name: 'Label',
@@ -130,6 +147,19 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
       text: { name: 'text', type: 'string', required: true },
     },
     example: 'component Label text: "Field label"',
+  },
+  Paragraph: {
+    name: 'Paragraph',
+    description: 'Full-width text block with alignment, size, and formatting options.',
+    category: 'Text',
+    properties: {
+      text: { name: 'text', type: 'string', required: true },
+      align: alignEnum,
+      size: textSizeEnum,
+      bold: { name: 'bold', type: 'boolean', description: 'Applies bold weight to the text.' },
+      italic: { name: 'italic', type: 'boolean', description: 'Applies italic style to the text.' },
+    },
+    example: 'component Paragraph text: "Body copy goes here." align: left',
   },
   Button: {
     name: 'Button',
@@ -524,6 +554,8 @@ export const LAYOUTS: Record<string, LayoutMetadata> = {
 export const PROPERTY_VALUES: Record<string, string[]> = {
   size: ['none', 'xs', 'sm', 'md', 'lg', 'xl'],
   variant: variantWithDefaultEnum.options!,
+  // Note: specific Material shades (e.g. red_400, blue_A200) also work at runtime
+  // via the color resolver even though they are not listed here.
   justify: ['stretch', 'start', 'center', 'end', 'spaceBetween', 'spaceAround'],
   align: ['start', 'center', 'end'],
   padding: spacingEnum.options!,

@@ -325,6 +325,8 @@ export class SVGRenderer {
       // Text/Content components
       case 'Text':
         return this.renderText(node, pos);
+      case 'Paragraph':
+        return this.renderParagraph(node, pos);
       case 'Label':
         return this.renderLabel(node, pos);
       case 'Code':
@@ -1271,15 +1273,15 @@ export class SVGRenderer {
 
   protected renderText(node: IRComponentNode, pos: any): string {
     const text = String(node.props.text || 'Text content');
-
-    // Use tokens from density configuration
-    const fontSize = this.tokens.text.fontSize;
+    const sizeProp = String(node.props.size || '');
+    const defaultFontSize = this.tokens.text.fontSize;
+    const textFontSizeMap: Record<string, number> = { xs: 10, sm: 12, lg: 16, xl: 20 };
+    const fontSize = textFontSizeMap[sizeProp] ?? defaultFontSize;
     const lineHeightPx = Math.ceil(fontSize * this.tokens.text.lineHeight);
+    const bold = this.parseBooleanProp(node.props.bold, false);
+    const italic = this.parseBooleanProp(node.props.italic, false);
     const lines = this.wrapTextToLines(text, pos.width, fontSize);
-    // Center lines vertically within the bounding box. When the text fills the
-    // box (multi-line), (pos.height - totalTextHeight) ≈ 0, so this is a no-op.
-    // For single-line text, this aligns the baseline with adjacent controls
-    // (Input, Button) that also center their text within the control height.
+    // Center lines vertically within the bounding box.
     const totalTextHeight = lines.length * lineHeightPx;
     const firstLineY = pos.y + Math.round(Math.max(0, (pos.height - totalTextHeight) / 2)) + fontSize;
     const tspans = lines
@@ -1293,7 +1295,54 @@ export class SVGRenderer {
     <text x="${pos.x}" y="${firstLineY}"
           font-family="Arial, Helvetica, sans-serif"
           font-size="${fontSize}"
+          font-weight="${bold ? '700' : '400'}"
+          font-style="${italic ? 'italic' : 'normal'}"
           fill="${this.renderTheme.text}">${tspans}</text>
+  </g>`;
+  }
+
+  protected renderParagraph(node: IRComponentNode, pos: any): string {
+    const text = String(node.props.text || '');
+    const sizeProp = String(node.props.size || '');
+    const defaultFontSize = this.tokens.text.fontSize;
+    const textFontSizeMap: Record<string, number> = { xs: 10, sm: 12, lg: 16, xl: 20 };
+    const fontSize = textFontSizeMap[sizeProp] ?? defaultFontSize;
+    const lineHeightPx = Math.ceil(fontSize * this.tokens.text.lineHeight);
+    const bold = this.parseBooleanProp(node.props.bold, false);
+    const italic = this.parseBooleanProp(node.props.italic, false);
+    const align = String(node.props.align || 'left');
+    const lines = this.wrapTextToLines(text, pos.width, fontSize);
+    const totalTextHeight = lines.length * lineHeightPx;
+    const firstLineY = pos.y + Math.round(Math.max(0, (pos.height - totalTextHeight) / 2)) + fontSize;
+
+    let textX: number;
+    let textAnchor: string;
+    if (align === 'center') {
+      textX = pos.x + pos.width / 2;
+      textAnchor = 'middle';
+    } else if (align === 'right') {
+      textX = pos.x + pos.width;
+      textAnchor = 'end';
+    } else {
+      textX = pos.x;
+      textAnchor = 'start';
+    }
+
+    const tspans = lines
+      .map(
+        (line, index) =>
+          `<tspan x="${textX}" dy="${index === 0 ? 0 : lineHeightPx}">${this.escapeXml(line)}</tspan>`
+      )
+      .join('');
+
+    return `<g${this.getDataNodeId(node)}>
+    <text x="${textX}" y="${firstLineY}"
+          font-family="Arial, Helvetica, sans-serif"
+          font-size="${fontSize}"
+          font-weight="${bold ? '700' : '400'}"
+          font-style="${italic ? 'italic' : 'normal'}"
+          fill="${this.renderTheme.text}"
+          text-anchor="${textAnchor}">${tspans}</text>
   </g>`;
   }
 

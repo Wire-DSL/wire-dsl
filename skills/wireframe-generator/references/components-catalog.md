@@ -5,9 +5,9 @@ description: Complete reference of all 21 Wire DSL components with properties an
 
 # Wire DSL Components Catalog
 
-Wire DSL provides 21 UI components organized into 8 categories. This reference lists all components with their properties and usage examples.
+Wire DSL provides 22 UI components organized into 8 categories. This reference lists all components with their properties and usage examples.
 
-## Text Components (3)
+## Text Components (4)
 
 ### Heading
 Renders a large heading/title text.
@@ -27,13 +27,35 @@ component Heading text: "User Profile"
 Renders standard body text.
 
 **Properties:**
-- `content` (string, required): The text content
+- `text` (string, required): The text content
+- `size` (enum, optional): Font size — `xs` | `sm` | `md` | `lg` | `xl` (default: `md`)
+- `bold` (boolean, optional): Bold weight (default: `false`)
+- `italic` (boolean, optional): Italic style (default: `false`)
 
 **Example:**
 ```wire
-component Text content: "This is regular Text text"
-component Text content: "Description of the product"
-component Text content: "Long text wraps automatically into multiple lines"
+component Text text: "This is regular body text"
+component Text text: "Important notice" bold: true
+component Text text: "Side note" size: sm italic: true
+```
+
+---
+
+### Paragraph
+Multi-line body text block with alignment control.
+
+**Properties:**
+- `text` (string, required): The text content (wraps automatically)
+- `align` (enum, optional): Text alignment — `left` | `center` | `right` (default: `left`)
+- `size` (enum, optional): Font size — `xs` | `sm` | `md` | `lg` | `xl` (default: `md`)
+- `bold` (boolean, optional): Bold weight (default: `false`)
+- `italic` (boolean, optional): Italic style (default: `false`)
+
+**Example:**
+```wire
+component Paragraph text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+component Paragraph text: "Centered caption" align: center size: sm
+component Paragraph text: "Quoted text" italic: true align: center
 ```
 
 ---
@@ -168,15 +190,17 @@ Standard clickable button.
 
 **Properties:**
 - `text` (string, required): Button text
-- `variant` (enum, optional): Visual style (default: primary)
-  - Values: `primary`, `secondary`, `ghost`
+- `variant` (enum, optional): Visual style (default: `default`). Semantic: `default` | `primary` | `secondary` | `success` | `warning` | `danger` | `info`. Material Design families: `red` | `pink` | `purple` | `deep_purple` | `indigo` | `blue` | `light_blue` | `cyan` | `teal` | `green` | `light_green` | `lime` | `yellow` | `amber` | `orange` | `deep_orange` | `brown` | `grey` | `blue_grey`. Specific shades also work: `red_400`, `teal_700`, `purple_A200`, etc.
+- `icon` (string, optional): Icon name rendered beside text
+- `iconAlign` (enum, optional): `left` | `right` (default: `left`)
+- `disabled` (boolean, optional): Dims the button (default: `false`)
 
 **Example:**
 ```wire
 component Button text: "Submit" variant: primary
 component Button text: "Cancel" variant: secondary
-component Button text: "Delete" variant: ghost
-component Button text: "Save"
+component Button text: "Delete" variant: danger
+component Button text: "Save" variant: teal
 ```
 
 ---
