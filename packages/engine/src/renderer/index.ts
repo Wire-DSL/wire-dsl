@@ -251,7 +251,9 @@ export class SVGRenderer {
       }
 
       // Render container children, or a diagnostic placeholder when empty
-      if (node.children.length === 0 && this.options.showDiagnostics) {
+      // (cell containers are intentionally empty and should not show a diagnostic)
+      const isCellContainer = node.meta?.source === 'cell';
+      if (node.children.length === 0 && this.options.showDiagnostics && !isCellContainer) {
         containerGroup.push(this.renderEmptyContainerDiagnostic(pos, node.containerType));
       } else {
         node.children.forEach((childRef) => {
@@ -314,7 +316,6 @@ export class SVGRenderer {
       case 'Table':
         return this.renderTable(node, pos);
       case 'Chart':
-      case 'ChartPlaceholder':
         return this.renderChartPlaceholder(node, pos);
       case 'Breadcrumbs':
         return this.renderBreadcrumbs(node, pos);

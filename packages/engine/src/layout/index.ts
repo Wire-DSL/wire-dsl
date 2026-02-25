@@ -1050,7 +1050,7 @@ export class LayoutEngine {
     if (node.componentType === 'Modal') return 300;
     if (node.componentType === 'Card') return 120;
     if (node.componentType === 'Stat') return 120;
-    if (node.componentType === 'Chart' || node.componentType === 'ChartPlaceholder') return 250;
+    if (node.componentType === 'Chart') return 250;
     if (node.componentType === 'List') {
       const itemsFromProps = String(node.props.items || '')
         .split(',')

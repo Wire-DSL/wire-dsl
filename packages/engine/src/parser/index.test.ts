@@ -241,7 +241,7 @@ describe('WireDSL Parser', () => {
       project "Numbers" {
         screen Main {
           layout grid(columns: 12, gap: 16) {
-            component ChartPlaceholder height: 300 width: 600
+            component Chart height: 300 width: 600
           }
         }
       }
@@ -349,7 +349,7 @@ describe('WireDSL Parser', () => {
               }
             }
 
-            component ChartPlaceholder type: "bar" height: 300
+            component Chart type: "bar" height: 300
 
             component Table
               columns: "Date,Event,User"

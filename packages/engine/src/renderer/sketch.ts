@@ -1421,14 +1421,6 @@ export class SketchSVGRenderer extends SVGRenderer {
   }
 
   /**
-   * Render chart placeholder with sketch filter and Comic Sans
-   */
-  protected renderChartPlaceholder(node: IRComponentNode, pos: any): string {
-    // Reuse standard chart geometry for consistency.
-    return super.renderChartPlaceholder(node, pos);
-  }
-
-  /**
    * Helper method to get icon SVG
    */
   private getIconSvg(iconName: string): string {

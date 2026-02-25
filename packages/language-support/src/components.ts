@@ -364,16 +364,6 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     },
     example: 'component Chart type: "line" height: 240',
   },
-  ChartPlaceholder: {
-    name: 'ChartPlaceholder',
-    description: 'Backward-compatible alias of Chart.',
-    category: 'Data',
-    properties: {
-      type: { name: 'type', type: 'enum', options: ['bar', 'line', 'pie', 'area'], required: true },
-      height: { name: 'height', type: 'number' },
-    },
-    example: 'component ChartPlaceholder type: "bar" height: 240',
-  },
   Code: {
     name: 'Code',
     description: 'Code snippet display.',

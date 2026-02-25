@@ -863,7 +863,7 @@ describe('SVG Renderer', () => {
       project "Chart" {
         screen Main {
           layout stack {
-            component ChartPlaceholder type: "bar" height: 300
+            component Chart type: "bar" height: 300
           }
         }
       }
@@ -1221,7 +1221,7 @@ describe('SVG Renderer', () => {
               }
             }
             
-            component ChartPlaceholder type: "bar" height: 300
+            component Chart type: "bar" height: 300
             component Table columns: "Date,Event,User" rowsMock: 5
           }
         }

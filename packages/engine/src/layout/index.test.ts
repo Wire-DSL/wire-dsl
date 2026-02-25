@@ -567,7 +567,7 @@ describe('Layout Engine', () => {
       project "Custom" {
         screen Main {
           layout stack {
-            component ChartPlaceholder height: 300 width: 600
+            component Chart height: 300 width: 600
           }
         }
       }
@@ -694,7 +694,7 @@ describe('Layout Engine', () => {
               }
             }
             
-            component ChartPlaceholder type: "bar" height: 300
+            component Chart type: "bar" height: 300
           }
         }
       }
@@ -1005,7 +1005,7 @@ describe('Layout Engine', () => {
               }
             }
             
-            component ChartPlaceholder type: "line" height: 400
+            component Chart type: "line" height: 400
           }
         }
       }
