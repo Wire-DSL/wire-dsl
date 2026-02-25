@@ -47,7 +47,7 @@ code. Write .wire files and render them to SVG, PNG, or PDF.
 
 Key facts:
 - Syntax: declarative, similar to Mermaid but for UI layouts
-- 22 UI components across 8 groups (Text, Input, Button, Nav, Data, Media, Display, Info/Modal)
+- 30 UI components across 8 groups (Text, Input, Button, Nav, Data, Media, Display, Info/Modal)
 - 5 container types: stack, grid, split, panel, card
 - 287 built-in Feather Icons
 - Custom reusable definitions: define Component, define Layout
@@ -55,7 +55,7 @@ Key facts:
 
 This file contains, in order:
   1. DSL Syntax (grammar, tokens, layouts, validation rules)
-  2. Components Reference (all 22 components)
+  2. Components Reference (all 30 components)
   3. Containers & Layouts Reference
   4. Icons Guide (287 icon names)
   5. CLI — wire render command

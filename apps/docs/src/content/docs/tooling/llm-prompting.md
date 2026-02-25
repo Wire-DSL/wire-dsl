@@ -95,7 +95,7 @@ border: false
 
 ---
 
-## The 22 Components
+## The 30 Components
 
 ### Text (4)
 ```wire
