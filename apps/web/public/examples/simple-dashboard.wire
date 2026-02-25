@@ -1,5 +1,5 @@
 project "Simple Dashboard" {
-  config {
+  style {
     density: "comfortable"
     spacing: "lg"
     radius: "md"

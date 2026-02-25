@@ -1,5 +1,5 @@
-project "Analytics Dashboard" {
-  config {
+project "Admin Dashboard" {
+  style {
     density: "normal"
     spacing: "md"
     radius: "md"
@@ -7,57 +7,87 @@ project "Analytics Dashboard" {
     font: "base"
   }
 
-  screen Dashboard {
-    layout stack(direction: vertical, gap: lg, padding: xl) {
-      component Topbar title: "Analytics" subtitle: "Realtime overview"
+  screen UsersList {
+    layout split(left: 240, gap: lg) {
+      layout stack(direction: vertical, gap: md, padding: md) {
+        component Heading text: "Menu"
+        component SidebarMenu items: "Users,Roles,Permissions,Audit,Settings" active: 0
+      }
 
-      layout split(sidebar: 260, gap: lg) {
-        layout stack(direction: vertical, gap: md, padding: md) {
-          component Heading title: "Filters"
-          component Select label: "Date Range" items: "Last 7 days,Last 30 days,Last 90 days"
-          component Select label: "Channel" items: "All channels,Social,Email,Direct"
-          component Select label: "Region" items: "Global,North America,Europe,Asia"
-          component Divider
-          component Checkbox label: "Email alerts"
-          component Checkbox label: "Slack alerts"
+      layout stack(direction: vertical, gap: lg, padding: lg) {
+        component Heading text: "Users"
+        component Text text: "Manage system users"
+
+        layout grid(columns: 12, gap: md) {
+          cell span: 8 {
+            component Input label: "Search user" placeholder: "name, email..."
+          }
+          cell span: 4 align: end {
+            component Button text: "Create user" variant: primary labelSpace: true size: lg
+          }
         }
 
-        layout stack(direction: vertical, gap: lg, padding: lg) {
-          layout grid(columns: 12, gap: md) {
-            cell span: 3 {
-              component Badge text: "+12%" variant: primary
-            }
-            cell span: 3 {
-              component Badge text: "-3%" variant: secondary
-            }
-            cell span: 3 {
-              component Badge text: "4.5k" variant: primary
-            }
-            cell span: 3 {
-              component Badge text: "1.2k" variant: secondary
-            }
+        component Table columns: "ID,Name,Email,Status,Role" rows: 8
+      }
+    }
+  }
+
+  screen UserDetail {
+    layout stack(direction: vertical, gap: lg, padding: lg) {
+      component Breadcrumbs items: "Users,User Details"
+      
+      component Heading text: "User Details"
+      component Text text: "View and edit user information"
+
+      layout panel(padding: lg) {
+        layout stack(direction: vertical, gap: md) {
+          component Heading text: "Account Status"
+          component Text text: "User account is active and in good standing"
+
+          component Textarea label: "Bio" placeholder: "User bio and notes..." rows: 4
+
+          component Checkbox label: "Email verified"
+
+          component Toggle label: "Two-factor authentication"
+
+          component Select label: "Status" items: "Active,Inactive,Pending"
+
+          component Divider
+          
+          layout stack(direction: horizontal, gap: md) {
+            component Button text: "Save" variant: primary
+            component Button text: "Cancel"
           }
+        }
+      }
+    }
+  }
 
-          component Tabs items: "Overview,Traffic,Revenue,Engagement" activeIndex: 0
+  screen UserCreate {
+    layout stack(direction: vertical, gap: lg, padding: xl) {
+      component Heading text: "Create New User"
+      component Text text: "Add a new user to the system"
 
-          layout grid(columns: 12, gap: md) {
-            cell span: 6 {
-              component Chart type: "bar" height: 250
-            }
-            cell span: 6 {
-              component Chart type: "line" height: 250
-            }
-            cell span: 12 {
-              component Chart type: "area" height: 250
-            }
+      layout panel(padding: lg) {
+        layout stack(direction: vertical, gap: md) {
+          component Input label: "First Name" placeholder: "John"
+
+          component Input label: "Last Name" placeholder: "Doe"
+
+          component Input label: "Email Address" placeholder: "john.doe@example.com"
+
+          component Select label: "Role" items: "Admin,Editor,Viewer,Moderator,User"
+
+          component Select label: "Status" items: "Active,Inactive,Pending"
+
+          component Checkbox label: "Send welcome email"
+
+          component Checkbox label: "Require password change on first login"
+
+          layout stack(direction: horizontal, gap: md) {
+            component Button text: "Create User" variant: primary
+            component Button text: "Cancel"
           }
-
-          layout stack(direction: vertical, gap: sm) {
-            component Alert type: "warning" message: "Traffic spike detected on mobile devices"
-            component Alert type: "error" message: "Sync delayed for EU region"
-          }
-
-          component Table columns: "User,Country,Device,Time" rows: 10
         }
       }
     }
