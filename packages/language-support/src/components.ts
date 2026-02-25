@@ -80,7 +80,7 @@ const iconNameEnum: PropertyMetadata = {
 const controlSizeEnum: PropertyMetadata = {
   name: 'size',
   type: 'enum',
-  options: ['sm', 'md', 'lg'],
+  options: ['xs', 'sm', 'md', 'lg', 'xl'],
 };
 const alignEnum: PropertyMetadata = {
   name: 'align',
@@ -276,8 +276,9 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
       user: { name: 'user', type: 'string' },
       variant: variantWithDefaultEnum,
       border: { name: 'border', type: 'boolean' },
-      background: { name: 'background', type: 'boolean' },
+      background: { name: 'background', type: 'color', description: '"true" = cardBg; hex or named Material color = custom; "false" or absent = none.' },
       radius: { name: 'radius', type: 'enum', options: ['none', 'sm', 'md', 'lg', 'xl'] },
+      size: { name: 'size', type: 'enum', options: ['sm', 'md', 'lg'], defaultValue: 'md', description: 'Height of the topbar.' },
     },
     example: 'component Topbar title: "Dashboard" subtitle: "Overview" icon: "menu" user: "john_doe" avatar: true',
   },
@@ -322,6 +323,11 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     properties: {
       items: { name: 'items', type: 'string', required: true },
       active: { name: 'active', type: 'number' },
+      variant: variantWithDefaultEnum,
+      radius: { name: 'radius', type: 'enum', options: ['none', 'sm', 'md', 'lg', 'full'], defaultValue: 'md' },
+      size: { name: 'size', type: 'enum', options: ['sm', 'md', 'lg'], defaultValue: 'md' },
+      icons: { name: 'icons', type: 'string', description: 'Comma-separated icon names aligned to each tab.' },
+      flat: { name: 'flat', type: 'boolean', defaultValue: false, description: 'Flat style — underline indicator without filled background.' },
     },
     example: 'component Tabs items: "Overview,Details,Activity" active: 1',
   },
@@ -412,6 +418,7 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
       icon: iconNameEnum,
       variant: variantWithDefaultEnum,
       height: { name: 'height', type: 'number' },
+      circle: { name: 'circle', type: 'boolean', description: 'Clips the image to a circle (avatar style).', defaultValue: false },
     },
     example: 'component Image placeholder: "icon" icon: "user" variant: primary height: 120',
   },
@@ -423,6 +430,7 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
       icon: { name: 'icon', type: 'enum', options: ICON_NAME_OPTIONS, required: true },
       size: sizeEnum,
       variant: variantWithDefaultEnum,
+      circle: { name: 'circle', type: 'boolean', description: 'Renders the icon inside a circular background.', defaultValue: false },
     },
     example: 'component Icon icon: "home" size: md',
   },
@@ -463,8 +471,10 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     properties: {
       text: { name: 'text', type: 'string', required: true },
       variant: variantWithDefaultEnum,
+      size: { name: 'size', type: 'enum', options: ['xs', 'sm', 'md', 'lg', 'xl'], defaultValue: 'md' },
+      padding: { name: 'padding', type: 'number', description: 'Custom horizontal padding in px.' },
     },
-    example: 'component Badge text: "Active" variant: success',
+    example: 'component Badge text: "Active" variant: success size: md',
   },
   Alert: {
     name: 'Alert',

@@ -247,6 +247,7 @@ Clickable action button.
 **Properties**:
 - `text` (string): Button label
 - `variant` (string): Visual style (default: `default`). Accepts semantic names or Material Design color families.
+- `size` (enum, optional): `xs` | `sm` | `md` | `lg` | `xl` (default: `md`)
 - `icon` (string, optional): Icon name to render alongside the text (e.g., `"check"`, `"trash"`, `"plus"`)
 - `iconAlign` (string, optional): Icon placement - `left` | `right` (default: `left`)
 - `disabled` (boolean, optional): Visually dims the button (default: `false`)
@@ -277,7 +278,7 @@ Button with icon instead of text.
 
 **Properties**:
 - `icon` (string): Icon name (e.g., "search", "menu", "close")
-- `size` (enum): `sm` | `md` | `lg` (default: `md`)
+- `size` (enum): `xs` | `sm` | `md` | `lg` | `xl` (default: `md`)
 - `variant` (enum): `default` | `primary` | `secondary` | `success` | `warning` | `danger` | `info`
 - `disabled` (boolean): disabled state (`true` | `false`, default: `false`)
 
@@ -301,8 +302,15 @@ Top navigation bar/header.
 **Properties**:
 - `title` (string): Main title
 - `subtitle` (string, optional): Secondary subtitle
+- `size` (enum, optional): `sm` | `md` | `lg` (default: `md`) — controls topbar height (44px / 56px / 72px)
 - `user` (string, optional): User name or identifier for badge
 - `actions` (string, optional): Action items (comma-separated)
+- `icon` (string, optional): Icon name for left badge slot
+- `avatar` (boolean, optional): Show avatar circle (default: `false`)
+- `variant` (string, optional): Accent color for icon badge and action buttons
+- `border` (boolean, optional): Show bottom border (default: `false`)
+- `background` (color, optional): Background fill. `"true"` = `cardBg` (legacy); hex or named Material color = custom color; `"false"` or absent = transparent.
+- `radius` (enum, optional): Corner radius — `none` | `sm` | `md` | `lg` | `xl` (default: `md`)
 
 **Example**:
 ```wire
@@ -310,6 +318,8 @@ component Topbar title: "Dashboard"
 component Topbar title: "Dashboard" subtitle: "Welcome back"
 component Topbar title: "Settings" user: "john_doe"
 component Topbar title: "Admin" actions: "Help,Logout"
+component Topbar title: "App" size: lg background: "#1E293B" border: true
+component Topbar title: "Portal" size: sm background: indigo user: "alice"
 ```
 
 **Rendering**: Horizontal bar at top of screen with logo/title and optional user menu
@@ -384,11 +394,19 @@ Tabbed interface with multiple panels.
 **Properties**:
 - `items` (string, CSV): Tab labels
 - `active` (number): Index of active tab (default: 0)
+- `variant` (string, optional): Active tab color — semantic name or Material Design color family (default: `default` = accent color)
+- `size` (enum, optional): `sm` | `md` | `lg` (default: `md`) — controls tab bar height (32px / 44px / 52px)
+- `radius` (enum, optional): Tab corner rounding — `none` | `sm` | `md` | `lg` | `full` (default: `md`)
+- `icons` (string, CSV, optional): Icon names aligned by position to each tab label
+- `flat` (boolean, optional): Flat underline style — active tab shows a colored bottom indicator, no filled background (default: `false`)
 
 **Example**:
 ```wire
 component Tabs items: "Overview,Details,Comments" active: 0
-component Tabs items: "Profile,Settings,Privacy,Security" active: 1
+component Tabs items: "Profile,Settings,Privacy" active: 1 variant: primary
+component Tabs items: "Home,Stats,History" icons: "home,bar-chart,clock" active: 0
+component Tabs items: "All,Active,Archived" active: 0 flat: true variant: indigo
+component Tabs items: "Files,Shared,Trash" size: sm radius: full
 ```
 
 **Rendering**: Horizontal tabs with one highlighted as active
@@ -453,9 +471,10 @@ Placeholder for image content.
 
 **Properties**:
 - `placeholder` (string): Shape - `square` | `landscape` | `portrait` | `avatar` | `icon`
-- `height` (number, optional): Height in pixels (default: 200)
-- `icon` (string, optional): Icon name — used when `placeholder: icon`. The icon fills the component area directly, without an inner border box.
-- `variant` (string, optional): When `placeholder: icon`, tints the background and icon with the specified color (e.g., `primary`, `success`, `danger`, or custom color). Behaves similarly to `IconButton` variants.
+- `height` (number, optional): Height in pixels. When set, the image scales to cover the full area and clips to the specified dimensions (object-fit: cover behavior).
+- `circle` (boolean, optional): Clips the image to a circular shape (avatar style). Also enables cover scaling (default: `false`).
+- `icon` (string, optional): Icon name — used when `placeholder: icon`. The icon fills the component area directly.
+- `variant` (string, optional): When `placeholder: icon`, tints the background and icon with the specified color.
 
 > The background color adapts to the active theme — light gray in `light` mode, dark gray in `dark` mode.
 
@@ -463,13 +482,12 @@ Placeholder for image content.
 ```wire
 component Image placeholder: "square" height: 250
 component Image placeholder: "landscape" height: 300
-component Image placeholder: "avatar" height: 100
+component Image placeholder: "avatar" height: 100 circle: true
 component Image placeholder: "icon" icon: "image" height: 120
-component Image placeholder: "icon" icon: "user" variant: primary height: 80
-component Image placeholder: "icon" icon: "shield" variant: success height: 80
+component Image placeholder: "icon" icon: "user" variant: primary height: 80 circle: true
 ```
 
-**Rendering**: Rectangular placeholder with appropriate aspect ratio; when `placeholder: icon`, the specified icon is centered and fills the available space
+**Rendering**: Rectangular (or circular) placeholder with appropriate aspect ratio; when `height` is set or `circle: true`, cover-mode clipping is applied
 
 ---
 
@@ -479,16 +497,18 @@ Icon symbol.
 
 **Properties**:
 - `icon` (string): Icon identifier (e.g., "search", "star", "heart")
-- `size` (enum): `sm` | `md` | `lg` (default: `md`)
+- `size` (enum): `xs` | `sm` | `md` | `lg` | `xl` (default: `md`)
+- `variant` (string, optional): Icon color variant — semantic or Material Design color
+- `circle` (boolean, optional): Renders the icon inside a circular background (default: `false`)
 
 **Example**:
 ```wire
 component Icon icon: "search"
-component Icon icon: "settings"
-component Icon icon: "download"
+component Icon icon: "settings" size: lg
+component Icon icon: "user" size: md variant: primary circle: true
 ```
 
-**Rendering**: Small icon symbol inline with text
+**Rendering**: Small icon symbol inline with text; when `circle: true`, shows inside a tinted circular badge
 
 ---
 
@@ -534,12 +554,15 @@ Small label/tag for status or categorization.
 **Properties**:
 - `text` (string): Badge label
 - `variant` (string): Style - `default` | `primary` | `secondary` | `success` | `warning` | `danger` | `info` (default: `default`)
+- `size` (enum, optional): `xs` | `sm` | `md` | `lg` | `xl` (default: `md`) — controls badge height and font size
+- `padding` (number, optional): Custom horizontal padding in px (overrides default for the chosen size)
 
 **Example**:
 ```wire
 component Badge text: "New" variant: primary
-component Badge text: "Active" variant: success
-component Badge text: "Alert" variant: warning
+component Badge text: "Active" variant: success size: sm
+component Badge text: "Alert" variant: warning size: lg
+component Badge text: "Tag" variant: info padding: 12
 ```
 
 **Rendering**: Small rounded label with colored background

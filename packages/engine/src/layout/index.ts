@@ -1071,7 +1071,10 @@ export class LayoutEngine {
     }
 
     // Standard height components
-    if (node.componentType === 'Topbar') return 56;
+    if (node.componentType === 'Topbar') {
+      const TOPBAR_HEIGHTS: Record<string, number> = { sm: 44, md: 56, lg: 72 };
+      return TOPBAR_HEIGHTS[String(node.props.size || 'md')] ?? 56;
+    }
     if (node.componentType === 'Divider') return 1;
     if (node.componentType === 'Separate') return this.getSeparateSize(node);
     if (
@@ -1086,6 +1089,13 @@ export class LayoutEngine {
       node.componentType === 'Link'
     ) {
       return actionControlHeight + controlLabelOffset;
+    }
+
+    // Badge / Chip: size-aware height
+    if (node.componentType === 'Badge' || node.componentType === 'Chip') {
+      const BADGE_HEIGHTS: Record<string, number> = { xs: 16, sm: 20, md: 22, lg: 26, xl: 32 };
+      const badgeSize = String(node.props.size || 'md');
+      return BADGE_HEIGHTS[badgeSize] ?? 22;
     }
 
     // Default height
@@ -1243,10 +1253,18 @@ export class LayoutEngine {
       return 260;
     }
 
-    // Badge, Chip: small fixed width
+    // Badge, Chip: width scales with size and text
     if (node.componentType === 'Badge' || node.componentType === 'Chip') {
       const text = String(node.props.text || '');
-      return Math.max(50, text.length * 7 + 16);
+      const size = String(node.props.size || 'md');
+      const BADGE_CHAR_W: Record<string, number> = { xs: 6, sm: 6.5, md: 7, lg: 7.5, xl: 8.5 };
+      const BADGE_PAD_X: Record<string, number> = { xs: 5, sm: 6, md: 8, lg: 10, xl: 14 };
+      const customPadding = node.props.padding !== undefined ? Number(node.props.padding) : undefined;
+      const padX = customPadding !== undefined && !isNaN(customPadding)
+        ? customPadding
+        : (BADGE_PAD_X[size] ?? 8);
+      const charW = BADGE_CHAR_W[size] ?? 7;
+      return Math.max(padX * 4, text.length * charW + padX * 2);
     }
 
     // Default width: 120px

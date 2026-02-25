@@ -645,7 +645,19 @@ export class SVGRenderer {
         ? this.resolveAccentColor()
         : this.resolveVariantColor(variant, this.resolveAccentColor());
     const showBorder = this.parseBooleanProp(node.props.border, false);
-    const showBackground = this.parseBooleanProp(node.props.background, false);
+    // A2: background can be boolean legacy ("true"/"false") or a color string
+    const bgPropStr = String(node.props.background ?? '');
+    let resolvedBg: string | null = null;
+    if (bgPropStr === 'true') {
+      resolvedBg = this.renderTheme.cardBg;
+    } else if (bgPropStr && bgPropStr !== 'false') {
+      if (bgPropStr.startsWith('#') || bgPropStr.startsWith('rgb')) {
+        resolvedBg = bgPropStr;
+      } else if (this.colorResolver.hasColor(bgPropStr)) {
+        resolvedBg = this.colorResolver.resolveColor(bgPropStr, this.renderTheme.cardBg);
+      }
+    }
+    const showBackground = resolvedBg !== null;
     const radiusMap: Record<string, number> = {
       none: 0,
       sm: 4,
@@ -658,7 +670,7 @@ export class SVGRenderer {
 
     let svg = `<g${this.getDataNodeId(node)}>`;
     if (showBorder || showBackground) {
-      const bg = showBackground ? this.renderTheme.cardBg : 'none';
+      const bg = resolvedBg ?? 'none';
       const stroke = showBorder ? this.renderTheme.border : 'none';
       svg += `
     <rect x="${pos.x}" y="${pos.y}" 
@@ -1628,14 +1640,30 @@ export class SVGRenderer {
   }
 
   protected renderTabs(node: IRComponentNode, pos: any): string {
-    // Read items prop instead of tabs, or fall back to empty
     const itemsStr = String(node.props.items || '');
     const tabs = itemsStr ? itemsStr.split(',').map((t) => t.trim()) : ['Tab 1', 'Tab 2', 'Tab 3'];
     const activeProp = node.props.active ?? 0;
     const activeIndex = Number.isFinite(Number(activeProp))
       ? Math.max(0, Math.floor(Number(activeProp)))
       : 0;
-    const accentColor = this.resolveAccentColor();
+
+    // A1: new props
+    const variant = String(node.props.variant || 'default');
+    const accentColor =
+      variant === 'default'
+        ? this.resolveAccentColor()
+        : this.resolveVariantColor(variant, this.resolveAccentColor());
+
+    const radiusMap: Record<string, number> = { none: 0, sm: 4, md: 6, lg: 10, full: 20 };
+    const tabRadius = radiusMap[String(node.props.radius || 'md')] ?? 6;
+
+    const sizeMap: Record<string, number> = { sm: 32, md: 44, lg: 52 };
+    const tabHeight = sizeMap[String(node.props.size || 'md')] ?? 44;
+    const textY = pos.y + tabHeight / 2 + 5;
+
+    const iconsStr = String(node.props.icons || '');
+    const iconList = iconsStr ? iconsStr.split(',').map((s) => s.trim()) : [];
+    const isFlat = this.parseBooleanProp(node.props.flat, false);
     const tabWidth = pos.width / tabs.length;
 
     let svg = `<g${this.getDataNodeId(node)}>
@@ -1644,29 +1672,84 @@ export class SVGRenderer {
     tabs.forEach((tab, i) => {
       const tabX = pos.x + i * tabWidth;
       const isActive = i === activeIndex;
+      const iconName = iconList[i] || '';
+      const tabIconSvg = iconName ? getIcon(iconName) : null;
 
-      svg += `
-    <rect x="${tabX}" y="${pos.y}" 
-          width="${tabWidth}" height="44" 
-          fill="${isActive ? accentColor : 'transparent'}" 
-          stroke="${isActive ? 'none' : this.renderTheme.border}" 
-          stroke-width="1"/>
-    <text x="${tabX + tabWidth / 2}" y="${pos.y + 28}" 
-          font-family="Arial, Helvetica, sans-serif" 
-          font-size="13" 
-          font-weight="${isActive ? '600' : '500'}" 
-          fill="${isActive ? 'white' : this.renderTheme.text}" 
+      if (isFlat) {
+        // Flat: text only, colored underline for active
+        if (isActive) {
+          svg += `
+    <rect x="${tabX + 6}" y="${pos.y + tabHeight - 3}"
+          width="${tabWidth - 12}" height="3"
+          rx="1.5"
+          fill="${accentColor}"/>`;
+        }
+        svg += `
+    <text x="${tabX + tabWidth / 2}" y="${textY}"
+          font-family="Arial, Helvetica, sans-serif"
+          font-size="13"
+          font-weight="${isActive ? '600' : '500'}"
+          fill="${isActive ? accentColor : this.renderTheme.textMuted}"
           text-anchor="middle">${this.escapeXml(tab)}</text>`;
+      } else {
+        // Standard: filled rect for active tab
+        svg += `
+    <rect x="${tabX}" y="${pos.y}"
+          width="${tabWidth}" height="${tabHeight}"
+          rx="${isActive ? tabRadius : 0}"
+          fill="${isActive ? accentColor : 'transparent'}"
+          stroke="${isActive ? 'none' : this.renderTheme.border}"
+          stroke-width="1"/>`;
+
+        if (tabIconSvg) {
+          const iconSize = 14;
+          const gap = 5;
+          const totalW = iconSize + gap + tab.length * 6.5;
+          const startX = tabX + (tabWidth - totalW) / 2;
+          const iconOffY = pos.y + (tabHeight - iconSize) / 2;
+          svg += `
+    <g transform="translate(${startX}, ${iconOffY})">
+      <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none"
+           stroke="${isActive ? 'white' : this.renderTheme.textMuted}"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        ${this.extractSvgContent(tabIconSvg)}
+      </svg>
+    </g>
+    <text x="${startX + iconSize + gap}" y="${textY}"
+          font-family="Arial, Helvetica, sans-serif"
+          font-size="13"
+          font-weight="${isActive ? '600' : '500'}"
+          fill="${isActive ? 'white' : this.renderTheme.text}">${this.escapeXml(tab)}</text>`;
+        } else {
+          svg += `
+    <text x="${tabX + tabWidth / 2}" y="${textY}"
+          font-family="Arial, Helvetica, sans-serif"
+          font-size="13"
+          font-weight="${isActive ? '600' : '500'}"
+          fill="${isActive ? 'white' : this.renderTheme.text}"
+          text-anchor="middle">${this.escapeXml(tab)}</text>`;
+        }
+      }
     });
 
-    svg += `
+    // Content area
+    const contentY = pos.y + tabHeight;
+    const contentH = pos.height - tabHeight;
+    if (contentH > 2 && !isFlat) {
+      svg += `
     <!-- Tab content area -->
-    <rect x="${pos.x}" y="${pos.y + 44}" 
-          width="${pos.width}" height="${pos.height - 44}" 
-          fill="${this.renderTheme.cardBg}" 
-          stroke="${this.renderTheme.border}" 
-          stroke-width="1"/>
-  </g>`;
+    <rect x="${pos.x}" y="${contentY}"
+          width="${pos.width}" height="${contentH}"
+          fill="${this.renderTheme.cardBg}"
+          stroke="${this.renderTheme.border}"
+          stroke-width="1"/>`;
+    } else if (isFlat) {
+      svg += `
+    <line x1="${pos.x}" y1="${contentY}" x2="${pos.x + pos.width}" y2="${contentY}"
+          stroke="${this.renderTheme.border}" stroke-width="1"/>`;
+    }
+
+    svg += '\n  </g>';
     return svg;
   }
 
@@ -1754,11 +1837,21 @@ export class SVGRenderer {
       : this.renderTheme.border;
     const textColor = hasExplicitVariantColor ? 'white' : this.renderTheme.text;
 
-    // Use tokens from density configuration
+    // Size-aware font size
+    const size = String(node.props.size || 'md');
+    const BADGE_FONT_SIZES: Record<string, number> = { xs: 9, sm: 11, md: 12, lg: 13, xl: 15 };
+    const fontSize = BADGE_FONT_SIZES[size] ?? this.tokens.badge.fontSize;
+
+    // Custom padding prop overrides token default
+    const customPadding = node.props.padding !== undefined ? Number(node.props.padding) : undefined;
+    const BADGE_PAD_X: Record<string, number> = { xs: 5, sm: 6, md: 8, lg: 10, xl: 14 };
+    const paddingX = customPadding !== undefined && !isNaN(customPadding)
+      ? customPadding
+      : (BADGE_PAD_X[size] ?? this.tokens.badge.paddingX);
+
     const badgeRadius = this.tokens.badge.radius === 'pill'
       ? pos.height / 2
       : this.tokens.badge.radius;
-    const fontSize = this.tokens.badge.fontSize;
 
     return `<g${this.getDataNodeId(node)}>
     <rect x="${pos.x}" y="${pos.y}"
@@ -1766,7 +1859,7 @@ export class SVGRenderer {
           rx="${badgeRadius}"
           fill="${bgColor}"
           stroke="none"/>
-    <text x="${pos.x + pos.width / 2}" y="${pos.y + pos.height / 2 + 4}"
+    <text x="${pos.x + paddingX + (pos.width - paddingX * 2) / 2}" y="${pos.y + pos.height / 2 + fontSize * 0.35}"
           font-family="Arial, Helvetica, sans-serif"
           font-size="${fontSize}"
           font-weight="600"
@@ -2023,6 +2116,21 @@ export class SVGRenderer {
     // Theme-aware image background
     const imageBg = this.options.theme === 'dark' ? '#2A2A2A' : '#E8E8E8';
 
+    // A3/A4: Clip handling — circle shape or cover crop on explicit height
+    const hasExplicitHeight = node.props.height !== undefined && !isNaN(Number(node.props.height)) && Number(node.props.height) > 0;
+    const isCircle = this.parseBooleanProp(node.props.circle, false);
+    const useClip = isCircle || hasExplicitHeight;
+    const clipId = useClip
+      ? `iclip${String(node.meta?.nodeId ?? '').replace(/\W/g, '').slice(0, 16) || `${Math.round(Math.abs(pos.x))}x${Math.round(Math.abs(pos.y))}`}`
+      : '';
+    const imgCx = pos.x + pos.width / 2;
+    const imgCy = pos.y + pos.height / 2;
+    const imgR = Math.min(pos.width, pos.height) / 2;
+    const defsHtml = useClip
+      ? `<defs><clipPath id="${clipId}">${isCircle ? `<circle cx="${imgCx}" cy="${imgCy}" r="${imgR}"/>` : `<rect x="${pos.x}" y="${pos.y}" width="${pos.width}" height="${pos.height}" rx="4"/>`}</clipPath></defs>`
+      : '';
+    const clipAttr = useClip ? ` clip-path="url(#${clipId})"` : '';
+
     // Determine aspect ratio based on placeholder type
     const aspectRatios: Record<string, number> = {
       landscape: 16 / 9,
@@ -2034,15 +2142,26 @@ export class SVGRenderer {
 
     const ratio = aspectRatios[placeholder] || 16 / 9;
 
-    // Calculate max size without stretching (constrain to smallest dimension)
-    const maxSize = Math.min(pos.width, pos.height) * 0.8;
-    let iconWidth = maxSize;
-    let iconHeight = maxSize / ratio;
-
-    // If height is still too large, constrain by height instead
-    if (iconHeight > pos.height * 0.8) {
-      iconHeight = pos.height * 0.8;
-      iconWidth = iconHeight * ratio;
+    // A3: Cover mode when explicit height set or circle; contain mode otherwise
+    let iconWidth: number;
+    let iconHeight: number;
+    if (useClip) {
+      // Cover: scale to fill the container, will be clipped
+      iconWidth = pos.width;
+      iconHeight = pos.width / ratio;
+      if (iconHeight < pos.height) {
+        iconHeight = pos.height;
+        iconWidth = pos.height * ratio;
+      }
+    } else {
+      // Contain: scale to fit within 80% of the smallest dimension
+      const maxSize = Math.min(pos.width, pos.height) * 0.8;
+      iconWidth = maxSize;
+      iconHeight = maxSize / ratio;
+      if (iconHeight > pos.height * 0.8) {
+        iconHeight = pos.height * 0.8;
+        iconWidth = iconHeight * ratio;
+      }
     }
 
     // Center the icon in the available space
@@ -2062,19 +2181,22 @@ export class SVGRenderer {
       const iconOffsetX = pos.x + (pos.width - iconSize) / 2;
       const iconOffsetY = pos.y + (pos.height - iconSize) / 2;
 
-      return `<g${this.getDataNodeId(node)}>
+      const iconBorderShape = isCircle
+        ? `<circle cx="${imgCx}" cy="${imgCy}" r="${imgR}" fill="none" stroke="${this.renderTheme.border}" stroke-width="1"/>`
+        : `<rect x="${pos.x}" y="${pos.y}" width="${pos.width}" height="${pos.height}" fill="none" stroke="${this.renderTheme.border}" stroke-width="1" rx="4"/>`;
+      return `${defsHtml}<g${this.getDataNodeId(node)}${clipAttr}>
     <rect x="${pos.x}" y="${pos.y}" width="${pos.width}" height="${pos.height}" fill="${bgColor}" rx="4"/>
     <g transform="translate(${iconOffsetX}, ${iconOffsetY})">
       <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         ${this.extractSvgContent(placeholderIconSvg)}
       </svg>
     </g>
-    <rect x="${pos.x}" y="${pos.y}" width="${pos.width}" height="${pos.height}" fill="none" stroke="${this.renderTheme.border}" stroke-width="1" rx="4"/>
+    ${iconBorderShape}
   </g>`;
     }
 
     // Background
-    let svg = `<g${this.getDataNodeId(node)}>
+    let svg = `${defsHtml}<g${this.getDataNodeId(node)}${clipAttr}>
     <!-- Image Background -->
     <rect x="${pos.x}" y="${pos.y}" width="${pos.width}" height="${pos.height}" fill="${imageBg}"/>`;
 
@@ -2148,10 +2270,12 @@ export class SVGRenderer {
     }
 
     // Border
+    const borderShape = isCircle
+      ? `<circle cx="${imgCx}" cy="${imgCy}" r="${imgR}" fill="none" stroke="${this.renderTheme.border}" stroke-width="1"/>`
+      : `<rect x="${pos.x}" y="${pos.y}" width="${pos.width}" height="${pos.height}" fill="none" stroke="${this.renderTheme.border}" stroke-width="1" rx="4"/>`;
     svg += `
     <!-- Border -->
-    <rect x="${pos.x}" y="${pos.y}" width="${pos.width}" height="${pos.height}" 
-          fill="none" stroke="${this.renderTheme.border}" stroke-width="1" rx="4"/>
+    ${borderShape}
   </g>`;
     return svg;
   }
@@ -2290,6 +2414,25 @@ export class SVGRenderer {
     const iconSize = this.getIconSize(size);
     const offsetX = pos.x + (pos.width - iconSize) / 2;
     const offsetY = pos.y + (pos.height - iconSize) / 2;
+
+    // A4: Circle clip for Icon
+    const isIconCircle = this.parseBooleanProp(node.props.circle, false);
+    if (isIconCircle) {
+      const cx = pos.x + pos.width / 2;
+      const cy = pos.y + pos.height / 2;
+      const r = Math.min(pos.width, pos.height) / 2;
+      const iconClipId = `iconclip${String(node.meta?.nodeId ?? '').replace(/\W/g, '').slice(0, 16) || `${Math.round(Math.abs(pos.x))}x${Math.round(Math.abs(pos.y))}`}`;
+      const bgColor = this.hexToRgba(iconColor, 0.12);
+      return `<defs><clipPath id="${iconClipId}"><circle cx="${cx}" cy="${cy}" r="${r}"/></clipPath></defs><g${this.getDataNodeId(node)} clip-path="url(#${iconClipId})">
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="${bgColor}"/>
+    <g transform="translate(${offsetX}, ${offsetY})">
+      <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        ${this.extractSvgContent(iconSvg)}
+      </svg>
+    </g>
+  </g>
+  <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${this.hexToRgba(iconColor, 0.35)}" stroke-width="1"/>`;
+    }
 
     // Wrap SVG with viewBox and sizing
     const wrappedSvg = `<g${this.getDataNodeId(node)} transform="translate(${offsetX}, ${offsetY})">

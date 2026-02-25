@@ -519,10 +519,21 @@ export class SketchSVGRenderer extends SVGRenderer {
         : this.resolveVariantColor(variant, this.resolveAccentColor());
     const topbar = this.calculateTopbarLayout(node, pos, title, subtitle, actions, user);
 
+    // A2: respect background color prop (default to cardBg in sketch style)
+    const bgPropStr = String(node.props.background ?? '');
+    let sketchTopbarBg: string = this.renderTheme.cardBg;
+    if (bgPropStr && bgPropStr !== 'false' && bgPropStr !== 'true') {
+      if (bgPropStr.startsWith('#') || bgPropStr.startsWith('rgb')) {
+        sketchTopbarBg = bgPropStr;
+      } else if (this.colorResolver.hasColor(bgPropStr)) {
+        sketchTopbarBg = this.colorResolver.resolveColor(bgPropStr, this.renderTheme.cardBg);
+      }
+    }
+
     let svg = `<g${this.getDataNodeId(node)}>
     <rect x="${pos.x}" y="${pos.y}"
           width="${pos.width}" height="${pos.height}"
-          fill="${this.renderTheme.cardBg}"
+          fill="${sketchTopbarBg}"
           stroke="#2D3748"
           stroke-width="0.5"
           filter="url(#sketch-rough)"/>
@@ -956,7 +967,24 @@ export class SketchSVGRenderer extends SVGRenderer {
   protected renderTabs(node: IRComponentNode, pos: any): string {
     const itemsStr = String(node.props.items || '');
     const tabs = itemsStr ? itemsStr.split(',').map((t) => t.trim()) : ['Tab 1', 'Tab 2', 'Tab 3'];
-    const accentColor = this.resolveAccentColor();
+    const activeProp = node.props.active ?? 0;
+    const activeIndex = Number.isFinite(Number(activeProp))
+      ? Math.max(0, Math.floor(Number(activeProp)))
+      : 0;
+
+    const variant = String(node.props.variant || 'default');
+    const accentColor =
+      variant === 'default'
+        ? this.resolveAccentColor()
+        : this.resolveVariantColor(variant, this.resolveAccentColor());
+
+    const sizeMap: Record<string, number> = { sm: 32, md: 44, lg: 52 };
+    const tabHeight = sizeMap[String(node.props.size || 'md')] ?? 44;
+    const textY = pos.y + tabHeight / 2 + 5;
+
+    const iconsStr = String(node.props.icons || '');
+    const iconList = iconsStr ? iconsStr.split(',').map((s) => s.trim()) : [];
+    const isFlat = this.parseBooleanProp(node.props.flat, false);
     const tabWidth = pos.width / tabs.length;
 
     let svg = `<g${this.getDataNodeId(node)}>
@@ -964,32 +992,84 @@ export class SketchSVGRenderer extends SVGRenderer {
 
     tabs.forEach((tab, i) => {
       const tabX = pos.x + i * tabWidth;
-      const isActive = i === 0;
+      const isActive = i === activeIndex;
+      const iconName = iconList[i] || '';
+      const tabIconSvg = iconName ? getIcon(iconName) : null;
 
-      svg += `
+      if (isFlat) {
+        if (isActive) {
+          svg += `
+    <rect x="${tabX + 6}" y="${pos.y + tabHeight - 3}"
+          width="${tabWidth - 12}" height="3"
+          rx="1.5"
+          fill="${accentColor}"
+          filter="url(#sketch-rough)"/>`;
+        }
+        svg += `
+    <text x="${tabX + tabWidth / 2}" y="${textY}"
+          font-family="${this.fontFamily}"
+          font-size="13"
+          font-weight="${isActive ? '600' : '500'}"
+          fill="${isActive ? accentColor : this.renderTheme.textMuted}"
+          text-anchor="middle">${this.escapeXml(tab)}</text>`;
+      } else {
+        svg += `
     <rect x="${tabX}" y="${pos.y}"
-          width="${tabWidth}" height="44"
+          width="${tabWidth}" height="${tabHeight}"
           fill="${isActive ? accentColor : 'transparent'}"
           stroke="${isActive ? accentColor : '#2D3748'}"
           stroke-width="0.5"
-          filter="url(#sketch-rough)"/>
-    <text x="${tabX + tabWidth / 2}" y="${pos.y + 28}"
+          filter="url(#sketch-rough)"/>`;
+
+        if (tabIconSvg) {
+          const iconSize = 14;
+          const gap = 5;
+          const totalW = iconSize + gap + tab.length * 6.5;
+          const startX = tabX + (tabWidth - totalW) / 2;
+          const iconOffY = pos.y + (tabHeight - iconSize) / 2;
+          svg += `
+    <g transform="translate(${startX}, ${iconOffY})">
+      <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none"
+           stroke="${isActive ? 'white' : this.renderTheme.textMuted}"
+           stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        ${this.extractSvgContent(tabIconSvg)}
+      </svg>
+    </g>
+    <text x="${startX + iconSize + gap}" y="${textY}"
+          font-family="${this.fontFamily}"
+          font-size="13"
+          font-weight="${isActive ? '600' : '500'}"
+          fill="${isActive ? 'white' : this.renderTheme.text}">${this.escapeXml(tab)}</text>`;
+        } else {
+          svg += `
+    <text x="${tabX + tabWidth / 2}" y="${textY}"
           font-family="${this.fontFamily}"
           font-size="13"
           font-weight="${isActive ? '600' : '500'}"
           fill="${isActive ? 'white' : this.renderTheme.text}"
           text-anchor="middle">${this.escapeXml(tab)}</text>`;
+        }
+      }
     });
 
-    svg += `
+    const contentY = pos.y + tabHeight;
+    const contentH = pos.height - tabHeight;
+    if (contentH > 2 && !isFlat) {
+      svg += `
     <!-- Tab content area -->
-    <rect x="${pos.x}" y="${pos.y + 44}"
-          width="${pos.width}" height="${pos.height - 44}"
+    <rect x="${pos.x}" y="${contentY}"
+          width="${pos.width}" height="${contentH}"
           fill="${this.renderTheme.cardBg}"
           stroke="#2D3748"
           stroke-width="0.5"
-          filter="url(#sketch-rough)"/>
-  </g>`;
+          filter="url(#sketch-rough)"/>`;
+    } else if (isFlat) {
+      svg += `
+    <line x1="${pos.x}" y1="${contentY}" x2="${pos.x + pos.width}" y2="${contentY}"
+          stroke="#2D3748" stroke-width="0.5" filter="url(#sketch-rough)"/>`;
+    }
+
+    svg += '\n  </g>';
     return svg;
   }
 
@@ -1274,6 +1354,21 @@ export class SketchSVGRenderer extends SVGRenderer {
     // Theme-aware image background
     const imageBg = this.options.theme === 'dark' ? '#2A2A2A' : '#E8E8E8';
 
+    // A3/A4: Clip handling
+    const hasExplicitHeight = node.props.height !== undefined && !isNaN(Number(node.props.height)) && Number(node.props.height) > 0;
+    const isCircle = this.parseBooleanProp(node.props.circle, false);
+    const useClip = isCircle || hasExplicitHeight;
+    const clipId = useClip
+      ? `sclip${String(node.meta?.nodeId ?? '').replace(/\W/g, '').slice(0, 16) || `${Math.round(Math.abs(pos.x))}x${Math.round(Math.abs(pos.y))}`}`
+      : '';
+    const imgCx = pos.x + pos.width / 2;
+    const imgCy = pos.y + pos.height / 2;
+    const imgR = Math.min(pos.width, pos.height) / 2;
+    const defsHtml = useClip
+      ? `<defs><clipPath id="${clipId}">${isCircle ? `<circle cx="${imgCx}" cy="${imgCy}" r="${imgR}"/>` : `<rect x="${pos.x}" y="${pos.y}" width="${pos.width}" height="${pos.height}" rx="4"/>`}</clipPath></defs>`
+      : '';
+    const clipAttr = useClip ? ` clip-path="url(#${clipId})"` : '';
+
     // Custom icon placeholder — no inner badge rect; icon fills the space
     if (iconSvg) {
       const semanticBase = variant ? this.getSemanticVariantColor(variant) : undefined;
@@ -1286,7 +1381,10 @@ export class SketchSVGRenderer extends SVGRenderer {
       const iconOffsetX = pos.x + (pos.width - iconSize) / 2;
       const iconOffsetY = pos.y + (pos.height - iconSize) / 2;
 
-      return `<g${this.getDataNodeId(node)}>
+      const sketchIconBorder = isCircle
+        ? `<circle cx="${imgCx}" cy="${imgCy}" r="${imgR}" fill="none" stroke="#2D3748" stroke-width="0.5" filter="url(#sketch-rough)"/>`
+        : `<rect x="${pos.x}" y="${pos.y}" width="${pos.width}" height="${pos.height}" fill="none" stroke="#2D3748" stroke-width="0.5" rx="4" filter="url(#sketch-rough)"/>`;
+      return `${defsHtml}<g${this.getDataNodeId(node)}${clipAttr}>
     <rect x="${pos.x}" y="${pos.y}"
           width="${pos.width}" height="${pos.height}"
           fill="${bgColor}"
@@ -1297,17 +1395,14 @@ export class SketchSVGRenderer extends SVGRenderer {
         ${this.extractSvgContent(iconSvg)}
       </svg>
     </g>
-    <rect x="${pos.x}" y="${pos.y}"
-          width="${pos.width}" height="${pos.height}"
-          fill="none"
-          stroke="#2D3748"
-          stroke-width="0.5"
-          rx="4"
-          filter="url(#sketch-rough)"/>
+    ${sketchIconBorder}
   </g>`;
     }
 
-    return `<g${this.getDataNodeId(node)}>
+    const sketchCircleBorder = isCircle
+      ? `<circle cx="${imgCx}" cy="${imgCy}" r="${imgR}" fill="none" stroke="#2D3748" stroke-width="0.5"/>`
+      : '';
+    return `${defsHtml}<g${this.getDataNodeId(node)}${clipAttr}>
     <!-- Image Background -->
     <rect x="${pos.x}" y="${pos.y}"
           width="${pos.width}" height="${pos.height}"
@@ -1323,7 +1418,7 @@ export class SketchSVGRenderer extends SVGRenderer {
           font-size="24"
           fill="#666"
           text-anchor="middle">🖼</text>
-  </g>`;
+  </g>${sketchCircleBorder}`;
   }
 
   /**
@@ -1463,6 +1558,25 @@ export class SketchSVGRenderer extends SVGRenderer {
       variant === 'default' ? this.resolveTextColor() : this.resolveVariantColor(variant, this.resolveTextColor());
     const offsetX = pos.x + (pos.width - iconSize) / 2;
     const offsetY = pos.y + (pos.height - iconSize) / 2;
+
+    // A4: Circle clip for Icon
+    const isIconCircle = this.parseBooleanProp(node.props.circle, false);
+    if (isIconCircle) {
+      const cx = pos.x + pos.width / 2;
+      const cy = pos.y + pos.height / 2;
+      const r = Math.min(pos.width, pos.height) / 2;
+      const iconClipId = `sconclip${String(node.meta?.nodeId ?? '').replace(/\W/g, '').slice(0, 16) || `${Math.round(Math.abs(pos.x))}x${Math.round(Math.abs(pos.y))}`}`;
+      const bgColor = this.hexToRgba(iconColor, 0.10);
+      return `<defs><clipPath id="${iconClipId}"><circle cx="${cx}" cy="${cy}" r="${r}"/></clipPath></defs><g${this.getDataNodeId(node)} clip-path="url(#${iconClipId})">
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="${bgColor}"/>
+    <g transform="translate(${offsetX}, ${offsetY})">
+      <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round">
+        ${this.extractSvgContent(iconSvg)}
+      </svg>
+    </g>
+  </g>
+  <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${this.hexToRgba(iconColor, 0.35)}" stroke-width="0.5"/>`;
+    }
 
     return `<g${this.getDataNodeId(node)} transform="translate(${offsetX}, ${offsetY})">
     <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="0.5" stroke-linecap="round" stroke-linejoin="round">

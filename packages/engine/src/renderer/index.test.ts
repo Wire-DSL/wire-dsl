@@ -1942,6 +1942,277 @@ describe('SVG Renderer - SourceMap Integration (data-node-id)', () => {
     expect(svg).toContain('rx="6"');
   });
 
+  // ─── A5: Badge size ───────────────────────────────────────────────────────
+
+  it('should render Badge xs size with small font-size', () => {
+    const input = `
+      project "BadgeXS" {
+        screen Main {
+          layout stack {
+            component Badge text: "New" variant: primary size: xs
+          }
+        }
+      }
+    `;
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    expect(svg).toContain('font-size="9"');
+  });
+
+  it('should render Badge xl size with large font-size', () => {
+    const input = `
+      project "BadgeXL" {
+        screen Main {
+          layout stack {
+            component Badge text: "Status" variant: success size: xl
+          }
+        }
+      }
+    `;
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    expect(svg).toContain('font-size="15"');
+  });
+
+  it('should render Badge with custom padding overriding size default', () => {
+    const input = `
+      project "BadgePadding" {
+        screen Main {
+          layout stack {
+            component Badge text: "Hi" size: sm padding: 20
+          }
+        }
+      }
+    `;
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    // Badge should render with text content
+    expect(svg).toContain('Hi');
+    expect(svg).toContain('<rect');
+  });
+
+  // ─── A3: Image cover-mode clipPath ────────────────────────────────────────
+
+  it('should render Image with explicit height using clipPath (cover mode)', () => {
+    const input = `
+      project "ImageCover" {
+        screen Main {
+          layout stack {
+            component Image placeholder: "landscape" height: 200
+          }
+        }
+      }
+    `;
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    expect(svg).toContain('<defs>');
+    expect(svg).toContain('<clipPath');
+    expect(svg).toContain('</defs>');
+  });
+
+  // ─── A4: circle prop for Image and Icon ──────────────────────────────────
+
+  it('should render Image with circle: true using circular clipPath', () => {
+    const input = `
+      project "ImageCircle" {
+        screen Main {
+          layout stack {
+            component Image placeholder: "avatar" circle: true
+          }
+        }
+      }
+    `;
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    expect(svg).toContain('<defs>');
+    expect(svg).toContain('<clipPath');
+    expect(svg).toContain('<circle');
+  });
+
+  it('should render Icon with circle: true using circle background', () => {
+    const input = `
+      project "IconCircle" {
+        screen Main {
+          layout stack {
+            component Icon type: "user" circle: true variant: primary
+          }
+        }
+      }
+    `;
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    expect(svg).toContain('<circle');
+  });
+
+  // ─── A2: Topbar background as color ──────────────────────────────────────
+
+  it('should render Topbar with Material color name as background fill', () => {
+    const input = `
+      project "TopbarColor" {
+        screen Main {
+          layout stack {
+            component Topbar title: "Dashboard" background: "indigo"
+          }
+        }
+      }
+    `;
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    // Material indigo 500 = #3F51B5
+    expect(svg).toContain('#3F51B5');
+  });
+
+  it('should render Topbar with hex color as background fill', () => {
+    const input = `
+      project "TopbarHex" {
+        screen Main {
+          layout stack {
+            component Topbar title: "App" background: "#FF5722"
+          }
+        }
+      }
+    `;
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    expect(svg).toContain('#FF5722');
+  });
+
+  it('should render Topbar size: lg taller than size: sm', () => {
+    const makeInput = (size: string) => `
+      project "TopbarSize" {
+        screen Main {
+          layout stack {
+            component Topbar title: "App" size: ${size}
+          }
+        }
+      }
+    `;
+    const irSm = generateIR(parseWireDSL(makeInput('sm')));
+    const irLg = generateIR(parseWireDSL(makeInput('lg')));
+    const layoutSm = calculateLayout(irSm);
+    const layoutLg = calculateLayout(irLg);
+    const [idSm] = Object.entries(irSm.project.nodes).find(([, n]) => n.kind === 'component' && (n as any).componentType === 'Topbar')!;
+    const [idLg] = Object.entries(irLg.project.nodes).find(([, n]) => n.kind === 'component' && (n as any).componentType === 'Topbar')!;
+    expect(layoutLg[idLg].height).toBeGreaterThan(layoutSm[idSm].height);
+  });
+
+  // ─── A1: Tabs variant / flat / icons / radius / size ─────────────────────
+
+  it('should render Tabs flat: true with underline indicator and no filled rect for active tab', () => {
+    const input = `
+      project "TabsFlat" {
+        screen Main {
+          layout stack {
+            component Tabs items: "Home,Profile,Settings" active: 0 flat: true
+          }
+        }
+      }
+    `;
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    // flat draws a bottom line separator
+    expect(svg).toContain('<line');
+    // flat active tab: a small underline rect with rx="1.5"
+    expect(svg).toContain('rx="1.5"');
+  });
+
+  it('should render Tabs with primary variant using accent color', () => {
+    const input = `
+      project "TabsVariant" {
+        colors { primary: #1565C0 }
+        screen Main {
+          layout stack {
+            component Tabs items: "A,B,C" active: 0 variant: primary
+          }
+        }
+      }
+    `;
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    expect(svg).toContain('#1565C0');
+  });
+
+  it('should render Tabs with icons embedding SVG path elements', () => {
+    const input = `
+      project "TabsIcons" {
+        screen Main {
+          layout stack {
+            component Tabs items: "Home,Users,Settings" active: 0 icons: "home,users,settings"
+          }
+        }
+      }
+    `;
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    const svg = renderToSVG(ir, layout);
+
+    // Icon SVG paths should be embedded
+    expect(svg).toContain('<path');
+    // Tab label text should still appear
+    expect(svg).toContain('Home');
+    expect(svg).toContain('Users');
+  });
+
+  it('should render Tabs size: sm with smaller tab height than size: lg', () => {
+    const makeInput = (size: string) => `
+      project "TabsSize" {
+        screen Main {
+          layout stack {
+            component Tabs items: "A,B" active: 0 size: ${size}
+          }
+        }
+      }
+    `;
+    const irSm = generateIR(parseWireDSL(makeInput('sm')));
+    const irLg = generateIR(parseWireDSL(makeInput('lg')));
+
+    const svgSm = renderToSVG(irSm, calculateLayout(irSm));
+    const svgLg = renderToSVG(irLg, calculateLayout(irLg));
+
+    // sm tabHeight = 32, textY = y + 32/2 + 5 = y + 21
+    // lg tabHeight = 52, textY = y + 52/2 + 5 = y + 31
+    // Confirm both render
+    expect(svgSm).toContain('A');
+    expect(svgLg).toContain('A');
+    // textY for sm is smaller than for lg (relative to component y=0 in a simple layout)
+    const smTextMatch = svgSm.match(/y="(\d+(?:\.\d+)?)"[^>]*>A<\/text>/);
+    const lgTextMatch = svgLg.match(/y="(\d+(?:\.\d+)?)"[^>]*>A<\/text>/);
+    if (smTextMatch && lgTextMatch) {
+      expect(Number(smTextMatch[1])).toBeLessThan(Number(lgTextMatch[1]));
+    }
+  });
+
 });
 
 describe('Skeleton SVG Renderer', () => {

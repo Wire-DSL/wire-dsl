@@ -1605,4 +1605,190 @@ describe('Layout Engine', () => {
       expect(shorter.y + shorter.height).toBe(taller.y + taller.height);
     });
   });
+
+  // ─── A7: xs / xl sizes for Button & IconButton ───────────────────────────
+
+  it('should calculate Button xs size height (normal density)', () => {
+    const input = `
+      project "ButtonXS" {
+        screen Main {
+          layout stack {
+            component Button text: "Tiny" size: xs
+          }
+        }
+      }
+    `;
+    const ir = generateIR(parseWireDSL(input));
+    const layout = calculateLayout(ir);
+    const [buttonId] = Object.entries(ir.project.nodes).find(
+      ([, n]) => n.kind === 'component' && (n as any).componentType === 'Button'
+    )!;
+    expect(layout[buttonId].height).toBe(28);
+  });
+
+  it('should calculate Button xl size height (normal density)', () => {
+    const input = `
+      project "ButtonXL" {
+        screen Main {
+          layout stack {
+            component Button text: "Large" size: xl
+          }
+        }
+      }
+    `;
+    const ir = generateIR(parseWireDSL(input));
+    const layout = calculateLayout(ir);
+    const [buttonId] = Object.entries(ir.project.nodes).find(
+      ([, n]) => n.kind === 'component' && (n as any).componentType === 'Button'
+    )!;
+    expect(layout[buttonId].height).toBe(56);
+  });
+
+  it('should calculate IconButton xs size height (normal density)', () => {
+    const input = `
+      project "IconButtonXS" {
+        screen Main {
+          layout stack {
+            component IconButton icon: "search" size: xs
+          }
+        }
+      }
+    `;
+    const ir = generateIR(parseWireDSL(input));
+    const layout = calculateLayout(ir);
+    const [id] = Object.entries(ir.project.nodes).find(
+      ([, n]) => n.kind === 'component' && (n as any).componentType === 'IconButton'
+    )!;
+    expect(layout[id].height).toBe(20);
+  });
+
+  it('should calculate IconButton xl size height (normal density)', () => {
+    const input = `
+      project "IconButtonXL" {
+        screen Main {
+          layout stack {
+            component IconButton icon: "search" size: xl
+          }
+        }
+      }
+    `;
+    const ir = generateIR(parseWireDSL(input));
+    const layout = calculateLayout(ir);
+    const [id] = Object.entries(ir.project.nodes).find(
+      ([, n]) => n.kind === 'component' && (n as any).componentType === 'IconButton'
+    )!;
+    expect(layout[id].height).toBe(48);
+  });
+
+  // ─── A2: Topbar size ──────────────────────────────────────────────────────
+
+  it('should calculate Topbar sm size height', () => {
+    const input = `
+      project "TopbarSM" {
+        screen Main {
+          layout stack {
+            component Topbar title: "App" size: sm
+          }
+        }
+      }
+    `;
+    const ir = generateIR(parseWireDSL(input));
+    const layout = calculateLayout(ir);
+    const [id] = Object.entries(ir.project.nodes).find(
+      ([, n]) => n.kind === 'component' && (n as any).componentType === 'Topbar'
+    )!;
+    expect(layout[id].height).toBe(44);
+  });
+
+  it('should calculate Topbar md size height (default)', () => {
+    const input = `
+      project "TopbarMD" {
+        screen Main {
+          layout stack {
+            component Topbar title: "App"
+          }
+        }
+      }
+    `;
+    const ir = generateIR(parseWireDSL(input));
+    const layout = calculateLayout(ir);
+    const [id] = Object.entries(ir.project.nodes).find(
+      ([, n]) => n.kind === 'component' && (n as any).componentType === 'Topbar'
+    )!;
+    expect(layout[id].height).toBe(56);
+  });
+
+  it('should calculate Topbar lg size height', () => {
+    const input = `
+      project "TopbarLG" {
+        screen Main {
+          layout stack {
+            component Topbar title: "App" size: lg
+          }
+        }
+      }
+    `;
+    const ir = generateIR(parseWireDSL(input));
+    const layout = calculateLayout(ir);
+    const [id] = Object.entries(ir.project.nodes).find(
+      ([, n]) => n.kind === 'component' && (n as any).componentType === 'Topbar'
+    )!;
+    expect(layout[id].height).toBe(72);
+  });
+
+  // ─── A5: Badge size ───────────────────────────────────────────────────────
+
+  it('should calculate Badge xs size height', () => {
+    const input = `
+      project "BadgeXS" {
+        screen Main {
+          layout stack {
+            component Badge text: "New" size: xs
+          }
+        }
+      }
+    `;
+    const ir = generateIR(parseWireDSL(input));
+    const layout = calculateLayout(ir);
+    const [id] = Object.entries(ir.project.nodes).find(
+      ([, n]) => n.kind === 'component' && (n as any).componentType === 'Badge'
+    )!;
+    expect(layout[id].height).toBe(16);
+  });
+
+  it('should calculate Badge md size height (default)', () => {
+    const input = `
+      project "BadgeMD" {
+        screen Main {
+          layout stack {
+            component Badge text: "Active"
+          }
+        }
+      }
+    `;
+    const ir = generateIR(parseWireDSL(input));
+    const layout = calculateLayout(ir);
+    const [id] = Object.entries(ir.project.nodes).find(
+      ([, n]) => n.kind === 'component' && (n as any).componentType === 'Badge'
+    )!;
+    expect(layout[id].height).toBe(22);
+  });
+
+  it('should calculate Badge xl size height', () => {
+    const input = `
+      project "BadgeXL" {
+        screen Main {
+          layout stack {
+            component Badge text: "Status" size: xl
+          }
+        }
+      }
+    `;
+    const ir = generateIR(parseWireDSL(input));
+    const layout = calculateLayout(ir);
+    const [id] = Object.entries(ir.project.nodes).find(
+      ([, n]) => n.kind === 'component' && (n as any).componentType === 'Badge'
+    )!;
+    expect(layout[id].height).toBe(32);
+  });
 });
