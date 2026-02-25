@@ -439,7 +439,7 @@ component Code code: "SELECT * FROM users WHERE active = true;"
 
 ---
 
-### ChartPlaceholder
+### Chart
 Chart visualization placeholder.
 
 **Properties:**
@@ -449,10 +449,10 @@ Chart visualization placeholder.
 
 **Example:**
 ```wire
-component ChartPlaceholder type: "bar" height: 250
-component ChartPlaceholder type: "line" height: 400
-component ChartPlaceholder type: "pie" height: 300
-component ChartPlaceholder type: "area" height: 350
+component Chart type: "bar" height: 250
+component Chart type: "line" height: 400
+component Chart type: "pie" height: 300
+component Chart type: "area" height: 350
 ```
 
 ---
@@ -498,7 +498,7 @@ component Spinner
 | **Data** | Table, List | 2 |
 | **Media** | Image, Icon | 2 |
 | **Display** | Divider, Badge, Link, Alert | 4 |
-| **Info** | Stat, Code, ChartPlaceholder | 3 |
+| **Info** | Stat, Code, Chart | 3 |
 | **Modal** | Modal, Spinner | 2 |
 | **TOTAL** | | **21** |
 

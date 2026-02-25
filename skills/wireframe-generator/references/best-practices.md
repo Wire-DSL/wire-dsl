@@ -543,7 +543,7 @@ screen Dashboard {
       }
     }
 
-    component ChartPlaceholder type: "line" height: 300
+    component Chart type: "line" height: 300
   }
 }
 ```

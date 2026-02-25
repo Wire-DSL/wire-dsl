@@ -105,7 +105,7 @@ Choose from 21 available components organized in categories:
 **Data:** Table, List
 **Media:** Image, Icon
 **Display:** Divider, Badge, Link, Alert
-**Info:** Stat, Code, ChartPlaceholder
+**Info:** Stat, Code
 **Modal:** Modal, Spinner
 
 ### Step 5: Validate Syntax
@@ -193,7 +193,7 @@ project "Admin Dashboard" {
           }
         }
 
-        component ChartPlaceholder type: "line" height: 300
+        component Chart type: "line" height: 300
         component Table columns: "User,Email,Status,Role" rows: 8
       }
     }

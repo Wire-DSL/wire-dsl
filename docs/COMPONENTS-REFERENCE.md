@@ -629,8 +629,6 @@ Placeholder for various chart types.
 **Properties**:
 - `type` (string): Chart type - `bar` | `line` | `pie` | `area` (default: `bar`)
 - `height` (number): Height in pixels (default: 200)
-- `ChartPlaceholder`: backward-compatible alias of `Chart`
-
 **Example**:
 ```wire
 component Chart type: "bar" height: 250

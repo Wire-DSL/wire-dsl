@@ -32,7 +32,7 @@ project "Simple Dashboard" {
         }
       }
 
-      component ChartPlaceholder type: "bar" height: 300
+      component Chart type: "bar" height: 300
 
       component Table columns: "Date,Event,User" rows: 5
     }

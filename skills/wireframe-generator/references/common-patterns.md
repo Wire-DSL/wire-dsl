@@ -207,7 +207,7 @@ project "Admin Dashboard" {
             layout panel(padding: md) {
               layout stack(direction: vertical, gap: md) {
                 component Heading text: "Revenue Overview"
-                component ChartPlaceholder type: "line" height: 300
+                component Chart type: "line" height: 300
               }
             }
           }
@@ -215,7 +215,7 @@ project "Admin Dashboard" {
             layout panel(padding: md) {
               layout stack(direction: vertical, gap: md) {
                 component Heading text: "Traffic Sources"
-                component ChartPlaceholder type: "pie" height: 300
+                component Chart type: "pie" height: 300
               }
             }
           }
@@ -289,10 +289,10 @@ project "Metrics Dashboard" {
       // Charts Row
       layout grid(columns: 12, gap: lg) {
         cell span: 8 {
-          component ChartPlaceholder type: "area" height: 400
+          component Chart type: "area" height: 400
         }
         cell span: 4 {
-          component ChartPlaceholder type: "bar" height: 400
+          component Chart type: "bar" height: 400
         }
       }
 

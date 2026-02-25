@@ -276,7 +276,7 @@ layout grid(columns: 12, gap: lg) {
     layout stack(direction: vertical, gap: md) {
       component Heading text: "Main Content"
       component Text content: "This is the main content area..."
-      component ChartPlaceholder type: "line" height: 300
+      component Chart type: "line" height: 300
     }
   }
   cell span: 4 {
