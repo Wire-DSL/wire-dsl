@@ -251,7 +251,9 @@ export class SVGRenderer {
       }
 
       // Render container children, or a diagnostic placeholder when empty
-      if (node.children.length === 0 && this.options.showDiagnostics) {
+      // (cell containers are intentionally empty and should not show a diagnostic)
+      const isCellContainer = node.meta?.source === 'cell';
+      if (node.children.length === 0 && this.options.showDiagnostics && !isCellContainer) {
         containerGroup.push(this.renderEmptyContainerDiagnostic(pos, node.containerType));
       } else {
         node.children.forEach((childRef) => {
@@ -314,7 +316,6 @@ export class SVGRenderer {
       case 'Table':
         return this.renderTable(node, pos);
       case 'Chart':
-      case 'ChartPlaceholder':
         return this.renderChartPlaceholder(node, pos);
       case 'Breadcrumbs':
         return this.renderBreadcrumbs(node, pos);
@@ -324,6 +325,8 @@ export class SVGRenderer {
       // Text/Content components
       case 'Text':
         return this.renderText(node, pos);
+      case 'Paragraph':
+        return this.renderParagraph(node, pos);
       case 'Label':
         return this.renderLabel(node, pos);
       case 'Code':
@@ -418,7 +421,7 @@ export class SVGRenderer {
   protected renderButton(node: IRComponentNode, pos: any): string {
     const text = String(node.props.text || 'Button');
     const variant = String(node.props.variant || 'default');
-    const size = String(node.props.size || 'md');
+    const size = String(node.props.size || 'sm');
     const disabled = this.parseBooleanProp(node.props.disabled, false);
     const density = (this.ir.project.style.density || 'normal') as DensityLevel;
     const extraPadding = resolveControlHorizontalPadding(String(node.props.padding || 'none'), density);
@@ -524,7 +527,7 @@ export class SVGRenderer {
   protected renderLink(node: IRComponentNode, pos: any): string {
     const text = String(node.props.text || 'Link');
     const variant = String(node.props.variant || 'primary');
-    const size = String(node.props.size || 'md');
+    const size = String(node.props.size || 'sm');
     const density = (this.ir.project.style.density || 'normal') as DensityLevel;
     const fontSize = this.tokens.button.fontSize;
     const fontWeight = this.tokens.button.fontWeight;
@@ -642,7 +645,35 @@ export class SVGRenderer {
         ? this.resolveAccentColor()
         : this.resolveVariantColor(variant, this.resolveAccentColor());
     const showBorder = this.parseBooleanProp(node.props.border, false);
-    const showBackground = this.parseBooleanProp(node.props.background, false);
+    // A2: background can be boolean legacy ("true"/"false") or a color string
+    const bgPropStr = String(node.props.background ?? '');
+    let resolvedBg: string | null = null;
+    if (bgPropStr === 'true') {
+      resolvedBg = this.renderTheme.cardBg;
+    } else if (bgPropStr && bgPropStr !== 'false') {
+      if (bgPropStr.startsWith('#') || bgPropStr.startsWith('rgb')) {
+        resolvedBg = bgPropStr;
+      } else if (this.colorResolver.hasColor(bgPropStr)) {
+        resolvedBg = this.colorResolver.resolveColor(bgPropStr, this.renderTheme.cardBg);
+      }
+    }
+    const showBackground = resolvedBg !== null;
+    // color prop: overrides title / subtitle text color
+    const colorPropStr = String(node.props.color ?? '');
+    let titleColor = this.renderTheme.text;
+    let subtitleColor = this.renderTheme.textMuted;
+    if (colorPropStr && colorPropStr !== 'false') {
+      let resolvedTitleColor: string | null = null;
+      if (colorPropStr.startsWith('#') || colorPropStr.startsWith('rgb')) {
+        resolvedTitleColor = colorPropStr;
+      } else if (this.colorResolver.hasColor(colorPropStr)) {
+        resolvedTitleColor = this.colorResolver.resolveColor(colorPropStr, this.renderTheme.text);
+      }
+      if (resolvedTitleColor) {
+        titleColor = resolvedTitleColor;
+        subtitleColor = this.hexToRgba(resolvedTitleColor, 0.65);
+      }
+    }
     const radiusMap: Record<string, number> = {
       none: 0,
       sm: 4,
@@ -655,7 +686,7 @@ export class SVGRenderer {
 
     let svg = `<g${this.getDataNodeId(node)}>`;
     if (showBorder || showBackground) {
-      const bg = showBackground ? this.renderTheme.cardBg : 'none';
+      const bg = resolvedBg ?? 'none';
       const stroke = showBorder ? this.renderTheme.border : 'none';
       svg += `
     <rect x="${pos.x}" y="${pos.y}" 
@@ -671,7 +702,7 @@ export class SVGRenderer {
           font-family="Arial, Helvetica, sans-serif" 
           font-size="18" 
           font-weight="600" 
-          fill="${this.renderTheme.text}">${this.escapeXml(topbar.visibleTitle)}</text>`;
+          fill="${titleColor}">${this.escapeXml(topbar.visibleTitle)}</text>`;
 
     // Subtitle
     if (topbar.hasSubtitle) {
@@ -679,7 +710,7 @@ export class SVGRenderer {
     <text x="${topbar.textX}" y="${topbar.subtitleY}" 
           font-family="Arial, Helvetica, sans-serif" 
           font-size="13" 
-          fill="${this.renderTheme.textMuted}">${this.escapeXml(topbar.visibleSubtitle)}</text>`;
+          fill="${subtitleColor}">${this.escapeXml(topbar.visibleSubtitle)}</text>`;
     }
 
     if (topbar.leftIcon) {
@@ -1270,15 +1301,15 @@ export class SVGRenderer {
 
   protected renderText(node: IRComponentNode, pos: any): string {
     const text = String(node.props.text || 'Text content');
-
-    // Use tokens from density configuration
-    const fontSize = this.tokens.text.fontSize;
+    const sizeProp = String(node.props.size || '');
+    const defaultFontSize = this.tokens.text.fontSize;
+    const textFontSizeMap: Record<string, number> = { xs: 10, sm: 12, lg: 16, xl: 20 };
+    const fontSize = textFontSizeMap[sizeProp] ?? defaultFontSize;
     const lineHeightPx = Math.ceil(fontSize * this.tokens.text.lineHeight);
+    const bold = this.parseBooleanProp(node.props.bold, false);
+    const italic = this.parseBooleanProp(node.props.italic, false);
     const lines = this.wrapTextToLines(text, pos.width, fontSize);
-    // Center lines vertically within the bounding box. When the text fills the
-    // box (multi-line), (pos.height - totalTextHeight) ≈ 0, so this is a no-op.
-    // For single-line text, this aligns the baseline with adjacent controls
-    // (Input, Button) that also center their text within the control height.
+    // Center lines vertically within the bounding box.
     const totalTextHeight = lines.length * lineHeightPx;
     const firstLineY = pos.y + Math.round(Math.max(0, (pos.height - totalTextHeight) / 2)) + fontSize;
     const tspans = lines
@@ -1292,7 +1323,54 @@ export class SVGRenderer {
     <text x="${pos.x}" y="${firstLineY}"
           font-family="Arial, Helvetica, sans-serif"
           font-size="${fontSize}"
+          font-weight="${bold ? '700' : '400'}"
+          font-style="${italic ? 'italic' : 'normal'}"
           fill="${this.renderTheme.text}">${tspans}</text>
+  </g>`;
+  }
+
+  protected renderParagraph(node: IRComponentNode, pos: any): string {
+    const text = String(node.props.text || '');
+    const sizeProp = String(node.props.size || '');
+    const defaultFontSize = this.tokens.text.fontSize;
+    const textFontSizeMap: Record<string, number> = { xs: 10, sm: 12, lg: 16, xl: 20 };
+    const fontSize = textFontSizeMap[sizeProp] ?? defaultFontSize;
+    const lineHeightPx = Math.ceil(fontSize * this.tokens.text.lineHeight);
+    const bold = this.parseBooleanProp(node.props.bold, false);
+    const italic = this.parseBooleanProp(node.props.italic, false);
+    const align = String(node.props.align || 'left');
+    const lines = this.wrapTextToLines(text, pos.width, fontSize);
+    const totalTextHeight = lines.length * lineHeightPx;
+    const firstLineY = pos.y + Math.round(Math.max(0, (pos.height - totalTextHeight) / 2)) + fontSize;
+
+    let textX: number;
+    let textAnchor: string;
+    if (align === 'center') {
+      textX = pos.x + pos.width / 2;
+      textAnchor = 'middle';
+    } else if (align === 'right') {
+      textX = pos.x + pos.width;
+      textAnchor = 'end';
+    } else {
+      textX = pos.x;
+      textAnchor = 'start';
+    }
+
+    const tspans = lines
+      .map(
+        (line, index) =>
+          `<tspan x="${textX}" dy="${index === 0 ? 0 : lineHeightPx}">${this.escapeXml(line)}</tspan>`
+      )
+      .join('');
+
+    return `<g${this.getDataNodeId(node)}>
+    <text x="${textX}" y="${firstLineY}"
+          font-family="Arial, Helvetica, sans-serif"
+          font-size="${fontSize}"
+          font-weight="${bold ? '700' : '400'}"
+          font-style="${italic ? 'italic' : 'normal'}"
+          fill="${this.renderTheme.text}"
+          text-anchor="${textAnchor}">${tspans}</text>
   </g>`;
   }
 
@@ -1578,45 +1656,182 @@ export class SVGRenderer {
   }
 
   protected renderTabs(node: IRComponentNode, pos: any): string {
-    // Read items prop instead of tabs, or fall back to empty
     const itemsStr = String(node.props.items || '');
     const tabs = itemsStr ? itemsStr.split(',').map((t) => t.trim()) : ['Tab 1', 'Tab 2', 'Tab 3'];
     const activeProp = node.props.active ?? 0;
     const activeIndex = Number.isFinite(Number(activeProp))
       ? Math.max(0, Math.floor(Number(activeProp)))
       : 0;
-    const accentColor = this.resolveAccentColor();
+
+    const variant = String(node.props.variant || 'default');
+    const accentColor =
+      variant === 'default'
+        ? this.resolveAccentColor()
+        : this.resolveVariantColor(variant, this.resolveAccentColor());
+
+    const radiusMap: Record<string, number> = { none: 0, sm: 4, md: 6, lg: 10, full: 20 };
+    const tabRadius = radiusMap[String(node.props.radius || 'md')] ?? 6;
+
+    const sizeMap: Record<string, number> = { sm: 32, md: 44, lg: 52 };
+    const tabHeight = pos.height > 0 ? pos.height : (sizeMap[String(node.props.size || 'md')] ?? 44);
+    const fontSize = 13;
+    const textY = pos.y + Math.round(tabHeight / 2) + Math.round(fontSize * 0.4);
+
+    const iconsStr = String(node.props.icons || '');
+    const iconList = iconsStr ? iconsStr.split(',').map((s) => s.trim()) : [];
+    const isFlat = this.parseBooleanProp(node.props.flat, false);
+    const showBorder = this.parseBooleanProp(node.props.border, true);
     const tabWidth = pos.width / tabs.length;
 
-    let svg = `<g${this.getDataNodeId(node)}>
-    <!-- Tab headers -->`;
+    // color prop: overrides tab label text color
+    const colorPropStr = String(node.props.color ?? '');
+    let textColorOverride: string | null = null;
+    if (colorPropStr && colorPropStr !== 'false') {
+      if (colorPropStr.startsWith('#') || colorPropStr.startsWith('rgb')) {
+        textColorOverride = colorPropStr;
+      } else if (this.colorResolver.hasColor(colorPropStr)) {
+        textColorOverride = this.colorResolver.resolveColor(colorPropStr, this.renderTheme.text);
+      }
+    }
+    const activeTextColor = textColorOverride ?? (isFlat ? accentColor : 'white');
+    const inactiveTextColor = textColorOverride
+      ? this.hexToRgba(textColorOverride, 0.55)
+      : this.renderTheme.textMuted;
+
+    // Container clip: rounds all corners of the Tabs widget (prevents active pill overflow)
+    const hasRadius = tabRadius > 0;
+    const clipId = hasRadius
+      ? `tc${String(node.meta?.nodeId ?? '').replace(/\W/g, '').slice(0, 12) || `${Math.round(Math.abs(pos.x))}x${Math.round(Math.abs(pos.y))}`}`
+      : '';
+
+    let svg = '';
+    if (hasRadius) {
+      svg += `<defs><clipPath id="${clipId}"><rect x="${pos.x}" y="${pos.y}" width="${pos.width}" height="${pos.height}" rx="${tabRadius}"/></clipPath></defs>`;
+    }
+
+    svg += `<g${this.getDataNodeId(node)}>`;
+    if (hasRadius) {
+      svg += `<g clip-path="url(#${clipId})">`;
+    }
+
+    // Tab header background (not in flat mode — flat has transparent header area)
+    if (!isFlat) {
+      svg += `
+    <rect x="${pos.x}" y="${pos.y}" width="${pos.width}" height="${tabHeight}"
+          fill="${this.renderTheme.bg}"/>`;
+    }
 
     tabs.forEach((tab, i) => {
       const tabX = pos.x + i * tabWidth;
       const isActive = i === activeIndex;
+      const iconName = iconList[i] || '';
+      const tabIconSvg = iconName ? getIcon(iconName) : null;
 
-      svg += `
-    <rect x="${tabX}" y="${pos.y}" 
-          width="${tabWidth}" height="44" 
-          fill="${isActive ? accentColor : 'transparent'}" 
-          stroke="${isActive ? 'none' : this.renderTheme.border}" 
-          stroke-width="1"/>
-    <text x="${tabX + tabWidth / 2}" y="${pos.y + 28}" 
-          font-family="Arial, Helvetica, sans-serif" 
-          font-size="13" 
-          font-weight="${isActive ? '600' : '500'}" 
-          fill="${isActive ? 'white' : this.renderTheme.text}" 
+      // Compute centered icon+text group position
+      const iconSize = 14;
+      const iconGap = 4;
+      const charW = fontSize * 0.58;
+      const textEst = tab.length * charW;
+      const totalW = tabIconSvg ? (iconSize + iconGap + textEst) : textEst;
+      const groupX = tabX + Math.round((tabWidth - totalW) / 2);
+      const iconOffY = pos.y + Math.round((tabHeight - iconSize) / 2);
+
+    if (isFlat) {
+      if (isActive) {
+        svg += `
+    <rect x="${tabX + 6}" y="${pos.y + tabHeight - 3}"
+          width="${tabWidth - 12}" height="3"
+          rx="1.5"
+          fill="${accentColor}"/>`;
+        }
+        // Flat: icon (if any)
+        if (tabIconSvg) {
+          svg += `
+    <g transform="translate(${groupX}, ${iconOffY})">
+      <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none"
+           stroke="${isActive ? accentColor : this.renderTheme.textMuted}"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        ${this.extractSvgContent(tabIconSvg)}
+      </svg>
+    </g>
+    <text x="${groupX + iconSize + iconGap}" y="${textY}"
+          font-family="Arial, Helvetica, sans-serif"
+          font-size="${fontSize}"
+          font-weight="${isActive ? '600' : '500'}"
+          fill="${isActive ? activeTextColor : inactiveTextColor}">${this.escapeXml(tab)}</text>`;
+        } else {
+          svg += `
+    <text x="${tabX + tabWidth / 2}" y="${textY}"
+          font-family="Arial, Helvetica, sans-serif"
+          font-size="${fontSize}"
+          font-weight="${isActive ? '600' : '500'}"
+          fill="${isActive ? activeTextColor : inactiveTextColor}"
           text-anchor="middle">${this.escapeXml(tab)}</text>`;
+        }
+      } else {
+        // Standard: filled rect for active tab (rx=0 — container clip handles rounding;
+        // exception: when border:false + hasRadius, active pill shows its own radius)
+        svg += `
+    <rect x="${tabX}" y="${pos.y}"
+          width="${tabWidth}" height="${tabHeight}"
+          rx="${!showBorder && hasRadius && isActive ? tabRadius : 0}"
+          fill="${isActive ? accentColor : 'transparent'}"
+          ${!isActive && showBorder ? `stroke="${this.renderTheme.border}" stroke-width="0.5"` : ''}/>`;
+
+        if (tabIconSvg) {
+          svg += `
+    <g transform="translate(${groupX}, ${iconOffY})">
+      <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none"
+           stroke="${isActive ? activeTextColor : this.renderTheme.textMuted}"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        ${this.extractSvgContent(tabIconSvg)}
+      </svg>
+    </g>
+    <text x="${groupX + iconSize + iconGap}" y="${textY}"
+          font-family="Arial, Helvetica, sans-serif"
+          font-size="${fontSize}"
+          font-weight="${isActive ? '600' : '500'}"
+          fill="${isActive ? activeTextColor : this.renderTheme.text}">${this.escapeXml(tab)}</text>`;
+        } else {
+          svg += `
+    <text x="${tabX + tabWidth / 2}" y="${textY}"
+          font-family="Arial, Helvetica, sans-serif"
+          font-size="${fontSize}"
+          font-weight="${isActive ? '600' : '500'}"
+          fill="${isActive ? activeTextColor : this.renderTheme.text}"
+          text-anchor="middle">${this.escapeXml(tab)}</text>`;
+        }
+      }
     });
 
-    svg += `
+    // Content area / separator
+    const contentY = pos.y + tabHeight;
+    const contentH = pos.height - tabHeight;
+    if (contentH >= 20 && !isFlat) {
+      svg += `
     <!-- Tab content area -->
-    <rect x="${pos.x}" y="${pos.y + 44}" 
-          width="${pos.width}" height="${pos.height - 44}" 
-          fill="${this.renderTheme.cardBg}" 
-          stroke="${this.renderTheme.border}" 
-          stroke-width="1"/>
-  </g>`;
+    <rect x="${pos.x}" y="${contentY}"
+          width="${pos.width}" height="${contentH}"
+          fill="${this.renderTheme.cardBg}"
+          ${showBorder ? `stroke="${this.renderTheme.border}" stroke-width="1"` : ''}/>`;
+    } else if (isFlat && showBorder) {
+      svg += `
+    <line x1="${pos.x}" y1="${contentY}" x2="${pos.x + pos.width}" y2="${contentY}"
+          stroke="${this.renderTheme.border}" stroke-width="1"/>`;
+    }
+
+    if (hasRadius) {
+      svg += `\n  </g>`;
+      // Outer border drawn on top of the clip so rounded corners are visible
+      if (!isFlat && showBorder) {
+        svg += `
+    <rect x="${pos.x}" y="${pos.y}" width="${pos.width}" height="${pos.height}"
+          rx="${tabRadius}" fill="none"
+          stroke="${this.renderTheme.border}" stroke-width="1"/>`;
+      }
+    }
+
+    svg += '\n  </g>';
     return svg;
   }
 
@@ -1704,11 +1919,21 @@ export class SVGRenderer {
       : this.renderTheme.border;
     const textColor = hasExplicitVariantColor ? 'white' : this.renderTheme.text;
 
-    // Use tokens from density configuration
+    // Size-aware font size
+    const size = String(node.props.size || 'md');
+    const BADGE_FONT_SIZES: Record<string, number> = { xs: 9, sm: 11, md: 12, lg: 13, xl: 15 };
+    const fontSize = BADGE_FONT_SIZES[size] ?? this.tokens.badge.fontSize;
+
+    // Custom padding prop overrides token default
+    const customPadding = node.props.padding !== undefined ? Number(node.props.padding) : undefined;
+    const BADGE_PAD_X: Record<string, number> = { xs: 5, sm: 6, md: 8, lg: 10, xl: 14 };
+    const paddingX = customPadding !== undefined && !isNaN(customPadding)
+      ? customPadding
+      : (BADGE_PAD_X[size] ?? this.tokens.badge.paddingX);
+
     const badgeRadius = this.tokens.badge.radius === 'pill'
       ? pos.height / 2
       : this.tokens.badge.radius;
-    const fontSize = this.tokens.badge.fontSize;
 
     return `<g${this.getDataNodeId(node)}>
     <rect x="${pos.x}" y="${pos.y}"
@@ -1716,7 +1941,7 @@ export class SVGRenderer {
           rx="${badgeRadius}"
           fill="${bgColor}"
           stroke="none"/>
-    <text x="${pos.x + pos.width / 2}" y="${pos.y + pos.height / 2 + 4}"
+    <text x="${pos.x + paddingX + (pos.width - paddingX * 2) / 2}" y="${pos.y + pos.height / 2 + fontSize * 0.35}"
           font-family="Arial, Helvetica, sans-serif"
           font-size="${fontSize}"
           font-weight="600"
@@ -1964,7 +2189,7 @@ export class SVGRenderer {
   }
 
   protected renderImage(node: IRComponentNode, pos: any): string {
-    const placeholder = String(node.props.placeholder || 'landscape').toLowerCase();
+    const placeholder = String(node.props.type || 'landscape').toLowerCase();
     const placeholderIcon = String(node.props.icon || '').trim();
     const variant = String(node.props.variant || '').trim();
     const placeholderIconSvg =
@@ -1972,6 +2197,21 @@ export class SVGRenderer {
 
     // Theme-aware image background
     const imageBg = this.options.theme === 'dark' ? '#2A2A2A' : '#E8E8E8';
+
+    // A3/A4: Clip handling — circle shape or cover crop on explicit height
+    const hasExplicitHeight = node.props.height !== undefined && !isNaN(Number(node.props.height)) && Number(node.props.height) > 0;
+    const isCircle = this.parseBooleanProp(node.props.circle, false);
+    const useClip = isCircle || hasExplicitHeight;
+    const clipId = useClip
+      ? `iclip${String(node.meta?.nodeId ?? '').replace(/\W/g, '').slice(0, 16) || `${Math.round(Math.abs(pos.x))}x${Math.round(Math.abs(pos.y))}`}`
+      : '';
+    const imgCx = pos.x + pos.width / 2;
+    const imgCy = pos.y + pos.height / 2;
+    const imgR = Math.min(pos.width, pos.height) / 2;
+    const defsHtml = useClip
+      ? `<defs><clipPath id="${clipId}">${isCircle ? `<circle cx="${imgCx}" cy="${imgCy}" r="${imgR}"/>` : `<rect x="${pos.x}" y="${pos.y}" width="${pos.width}" height="${pos.height}" rx="4"/>`}</clipPath></defs>`
+      : '';
+    const clipAttr = useClip ? ` clip-path="url(#${clipId})"` : '';
 
     // Determine aspect ratio based on placeholder type
     const aspectRatios: Record<string, number> = {
@@ -1984,15 +2224,30 @@ export class SVGRenderer {
 
     const ratio = aspectRatios[placeholder] || 16 / 9;
 
-    // Calculate max size without stretching (constrain to smallest dimension)
-    const maxSize = Math.min(pos.width, pos.height) * 0.8;
-    let iconWidth = maxSize;
-    let iconHeight = maxSize / ratio;
-
-    // If height is still too large, constrain by height instead
-    if (iconHeight > pos.height * 0.8) {
-      iconHeight = pos.height * 0.8;
-      iconWidth = iconHeight * ratio;
+    // A3: Cover mode ONLY for circle (scaled to fill then clipped).
+    // For landscape/portrait/square with explicit height, keep the camera icon
+    // in "contain" mode so it stays fully visible within the bounds.
+    let iconWidth: number;
+    let iconHeight: number;
+    if (isCircle) {
+      // Cover: scale to fill the circle (diameter = 2*imgR = min(width,height)).
+      // Using pos.width would cause extreme zoom when width >> height.
+      const diameter = 2 * imgR;
+      iconWidth = diameter;
+      iconHeight = diameter / ratio;
+      if (iconHeight < diameter) {
+        iconHeight = diameter;
+        iconWidth = diameter * ratio;
+      }
+    } else {
+      // Contain: scale to fit within 80% of the smallest dimension
+      const maxSize = Math.min(pos.width, pos.height) * 0.8;
+      iconWidth = maxSize;
+      iconHeight = maxSize / ratio;
+      if (iconHeight > pos.height * 0.8) {
+        iconHeight = pos.height * 0.8;
+        iconWidth = iconHeight * ratio;
+      }
     }
 
     // Center the icon in the available space
@@ -2012,19 +2267,22 @@ export class SVGRenderer {
       const iconOffsetX = pos.x + (pos.width - iconSize) / 2;
       const iconOffsetY = pos.y + (pos.height - iconSize) / 2;
 
-      return `<g${this.getDataNodeId(node)}>
+      const iconBorderShape = isCircle
+        ? `<circle cx="${imgCx}" cy="${imgCy}" r="${imgR}" fill="none" stroke="${this.renderTheme.border}" stroke-width="1"/>`
+        : `<rect x="${pos.x}" y="${pos.y}" width="${pos.width}" height="${pos.height}" fill="none" stroke="${this.renderTheme.border}" stroke-width="1" rx="4"/>`;
+      return `${defsHtml}<g${this.getDataNodeId(node)}${clipAttr}>
     <rect x="${pos.x}" y="${pos.y}" width="${pos.width}" height="${pos.height}" fill="${bgColor}" rx="4"/>
     <g transform="translate(${iconOffsetX}, ${iconOffsetY})">
       <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         ${this.extractSvgContent(placeholderIconSvg)}
       </svg>
     </g>
-    <rect x="${pos.x}" y="${pos.y}" width="${pos.width}" height="${pos.height}" fill="none" stroke="${this.renderTheme.border}" stroke-width="1" rx="4"/>
+    ${iconBorderShape}
   </g>`;
     }
 
     // Background
-    let svg = `<g${this.getDataNodeId(node)}>
+    let svg = `${defsHtml}<g${this.getDataNodeId(node)}${clipAttr}>
     <!-- Image Background -->
     <rect x="${pos.x}" y="${pos.y}" width="${pos.width}" height="${pos.height}" fill="${imageBg}"/>`;
 
@@ -2098,10 +2356,12 @@ export class SVGRenderer {
     }
 
     // Border
+    const borderShape = isCircle
+      ? `<circle cx="${imgCx}" cy="${imgCy}" r="${imgR}" fill="none" stroke="${this.renderTheme.border}" stroke-width="1"/>`
+      : `<rect x="${pos.x}" y="${pos.y}" width="${pos.width}" height="${pos.height}" fill="none" stroke="${this.renderTheme.border}" stroke-width="1" rx="4"/>`;
     svg += `
     <!-- Border -->
-    <rect x="${pos.x}" y="${pos.y}" width="${pos.width}" height="${pos.height}" 
-          fill="none" stroke="${this.renderTheme.border}" stroke-width="1" rx="4"/>
+    ${borderShape}
   </g>`;
     return svg;
   }
@@ -2238,12 +2498,33 @@ export class SVGRenderer {
     }
 
     const iconSize = this.getIconSize(size);
-    const offsetX = pos.x + (pos.width - iconSize) / 2;
-    const offsetY = pos.y + (pos.height - iconSize) / 2;
+    const paddingPx = Math.max(0, Number(node.props.padding || 0));
+    const renderedIconSize = Math.max(4, iconSize - paddingPx * 2);
+    const offsetX = pos.x + (pos.width - renderedIconSize) / 2;
+    const offsetY = pos.y + (pos.height - renderedIconSize) / 2;
+
+    // A4: Circle clip for Icon
+    const isIconCircle = this.parseBooleanProp(node.props.circle, false);
+    if (isIconCircle) {
+      const cx = pos.x + pos.width / 2;
+      const cy = pos.y + pos.height / 2;
+      const r = Math.min(pos.width, pos.height) / 2;
+      const iconClipId = `iconclip${String(node.meta?.nodeId ?? '').replace(/\W/g, '').slice(0, 16) || `${Math.round(Math.abs(pos.x))}x${Math.round(Math.abs(pos.y))}`}`;
+      const bgColor = this.hexToRgba(iconColor, 0.12);
+      return `<defs><clipPath id="${iconClipId}"><circle cx="${cx}" cy="${cy}" r="${r}"/></clipPath></defs><g${this.getDataNodeId(node)} clip-path="url(#${iconClipId})">
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="${bgColor}"/>
+    <g transform="translate(${offsetX}, ${offsetY})">
+      <svg width="${renderedIconSize}" height="${renderedIconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        ${this.extractSvgContent(iconSvg)}
+      </svg>
+    </g>
+  </g>
+  <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${this.hexToRgba(iconColor, 0.35)}" stroke-width="1"/>`;
+    }
 
     // Wrap SVG with viewBox and sizing
     const wrappedSvg = `<g${this.getDataNodeId(node)} transform="translate(${offsetX}, ${offsetY})">
-    <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <svg width="${renderedIconSize}" height="${renderedIconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       ${this.extractSvgContent(iconSvg)}
     </svg>
   </g>`;
@@ -2254,7 +2535,7 @@ export class SVGRenderer {
   protected renderIconButton(node: IRComponentNode, pos: any): string {
     const iconName = String(node.props.icon || 'help-circle');
     const variant = String(node.props.variant || 'default');
-    const size = String(node.props.size || 'md');
+    const size = String(node.props.size || 'sm');
     const disabled = String(node.props.disabled || 'false') === 'true';
     const density = (this.ir.project.style.density || 'normal') as DensityLevel;
     const labelOffset = this.parseBooleanProp(node.props.labelSpace, false) ? 18 : 0;
@@ -2401,7 +2682,7 @@ export class SVGRenderer {
   protected wrapTextToLines(text: string, maxWidth: number, fontSize: number): string[] {
     const normalized = text.replace(/\r\n/g, '\n');
     const paragraphs = normalized.split('\n');
-    const charWidth = fontSize * 0.6;
+    const charWidth = fontSize * 0.5;
     const safeWidth = Math.max(maxWidth || 0, charWidth);
     const maxCharsPerLine = Math.max(1, Math.floor(safeWidth / charWidth));
     const lines: string[] = [];

@@ -1,5 +1,5 @@
 # Wire-DSL — Complete Documentation
-# Generated: 2026-02-24
+# Generated: 2026-02-27
 # Index: llms.txt
 
 Wire-DSL is a block-declarative DSL for creating interactive wireframes using
@@ -221,11 +221,17 @@ layout stack(direction: vertical, gap: md, padding: lg) {
 - `direction`: `vertical` (default) | `horizontal`
 - `gap`: spacing between children (`xs`=4px, `sm`=8px, `md`=16px, `lg`=24px, `xl`=32px)
 - `padding`: internal padding (`xs`/`sm`/`md`/`lg`/`xl`; default: none)
-- `align`: horizontal alignment for `direction: horizontal` only
-  - `justify` (default): Equal width, fills 100%
-  - `left`: Natural width, grouped left
+- `justify`: main-axis distribution for `direction: horizontal` only
+  - `stretch` (default): Equal width, fills 100%
+  - `start`: Natural width, grouped left
   - `center`: Natural width, centered
-  - `right`: Natural width, grouped right
+  - `end`: Natural width, grouped right
+  - `spaceBetween`: First child left, last child right, space distributed between
+  - `spaceAround`: Equal space wraps each child
+- `align`: cross-axis (vertical) alignment for `direction: horizontal` only
+  - `start` (default): Children aligned to top of row
+  - `center`: Children vertically centered in row
+  - `end`: Children aligned to bottom of row
 
 **Examples**:
 
@@ -238,9 +244,9 @@ layout stack(direction: horizontal, gap: md) {
 }
 ```
 
-Horizontal stack with right-aligned buttons:
+Horizontal stack with end-aligned buttons:
 ```
-layout stack(direction: horizontal, gap: md, align: "right") {
+layout stack(direction: horizontal, gap: md, justify: end) {
   component Button text: "Back"
   component Button text: "Next" variant: primary
 }
@@ -248,9 +254,17 @@ layout stack(direction: horizontal, gap: md, align: "right") {
 
 Horizontal stack with centered content:
 ```
-layout stack(direction: horizontal, gap: md, align: "center") {
+layout stack(direction: horizontal, gap: md, justify: center) {
   component Button text: "Agree"
   component Button text: "Disagree"
+}
+```
+
+Toolbar with space between + vertical centering:
+```
+layout stack(direction: horizontal, gap: md, justify: spaceBetween, align: center) {
+  component Heading text: "Users"
+  component Button text: "New user" variant: primary icon: "plus"
 }
 ```
 
@@ -354,7 +368,7 @@ Flexible vertical container for grouping related content.
 
 ```
 layout card(padding: lg, gap: md, radius: md, border: true) {
-  component Image placeholder: "landscape"
+  component Image type: landscape
   component Heading text: "Product Title"
   component Text text: "Product description"
   component Button text: "Learn More"
@@ -379,7 +393,7 @@ layout card(padding: lg, gap: md, radius: md, border: true) {
 
 ```
 layout card(padding: md, gap: md, radius: lg, border: true) {
-  component Image placeholder: "square" height: 250
+  component Image type: square height: 250
   component Heading text: "Premium Item"
   component Text text: "High-quality product with excellent reviews"
   layout stack(direction: horizontal, gap: sm) {
@@ -393,7 +407,7 @@ layout card(padding: md, gap: md, radius: lg, border: true) {
 
 ```
 layout card(padding: lg, gap: md) {
-  component Image placeholder: "avatar" height: 120
+  component Image type: avatar height: 120
   component Heading text: "John Doe"
   component Text text: "john@example.com"
   component Divider
@@ -612,7 +626,7 @@ component Button text: "Click me" variant: primary
 
 | Component | Properties | Example |
 |-----------|-----------|---------|
-| `Image` | `placeholder`, `height` | `component Image placeholder: "square" height: 200` |
+| `Image` | `type`, `height` | `component Image type: square height: 200` |
 | `Icon` | `type`, `size`, `variant` | `component Icon icon: "search" size: md variant: primary` |
 
 ### Other Components
@@ -785,14 +799,40 @@ Standard body text for content and descriptions.
 
 **Properties**:
 - `text` (string): The text content
+- `size` (enum, optional): Font size — `xs` | `sm` | `md` | `lg` | `xl` (default: `md`, ~14px)
+- `bold` (boolean, optional): Render text in bold (default: `false`)
+- `italic` (boolean, optional): Render text in italic (default: `false`)
 
 **Example**:
 ```wire
 component Text text: "This is body text"
-component Text text: "User profile information goes here"
+component Text text: "Important notice" bold: true
+component Text text: "Side note" size: sm italic: true
 ```
 
-**Rendering**: Regular text at 14-16px font size
+**Rendering**: Regular text at the specified size, with optional bold and italic styling
+
+---
+
+### Paragraph
+
+Multi-line body text block with alignment control. Suitable for longer prose content.
+
+**Properties**:
+- `text` (string): The text content (may wrap across multiple lines)
+- `align` (enum, optional): Text alignment — `left` | `center` | `right` (default: `left`)
+- `size` (enum, optional): Font size — `xs` | `sm` | `md` | `lg` | `xl` (default: `md`)
+- `bold` (boolean, optional): Render text in bold (default: `false`)
+- `italic` (boolean, optional): Render text in italic (default: `false`)
+
+**Example**:
+```wire
+component Paragraph text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+component Paragraph text: "Centered caption" align: center size: sm
+component Paragraph text: "Quote text" italic: true align: center
+```
+
+**Rendering**: Wrapped text block respecting alignment and font styling options
 
 ---
 
@@ -821,7 +861,7 @@ Single-line text input field.
 
 **Properties**:
 - `label` (string): Field label
-- `placeholder` (string): Placeholder text
+- `type` (enum): Placeholder text
 - `iconLeft` (string, optional): Icon name rendered on the left side of the field (e.g., `"search"`, `"mail"`)
 - `iconRight` (string, optional): Icon name rendered on the right side of the field (e.g., `"eye"`, `"x"`)
 - `disabled` (boolean, optional): Visually dims the field to indicate it is non-interactive (default: `false`)
@@ -843,7 +883,7 @@ Multi-line text input field.
 
 **Properties**:
 - `label` (string): Field label
-- `placeholder` (string): Placeholder text
+- `type` (enum): Placeholder text
 - `rows` (number): Number of visible rows (default: 4)
 
 **Example**:
@@ -949,19 +989,17 @@ Clickable action button.
 
 **Properties**:
 - `text` (string): Button label
-- `variant` (string): Visual style - `default` | `primary` | `secondary` | `success` | `warning` | `danger` | `info` (default: `default`)
+- `variant` (string): Visual style (default: `default`). Accepts semantic names or Material Design color families.
+- `size` (enum, optional): `xs` | `sm` | `md` | `lg` | `xl` (default: `md`)
 - `icon` (string, optional): Icon name to render alongside the text (e.g., `"check"`, `"trash"`, `"plus"`)
 - `iconAlign` (string, optional): Icon placement - `left` | `right` (default: `left`)
 - `disabled` (boolean, optional): Visually dims the button (default: `false`)
 
-**Variants**:
-- `default`: Neutral button style
-- `primary`: Prominent filled button (usually blue)
-- `secondary`: Neutral action
-- `success`: Positive action
-- `warning`: Caution action
-- `danger`: Destructive action
-- `info`: Informational action
+**Semantic variants**: `default` | `primary` | `secondary` | `success` | `warning` | `danger` | `info`
+
+**Material Design color variants**: `red` | `pink` | `purple` | `deep_purple` | `indigo` | `blue` | `light_blue` | `cyan` | `teal` | `green` | `light_green` | `lime` | `yellow` | `amber` | `orange` | `deep_orange` | `brown` | `grey` | `blue_grey`
+
+You can also specify a specific shade such as `red_400`, `purple_A200`, `teal_700`, etc.
 
 **Example**:
 ```wire
@@ -983,7 +1021,7 @@ Button with icon instead of text.
 
 **Properties**:
 - `icon` (string): Icon name (e.g., "search", "menu", "close")
-- `size` (enum): `sm` | `md` | `lg` (default: `md`)
+- `size` (enum): `xs` | `sm` | `md` | `lg` | `xl` (default: `md`)
 - `variant` (enum): `default` | `primary` | `secondary` | `success` | `warning` | `danger` | `info`
 - `disabled` (boolean): disabled state (`true` | `false`, default: `false`)
 
@@ -1007,8 +1045,15 @@ Top navigation bar/header.
 **Properties**:
 - `title` (string): Main title
 - `subtitle` (string, optional): Secondary subtitle
+- `size` (enum, optional): `sm` | `md` | `lg` (default: `md`) — controls topbar height (44px / 56px / 72px)
 - `user` (string, optional): User name or identifier for badge
 - `actions` (string, optional): Action items (comma-separated)
+- `icon` (string, optional): Icon name for left badge slot
+- `avatar` (boolean, optional): Show avatar circle (default: `false`)
+- `variant` (string, optional): Accent color for icon badge and action buttons
+- `border` (boolean, optional): Show bottom border (default: `false`)
+- `background` (color, optional): Background fill. `"true"` = `cardBg` (legacy); hex or named Material color = custom color; `"false"` or absent = transparent.
+- `radius` (enum, optional): Corner radius — `none` | `sm` | `md` | `lg` | `xl` (default: `md`)
 
 **Example**:
 ```wire
@@ -1016,6 +1061,8 @@ component Topbar title: "Dashboard"
 component Topbar title: "Dashboard" subtitle: "Welcome back"
 component Topbar title: "Settings" user: "john_doe"
 component Topbar title: "Admin" actions: "Help,Logout"
+component Topbar title: "App" size: lg background: "#1E293B" border: true
+component Topbar title: "Portal" size: sm background: indigo user: "alice"
 ```
 
 **Rendering**: Horizontal bar at top of screen with logo/title and optional user menu
@@ -1090,11 +1137,19 @@ Tabbed interface with multiple panels.
 **Properties**:
 - `items` (string, CSV): Tab labels
 - `active` (number): Index of active tab (default: 0)
+- `variant` (string, optional): Active tab color — semantic name or Material Design color family (default: `default` = accent color)
+- `size` (enum, optional): `sm` | `md` | `lg` (default: `md`) — controls tab bar height (32px / 44px / 52px)
+- `radius` (enum, optional): Tab corner rounding — `none` | `sm` | `md` | `lg` | `full` (default: `md`)
+- `icons` (string, CSV, optional): Icon names aligned by position to each tab label
+- `flat` (boolean, optional): Flat underline style — active tab shows a colored bottom indicator, no filled background (default: `false`)
 
 **Example**:
 ```wire
 component Tabs items: "Overview,Details,Comments" active: 0
-component Tabs items: "Profile,Settings,Privacy,Security" active: 1
+component Tabs items: "Profile,Settings,Privacy" active: 1 variant: primary
+component Tabs items: "Home,Stats,History" icons: "home,bar-chart,clock" active: 0
+component Tabs items: "All,Active,Archived" active: 0 flat: true variant: indigo
+component Tabs items: "Files,Shared,Trash" size: sm radius: full
 ```
 
 **Rendering**: Horizontal tabs with one highlighted as active
@@ -1158,24 +1213,24 @@ component List title: "Cities" itemsMock: 5 mock: "city" random: true
 Placeholder for image content.
 
 **Properties**:
-- `placeholder` (string): Shape - `square` | `landscape` | `portrait` | `avatar` | `icon`
-- `height` (number, optional): Height in pixels (default: 200)
-- `icon` (string, optional): Icon name — used when `placeholder: icon`. The icon fills the component area directly, without an inner border box.
-- `variant` (string, optional): When `placeholder: icon`, tints the background and icon with the specified color (e.g., `primary`, `success`, `danger`, or custom color). Behaves similarly to `IconButton` variants.
+- `type` (enum): Shape — `landscape` | `portrait` | `square` | `avatar` | `icon`
+- `height` (number, optional): Height in pixels. When set, the image scales to cover the full area and clips to the specified dimensions (object-fit: cover behavior).
+- `circle` (boolean, optional): Clips the image to a circular shape (avatar style). Also enables cover scaling (default: `false`).
+- `icon` (string, optional): Icon name — used when `type: icon`. The icon fills the component area directly.
+- `variant` (string, optional): when `type: icon`, tints the background and icon with the specified color.
 
 > The background color adapts to the active theme — light gray in `light` mode, dark gray in `dark` mode.
 
 **Example**:
 ```wire
-component Image placeholder: "square" height: 250
-component Image placeholder: "landscape" height: 300
-component Image placeholder: "avatar" height: 100
-component Image placeholder: "icon" icon: "image" height: 120
-component Image placeholder: "icon" icon: "user" variant: primary height: 80
-component Image placeholder: "icon" icon: "shield" variant: success height: 80
+component Image type: square height: 250
+component Image type: landscape height: 300
+component Image type: avatar height: 100 circle: true
+component Image type: icon icon: "image" height: 120
+component Image type: icon icon: "user" variant: primary height: 80 circle: true
 ```
 
-**Rendering**: Rectangular placeholder with appropriate aspect ratio; when `placeholder: icon`, the specified icon is centered and fills the available space
+**Rendering**: Rectangular (or circular) placeholder with appropriate aspect ratio; when `height` is set or `circle: true`, cover-mode clipping is applied
 
 ---
 
@@ -1185,16 +1240,18 @@ Icon symbol.
 
 **Properties**:
 - `icon` (string): Icon identifier (e.g., "search", "star", "heart")
-- `size` (enum): `sm` | `md` | `lg` (default: `md`)
+- `size` (enum): `xs` | `sm` | `md` | `lg` | `xl` (default: `md`)
+- `variant` (string, optional): Icon color variant — semantic or Material Design color
+- `circle` (boolean, optional): Renders the icon inside a circular background (default: `false`)
 
 **Example**:
 ```wire
 component Icon icon: "search"
-component Icon icon: "settings"
-component Icon icon: "download"
+component Icon icon: "settings" size: lg
+component Icon icon: "user" size: md variant: primary circle: true
 ```
 
-**Rendering**: Small icon symbol inline with text
+**Rendering**: Small icon symbol inline with text; when `circle: true`, shows inside a tinted circular badge
 
 ---
 
@@ -1240,12 +1297,15 @@ Small label/tag for status or categorization.
 **Properties**:
 - `text` (string): Badge label
 - `variant` (string): Style - `default` | `primary` | `secondary` | `success` | `warning` | `danger` | `info` (default: `default`)
+- `size` (enum, optional): `xs` | `sm` | `md` | `lg` | `xl` (default: `md`) — controls badge height and font size
+- `padding` (number, optional): Custom horizontal padding in px (overrides default for the chosen size)
 
 **Example**:
 ```wire
 component Badge text: "New" variant: primary
-component Badge text: "Active" variant: success
-component Badge text: "Alert" variant: warning
+component Badge text: "Active" variant: success size: sm
+component Badge text: "Alert" variant: warning size: lg
+component Badge text: "Tag" variant: info padding: 12
 ```
 
 **Rendering**: Small rounded label with colored background
@@ -1358,8 +1418,6 @@ Placeholder for various chart types.
 **Properties**:
 - `type` (string): Chart type - `bar` | `line` | `pie` | `area` (default: `bar`)
 - `height` (number): Height in pixels (default: 200)
-- `ChartPlaceholder`: backward-compatible alias of `Chart`
-
 **Example**:
 ```wire
 component Chart type: "bar" height: 250
@@ -1414,7 +1472,7 @@ component Modal title: "Delete User" visible: false
 | Tabs | Navigation | Tabbed content |
 | Table | Data | Data grid |
 | List | Data | Item list |
-| Image | Media | Image placeholder |
+| Image | Media | image type |
 | Icon | Media | Icon symbol |
 | Divider | Display | Visual separator |
 | Separate | Display | Invisible spacer |
@@ -1486,7 +1544,8 @@ layout stack(direction: vertical, gap: md, padding: lg) {
 | `direction` | string | `vertical`, `horizontal` | `vertical` | Stack direction |
 | `gap` | string | `xs`, `sm`, `md`, `lg`, `xl` | `md` | Spacing between children |
 | `padding` | string | `xs`, `sm`, `md`, `lg`, `xl` | none | Internal padding |
-| `align` | string | `justify`, `left`, `center`, `right` | `justify` | Horizontal alignment (horizontal stacks only) |
+| `justify` | string | `stretch`, `start`, `center`, `end`, `spaceBetween`, `spaceAround` | `stretch` | Main-axis distribution (horizontal stacks only) |
+| `align` | string | `start`, `center`, `end` | `start` | Cross-axis alignment per child (horizontal stacks only) |
 
 ### Spacing Values
 
@@ -1518,9 +1577,9 @@ layout stack(direction: horizontal, gap: md, padding: md) {
 ```
 All buttons divide the width equally, filling 100% of the container.
 
-**Horizontal Stack - Left Aligned**:
+**Horizontal Stack - Start Aligned**:
 ```
-layout stack(direction: horizontal, gap: md, align: "left") {
+layout stack(direction: horizontal, gap: md, justify: start) {
   component Button text: "Save" variant: primary
   component Button text: "Cancel"
   component Button text: "Reset"
@@ -1530,36 +1589,64 @@ Buttons group on the left with their natural width, useful for left-aligned acti
 
 **Horizontal Stack - Center Aligned**:
 ```
-layout stack(direction: horizontal, gap: md, align: "center") {
+layout stack(direction: horizontal, gap: md, justify: center) {
   component Button text: "Agree" variant: primary
   component Button text: "Disagree"
 }
 ```
 Buttons group in the center with their natural width, ideal for dialogs or confirmations.
 
-**Horizontal Stack - Right Aligned**:
+**Horizontal Stack - End Aligned**:
 ```
-layout stack(direction: horizontal, gap: md, align: "right") {
+layout stack(direction: horizontal, gap: md, justify: end) {
   component Button text: "Back"
   component Button text: "Next" variant: primary
 }
 ```
 Buttons group on the right with their natural width, typical pattern for form navigation or dialog actions.
 
+**Horizontal Stack - Space Between**:
+```
+layout stack(direction: horizontal, gap: md, justify: spaceBetween) {
+  component Heading text: "Users"
+  component Button text: "New user" variant: primary
+}
+```
+First child is flush left, last child is flush right — the classic toolbar/header pattern.
+
+**Horizontal Stack - Space Around**:
+```
+layout stack(direction: horizontal, gap: md, justify: spaceAround) {
+  component Button text: "Home"
+  component Button text: "Profile"
+  component Button text: "Settings"
+}
+```
+Equal space wraps each child, commonly used for navigation bars.
+
+**Cross-axis (vertical) alignment with `align`**:
+```
+layout stack(direction: horizontal, gap: md, justify: spaceBetween, align: center) {
+  component Heading text: "Dashboard"
+  component Button text: "Settings" icon: "settings"
+}
+```
+Children are vertically centered within the row.
+
 **Icon Alignment Examples**:
 ```
-layout stack(direction: horizontal, gap: 8, align: "left") {
+layout stack(direction: horizontal, gap: 8, justify: start) {
   component Icon icon: "home"
   component Icon icon: "search"
   component Icon icon: "settings"
 }
 
-layout stack(direction: horizontal, gap: 8, align: "center") {
+layout stack(direction: horizontal, gap: 8, justify: center) {
   component Icon icon: "heart"
   component Icon icon: "star"
 }
 
-layout stack(direction: horizontal, gap: 8, align: "right") {
+layout stack(direction: horizontal, gap: 8, justify: end) {
   component Icon icon: "download"
   component Icon icon: "share"
 }
@@ -1574,31 +1661,44 @@ layout stack(direction: vertical, gap: lg, padding: xl) {
 }
 ```
 
-### Horizontal Stack Alignment
+### Horizontal Stack Layout Control
 
-The `align` property controls how children are distributed horizontally in `direction: horizontal` stacks:
+Two properties control child distribution in `direction: horizontal` stacks, following the CSS Flexbox model:
+
+#### `justify` — Main Axis (horizontal distribution)
 
 | Value | Behavior | Use Case |
 |-------|----------|----------|
-| `justify` (default) | Equal width, fills 100% | Standard layouts, button groups |
-| `left` | Natural widths, grouped left | Left-aligned action bars |
+| `stretch` (default) | Equal width, fills 100% | Button groups, equal columns |
+| `start` | Natural widths, grouped left | Left-aligned action bars |
 | `center` | Natural widths, centered | Dialogs, centered confirmations |
-| `right` | Natural widths, grouped right | Form navigation, right-aligned actions |
+| `end` | Natural widths, grouped right | Form navigation, right actions |
+| `spaceBetween` | First left, last right, space distributed | Toolbar with title + action |
+| `spaceAround` | Equal space wraps each child | Navigation bars |
+
+#### `align` — Cross Axis (vertical alignment of children)
+
+| Value | Behavior |
+|-------|----------|
+| `start` (default) | Children aligned to top of row |
+| `center` | Children vertically centered in row |
+| `end` | Children aligned to bottom of row |
 
 **Key Behaviors**:
-- **`justify`**: All children get equal width. The traditional "100% width distribution" behavior.
-- **`left`, `center`, `right`**: Children use their natural intrinsic width (based on content, component type, etc.). The remaining space is used for alignment.
-- **Gap**: Always applied between children in all alignment modes.
+- **`stretch`**: All children get equal width (100% / n). The default "fill container" behavior.
+- **`start`, `center`, `end`, `spaceBetween`, `spaceAround`**: Children use their natural intrinsic width. Containers without a calculable width (cards, vertical stacks, panels) act as flex-grow items, sharing the remaining space equally.
+- **`align`**: Adjusts the vertical offset of each child within the row height. Requires children to have different heights to be visually noticeable.
+- **Gap**: Always applied between children in all `justify` modes.
 
 ### Important Notes
 
 ⚠️ **Padding Inheritance**: Stacks without explicit padding have **0px padding by default** (no inheritance from project style)
 
-⚠️ **Align in Horizontal Stacks Only**: The `align` property only affects `direction: horizontal` stacks. For vertical stacks, use nested centered containers if needed.
+⚠️ **`justify` and `align` in Horizontal Stacks Only**: Both properties only affect `direction: horizontal` stacks. For vertical stacks, use nested containers for alignment needs.
 
 ⚠️ **Nesting**: Avoid excessive nesting of the same layout type; use Grid for multi-column layouts instead
 
-⚠️ **Natural Width Calculation**: For `left`, `center`, and `right` alignment, component widths are calculated based on component type and content (e.g., Button text length, Icon size, etc.). Explicit `width` properties in components override these calculations.
+⚠️ **Natural Width Calculation**: For `justify` values other than `stretch`, component widths are calculated based on component type and content (e.g., Button text length, Icon size). Explicit `width` properties on components override these calculations. Containers without a calculable intrinsic width (cards, panels, vertical stacks) share the remaining space equally.
 
 ---
 
@@ -1869,7 +1969,7 @@ Create self-contained content cards. Ideal for product displays, user profiles, 
 
 ```
 layout card(padding: lg, gap: md, radius: md, border: true) {
-  component Image placeholder: "square" height: 250
+  component Image type: square height: 250
   component Heading text: "Card Title"
   component Text text: "Card description"
   component Button text: "Action"
@@ -1897,7 +1997,7 @@ layout card(padding: lg, gap: md, radius: md, border: true) {
 **Product Card**:
 ```
 layout card(padding: md, gap: md, radius: lg, border: true) {
-  component Image placeholder: "square" height: 200
+  component Image type: square height: 200
   component Heading text: "Premium Laptop"
   component Text text: "High-performance with latest specs"
   component Badge text: "In Stock" variant: success
@@ -1911,7 +2011,7 @@ layout card(padding: md, gap: md, radius: lg, border: true) {
 **User Profile Card**:
 ```
 layout card(padding: lg, gap: md, radius: md) {
-  component Image placeholder: "square"
+  component Image type: square
   component Heading text: "John Doe"
   component Text text: "Senior Software Engineer"
   component Text text: "john@example.com"
@@ -1926,7 +2026,7 @@ layout card(padding: lg, gap: md, radius: md) {
 **Blog Post Card**:
 ```
 layout card(padding: md, gap: md, radius: md, border: true) {
-  component Image placeholder: "landscape" height: 180
+  component Image type: landscape height: 180
   component Heading text: "Getting Started with Wire-DSL"
   component Text text: "Learn how to create interactive wireframes with Wire-DSL in 5 minutes"
   component Badge text: "Tutorial"
@@ -2209,7 +2309,7 @@ layout stack(direction: horizontal, gap: 8) {
 ## Available Icons (287)
 
 Wire-DSL currently bundles **287 icons** from **Feather Icons v4.29.0**.
-These names are valid for `Icon.icon`, `IconButton.icon`, `Topbar.icon`, `Image icon` (when `placeholder: "icon"`), and `Stat.icon`.
+These names are valid for `Icon.icon`, `IconButton.icon`, `Topbar.icon`, `Image icon` (when `type: icon`), and `Stat.icon`.
 
 In `@wire-dsl/language-support`, the same catalog is exposed as:
 - `ICON_NAMES` (typed list)
@@ -2958,14 +3058,14 @@ project "Card & Stat Demo" {
       }
 
       layout card(padding: lg, gap: md, radius: md, border: true) {
-        component Image placeholder: "landscape" height: 250
+        component Image type: landscape height: 250
         component Heading text: "Product Showcase"
         component Text text: "Explore our latest features and improvements"
         component Button text: "Learn More" variant: primary
       }
 
       layout card(padding: md, gap: sm) {
-        component Image placeholder: "portrait" height: 250
+        component Image type: portrait height: 250
         component Heading text: "Beautiful Villa"
         component Text text: "3 bedrooms, 2 bathrooms, Downtown area"
         layout stack(direction: horizontal, gap: md) {
@@ -2983,7 +3083,7 @@ project "Card & Stat Demo" {
       layout grid(columns: 12, gap: md) {
         cell span: 6 {
           layout card(padding: md, gap: md, radius: lg, border: true) {
-            component Image placeholder: "square" height: 250
+            component Image type: square height: 250
             component Heading text: "Product One"
             component Text text: "High-quality product with premium features"
             layout stack(direction: horizontal, gap: sm) {
@@ -2995,7 +3095,7 @@ project "Card & Stat Demo" {
 
         cell span: 6 {
           layout card(padding: md, gap: md, radius: lg, border: true) {
-            component Image placeholder: "square" height: 250
+            component Image type: square height: 250
             component Heading text: "Product Two"
             component Text text: "Best-selling item with excellent reviews"
             layout stack(direction: horizontal, gap: sm) {
@@ -3014,7 +3114,7 @@ project "Card & Stat Demo" {
 
       layout card(padding: xl, gap: lg, radius: md) {
         layout stack(direction: horizontal, gap: lg) {
-          component Image placeholder: "avatar" height: 120
+          component Image type: avatar height: 120
           layout stack(direction: vertical, gap: sm) {
             component Heading text: "John Smith"
             component Text text: "john@example.com"
@@ -3056,7 +3156,7 @@ project "Mobile Wireframe Demo" {
       component Button text: "Get Started" variant: primary
       component Button text: "Learn More" variant: secondary
 
-      component Image placeholder: "landscape"
+      component Image type: landscape
 
       component Heading text: "Features" level: h2
 
@@ -3086,7 +3186,7 @@ project "Mobile Wireframe Demo" {
   screen Details {
     layout stack(direction: vertical, gap: md, padding: md) {
       component Heading text: "Product Details"
-      component Image placeholder: "square"
+      component Image type: square
       component Heading text: "Description" level: h2
       component Text text: "This is a detailed view optimized for mobile screens. All content flows naturally in a single column."
       component Button text: "Add to Cart" variant: primary

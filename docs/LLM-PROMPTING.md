@@ -1,4 +1,4 @@
-﻿# LLM Prompt Guide: Generating Valid `.wire` Files
+# LLM Prompt Guide: Generating Valid `.wire` Files
 
 This guide enables LLMs to generate valid Wire-DSL files from text descriptions or wireframe images.
 
@@ -121,7 +121,7 @@ style {
 ### Media Components Details
 | Component | Key Properties | Valid Placeholders | Example |
 |---|---|---|---|
-| `Image` | `placeholder`, `height` | `"landscape"`, `"square"`, `"portrait"`, `"avatar"`, `"icon"` | `component Image placeholder: "square" height: 250` |
+| `Image` | `type`, `height` | `"landscape"`, `"square"`, `"portrait"`, `"avatar"`, `"icon"` | `component Image type: square height: 250` |
 | `Icon` | `type` | `size`, `variant` | `component Icon icon: "search" size: md variant: primary` |
 
 ### Navigation Components Details
@@ -370,7 +370,7 @@ project "Admin Dashboard" {
 ### Nested Stack within Card (Horizontal Buttons)
 ```wire
 layout card(padding: lg, gap: md, radius: lg, border: true) {
-  component Image placeholder: "square" height: 250
+  component Image type: square height: 250
   component Heading text: "Product Title"
   component Text text: "Product description"
   layout stack(direction: horizontal, gap: md) {
@@ -446,7 +446,7 @@ layout split(left: 280, gap: md) {
   
   layout stack(direction: vertical, gap: lg, padding: lg) {
     layout card(padding: lg, gap: md, radius: lg, border: true) {
-      component Image placeholder: "square"
+      component Image type: square
       component Heading text: "John Doe"
       component Text text: "john@example.com"
       component Divider
@@ -486,7 +486,7 @@ layout panel(padding: lg, background: "white") {
 layout grid(columns: 12, gap: md, padding: lg) {
   cell span: 6 {
     layout card(padding: md, gap: md, radius: lg, border: true) {
-      component Image placeholder: "square" height: 200
+      component Image type: square height: 200
       component Heading text: "Premium Item"
       component Text text: "High-quality product"
       component Stat title: "Price" value: "$99.99"
@@ -495,7 +495,7 @@ layout grid(columns: 12, gap: md, padding: lg) {
   }
   cell span: 6 {
     layout card(padding: md, gap: md, radius: lg, border: true) {
-      component Image placeholder: "square" height: 200
+      component Image type: square height: 200
       component Heading text: "Standard Item"
       component Text text: "Good value option"
       component Stat title: "Price" value: "$49.99"
@@ -549,7 +549,7 @@ Before generating output, verify:
 - [ ] Component names match exactly (case-sensitive)
 - [ ] All string values are quoted
 - [ ] All layouts have explicit `padding` when needed
-- [ ] Image placeholders use valid values: "landscape", "square", "portrait"
+- [ ] Image `type` uses valid values: "landscape", "square", "portrait"
 - [ ] Use `Image` for profile pictures when needed
 - [ ] Grid cells have `span` values between 1-12
 - [ ] Split fixed side width (`left` or `right`) is between 200-400 pixels
@@ -572,7 +572,7 @@ Before generating output, verify:
 - Use most common variant: `primary` for buttons, `md` for spacing
 - For numeric properties, use default spacing/padding
 - For text, use descriptive placeholders
-- For image placeholders, use `"square"` as safe default
+- For `Image type`, use `"square"` as safe default
 - For lists/arrays, use comma-separated values in quotes
 
 ### If Layout Properties Are Missing:

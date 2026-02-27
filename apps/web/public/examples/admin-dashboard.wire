@@ -1,5 +1,5 @@
 ﻿project "Admin Dashboard" {
-  config {
+  style {
     density: "normal"
     spacing: "md"
     radius: "md"
@@ -23,7 +23,7 @@
             component Input label: "Search user" placeholder: "name, email..."
           }
           cell span: 4 align: end {
-            component Button text: "Create user" variant: primary
+            component Button text: "Create user" variant: primary labelSpace: true size: lg
           }
         }
 

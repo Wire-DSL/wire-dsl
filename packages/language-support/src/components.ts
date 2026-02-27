@@ -43,6 +43,7 @@ export type ComponentCategory =
 
 // Reusable Enum Definitions
 const sizeEnum: PropertyMetadata = { name: 'size', type: 'enum', options: ['sm', 'md', 'lg'] };
+const textSizeEnum: PropertyMetadata = { name: 'size', type: 'enum', options: ['xs', 'sm', 'md', 'lg', 'xl'] };
 const spacingEnum: PropertyMetadata = {
   name: 'spacing',
   type: 'enum',
@@ -51,12 +52,25 @@ const spacingEnum: PropertyMetadata = {
 const variantEnum: PropertyMetadata = {
   name: 'variant',
   type: 'enum',
-  options: ['primary', 'secondary', 'success', 'warning', 'danger', 'info'],
+  options: [
+    'primary', 'secondary', 'success', 'warning', 'danger', 'info',
+    // Material Design base families
+    'red', 'pink', 'purple', 'deep_purple', 'indigo', 'blue', 'light_blue',
+    'cyan', 'teal', 'green', 'light_green', 'lime', 'yellow', 'amber',
+    'orange', 'deep_orange', 'brown', 'grey', 'blue_grey',
+  ],
 };
 const variantWithDefaultEnum: PropertyMetadata = {
   name: 'variant',
   type: 'enum',
-  options: ['default', 'primary', 'secondary', 'success', 'warning', 'danger', 'info'],
+  options: [
+    'default',
+    'primary', 'secondary', 'success', 'warning', 'danger', 'info',
+    // Material Design base families
+    'red', 'pink', 'purple', 'deep_purple', 'indigo', 'blue', 'light_blue',
+    'cyan', 'teal', 'green', 'light_green', 'lime', 'yellow', 'amber',
+    'orange', 'deep_orange', 'brown', 'grey', 'blue_grey',
+  ],
 };
 const iconNameEnum: PropertyMetadata = {
   name: 'icon',
@@ -66,7 +80,7 @@ const iconNameEnum: PropertyMetadata = {
 const controlSizeEnum: PropertyMetadata = {
   name: 'size',
   type: 'enum',
-  options: ['sm', 'md', 'lg'],
+  options: ['xs', 'sm', 'md', 'lg', 'xl'],
 };
 const alignEnum: PropertyMetadata = {
   name: 'align',
@@ -94,8 +108,8 @@ const disabledProp: PropertyMetadata = {
   description: 'Visually dims the component to indicate it is non-interactive.',
   defaultValue: false,
 };
-const imagePlaceholderEnum: PropertyMetadata = {
-  name: 'placeholder',
+const imageTypeEnum: PropertyMetadata = {
+  name: 'type',
   type: 'enum',
   options: ['landscape', 'portrait', 'square', 'icon', 'avatar'],
 };
@@ -119,8 +133,11 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     category: 'Text',
     properties: {
       text: { name: 'text', type: 'string', required: true },
+      size: textSizeEnum,
+      bold: { name: 'bold', type: 'boolean', description: 'Applies bold weight to the text.' },
+      italic: { name: 'italic', type: 'boolean', description: 'Applies italic style to the text.' },
     },
-    example: 'component Text text: "Lorem ipsum dolor sit amet"',
+    example: 'component Text text: "Lorem ipsum dolor sit amet" bold: true',
   },
   Label: {
     name: 'Label',
@@ -130,6 +147,19 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
       text: { name: 'text', type: 'string', required: true },
     },
     example: 'component Label text: "Field label"',
+  },
+  Paragraph: {
+    name: 'Paragraph',
+    description: 'Full-width text block with alignment, size, and formatting options.',
+    category: 'Text',
+    properties: {
+      text: { name: 'text', type: 'string', required: true },
+      align: alignEnum,
+      size: textSizeEnum,
+      bold: { name: 'bold', type: 'boolean', description: 'Applies bold weight to the text.' },
+      italic: { name: 'italic', type: 'boolean', description: 'Applies italic style to the text.' },
+    },
+    example: 'component Paragraph text: "Body copy goes here." align: left',
   },
   Button: {
     name: 'Button',
@@ -246,8 +276,10 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
       user: { name: 'user', type: 'string' },
       variant: variantWithDefaultEnum,
       border: { name: 'border', type: 'boolean' },
-      background: { name: 'background', type: 'boolean' },
+      background: { name: 'background', type: 'color', description: '"true" = cardBg; hex or named Material color = custom; "false" or absent = none.' },
       radius: { name: 'radius', type: 'enum', options: ['none', 'sm', 'md', 'lg', 'xl'] },
+      size: { name: 'size', type: 'enum', options: ['sm', 'md', 'lg'], defaultValue: 'md', description: 'Height of the topbar.' },
+      color: { name: 'color', type: 'color', description: 'Text color for title. Subtitle inherits this color at 65% opacity.' },
     },
     example: 'component Topbar title: "Dashboard" subtitle: "Overview" icon: "menu" user: "john_doe" avatar: true',
   },
@@ -292,6 +324,13 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     properties: {
       items: { name: 'items', type: 'string', required: true },
       active: { name: 'active', type: 'number' },
+      variant: variantWithDefaultEnum,
+      radius: { name: 'radius', type: 'enum', options: ['none', 'sm', 'md', 'lg', 'full'], defaultValue: 'md' },
+      size: { name: 'size', type: 'enum', options: ['sm', 'md', 'lg'], defaultValue: 'md' },
+      icons: { name: 'icons', type: 'string', description: 'Comma-separated icon names aligned to each tab.' },
+      flat: { name: 'flat', type: 'boolean', defaultValue: false, description: 'Flat style — underline indicator without filled background.' },
+      border: { name: 'border', type: 'boolean', defaultValue: true, description: 'Show/hide borders between tabs and around the container.' },
+      color: { name: 'color', type: 'color', description: 'Text color for tab labels. Overrides default white (active) and muted (inactive).' },
     },
     example: 'component Tabs items: "Overview,Details,Activity" active: 1',
   },
@@ -364,16 +403,6 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     },
     example: 'component Chart type: "line" height: 240',
   },
-  ChartPlaceholder: {
-    name: 'ChartPlaceholder',
-    description: 'Backward-compatible alias of Chart.',
-    category: 'Data',
-    properties: {
-      type: { name: 'type', type: 'enum', options: ['bar', 'line', 'pie', 'area'], required: true },
-      height: { name: 'height', type: 'number' },
-    },
-    example: 'component ChartPlaceholder type: "bar" height: 240',
-  },
   Code: {
     name: 'Code',
     description: 'Code snippet display.',
@@ -388,12 +417,13 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     description: 'Image placeholder block.',
     category: 'Media',
     properties: {
-      placeholder: imagePlaceholderEnum,
+      type: imageTypeEnum,
       icon: iconNameEnum,
       variant: variantWithDefaultEnum,
       height: { name: 'height', type: 'number' },
+      circle: { name: 'circle', type: 'boolean', description: 'Clips the image to a circle (avatar style).', defaultValue: false },
     },
-    example: 'component Image placeholder: "icon" icon: "user" variant: primary height: 120',
+    example: 'component Image type: icon icon: "user" variant: primary height: 120',
   },
   Icon: {
     name: 'Icon',
@@ -403,6 +433,8 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
       icon: { name: 'icon', type: 'enum', options: ICON_NAME_OPTIONS, required: true },
       size: sizeEnum,
       variant: variantWithDefaultEnum,
+      circle: { name: 'circle', type: 'boolean', description: 'Renders the icon inside a circular background.', defaultValue: false },
+      padding: { name: 'padding', type: 'number', description: 'Inset padding in pixels between the icon and the element bounding box, reduces the rendered icon size.' },
     },
     example: 'component Icon icon: "home" size: md',
   },
@@ -443,8 +475,10 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     properties: {
       text: { name: 'text', type: 'string', required: true },
       variant: variantWithDefaultEnum,
+      size: { name: 'size', type: 'enum', options: ['xs', 'sm', 'md', 'lg', 'xl'], defaultValue: 'md' },
+      padding: { name: 'padding', type: 'number', description: 'Custom horizontal padding in px.' },
     },
-    example: 'component Badge text: "Active" variant: success',
+    example: 'component Badge text: "Active" variant: success size: md',
   },
   Alert: {
     name: 'Alert',
@@ -534,6 +568,8 @@ export const LAYOUTS: Record<string, LayoutMetadata> = {
 export const PROPERTY_VALUES: Record<string, string[]> = {
   size: ['none', 'xs', 'sm', 'md', 'lg', 'xl'],
   variant: variantWithDefaultEnum.options!,
+  // Note: specific Material shades (e.g. red_400, blue_A200) also work at runtime
+  // via the color resolver even though they are not listed here.
   justify: ['stretch', 'start', 'center', 'end', 'spaceBetween', 'spaceAround'],
   align: ['start', 'center', 'end'],
   padding: spacingEnum.options!,

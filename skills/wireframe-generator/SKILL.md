@@ -105,7 +105,7 @@ Choose from 21 available components organized in categories:
 **Data:** Table, List
 **Media:** Image, Icon
 **Display:** Divider, Badge, Link, Alert
-**Info:** Stat, Code, ChartPlaceholder
+**Info:** Stat, Code
 **Modal:** Modal, Spinner
 
 ### Step 5: Validate Syntax
@@ -193,7 +193,7 @@ project "Admin Dashboard" {
           }
         }
 
-        component ChartPlaceholder type: "line" height: 300
+        component Chart type: "line" height: 300
         component Table columns: "User,Email,Status,Role" rows: 8
       }
     }
@@ -227,7 +227,7 @@ project "Product Catalog" {
       layout grid(columns: 12, gap: lg) {
         cell span: 4 {
           layout card(padding: md, gap: md, radius: lg, border: true) {
-            component Image placeholder: "square" height: 220
+            component Image type: square height: 220
             component Heading text: "Wireless Headphones"
             component Text content: "Premium sound quality"
             component Badge text: "New" variant: primary
@@ -240,7 +240,7 @@ project "Product Catalog" {
 
         cell span: 4 {
           layout card(padding: md, gap: md, radius: lg, border: true) {
-            component Image placeholder: "square" height: 220
+            component Image type: square height: 220
             component Heading text: "Smart Watch"
             component Text content: "Track your fitness"
             component Badge text: "Sale" variant: success
@@ -253,7 +253,7 @@ project "Product Catalog" {
 
         cell span: 4 {
           layout card(padding: md, gap: md, radius: lg, border: true) {
-            component Image placeholder: "square" height: 220
+            component Image type: square height: 220
             component Heading text: "Laptop Stand"
             component Text content: "Ergonomic design"
             component Badge text: "Popular" variant: info

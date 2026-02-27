@@ -859,7 +859,7 @@ export class LayoutEngine {
   private wrapTextToLines(text: string, maxWidth: number, fontSize: number): string[] {
     const normalized = text.replace(/\r\n/g, '\n');
     const paragraphs = normalized.split('\n');
-    const charWidth = fontSize * 0.6;
+    const charWidth = fontSize * 0.5;
     const safeWidth = Math.max(maxWidth, charWidth);
     const maxCharsPerLine = Math.max(1, Math.floor(safeWidth / charWidth));
     const lines: string[] = [];
@@ -906,9 +906,11 @@ export class LayoutEngine {
   private getIntrinsicComponentHeight(node: IRNode, availableWidth?: number): number {
     if (node.kind !== 'component') return this.getComponentHeight();
     const controlSize = String(node.props.size || 'md');
+    // Button, IconButton and Link default to sm (smaller default than form controls)
+    const actionControlSize = String(node.props.size || 'sm');
     const density = (this.style.density || 'normal') as DensityLevel;
     const inputControlHeight = resolveControlHeight(controlSize, density);
-    const actionControlHeight = resolveActionControlHeight(controlSize, density);
+    const actionControlHeight = resolveActionControlHeight(actionControlSize, density);
     const controlLabelOffset =
       node.componentType === 'Input' ||
       node.componentType === 'Textarea' ||
@@ -922,6 +924,7 @@ export class LayoutEngine {
     // Image: calculate height based on aspect ratio and available width
     if (node.componentType === 'Image') {
       const placeholder = String(node.props.placeholder || 'landscape');
+      const isCircle = this.parseBooleanProp(node.props.circle, false);
       const aspectRatios: Record<string, number> = {
         landscape: 16 / 9,
         portrait: 2 / 3,
@@ -930,7 +933,8 @@ export class LayoutEngine {
         avatar: 1,
       };
       
-      const ratio = aspectRatios[placeholder] || 16 / 9;
+      // Circle images are always square (1:1 ratio) regardless of placeholder type
+      const ratio = isCircle ? 1 : (aspectRatios[placeholder] || 16 / 9);
       
       // If explicit height is set, use it
       const explicitHeight = Number(node.props.height);
@@ -998,13 +1002,21 @@ export class LayoutEngine {
       return Math.max(1, Math.ceil(wrappedHeight + verticalPadding * 2));
     }
 
-    if (node.componentType === 'Text') {
+    if (node.componentType === 'Text' || node.componentType === 'Paragraph') {
       const content = String(node.props.text || '');
-      const { fontSize, lineHeight } = this.getTextMetricsForDensity();
+      const { fontSize: defaultFontSize, lineHeight } = this.getTextMetricsForDensity();
+      const sizeProp = String(node.props.size || '');
+      const textFontSizeMap: Record<string, number> = { xs: 10, sm: 12, lg: 16, xl: 20 };
+      const fontSize = textFontSizeMap[sizeProp] ?? defaultFontSize;
       const lineHeightPx = Math.ceil(fontSize * lineHeight);
       const maxWidth = availableWidth && availableWidth > 0 ? availableWidth : 200;
       const lines = this.wrapTextToLines(content, maxWidth, fontSize);
       const wrappedHeight = Math.max(1, lines.length) * lineHeightPx;
+      // When an explicit size is set, height scales with the font (no minimum floor).
+      // This ensures size: xs produces a compact row and size: xl a taller one.
+      if (sizeProp) {
+        return wrappedHeight;
+      }
       return Math.max(this.getComponentHeight(), wrappedHeight);
     }
 
@@ -1050,7 +1062,7 @@ export class LayoutEngine {
     if (node.componentType === 'Modal') return 300;
     if (node.componentType === 'Card') return 120;
     if (node.componentType === 'Stat') return 120;
-    if (node.componentType === 'Chart' || node.componentType === 'ChartPlaceholder') return 250;
+    if (node.componentType === 'Chart') return 250;
     if (node.componentType === 'List') {
       const itemsFromProps = String(node.props.items || '')
         .split(',')
@@ -1068,7 +1080,14 @@ export class LayoutEngine {
     }
 
     // Standard height components
-    if (node.componentType === 'Topbar') return 56;
+    if (node.componentType === 'Topbar') {
+      const TOPBAR_HEIGHTS: Record<string, number> = { sm: 44, md: 56, lg: 72 };
+      return TOPBAR_HEIGHTS[String(node.props.size || 'md')] ?? 56;
+    }
+    if (node.componentType === 'Tabs') {
+      const TABS_HEIGHTS: Record<string, number> = { sm: 32, md: 44, lg: 52 };
+      return TABS_HEIGHTS[String(node.props.size || 'md')] ?? 44;
+    }
     if (node.componentType === 'Divider') return 1;
     if (node.componentType === 'Separate') return this.getSeparateSize(node);
     if (
@@ -1083,6 +1102,13 @@ export class LayoutEngine {
       node.componentType === 'Link'
     ) {
       return actionControlHeight + controlLabelOffset;
+    }
+
+    // Badge / Chip: size-aware height (aligned with Button control heights)
+    if (node.componentType === 'Badge' || node.componentType === 'Chip') {
+      const BADGE_HEIGHTS: Record<string, number> = { xs: 28, sm: 36, md: 40, lg: 48, xl: 56 };
+      const badgeSize = String(node.props.size || 'md');
+      return BADGE_HEIGHTS[badgeSize] ?? 40;
     }
 
     // Default height
@@ -1160,7 +1186,7 @@ export class LayoutEngine {
 
     // IconButton: size + padding
     if (node.componentType === 'IconButton') {
-      const size = String(node.props.size || 'md');
+      const size = String(node.props.size || 'sm');
       const density = (this.style.density || 'normal') as DensityLevel;
       const baseSize = resolveIconButtonSize(size, density);
       const extraPadding = resolveControlHorizontalPadding(String(node.props.padding || 'none'), density);
@@ -1240,10 +1266,18 @@ export class LayoutEngine {
       return 260;
     }
 
-    // Badge, Chip: small fixed width
+    // Badge, Chip: width scales with size and text
     if (node.componentType === 'Badge' || node.componentType === 'Chip') {
       const text = String(node.props.text || '');
-      return Math.max(50, text.length * 7 + 16);
+      const size = String(node.props.size || 'md');
+      const BADGE_CHAR_W: Record<string, number> = { xs: 6, sm: 6.5, md: 7, lg: 7.5, xl: 8.5 };
+      const BADGE_PAD_X: Record<string, number> = { xs: 5, sm: 6, md: 8, lg: 10, xl: 14 };
+      const customPadding = node.props.padding !== undefined ? Number(node.props.padding) : undefined;
+      const padX = customPadding !== undefined && !isNaN(customPadding)
+        ? customPadding
+        : (BADGE_PAD_X[size] ?? 8);
+      const charW = BADGE_CHAR_W[size] ?? 7;
+      return Math.max(padX * 4, text.length * charW + padX * 2);
     }
 
     // Default width: 120px

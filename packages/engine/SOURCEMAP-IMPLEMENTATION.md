@@ -51,7 +51,7 @@ Complete implementation of bidirectional code↔canvas selection for Wire DSL En
 - ✅ Code, Textarea, Select, Checkbox, Radio, Toggle
 - ✅ Alert, Badge, Modal, List, Stat
 - ✅ Icon, IconButton, Image, Divider, Topbar
-- ✅ Table, Breadcrumbs, ChartPlaceholder
+- ✅ Table, Breadcrumbs, Chart
 
 **Key Changes:**
 ```typescript

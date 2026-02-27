@@ -97,10 +97,11 @@ border: false
 
 ## The 30 Components
 
-### Text (3)
+### Text (4)
 ```wire
 component Heading text: "Title"
-component Text content: "Body text"
+component Text text: "Body text" size: md bold: false italic: false
+component Paragraph text: "Longer body text" align: left size: md
 component Label text: "Field label"
 ```
 
@@ -139,11 +140,11 @@ component List items: "Item 1,Item 2,Item 3"
 
 ### Media (2)
 ```wire
-component Image placeholder: "square" height: 250
+component Image type: square height: 250
 component Icon type: "search"
 ```
 
-**Image placeholders**: `square`, `landscape`, `portrait`, `avatar`, `icon`
+**Image `type` values**: `square`, `landscape`, `portrait`, `avatar`, `icon`
 
 ### Display (5)
 ```wire
@@ -237,7 +238,7 @@ layout panel(padding: lg) {
 ### Card (Self-Contained)
 ```wire
 layout card(padding: lg, gap: md, radius: md, border: true) {
-  component Image placeholder: "square" height: 200
+  component Image type: square height: 200
   component Heading text: "Product"
   component Text content: "Description"
   component Button text: "View Details"
@@ -302,7 +303,7 @@ screen Dashboard {
 layout grid(columns: 12, gap: lg) {
   cell span: 4 {
     layout card(padding: md, gap: md, radius: lg) {
-      component Image placeholder: "square" height: 200
+      component Image type: square height: 200
       component Heading text: "Product Name"
       component Text content: "Description"
       component Button text: "Buy Now" variant: primary

@@ -1,5 +1,5 @@
 project "Admin Dashboard Simple" {
-  config {
+  style {
     density: "normal"
     spacing: "md"
     radius: "md"

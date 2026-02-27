@@ -247,31 +247,31 @@ project "Wire-DSL Complete Components Catalog" {
         layout grid(columns: 5, gap: md) {
           cell span: 1 {
             layout stack(direction: vertical, gap: xs) {
-              component Image placeholder: "square"
+              component Image type: square
               component Label text: "Square (1:1)"
             }
           }
           cell span: 1 {
             layout stack(direction: vertical, gap: xs) {
-              component Image placeholder: "landscape"
+              component Image type: landscape
               component Label text: "Landscape (16:9)"
             }
           }
           cell span: 1 {
             layout stack(direction: vertical, gap: xs) {
-              component Image placeholder: "portrait"
+              component Image type: portrait
               component Label text: "Portrait (2:3)"
             }
           }
           cell span: 1 {
             layout stack(direction: vertical, gap: xs) {
-              component Image placeholder: "avatar"
+              component Image type: avatar
               component Label text: "Avatar (1:1)"
             }
           }
           cell span: 1 {
             layout stack(direction: vertical, gap: xs) {
-              component Image placeholder: "icon" icon: "user"
+              component Image type: icon icon: "user"
               component Label text: "Icon (1:1)"
             }
           }
@@ -640,7 +640,7 @@ project "Wire-DSL Complete Components Catalog" {
         layout grid(columns: 3, gap: md) {
           cell span: 1 {
             layout card(padding: xs) {
-              component Image placeholder: "landscape"
+              component Image type: landscape
               layout grid(direction: vertical, columns: 24, gap: sm, padding: none) {
                 cell { }
                 cell span: 20 {
@@ -653,7 +653,7 @@ project "Wire-DSL Complete Components Catalog" {
           }
           cell span: 1 {
             layout card(padding: md) {
-              component Image placeholder: "landscape"
+              component Image type: landscape
               component Heading text: "Card md" level: h3
               component Text text: "Medium padding: 16px"
             }

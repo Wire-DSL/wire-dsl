@@ -47,7 +47,7 @@ Use this checklist before outputting Wire DSL code to ensure validity.
 - [ ] Grid cell `span` values are 1-12
 - [ ] Sidebar widths are reasonable (200-320px)
 - [ ] Chart types are: `bar`, `line`, `pie`, `area`
-- [ ] Image placeholders are: `square`, `landscape`, `portrait`, `avatar`
+- [ ] Image `type` values are: `square`, `landscape`, `portrait`, `avatar`
 
 ### ✅ Layout Validation
 
@@ -543,7 +543,7 @@ screen Dashboard {
       }
     }
 
-    component ChartPlaceholder type: "line" height: 300
+    component Chart type: "line" height: 300
   }
 }
 ```
@@ -618,7 +618,7 @@ layout grid(columns: 12, gap: md) {
 ### Pattern: Product Card
 ```wire
 layout card(padding: md, gap: md, radius: lg, border: true) {
-  component Image placeholder: "square" height: 220
+  component Image type: square height: 220
   component Heading text: "Product Name"
   component Text content: "Product description"
   component Badge text: "In Stock" variant: success

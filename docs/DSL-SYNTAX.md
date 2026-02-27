@@ -1,4 +1,4 @@
-﻿# Wire-DSL Syntax Guide
+# Wire-DSL Syntax Guide
 
 ## Overview
 
@@ -340,7 +340,7 @@ Flexible vertical container for grouping related content.
 
 ```
 layout card(padding: lg, gap: md, radius: md, border: true) {
-  component Image placeholder: "landscape"
+  component Image type: landscape
   component Heading text: "Product Title"
   component Text text: "Product description"
   component Button text: "Learn More"
@@ -365,7 +365,7 @@ layout card(padding: lg, gap: md, radius: md, border: true) {
 
 ```
 layout card(padding: md, gap: md, radius: lg, border: true) {
-  component Image placeholder: "square" height: 250
+  component Image type: square height: 250
   component Heading text: "Premium Item"
   component Text text: "High-quality product with excellent reviews"
   layout stack(direction: horizontal, gap: sm) {
@@ -379,7 +379,7 @@ layout card(padding: md, gap: md, radius: lg, border: true) {
 
 ```
 layout card(padding: lg, gap: md) {
-  component Image placeholder: "avatar" height: 120
+  component Image type: avatar height: 120
   component Heading text: "John Doe"
   component Text text: "john@example.com"
   component Divider
@@ -598,7 +598,7 @@ component Button text: "Click me" variant: primary
 
 | Component | Properties | Example |
 |-----------|-----------|---------|
-| `Image` | `placeholder`, `height` | `component Image placeholder: "square" height: 200` |
+| `Image` | `type`, `height` | `component Image type: square height: 200` |
 | `Icon` | `type`, `size`, `variant` | `component Icon icon: "search" size: md variant: primary` |
 
 ### Other Components

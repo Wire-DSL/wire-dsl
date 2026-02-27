@@ -138,7 +138,7 @@ layout stack(direction: horizontal, gap: sm, padding: md, align: justify) {
   component IconButton icon: "menu"
   component Input label: "Search" placeholder: "Search..."
   component IconButton icon: "settings"
-  component Image placeholder: "square"
+  component Image type: square
 }
 ```
 
@@ -232,7 +232,7 @@ layout grid(columns: 12, gap: md) {
 layout grid(columns: 12, gap: lg) {
   cell span: 4 {
     layout card(padding: md, gap: md) {
-      component Image placeholder: "square" height: 200
+      component Image type: square height: 200
       component Heading text: "Product 1"
       component Text content: "$99.99"
       component Button text: "Buy Now" variant: primary
@@ -240,7 +240,7 @@ layout grid(columns: 12, gap: lg) {
   }
   cell span: 4 {
     layout card(padding: md, gap: md) {
-      component Image placeholder: "square" height: 200
+      component Image type: square height: 200
       component Heading text: "Product 2"
       component Text content: "$79.99"
       component Button text: "Buy Now" variant: primary
@@ -248,7 +248,7 @@ layout grid(columns: 12, gap: lg) {
   }
   cell span: 4 {
     layout card(padding: md, gap: md) {
-      component Image placeholder: "square" height: 200
+      component Image type: square height: 200
       component Heading text: "Product 3"
       component Text content: "$129.99"
       component Button text: "Buy Now" variant: primary
@@ -276,7 +276,7 @@ layout grid(columns: 12, gap: lg) {
     layout stack(direction: vertical, gap: md) {
       component Heading text: "Main Content"
       component Text content: "This is the main content area..."
-      component ChartPlaceholder type: "line" height: 300
+      component Chart type: "line" height: 300
     }
   }
   cell span: 4 {
@@ -475,7 +475,7 @@ layout card(padding: lg, gap: md, radius: md, border: true) {
 **Product Card:**
 ```wire
 layout card(padding: md, gap: md, radius: lg, border: true) {
-  component Image placeholder: "square" height: 250
+  component Image type: square height: 250
   component Heading text: "Wireless Headphones"
   component Text content: "Premium sound quality with noise cancellation"
   component Badge text: "New Arrival" variant: primary
@@ -489,7 +489,7 @@ layout card(padding: md, gap: md, radius: lg, border: true) {
 **User Profile Card:**
 ```wire
 layout card(padding: lg, gap: md, radius: md, border: true) {
-  component Image placeholder: "square"
+  component Image type: square
   component Heading text: "John Doe"
   component Text content: "Senior Developer"
   component Divider
@@ -580,13 +580,13 @@ layout stack(direction: vertical, gap: xl, padding: lg) {
 layout grid(columns: 12, gap: lg) {
   cell span: 4 {
     layout card(padding: md, gap: sm) {
-      component Image placeholder: "square" height: 200
+      component Image type: square height: 200
       component Heading text: "Card 1"
     }
   }
   cell span: 4 {
     layout card(padding: md, gap: sm) {
-      component Image placeholder: "square" height: 200
+      component Image type: square height: 200
       component Heading text: "Card 2"
     }
   }
