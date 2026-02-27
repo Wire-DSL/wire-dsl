@@ -1,5 +1,11 @@
 # @wire-dsl/language-support
 
+## 0.8.0
+
+### Minor Changes
+
+- [#76](https://github.com/Wire-DSL/wire-dsl/pull/76) [`7daa704`](https://github.com/Wire-DSL/wire-dsl/commit/7daa704f6dc0600dfaa1c373a301e9d1e57bbe05) Thanks [@roxguel](https://github.com/roxguel)! - Justify and align children stack layout
+
 ## 0.7.0
 
 ### Minor Changes
