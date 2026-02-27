@@ -1,5 +1,16 @@
 # @wire-dsl/docs
 
+## 0.3.0
+
+### Minor Changes
+
+- [#75](https://github.com/Wire-DSL/wire-dsl/pull/75) [`d3a858d`](https://github.com/Wire-DSL/wire-dsl/commit/d3a858ddfec7ecaff491b39d30943ea382865b65) Thanks [@roxguel](https://github.com/roxguel)! - Improvement engine and language support to version 0.7.0
+
+### Patch Changes
+
+- Updated dependencies [[`d3a858d`](https://github.com/Wire-DSL/wire-dsl/commit/d3a858ddfec7ecaff491b39d30943ea382865b65)]:
+  - @wire-dsl/engine@0.7.0
+
 ## 0.2.3
 
 ### Patch Changes
