@@ -1,5 +1,14 @@
 # @wire-dsl/core
 
+## 0.2.6
+
+### Patch Changes
+
+- [`973d174`](https://github.com/Wire-DSL/wire-dsl/commit/973d1745799f6281e236875e3dc342ef9888fd57) Thanks [@roxguel](https://github.com/roxguel)! - Improvement engine
+
+- Updated dependencies [[`973d174`](https://github.com/Wire-DSL/wire-dsl/commit/973d1745799f6281e236875e3dc342ef9888fd57)]:
+  - @wire-dsl/engine@0.9.0
+
 ## 0.2.5
 
 ### Patch Changes
