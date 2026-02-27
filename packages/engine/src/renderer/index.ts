@@ -421,7 +421,7 @@ export class SVGRenderer {
   protected renderButton(node: IRComponentNode, pos: any): string {
     const text = String(node.props.text || 'Button');
     const variant = String(node.props.variant || 'default');
-    const size = String(node.props.size || 'md');
+    const size = String(node.props.size || 'sm');
     const disabled = this.parseBooleanProp(node.props.disabled, false);
     const density = (this.ir.project.style.density || 'normal') as DensityLevel;
     const extraPadding = resolveControlHorizontalPadding(String(node.props.padding || 'none'), density);
@@ -527,7 +527,7 @@ export class SVGRenderer {
   protected renderLink(node: IRComponentNode, pos: any): string {
     const text = String(node.props.text || 'Link');
     const variant = String(node.props.variant || 'primary');
-    const size = String(node.props.size || 'md');
+    const size = String(node.props.size || 'sm');
     const density = (this.ir.project.style.density || 'normal') as DensityLevel;
     const fontSize = this.tokens.button.fontSize;
     const fontWeight = this.tokens.button.fontWeight;
@@ -658,6 +658,22 @@ export class SVGRenderer {
       }
     }
     const showBackground = resolvedBg !== null;
+    // color prop: overrides title / subtitle text color
+    const colorPropStr = String(node.props.color ?? '');
+    let titleColor = this.renderTheme.text;
+    let subtitleColor = this.renderTheme.textMuted;
+    if (colorPropStr && colorPropStr !== 'false') {
+      let resolvedTitleColor: string | null = null;
+      if (colorPropStr.startsWith('#') || colorPropStr.startsWith('rgb')) {
+        resolvedTitleColor = colorPropStr;
+      } else if (this.colorResolver.hasColor(colorPropStr)) {
+        resolvedTitleColor = this.colorResolver.resolveColor(colorPropStr, this.renderTheme.text);
+      }
+      if (resolvedTitleColor) {
+        titleColor = resolvedTitleColor;
+        subtitleColor = this.hexToRgba(resolvedTitleColor, 0.65);
+      }
+    }
     const radiusMap: Record<string, number> = {
       none: 0,
       sm: 4,
@@ -686,7 +702,7 @@ export class SVGRenderer {
           font-family="Arial, Helvetica, sans-serif" 
           font-size="18" 
           font-weight="600" 
-          fill="${this.renderTheme.text}">${this.escapeXml(topbar.visibleTitle)}</text>`;
+          fill="${titleColor}">${this.escapeXml(topbar.visibleTitle)}</text>`;
 
     // Subtitle
     if (topbar.hasSubtitle) {
@@ -694,7 +710,7 @@ export class SVGRenderer {
     <text x="${topbar.textX}" y="${topbar.subtitleY}" 
           font-family="Arial, Helvetica, sans-serif" 
           font-size="13" 
-          fill="${this.renderTheme.textMuted}">${this.escapeXml(topbar.visibleSubtitle)}</text>`;
+          fill="${subtitleColor}">${this.escapeXml(topbar.visibleSubtitle)}</text>`;
     }
 
     if (topbar.leftIcon) {
@@ -1647,7 +1663,6 @@ export class SVGRenderer {
       ? Math.max(0, Math.floor(Number(activeProp)))
       : 0;
 
-    // A1: new props
     const variant = String(node.props.variant || 'default');
     const accentColor =
       variant === 'default'
@@ -1658,16 +1673,53 @@ export class SVGRenderer {
     const tabRadius = radiusMap[String(node.props.radius || 'md')] ?? 6;
 
     const sizeMap: Record<string, number> = { sm: 32, md: 44, lg: 52 };
-    const tabHeight = sizeMap[String(node.props.size || 'md')] ?? 44;
-    const textY = pos.y + tabHeight / 2 + 5;
+    const tabHeight = pos.height > 0 ? pos.height : (sizeMap[String(node.props.size || 'md')] ?? 44);
+    const fontSize = 13;
+    const textY = pos.y + Math.round(tabHeight / 2) + Math.round(fontSize * 0.4);
 
     const iconsStr = String(node.props.icons || '');
     const iconList = iconsStr ? iconsStr.split(',').map((s) => s.trim()) : [];
     const isFlat = this.parseBooleanProp(node.props.flat, false);
+    const showBorder = this.parseBooleanProp(node.props.border, true);
     const tabWidth = pos.width / tabs.length;
 
-    let svg = `<g${this.getDataNodeId(node)}>
-    <!-- Tab headers -->`;
+    // color prop: overrides tab label text color
+    const colorPropStr = String(node.props.color ?? '');
+    let textColorOverride: string | null = null;
+    if (colorPropStr && colorPropStr !== 'false') {
+      if (colorPropStr.startsWith('#') || colorPropStr.startsWith('rgb')) {
+        textColorOverride = colorPropStr;
+      } else if (this.colorResolver.hasColor(colorPropStr)) {
+        textColorOverride = this.colorResolver.resolveColor(colorPropStr, this.renderTheme.text);
+      }
+    }
+    const activeTextColor = textColorOverride ?? (isFlat ? accentColor : 'white');
+    const inactiveTextColor = textColorOverride
+      ? this.hexToRgba(textColorOverride, 0.55)
+      : this.renderTheme.textMuted;
+
+    // Container clip: rounds all corners of the Tabs widget (prevents active pill overflow)
+    const hasRadius = tabRadius > 0;
+    const clipId = hasRadius
+      ? `tc${String(node.meta?.nodeId ?? '').replace(/\W/g, '').slice(0, 12) || `${Math.round(Math.abs(pos.x))}x${Math.round(Math.abs(pos.y))}`}`
+      : '';
+
+    let svg = '';
+    if (hasRadius) {
+      svg += `<defs><clipPath id="${clipId}"><rect x="${pos.x}" y="${pos.y}" width="${pos.width}" height="${pos.height}" rx="${tabRadius}"/></clipPath></defs>`;
+    }
+
+    svg += `<g${this.getDataNodeId(node)}>`;
+    if (hasRadius) {
+      svg += `<g clip-path="url(#${clipId})">`;
+    }
+
+    // Tab header background (not in flat mode — flat has transparent header area)
+    if (!isFlat) {
+      svg += `
+    <rect x="${pos.x}" y="${pos.y}" width="${pos.width}" height="${tabHeight}"
+          fill="${this.renderTheme.bg}"/>`;
+    }
 
     tabs.forEach((tab, i) => {
       const tabX = pos.x + i * tabWidth;
@@ -1675,78 +1727,108 @@ export class SVGRenderer {
       const iconName = iconList[i] || '';
       const tabIconSvg = iconName ? getIcon(iconName) : null;
 
-      if (isFlat) {
-        // Flat: text only, colored underline for active
-        if (isActive) {
-          svg += `
+      // Compute centered icon+text group position
+      const iconSize = 14;
+      const iconGap = 4;
+      const charW = fontSize * 0.58;
+      const textEst = tab.length * charW;
+      const totalW = tabIconSvg ? (iconSize + iconGap + textEst) : textEst;
+      const groupX = tabX + Math.round((tabWidth - totalW) / 2);
+      const iconOffY = pos.y + Math.round((tabHeight - iconSize) / 2);
+
+    if (isFlat) {
+      if (isActive) {
+        svg += `
     <rect x="${tabX + 6}" y="${pos.y + tabHeight - 3}"
           width="${tabWidth - 12}" height="3"
           rx="1.5"
           fill="${accentColor}"/>`;
         }
-        svg += `
-    <text x="${tabX + tabWidth / 2}" y="${textY}"
-          font-family="Arial, Helvetica, sans-serif"
-          font-size="13"
-          font-weight="${isActive ? '600' : '500'}"
-          fill="${isActive ? accentColor : this.renderTheme.textMuted}"
-          text-anchor="middle">${this.escapeXml(tab)}</text>`;
-      } else {
-        // Standard: filled rect for active tab
-        svg += `
-    <rect x="${tabX}" y="${pos.y}"
-          width="${tabWidth}" height="${tabHeight}"
-          rx="${isActive ? tabRadius : 0}"
-          fill="${isActive ? accentColor : 'transparent'}"
-          stroke="${isActive ? 'none' : this.renderTheme.border}"
-          stroke-width="1"/>`;
-
+        // Flat: icon (if any)
         if (tabIconSvg) {
-          const iconSize = 14;
-          const gap = 5;
-          const totalW = iconSize + gap + tab.length * 6.5;
-          const startX = tabX + (tabWidth - totalW) / 2;
-          const iconOffY = pos.y + (tabHeight - iconSize) / 2;
           svg += `
-    <g transform="translate(${startX}, ${iconOffY})">
+    <g transform="translate(${groupX}, ${iconOffY})">
       <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none"
-           stroke="${isActive ? 'white' : this.renderTheme.textMuted}"
+           stroke="${isActive ? accentColor : this.renderTheme.textMuted}"
            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         ${this.extractSvgContent(tabIconSvg)}
       </svg>
     </g>
-    <text x="${startX + iconSize + gap}" y="${textY}"
+    <text x="${groupX + iconSize + iconGap}" y="${textY}"
           font-family="Arial, Helvetica, sans-serif"
-          font-size="13"
+          font-size="${fontSize}"
           font-weight="${isActive ? '600' : '500'}"
-          fill="${isActive ? 'white' : this.renderTheme.text}">${this.escapeXml(tab)}</text>`;
+          fill="${isActive ? activeTextColor : inactiveTextColor}">${this.escapeXml(tab)}</text>`;
         } else {
           svg += `
     <text x="${tabX + tabWidth / 2}" y="${textY}"
           font-family="Arial, Helvetica, sans-serif"
-          font-size="13"
+          font-size="${fontSize}"
           font-weight="${isActive ? '600' : '500'}"
-          fill="${isActive ? 'white' : this.renderTheme.text}"
+          fill="${isActive ? activeTextColor : inactiveTextColor}"
+          text-anchor="middle">${this.escapeXml(tab)}</text>`;
+        }
+      } else {
+        // Standard: filled rect for active tab (rx=0 — container clip handles rounding;
+        // exception: when border:false + hasRadius, active pill shows its own radius)
+        svg += `
+    <rect x="${tabX}" y="${pos.y}"
+          width="${tabWidth}" height="${tabHeight}"
+          rx="${!showBorder && hasRadius && isActive ? tabRadius : 0}"
+          fill="${isActive ? accentColor : 'transparent'}"
+          ${!isActive && showBorder ? `stroke="${this.renderTheme.border}" stroke-width="0.5"` : ''}/>`;
+
+        if (tabIconSvg) {
+          svg += `
+    <g transform="translate(${groupX}, ${iconOffY})">
+      <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none"
+           stroke="${isActive ? activeTextColor : this.renderTheme.textMuted}"
+           stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        ${this.extractSvgContent(tabIconSvg)}
+      </svg>
+    </g>
+    <text x="${groupX + iconSize + iconGap}" y="${textY}"
+          font-family="Arial, Helvetica, sans-serif"
+          font-size="${fontSize}"
+          font-weight="${isActive ? '600' : '500'}"
+          fill="${isActive ? activeTextColor : this.renderTheme.text}">${this.escapeXml(tab)}</text>`;
+        } else {
+          svg += `
+    <text x="${tabX + tabWidth / 2}" y="${textY}"
+          font-family="Arial, Helvetica, sans-serif"
+          font-size="${fontSize}"
+          font-weight="${isActive ? '600' : '500'}"
+          fill="${isActive ? activeTextColor : this.renderTheme.text}"
           text-anchor="middle">${this.escapeXml(tab)}</text>`;
         }
       }
     });
 
-    // Content area
+    // Content area / separator
     const contentY = pos.y + tabHeight;
     const contentH = pos.height - tabHeight;
-    if (contentH > 2 && !isFlat) {
+    if (contentH >= 20 && !isFlat) {
       svg += `
     <!-- Tab content area -->
     <rect x="${pos.x}" y="${contentY}"
           width="${pos.width}" height="${contentH}"
           fill="${this.renderTheme.cardBg}"
-          stroke="${this.renderTheme.border}"
-          stroke-width="1"/>`;
-    } else if (isFlat) {
+          ${showBorder ? `stroke="${this.renderTheme.border}" stroke-width="1"` : ''}/>`;
+    } else if (isFlat && showBorder) {
       svg += `
     <line x1="${pos.x}" y1="${contentY}" x2="${pos.x + pos.width}" y2="${contentY}"
           stroke="${this.renderTheme.border}" stroke-width="1"/>`;
+    }
+
+    if (hasRadius) {
+      svg += `\n  </g>`;
+      // Outer border drawn on top of the clip so rounded corners are visible
+      if (!isFlat && showBorder) {
+        svg += `
+    <rect x="${pos.x}" y="${pos.y}" width="${pos.width}" height="${pos.height}"
+          rx="${tabRadius}" fill="none"
+          stroke="${this.renderTheme.border}" stroke-width="1"/>`;
+      }
     }
 
     svg += '\n  </g>';
@@ -2142,10 +2224,12 @@ export class SVGRenderer {
 
     const ratio = aspectRatios[placeholder] || 16 / 9;
 
-    // A3: Cover mode when explicit height set or circle; contain mode otherwise
+    // A3: Cover mode ONLY for circle (scaled to fill then clipped).
+    // For landscape/portrait/square with explicit height, keep the camera icon
+    // in "contain" mode so it stays fully visible within the bounds.
     let iconWidth: number;
     let iconHeight: number;
-    if (useClip) {
+    if (isCircle) {
       // Cover: scale to fill the container, will be clipped
       iconWidth = pos.width;
       iconHeight = pos.width / ratio;
@@ -2412,8 +2496,10 @@ export class SVGRenderer {
     }
 
     const iconSize = this.getIconSize(size);
-    const offsetX = pos.x + (pos.width - iconSize) / 2;
-    const offsetY = pos.y + (pos.height - iconSize) / 2;
+    const paddingPx = Math.max(0, Number(node.props.padding || 0));
+    const renderedIconSize = Math.max(4, iconSize - paddingPx * 2);
+    const offsetX = pos.x + (pos.width - renderedIconSize) / 2;
+    const offsetY = pos.y + (pos.height - renderedIconSize) / 2;
 
     // A4: Circle clip for Icon
     const isIconCircle = this.parseBooleanProp(node.props.circle, false);
@@ -2426,7 +2512,7 @@ export class SVGRenderer {
       return `<defs><clipPath id="${iconClipId}"><circle cx="${cx}" cy="${cy}" r="${r}"/></clipPath></defs><g${this.getDataNodeId(node)} clip-path="url(#${iconClipId})">
     <circle cx="${cx}" cy="${cy}" r="${r}" fill="${bgColor}"/>
     <g transform="translate(${offsetX}, ${offsetY})">
-      <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <svg width="${renderedIconSize}" height="${renderedIconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         ${this.extractSvgContent(iconSvg)}
       </svg>
     </g>
@@ -2436,7 +2522,7 @@ export class SVGRenderer {
 
     // Wrap SVG with viewBox and sizing
     const wrappedSvg = `<g${this.getDataNodeId(node)} transform="translate(${offsetX}, ${offsetY})">
-    <svg width="${iconSize}" height="${iconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <svg width="${renderedIconSize}" height="${renderedIconSize}" viewBox="0 0 24 24" fill="none" stroke="${iconColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       ${this.extractSvgContent(iconSvg)}
     </svg>
   </g>`;
@@ -2447,7 +2533,7 @@ export class SVGRenderer {
   protected renderIconButton(node: IRComponentNode, pos: any): string {
     const iconName = String(node.props.icon || 'help-circle');
     const variant = String(node.props.variant || 'default');
-    const size = String(node.props.size || 'md');
+    const size = String(node.props.size || 'sm');
     const disabled = String(node.props.disabled || 'false') === 'true';
     const density = (this.ir.project.style.density || 'normal') as DensityLevel;
     const labelOffset = this.parseBooleanProp(node.props.labelSpace, false) ? 18 : 0;
@@ -2594,7 +2680,7 @@ export class SVGRenderer {
   protected wrapTextToLines(text: string, maxWidth: number, fontSize: number): string[] {
     const normalized = text.replace(/\r\n/g, '\n');
     const paragraphs = normalized.split('\n');
-    const charWidth = fontSize * 0.6;
+    const charWidth = fontSize * 0.5;
     const safeWidth = Math.max(maxWidth || 0, charWidth);
     const maxCharsPerLine = Math.max(1, Math.floor(safeWidth / charWidth));
     const lines: string[] = [];

@@ -558,7 +558,7 @@ describe('Layout Engine', () => {
       .filter(([_, n]) => n.kind === 'component')
       .map(([id]) => layout[id])[0];
 
-    // Comfortable density: Button uses action control height (md = 40px)
+    // Comfortable density: Button uses action control height (default sm = 40px)
     expect(button.height).toBe(40);
   });
 
@@ -882,15 +882,15 @@ describe('Layout Engine', () => {
     expect(withCaption.height - plain.height).toBe(46);
   });
 
-  it('should align control heights for Input/Select with Button/IconButton when actions use size lg + labelSpace', () => {
+  it('should align control heights for Input/Select with Button/IconButton when actions use size md + labelSpace', () => {
     const input = `
       project "ControlHeightAlignment" {
         screen Main {
           layout stack(direction: horizontal, justify: start, gap: sm) {
             component Input label: "Email" placeholder: "user@example.com" size: md
             component Select label: "Role" items: "Admin,User" size: md
-            component Button text: "Save" size: lg labelSpace: true
-            component IconButton icon: "check" size: lg labelSpace: true
+            component Button text: "Save" size: md labelSpace: true
+            component IconButton icon: "check" size: md labelSpace: true
           }
         }
       }
@@ -1184,7 +1184,7 @@ describe('Layout Engine', () => {
 
         screen Main {
           layout stack(direction: vertical, gap: md, padding: md) {
-            component Heading text: "Este heading es suficientemente largo para requerir salto de linea automatico sin desbordar horizontalmente"
+            component Heading text: "Este heading es suficientemente largo para requerir salto de linea automatico sin desbordar horizontalmente en pantallas de escritorio"
             component Button text: "Siguiente"
           }
         }
@@ -1623,7 +1623,7 @@ describe('Layout Engine', () => {
     const [buttonId] = Object.entries(ir.project.nodes).find(
       ([, n]) => n.kind === 'component' && (n as any).componentType === 'Button'
     )!;
-    expect(layout[buttonId].height).toBe(20);
+    expect(layout[buttonId].height).toBe(28);
   });
 
   it('should calculate Button xl size height (normal density)', () => {
@@ -1641,7 +1641,7 @@ describe('Layout Engine', () => {
     const [buttonId] = Object.entries(ir.project.nodes).find(
       ([, n]) => n.kind === 'component' && (n as any).componentType === 'Button'
     )!;
-    expect(layout[buttonId].height).toBe(48);
+    expect(layout[buttonId].height).toBe(56);
   });
 
   it('should calculate IconButton xs size height (normal density)', () => {
@@ -1659,7 +1659,7 @@ describe('Layout Engine', () => {
     const [id] = Object.entries(ir.project.nodes).find(
       ([, n]) => n.kind === 'component' && (n as any).componentType === 'IconButton'
     )!;
-    expect(layout[id].height).toBe(20);
+    expect(layout[id].height).toBe(28);
   });
 
   it('should calculate IconButton xl size height (normal density)', () => {
@@ -1677,7 +1677,7 @@ describe('Layout Engine', () => {
     const [id] = Object.entries(ir.project.nodes).find(
       ([, n]) => n.kind === 'component' && (n as any).componentType === 'IconButton'
     )!;
-    expect(layout[id].height).toBe(48);
+    expect(layout[id].height).toBe(56);
   });
 
   // ─── A2: Topbar size ──────────────────────────────────────────────────────
@@ -1753,7 +1753,7 @@ describe('Layout Engine', () => {
     const [id] = Object.entries(ir.project.nodes).find(
       ([, n]) => n.kind === 'component' && (n as any).componentType === 'Badge'
     )!;
-    expect(layout[id].height).toBe(16);
+    expect(layout[id].height).toBe(28);
   });
 
   it('should calculate Badge md size height (default)', () => {
@@ -1771,7 +1771,7 @@ describe('Layout Engine', () => {
     const [id] = Object.entries(ir.project.nodes).find(
       ([, n]) => n.kind === 'component' && (n as any).componentType === 'Badge'
     )!;
-    expect(layout[id].height).toBe(22);
+    expect(layout[id].height).toBe(40);
   });
 
   it('should calculate Badge xl size height', () => {
@@ -1789,6 +1789,6 @@ describe('Layout Engine', () => {
     const [id] = Object.entries(ir.project.nodes).find(
       ([, n]) => n.kind === 'component' && (n as any).componentType === 'Badge'
     )!;
-    expect(layout[id].height).toBe(32);
+    expect(layout[id].height).toBe(56);
   });
 });

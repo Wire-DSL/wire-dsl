@@ -18,10 +18,11 @@ const CONTROL_HEIGHTS_BY_DENSITY: Record<DensityLevel, Record<string, number>> =
   comfortable: { xs: 32, sm: 40, md: 48, lg: 56, xl: 64 },
 };
 
+// A7-fix: aligned with CONTROL_HEIGHTS so Button/IconButton/Link match Input/Select per size
 const ACTION_CONTROL_HEIGHTS_BY_DENSITY: Record<DensityLevel, Record<string, number>> = {
-  compact: { xs: 16, sm: 20, md: 24, lg: 32, xl: 40 },
-  normal: { xs: 20, sm: 24, md: 32, lg: 40, xl: 48 },
-  comfortable: { xs: 24, sm: 28, md: 40, lg: 48, xl: 56 },
+  compact: { xs: 24, sm: 28, md: 32, lg: 36, xl: 44 },
+  normal: { xs: 28, sm: 36, md: 40, lg: 48, xl: 56 },
+  comfortable: { xs: 32, sm: 40, md: 48, lg: 56, xl: 64 },
 };
 
 const CONTROL_PADDING_BY_DENSITY: Record<DensityLevel, Record<string, number>> = {
