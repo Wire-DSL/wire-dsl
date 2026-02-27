@@ -1669,13 +1669,13 @@ describe('SVG Renderer', () => {
           layout grid(columns: 2, gap: lg) {
             cell span: 1 {
               layout card(padding: md, gap: md) {
-                component Image placeholder: "landscape" height: 200
+                component Image type: landscape height: 200
                 component Heading text: "Product A"
               }
             }
             cell span: 1 {
               layout card(padding: md, gap: md) {
-                component Image placeholder: "square" height: 200
+                component Image type: square height: 200
                 component Heading text: "Product B"
               }
             }
@@ -1693,12 +1693,12 @@ describe('SVG Renderer', () => {
     expect(svg).toContain('Product B');
   });
 
-  it('should render custom icon in Image when placeholder is icon', () => {
+  it('should render custom icon in Image when type is icon', () => {
     const input = `
       project "IconImageRender" {
         screen Main {
           layout stack {
-            component Image placeholder: "icon" icon: "search" height: 120
+            component Image type: icon icon: "search" height: 120
           }
         }
       }
@@ -1709,7 +1709,7 @@ describe('SVG Renderer', () => {
     const layout = calculateLayout(ir);
     const svg = renderToSVG(ir, layout);
 
-    // Image with placeholder: icon now renders actual SVG icon, not a text label
+    // Image with type: icon renders actual SVG icon, not a text label
     expect(svg).toContain('viewBox="0 0 24 24"'); // icon SVG was rendered
     expect(svg).not.toContain('Person Silhouette');
   });
@@ -2007,7 +2007,7 @@ describe('SVG Renderer - SourceMap Integration (data-node-id)', () => {
       project "ImageCover" {
         screen Main {
           layout stack {
-            component Image placeholder: "landscape" height: 200
+            component Image type: landscape height: 200
           }
         }
       }
@@ -2029,7 +2029,7 @@ describe('SVG Renderer - SourceMap Integration (data-node-id)', () => {
       project "ImageCircle" {
         screen Main {
           layout stack {
-            component Image placeholder: "avatar" circle: true
+            component Image type: avatar circle: true
           }
         }
       }

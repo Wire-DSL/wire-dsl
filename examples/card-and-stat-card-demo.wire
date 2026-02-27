@@ -56,14 +56,14 @@ project "Card & Stat Demo" {
       }
 
       layout card(padding: lg, gap: md, radius: md, border: true) {
-        component Image placeholder: "landscape" height: 250
+        component Image type: landscape height: 250
         component Heading text: "Product Showcase"
         component Text text: "Explore our latest features and improvements"
         component Button text: "Learn More" variant: primary
       }
 
       layout card(padding: md, gap: sm) {
-        component Image placeholder: "portrait" height: 250
+        component Image type: portrait height: 250
         component Heading text: "Beautiful Villa"
         component Text text: "3 bedrooms, 2 bathrooms, Downtown area"
         layout stack(direction: horizontal, gap: md) {
@@ -81,7 +81,7 @@ project "Card & Stat Demo" {
       layout grid(columns: 12, gap: md) {
         cell span: 6 {
           layout card(padding: md, gap: md, radius: lg, border: true) {
-            component Image placeholder: "square" height: 250
+            component Image type: square height: 250
             component Heading text: "Product One"
             component Text text: "High-quality product with premium features"
             layout stack(direction: horizontal, gap: sm) {
@@ -93,7 +93,7 @@ project "Card & Stat Demo" {
 
         cell span: 6 {
           layout card(padding: md, gap: md, radius: lg, border: true) {
-            component Image placeholder: "square" height: 250
+            component Image type: square height: 250
             component Heading text: "Product Two"
             component Text text: "Best-selling item with excellent reviews"
             layout stack(direction: horizontal, gap: sm) {
@@ -112,7 +112,7 @@ project "Card & Stat Demo" {
 
       layout card(padding: xl, gap: lg, radius: md) {
         layout stack(direction: horizontal, gap: lg) {
-          component Image placeholder: "avatar" height: 120
+          component Image type: avatar height: 120
           layout stack(direction: vertical, gap: sm) {
             component Heading text: "John Smith"
             component Text text: "john@example.com"

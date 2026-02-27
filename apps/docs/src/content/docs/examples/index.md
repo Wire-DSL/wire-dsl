@@ -120,7 +120,7 @@ layout stack(direction: vertical, gap: md, padding: lg) {
 layout grid(columns: 12, gap: lg, padding: lg) {
   cell span: 4 {
     layout card(padding: lg, gap: md, radius: md) {
-      component Image placeholder: "square" height: 200
+      component Image type: square height: 200
       component Heading text: "Item"
       component Text content: "Description"
       component Button text: "Action" variant: primary

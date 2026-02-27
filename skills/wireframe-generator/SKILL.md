@@ -227,7 +227,7 @@ project "Product Catalog" {
       layout grid(columns: 12, gap: lg) {
         cell span: 4 {
           layout card(padding: md, gap: md, radius: lg, border: true) {
-            component Image placeholder: "square" height: 220
+            component Image type: square height: 220
             component Heading text: "Wireless Headphones"
             component Text content: "Premium sound quality"
             component Badge text: "New" variant: primary
@@ -240,7 +240,7 @@ project "Product Catalog" {
 
         cell span: 4 {
           layout card(padding: md, gap: md, radius: lg, border: true) {
-            component Image placeholder: "square" height: 220
+            component Image type: square height: 220
             component Heading text: "Smart Watch"
             component Text content: "Track your fitness"
             component Badge text: "Sale" variant: success
@@ -253,7 +253,7 @@ project "Product Catalog" {
 
         cell span: 4 {
           layout card(padding: md, gap: md, radius: lg, border: true) {
-            component Image placeholder: "square" height: 220
+            component Image type: square height: 220
             component Heading text: "Laptop Stand"
             component Text content: "Ergonomic design"
             component Badge text: "Popular" variant: info

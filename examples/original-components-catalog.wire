@@ -210,19 +210,19 @@ project "Complete Components Catalog" {
         component Text text: "Image placeholders:"
         layout stack(direction: vertical, gap: sm) {
           component Text text: "square"
-          component Image placeholder: "square" height: 120
+          component Image type: square height: 120
         }
         layout stack(direction: vertical, gap: sm) {
           component Text text: "landscape"
-          component Image placeholder: "landscape" height: 120
+          component Image type: landscape height: 120
         }
         layout stack(direction: vertical, gap: sm) {
           component Text text: "portrait"
-          component Image placeholder: "portrait" height: 120
+          component Image type: portrait height: 120
         }
         layout stack(direction: vertical, gap: sm) {
           component Text text: "avatar"
-          component Image placeholder: "avatar" height: 100
+          component Image type: avatar height: 100
         }
       }
 
@@ -237,7 +237,7 @@ project "Complete Components Catalog" {
 
       layout stack(direction: vertical, gap: sm, padding: md) {
         component Text text: "Image - Profile picture placeholder"
-        component Image placeholder: "square"
+        component Image type: square
       }
 
       component Divider

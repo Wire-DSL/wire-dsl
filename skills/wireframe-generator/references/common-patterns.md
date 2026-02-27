@@ -173,7 +173,7 @@ project "Admin Dashboard" {
         component SidebarMenu items: "Dashboard,Users,Products,Orders,Analytics,Settings" active: 0
         component Divider
         layout stack(direction: horizontal, gap: sm, align: left) {
-          component Image placeholder: "square"
+          component Image type: square
           layout stack(direction: vertical, gap: xs) {
             component Text content: "Admin User"
             component Badge text: "Online" variant: success
@@ -324,7 +324,7 @@ project "Product Catalog" {
 
   define Component "ProductSample" {
     layout card(padding: md, gap: md, radius: lg, border: true) {
-      component Image placeholder: "square" height: 250
+      component Image type: square height: 250
       component Heading text: "Smart Watch"
       component Text content: "Track fitness and health metrics"
       component Badge text: "Sale" variant: success
@@ -354,7 +354,7 @@ project "Product Catalog" {
       layout grid(columns: 12, gap: xl) {
         cell span: 4 {
           layout card(padding: md, gap: md, radius: lg, border: true) {
-            component Image placeholder: "square" height: 250
+            component Image type: square height: 250
             component Heading text: "Wireless Headphones"
             component Text content: "Premium noise-cancelling headphones"
             component Badge text: "New" variant: primary
@@ -419,19 +419,19 @@ project "Product Detail" {
         // Product Images
         cell span: 6 {
           layout stack(direction: vertical, gap: md) {
-            component Image placeholder: "square" height: 500
+            component Image type: square height: 500
             layout grid(columns: 12, gap: sm) {
               cell span: 3 {
-                component Image placeholder: "square" height: 100
+                component Image type: square height: 100
               }
               cell span: 3 {
-                component Image placeholder: "square" height: 100
+                component Image type: square height: 100
               }
               cell span: 3 {
-                component Image placeholder: "square" height: 100
+                component Image type: square height: 100
               }
               cell span: 3 {
-                component Image placeholder: "square" height: 100
+                component Image type: square height: 100
               }
             }
           }
@@ -510,7 +510,7 @@ project "User Profile" {
       // Profile Header
       layout card(padding: lg, gap: md) {
         layout stack(direction: horizontal, gap: lg, align: left) {
-          component Image placeholder: "square"
+          component Image type: square
           layout stack(direction: vertical, gap: sm) {
             component Heading text: "John Doe"
             component Text content: "Senior Developer"
@@ -609,7 +609,7 @@ project "Settings" {
         layout panel(padding: md) {
           layout stack(direction: vertical, gap: md) {
             component Label text: "Profile Photo"
-            component Image placeholder: "square"
+            component Image type: square
             layout stack(direction: horizontal, gap: sm, align: left) {
               component Button text: "Upload New" variant: primary
               component Button text: "Remove"

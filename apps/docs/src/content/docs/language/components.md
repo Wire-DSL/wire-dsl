@@ -124,7 +124,7 @@ Single-line text input field.
 
 **Properties**:
 - `label` (string): Field label
-- `placeholder` (string): Placeholder text
+- `type` (enum): Placeholder text
 - `size` (enum): Control size - `sm` | `md` | `lg` (default: `md`)
 - `iconLeft` (enum, optional): Icon name rendered on the left side of the field (e.g., `search`, `mail`)
 - `iconRight` (enum, optional): Icon name rendered on the right side of the field (e.g., `eye`, `x`)
@@ -149,7 +149,7 @@ Multi-line text input field.
 
 **Properties**:
 - `label` (string): Field label
-- `placeholder` (string): Placeholder text
+- `type` (enum): Placeholder text
 - `rows` (number): Number of visible rows (default: 4)
 
 **Example**:
@@ -511,9 +511,9 @@ component List title: "Cities" itemsMock: 5 mock: "city" random: true
 Placeholder for image content.
 
 **Properties**:
-- `placeholder` (string): Shape - `square` | `landscape` | `portrait` | `avatar` | `icon`
-- `icon` (enum, optional): Icon name used when `placeholder: "icon"`. The icon fills the component area directly, without an inner border box.
-- `variant` (string, optional): When `placeholder: icon`, tints the background and icon with the specified color (e.g., `primary`, `success`, `danger`, or a custom key from `colors`). Behaves similarly to `IconButton` variants.
+- `type` (enum): Shape - `square` | `landscape` | `portrait` | `avatar` | `icon`
+- `icon` (enum, optional): Icon name used when `type: icon`. The icon fills the component area directly, without an inner border box.
+- `variant` (string, optional): when `type: icon`, tints the background and icon with the specified color (e.g., `primary`, `success`, `danger`, or a custom key from `colors`). Behaves similarly to `IconButton` variants.
 - `height` (number, optional): Explicit height in pixels. When set, the placeholder is rendered in **cover mode** — the image fills the entire area and is clipped to the bounding box via `<clipPath>`.
 - `circle` (boolean, optional): Clips the image into a circle shape using a circular `<clipPath>`. Useful for avatars. Implies cover mode (default: `false`)
 
@@ -521,16 +521,16 @@ Placeholder for image content.
 
 **Example**:
 ```wire
-component Image placeholder: "square" height: 250
-component Image placeholder: "landscape" height: 300
-component Image placeholder: "avatar" height: 100 circle: true
-component Image placeholder: "avatar" height: 80 circle: true
-component Image placeholder: "icon" icon: "image" height: 120
-component Image placeholder: "icon" icon: "user" variant: primary height: 80
-component Image placeholder: "icon" icon: "shield" variant: success height: 80
+component Image type: square height: 250
+component Image type: landscape height: 300
+component Image type: avatar height: 100 circle: true
+component Image type: avatar height: 80 circle: true
+component Image type: icon icon: "image" height: 120
+component Image type: icon icon: "user" variant: primary height: 80
+component Image type: icon icon: "shield" variant: success height: 80
 ```
 
-**Rendering**: Rectangular placeholder with appropriate aspect ratio. When `height` is set, the placeholder uses cover-mode clipping. When `circle: true`, the image is clipped to a circle; when `placeholder: icon`, the specified icon is centered and fills the available space.
+**Rendering**: Rectangular placeholder with appropriate aspect ratio. When `height` is set, the placeholder uses cover-mode clipping. When `circle: true`, the image is clipped to a circle; when `type: icon`, the specified icon is centered and fills the available space.
 
 ---
 
@@ -780,7 +780,7 @@ component Modal title: "Delete User" visible: false
 | Tabs | Navigation | Tabbed content |
 | Table | Data | Data grid |
 | List | Data | Item list |
-| Image | Media | Image placeholder |
+| Image | Media | image type |
 | Icon | Media | Icon symbol |
 | Divider | Display | Visual separator |
 | Separate | Display | Invisible spacer |

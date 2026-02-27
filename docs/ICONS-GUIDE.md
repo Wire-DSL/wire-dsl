@@ -1,4 +1,4 @@
-﻿# Icon Components Guide
+# Icon Components Guide
 
 Wire-DSL includes two icon components powered by **Feather Icons** (MIT License): `Icon` and `IconButton`.
 
@@ -85,7 +85,7 @@ layout stack(direction: horizontal, gap: 8) {
 ## Available Icons (287)
 
 Wire-DSL currently bundles **287 icons** from **Feather Icons v4.29.0**.
-These names are valid for `Icon.icon`, `IconButton.icon`, `Topbar.icon`, `Image icon` (when `placeholder: "icon"`), and `Stat.icon`.
+These names are valid for `Icon.icon`, `IconButton.icon`, `Topbar.icon`, `Image icon` (when `type: icon`), and `Stat.icon`.
 
 In `@wire-dsl/language-support`, the same catalog is exposed as:
 - `ICON_NAMES` (typed list)

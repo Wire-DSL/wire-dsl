@@ -1,4 +1,4 @@
-﻿# Wire-DSL Components Reference
+# Wire-DSL Components Reference
 
 
 Complete reference for all available components with detailed specifications, properties, and examples.
@@ -118,7 +118,7 @@ Single-line text input field.
 
 **Properties**:
 - `label` (string): Field label
-- `placeholder` (string): Placeholder text
+- `type` (enum): Placeholder text
 - `iconLeft` (string, optional): Icon name rendered on the left side of the field (e.g., `"search"`, `"mail"`)
 - `iconRight` (string, optional): Icon name rendered on the right side of the field (e.g., `"eye"`, `"x"`)
 - `disabled` (boolean, optional): Visually dims the field to indicate it is non-interactive (default: `false`)
@@ -140,7 +140,7 @@ Multi-line text input field.
 
 **Properties**:
 - `label` (string): Field label
-- `placeholder` (string): Placeholder text
+- `type` (enum): Placeholder text
 - `rows` (number): Number of visible rows (default: 4)
 
 **Example**:
@@ -470,21 +470,21 @@ component List title: "Cities" itemsMock: 5 mock: "city" random: true
 Placeholder for image content.
 
 **Properties**:
-- `placeholder` (string): Shape - `square` | `landscape` | `portrait` | `avatar` | `icon`
+- `type` (enum): Shape — `landscape` | `portrait` | `square` | `avatar` | `icon`
 - `height` (number, optional): Height in pixels. When set, the image scales to cover the full area and clips to the specified dimensions (object-fit: cover behavior).
 - `circle` (boolean, optional): Clips the image to a circular shape (avatar style). Also enables cover scaling (default: `false`).
-- `icon` (string, optional): Icon name — used when `placeholder: icon`. The icon fills the component area directly.
-- `variant` (string, optional): When `placeholder: icon`, tints the background and icon with the specified color.
+- `icon` (string, optional): Icon name — used when `type: icon`. The icon fills the component area directly.
+- `variant` (string, optional): when `type: icon`, tints the background and icon with the specified color.
 
 > The background color adapts to the active theme — light gray in `light` mode, dark gray in `dark` mode.
 
 **Example**:
 ```wire
-component Image placeholder: "square" height: 250
-component Image placeholder: "landscape" height: 300
-component Image placeholder: "avatar" height: 100 circle: true
-component Image placeholder: "icon" icon: "image" height: 120
-component Image placeholder: "icon" icon: "user" variant: primary height: 80 circle: true
+component Image type: square height: 250
+component Image type: landscape height: 300
+component Image type: avatar height: 100 circle: true
+component Image type: icon icon: "image" height: 120
+component Image type: icon icon: "user" variant: primary height: 80 circle: true
 ```
 
 **Rendering**: Rectangular (or circular) placeholder with appropriate aspect ratio; when `height` is set or `circle: true`, cover-mode clipping is applied
@@ -729,7 +729,7 @@ component Modal title: "Delete User" visible: false
 | Tabs | Navigation | Tabbed content |
 | Table | Data | Data grid |
 | List | Data | Item list |
-| Image | Media | Image placeholder |
+| Image | Media | image type |
 | Icon | Media | Icon symbol |
 | Divider | Display | Visual separator |
 | Separate | Display | Invisible spacer |

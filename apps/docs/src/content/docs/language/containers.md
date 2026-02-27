@@ -418,7 +418,7 @@ Create self-contained content cards. Ideal for product displays, user profiles, 
 
 ```wire
 layout card(padding: lg, gap: md, radius: md, border: true) {
-  component Image placeholder: "square" height: 250
+  component Image type: square height: 250
   component Heading text: "Card Title"
   component Text content: "Card description"
   component Button text: "Action"
@@ -447,7 +447,7 @@ layout card(padding: lg, gap: md, radius: md, border: true) {
 <!-- wire-preview:start -->
 ```wire
 layout card(padding: md, gap: md, radius: lg, border: true) {
-  component Image placeholder: "square" height: 200
+  component Image type: square height: 200
   component Heading text: "Premium Laptop"
   component Text content: "High-performance with latest specs"
   component Badge text: "In Stock" variant: success
@@ -479,7 +479,7 @@ layout card(padding: lg, gap: md, radius: md) {
 <!-- wire-preview:start -->
 ```wire
 layout card(padding: md, gap: md, radius: md, border: true) {
-  component Image placeholder: "landscape" height: 180
+  component Image type: landscape height: 180
   component Heading text: "Getting Started with Wire-DSL"
   component Text content: "Learn how to create interactive wireframes with Wire-DSL in 5 minutes"
   component Badge text: "Tutorial"

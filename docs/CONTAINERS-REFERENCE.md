@@ -1,4 +1,4 @@
-﻿# Containers & Layouts Reference
+# Containers & Layouts Reference
 
 Complete guide to container types (layouts) for organizing content in Wire-DSL wireframes.
 
@@ -468,7 +468,7 @@ Create self-contained content cards. Ideal for product displays, user profiles, 
 
 ```
 layout card(padding: lg, gap: md, radius: md, border: true) {
-  component Image placeholder: "square" height: 250
+  component Image type: square height: 250
   component Heading text: "Card Title"
   component Text text: "Card description"
   component Button text: "Action"
@@ -496,7 +496,7 @@ layout card(padding: lg, gap: md, radius: md, border: true) {
 **Product Card**:
 ```
 layout card(padding: md, gap: md, radius: lg, border: true) {
-  component Image placeholder: "square" height: 200
+  component Image type: square height: 200
   component Heading text: "Premium Laptop"
   component Text text: "High-performance with latest specs"
   component Badge text: "In Stock" variant: success
@@ -510,7 +510,7 @@ layout card(padding: md, gap: md, radius: lg, border: true) {
 **User Profile Card**:
 ```
 layout card(padding: lg, gap: md, radius: md) {
-  component Image placeholder: "square"
+  component Image type: square
   component Heading text: "John Doe"
   component Text text: "Senior Software Engineer"
   component Text text: "john@example.com"
@@ -525,7 +525,7 @@ layout card(padding: lg, gap: md, radius: md) {
 **Blog Post Card**:
 ```
 layout card(padding: md, gap: md, radius: md, border: true) {
-  component Image placeholder: "landscape" height: 180
+  component Image type: landscape height: 180
   component Heading text: "Getting Started with Wire-DSL"
   component Text text: "Learn how to create interactive wireframes with Wire-DSL in 5 minutes"
   component Badge text: "Tutorial"

@@ -329,7 +329,7 @@ component List items: "Apple,Banana,Cherry,Date"
 ## Media Components (2)
 
 ### Image
-Image placeholder with aspect ratio.
+Image type with aspect ratio.
 
 **Properties:**
 - `placeholder` (enum, required): Aspect ratio type
@@ -338,10 +338,10 @@ Image placeholder with aspect ratio.
 
 **Example:**
 ```wire
-component Image placeholder: "square" height: 250
-component Image placeholder: "landscape" height: 400
-component Image placeholder: "portrait" height: 600
-component Image placeholder: "avatar"
+component Image type: square height: 250
+component Image type: landscape height: 400
+component Image type: portrait height: 600
+component Image type: avatar
 ```
 
 ---

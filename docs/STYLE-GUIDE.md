@@ -1,4 +1,4 @@
-﻿# Style Configuration Guide
+# Style Configuration Guide
 
 Complete guide to the Wire-DSL style system for establishing visual consistency across wireframes.
 
@@ -456,7 +456,7 @@ project "ECommerceStore" {
       layout grid(columns: 12, gap: lg) {
         cell span: 4 {
           layout card(padding: lg, gap: md, radius: lg, border: true) {
-            component Image placeholder: "square" height: 250
+            component Image type: square height: 250
             component Heading text: "Product 1"
             component Text text: "High quality product"
             component Button text: "View Details"
@@ -464,7 +464,7 @@ project "ECommerceStore" {
         }
         cell span: 4 {
           layout card(padding: lg, gap: md, radius: lg, border: true) {
-            component Image placeholder: "square" height: 250
+            component Image type: square height: 250
             component Heading text: "Product 2"
             component Text text: "Best seller"
             component Button text: "View Details"
@@ -472,7 +472,7 @@ project "ECommerceStore" {
         }
         cell span: 4 {
           layout card(padding: lg, gap: md, radius: lg, border: true) {
-            component Image placeholder: "square" height: 250
+            component Image type: square height: 250
             component Heading text: "Product 3"
             component Text text: "New arrival"
             component Button text: "View Details"
