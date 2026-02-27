@@ -1,5 +1,12 @@
 # @wire-dsl/core
 
+## 0.2.5
+
+### Patch Changes
+
+- Updated dependencies [[`7daa704`](https://github.com/Wire-DSL/wire-dsl/commit/7daa704f6dc0600dfaa1c373a301e9d1e57bbe05)]:
+  - @wire-dsl/engine@0.8.0
+
 ## 0.2.4
 
 ### Patch Changes
