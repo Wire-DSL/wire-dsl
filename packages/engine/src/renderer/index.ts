@@ -2230,12 +2230,14 @@ export class SVGRenderer {
     let iconWidth: number;
     let iconHeight: number;
     if (isCircle) {
-      // Cover: scale to fill the container, will be clipped
-      iconWidth = pos.width;
-      iconHeight = pos.width / ratio;
-      if (iconHeight < pos.height) {
-        iconHeight = pos.height;
-        iconWidth = pos.height * ratio;
+      // Cover: scale to fill the circle (diameter = 2*imgR = min(width,height)).
+      // Using pos.width would cause extreme zoom when width >> height.
+      const diameter = 2 * imgR;
+      iconWidth = diameter;
+      iconHeight = diameter / ratio;
+      if (iconHeight < diameter) {
+        iconHeight = diameter;
+        iconWidth = diameter * ratio;
       }
     } else {
       // Contain: scale to fit within 80% of the smallest dimension
