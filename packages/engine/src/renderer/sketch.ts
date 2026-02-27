@@ -1439,7 +1439,7 @@ export class SketchSVGRenderer extends SVGRenderer {
    * Render image with sketch filter
    */
   protected renderImage(node: IRComponentNode, pos: any): string {
-    const placeholder = String(node.props.placeholder || 'landscape').toLowerCase();
+    const placeholder = String(node.props.type || 'landscape').toLowerCase();
     const iconType = String(node.props.icon || '').trim();
     const variant = String(node.props.variant || '').trim();
     const iconSvg =

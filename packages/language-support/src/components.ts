@@ -108,8 +108,8 @@ const disabledProp: PropertyMetadata = {
   description: 'Visually dims the component to indicate it is non-interactive.',
   defaultValue: false,
 };
-const imagePlaceholderEnum: PropertyMetadata = {
-  name: 'placeholder',
+const imageTypeEnum: PropertyMetadata = {
+  name: 'type',
   type: 'enum',
   options: ['landscape', 'portrait', 'square', 'icon', 'avatar'],
 };
@@ -417,13 +417,13 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     description: 'Image placeholder block.',
     category: 'Media',
     properties: {
-      placeholder: imagePlaceholderEnum,
+      type: imageTypeEnum,
       icon: iconNameEnum,
       variant: variantWithDefaultEnum,
       height: { name: 'height', type: 'number' },
       circle: { name: 'circle', type: 'boolean', description: 'Clips the image to a circle (avatar style).', defaultValue: false },
     },
-    example: 'component Image placeholder: "icon" icon: "user" variant: primary height: 120',
+    example: 'component Image type: icon icon: "user" variant: primary height: 120',
   },
   Icon: {
     name: 'Icon',

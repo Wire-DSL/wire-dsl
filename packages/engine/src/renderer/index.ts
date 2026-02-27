@@ -2189,7 +2189,7 @@ export class SVGRenderer {
   }
 
   protected renderImage(node: IRComponentNode, pos: any): string {
-    const placeholder = String(node.props.placeholder || 'landscape').toLowerCase();
+    const placeholder = String(node.props.type || 'landscape').toLowerCase();
     const placeholderIcon = String(node.props.icon || '').trim();
     const variant = String(node.props.variant || '').trim();
     const placeholderIconSvg =
