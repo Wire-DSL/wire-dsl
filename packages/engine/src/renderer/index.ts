@@ -1309,7 +1309,10 @@ export class SVGRenderer {
     const bold = this.parseBooleanProp(node.props.bold, false);
     const italic = this.parseBooleanProp(node.props.italic, false);
     const lines = this.wrapTextToLines(text, pos.width, fontSize);
-    // Center lines vertically within the bounding box.
+    // Center lines vertically within the bounding box. When the text fills the
+    // box (multi-line), (pos.height - totalTextHeight) ≈ 0, so this is a no-op.
+    // For single-line text, this aligns the baseline with adjacent controls
+    // (Input, Button) that also center their text within the control height.
     const totalTextHeight = lines.length * lineHeightPx;
     const firstLineY = pos.y + Math.round(Math.max(0, (pos.height - totalTextHeight) / 2)) + fontSize;
     const tspans = lines
