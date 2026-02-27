@@ -558,7 +558,7 @@ describe('Layout Engine', () => {
       .filter(([_, n]) => n.kind === 'component')
       .map(([id]) => layout[id])[0];
 
-    // Comfortable density: Button uses action control height (md = 40px)
+    // Comfortable density: Button uses action control height (default sm = 40px)
     expect(button.height).toBe(40);
   });
 
@@ -567,7 +567,7 @@ describe('Layout Engine', () => {
       project "Custom" {
         screen Main {
           layout stack {
-            component ChartPlaceholder height: 300 width: 600
+            component Chart height: 300 width: 600
           }
         }
       }
@@ -694,7 +694,7 @@ describe('Layout Engine', () => {
               }
             }
             
-            component ChartPlaceholder type: "bar" height: 300
+            component Chart type: "bar" height: 300
           }
         }
       }
@@ -882,15 +882,15 @@ describe('Layout Engine', () => {
     expect(withCaption.height - plain.height).toBe(46);
   });
 
-  it('should align control heights for Input/Select with Button/IconButton when actions use size lg + labelSpace', () => {
+  it('should align control heights for Input/Select with Button/IconButton when actions use size md + labelSpace', () => {
     const input = `
       project "ControlHeightAlignment" {
         screen Main {
           layout stack(direction: horizontal, justify: start, gap: sm) {
             component Input label: "Email" placeholder: "user@example.com" size: md
             component Select label: "Role" items: "Admin,User" size: md
-            component Button text: "Save" size: lg labelSpace: true
-            component IconButton icon: "check" size: lg labelSpace: true
+            component Button text: "Save" size: md labelSpace: true
+            component IconButton icon: "check" size: md labelSpace: true
           }
         }
       }
@@ -1005,7 +1005,7 @@ describe('Layout Engine', () => {
               }
             }
             
-            component ChartPlaceholder type: "line" height: 400
+            component Chart type: "line" height: 400
           }
         }
       }
@@ -1184,7 +1184,7 @@ describe('Layout Engine', () => {
 
         screen Main {
           layout stack(direction: vertical, gap: md, padding: md) {
-            component Heading text: "Este heading es suficientemente largo para requerir salto de linea automatico sin desbordar horizontalmente"
+            component Heading text: "Este heading es suficientemente largo para requerir salto de linea automatico sin desbordar horizontalmente en pantallas de escritorio"
             component Button text: "Siguiente"
           }
         }
@@ -1604,5 +1604,191 @@ describe('Layout Engine', () => {
       expect(shorter.y).toBe(expectedY);
       expect(shorter.y + shorter.height).toBe(taller.y + taller.height);
     });
+  });
+
+  // ─── A7: xs / xl sizes for Button & IconButton ───────────────────────────
+
+  it('should calculate Button xs size height (normal density)', () => {
+    const input = `
+      project "ButtonXS" {
+        screen Main {
+          layout stack {
+            component Button text: "Tiny" size: xs
+          }
+        }
+      }
+    `;
+    const ir = generateIR(parseWireDSL(input));
+    const layout = calculateLayout(ir);
+    const [buttonId] = Object.entries(ir.project.nodes).find(
+      ([, n]) => n.kind === 'component' && (n as any).componentType === 'Button'
+    )!;
+    expect(layout[buttonId].height).toBe(28);
+  });
+
+  it('should calculate Button xl size height (normal density)', () => {
+    const input = `
+      project "ButtonXL" {
+        screen Main {
+          layout stack {
+            component Button text: "Large" size: xl
+          }
+        }
+      }
+    `;
+    const ir = generateIR(parseWireDSL(input));
+    const layout = calculateLayout(ir);
+    const [buttonId] = Object.entries(ir.project.nodes).find(
+      ([, n]) => n.kind === 'component' && (n as any).componentType === 'Button'
+    )!;
+    expect(layout[buttonId].height).toBe(56);
+  });
+
+  it('should calculate IconButton xs size height (normal density)', () => {
+    const input = `
+      project "IconButtonXS" {
+        screen Main {
+          layout stack {
+            component IconButton icon: "search" size: xs
+          }
+        }
+      }
+    `;
+    const ir = generateIR(parseWireDSL(input));
+    const layout = calculateLayout(ir);
+    const [id] = Object.entries(ir.project.nodes).find(
+      ([, n]) => n.kind === 'component' && (n as any).componentType === 'IconButton'
+    )!;
+    expect(layout[id].height).toBe(28);
+  });
+
+  it('should calculate IconButton xl size height (normal density)', () => {
+    const input = `
+      project "IconButtonXL" {
+        screen Main {
+          layout stack {
+            component IconButton icon: "search" size: xl
+          }
+        }
+      }
+    `;
+    const ir = generateIR(parseWireDSL(input));
+    const layout = calculateLayout(ir);
+    const [id] = Object.entries(ir.project.nodes).find(
+      ([, n]) => n.kind === 'component' && (n as any).componentType === 'IconButton'
+    )!;
+    expect(layout[id].height).toBe(56);
+  });
+
+  // ─── A2: Topbar size ──────────────────────────────────────────────────────
+
+  it('should calculate Topbar sm size height', () => {
+    const input = `
+      project "TopbarSM" {
+        screen Main {
+          layout stack {
+            component Topbar title: "App" size: sm
+          }
+        }
+      }
+    `;
+    const ir = generateIR(parseWireDSL(input));
+    const layout = calculateLayout(ir);
+    const [id] = Object.entries(ir.project.nodes).find(
+      ([, n]) => n.kind === 'component' && (n as any).componentType === 'Topbar'
+    )!;
+    expect(layout[id].height).toBe(44);
+  });
+
+  it('should calculate Topbar md size height (default)', () => {
+    const input = `
+      project "TopbarMD" {
+        screen Main {
+          layout stack {
+            component Topbar title: "App"
+          }
+        }
+      }
+    `;
+    const ir = generateIR(parseWireDSL(input));
+    const layout = calculateLayout(ir);
+    const [id] = Object.entries(ir.project.nodes).find(
+      ([, n]) => n.kind === 'component' && (n as any).componentType === 'Topbar'
+    )!;
+    expect(layout[id].height).toBe(56);
+  });
+
+  it('should calculate Topbar lg size height', () => {
+    const input = `
+      project "TopbarLG" {
+        screen Main {
+          layout stack {
+            component Topbar title: "App" size: lg
+          }
+        }
+      }
+    `;
+    const ir = generateIR(parseWireDSL(input));
+    const layout = calculateLayout(ir);
+    const [id] = Object.entries(ir.project.nodes).find(
+      ([, n]) => n.kind === 'component' && (n as any).componentType === 'Topbar'
+    )!;
+    expect(layout[id].height).toBe(72);
+  });
+
+  // ─── A5: Badge size ───────────────────────────────────────────────────────
+
+  it('should calculate Badge xs size height', () => {
+    const input = `
+      project "BadgeXS" {
+        screen Main {
+          layout stack {
+            component Badge text: "New" size: xs
+          }
+        }
+      }
+    `;
+    const ir = generateIR(parseWireDSL(input));
+    const layout = calculateLayout(ir);
+    const [id] = Object.entries(ir.project.nodes).find(
+      ([, n]) => n.kind === 'component' && (n as any).componentType === 'Badge'
+    )!;
+    expect(layout[id].height).toBe(28);
+  });
+
+  it('should calculate Badge md size height (default)', () => {
+    const input = `
+      project "BadgeMD" {
+        screen Main {
+          layout stack {
+            component Badge text: "Active"
+          }
+        }
+      }
+    `;
+    const ir = generateIR(parseWireDSL(input));
+    const layout = calculateLayout(ir);
+    const [id] = Object.entries(ir.project.nodes).find(
+      ([, n]) => n.kind === 'component' && (n as any).componentType === 'Badge'
+    )!;
+    expect(layout[id].height).toBe(40);
+  });
+
+  it('should calculate Badge xl size height', () => {
+    const input = `
+      project "BadgeXL" {
+        screen Main {
+          layout stack {
+            component Badge text: "Status" size: xl
+          }
+        }
+      }
+    `;
+    const ir = generateIR(parseWireDSL(input));
+    const layout = calculateLayout(ir);
+    const [id] = Object.entries(ir.project.nodes).find(
+      ([, n]) => n.kind === 'component' && (n as any).componentType === 'Badge'
+    )!;
+    expect(layout[id].height).toBe(56);
   });
 });

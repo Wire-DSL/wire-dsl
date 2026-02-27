@@ -182,7 +182,7 @@ component Spinner
 
 ```wire
 component Input label: "Email" placeholder: "your@email.com"
-component Image placeholder: "square" height: 250
+component Image type: square height: 250
 component Button text: "Submit" variant: primary
 ```
 
@@ -360,7 +360,7 @@ project "E-Commerce App" {
       layout grid(columns: 12, gap: lg) {
         cell span: 4 {
           layout card(padding: md, gap: sm) {
-            component Image placeholder: "square" height: 200
+            component Image type: square height: 200
             component Heading text: "Product 1"
             component Text content: "$99.99"
             component Button text: "Add to Cart" variant: primary
@@ -368,7 +368,7 @@ project "E-Commerce App" {
         }
         cell span: 4 {
           layout card(padding: md, gap: sm) {
-            component Image placeholder: "square" height: 200
+            component Image type: square height: 200
             component Heading text: "Product 2"
             component Text content: "$79.99"
             component Button text: "Add to Cart" variant: primary
@@ -376,7 +376,7 @@ project "E-Commerce App" {
         }
         cell span: 4 {
           layout card(padding: md, gap: sm) {
-            component Image placeholder: "square" height: 200
+            component Image type: square height: 200
             component Heading text: "Product 3"
             component Text content: "$129.99"
             component Button text: "Add to Cart" variant: primary

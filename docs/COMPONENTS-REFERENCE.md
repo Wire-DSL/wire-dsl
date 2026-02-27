@@ -1,4 +1,4 @@
-﻿# Wire-DSL Components Reference
+# Wire-DSL Components Reference
 
 
 Complete reference for all available components with detailed specifications, properties, and examples.
@@ -56,14 +56,40 @@ Standard body text for content and descriptions.
 
 **Properties**:
 - `text` (string): The text content
+- `size` (enum, optional): Font size — `xs` | `sm` | `md` | `lg` | `xl` (default: `md`, ~14px)
+- `bold` (boolean, optional): Render text in bold (default: `false`)
+- `italic` (boolean, optional): Render text in italic (default: `false`)
 
 **Example**:
 ```wire
 component Text text: "This is body text"
-component Text text: "User profile information goes here"
+component Text text: "Important notice" bold: true
+component Text text: "Side note" size: sm italic: true
 ```
 
-**Rendering**: Regular text at 14-16px font size
+**Rendering**: Regular text at the specified size, with optional bold and italic styling
+
+---
+
+### Paragraph
+
+Multi-line body text block with alignment control. Suitable for longer prose content.
+
+**Properties**:
+- `text` (string): The text content (may wrap across multiple lines)
+- `align` (enum, optional): Text alignment — `left` | `center` | `right` (default: `left`)
+- `size` (enum, optional): Font size — `xs` | `sm` | `md` | `lg` | `xl` (default: `md`)
+- `bold` (boolean, optional): Render text in bold (default: `false`)
+- `italic` (boolean, optional): Render text in italic (default: `false`)
+
+**Example**:
+```wire
+component Paragraph text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+component Paragraph text: "Centered caption" align: center size: sm
+component Paragraph text: "Quote text" italic: true align: center
+```
+
+**Rendering**: Wrapped text block respecting alignment and font styling options
 
 ---
 
@@ -92,7 +118,7 @@ Single-line text input field.
 
 **Properties**:
 - `label` (string): Field label
-- `placeholder` (string): Placeholder text
+- `type` (enum): Placeholder text
 - `iconLeft` (string, optional): Icon name rendered on the left side of the field (e.g., `"search"`, `"mail"`)
 - `iconRight` (string, optional): Icon name rendered on the right side of the field (e.g., `"eye"`, `"x"`)
 - `disabled` (boolean, optional): Visually dims the field to indicate it is non-interactive (default: `false`)
@@ -114,7 +140,7 @@ Multi-line text input field.
 
 **Properties**:
 - `label` (string): Field label
-- `placeholder` (string): Placeholder text
+- `type` (enum): Placeholder text
 - `rows` (number): Number of visible rows (default: 4)
 
 **Example**:
@@ -220,19 +246,17 @@ Clickable action button.
 
 **Properties**:
 - `text` (string): Button label
-- `variant` (string): Visual style - `default` | `primary` | `secondary` | `success` | `warning` | `danger` | `info` (default: `default`)
+- `variant` (string): Visual style (default: `default`). Accepts semantic names or Material Design color families.
+- `size` (enum, optional): `xs` | `sm` | `md` | `lg` | `xl` (default: `md`)
 - `icon` (string, optional): Icon name to render alongside the text (e.g., `"check"`, `"trash"`, `"plus"`)
 - `iconAlign` (string, optional): Icon placement - `left` | `right` (default: `left`)
 - `disabled` (boolean, optional): Visually dims the button (default: `false`)
 
-**Variants**:
-- `default`: Neutral button style
-- `primary`: Prominent filled button (usually blue)
-- `secondary`: Neutral action
-- `success`: Positive action
-- `warning`: Caution action
-- `danger`: Destructive action
-- `info`: Informational action
+**Semantic variants**: `default` | `primary` | `secondary` | `success` | `warning` | `danger` | `info`
+
+**Material Design color variants**: `red` | `pink` | `purple` | `deep_purple` | `indigo` | `blue` | `light_blue` | `cyan` | `teal` | `green` | `light_green` | `lime` | `yellow` | `amber` | `orange` | `deep_orange` | `brown` | `grey` | `blue_grey`
+
+You can also specify a specific shade such as `red_400`, `purple_A200`, `teal_700`, etc.
 
 **Example**:
 ```wire
@@ -254,7 +278,7 @@ Button with icon instead of text.
 
 **Properties**:
 - `icon` (string): Icon name (e.g., "search", "menu", "close")
-- `size` (enum): `sm` | `md` | `lg` (default: `md`)
+- `size` (enum): `xs` | `sm` | `md` | `lg` | `xl` (default: `md`)
 - `variant` (enum): `default` | `primary` | `secondary` | `success` | `warning` | `danger` | `info`
 - `disabled` (boolean): disabled state (`true` | `false`, default: `false`)
 
@@ -278,8 +302,15 @@ Top navigation bar/header.
 **Properties**:
 - `title` (string): Main title
 - `subtitle` (string, optional): Secondary subtitle
+- `size` (enum, optional): `sm` | `md` | `lg` (default: `md`) — controls topbar height (44px / 56px / 72px)
 - `user` (string, optional): User name or identifier for badge
 - `actions` (string, optional): Action items (comma-separated)
+- `icon` (string, optional): Icon name for left badge slot
+- `avatar` (boolean, optional): Show avatar circle (default: `false`)
+- `variant` (string, optional): Accent color for icon badge and action buttons
+- `border` (boolean, optional): Show bottom border (default: `false`)
+- `background` (color, optional): Background fill. `"true"` = `cardBg` (legacy); hex or named Material color = custom color; `"false"` or absent = transparent.
+- `radius` (enum, optional): Corner radius — `none` | `sm` | `md` | `lg` | `xl` (default: `md`)
 
 **Example**:
 ```wire
@@ -287,6 +318,8 @@ component Topbar title: "Dashboard"
 component Topbar title: "Dashboard" subtitle: "Welcome back"
 component Topbar title: "Settings" user: "john_doe"
 component Topbar title: "Admin" actions: "Help,Logout"
+component Topbar title: "App" size: lg background: "#1E293B" border: true
+component Topbar title: "Portal" size: sm background: indigo user: "alice"
 ```
 
 **Rendering**: Horizontal bar at top of screen with logo/title and optional user menu
@@ -361,11 +394,19 @@ Tabbed interface with multiple panels.
 **Properties**:
 - `items` (string, CSV): Tab labels
 - `active` (number): Index of active tab (default: 0)
+- `variant` (string, optional): Active tab color — semantic name or Material Design color family (default: `default` = accent color)
+- `size` (enum, optional): `sm` | `md` | `lg` (default: `md`) — controls tab bar height (32px / 44px / 52px)
+- `radius` (enum, optional): Tab corner rounding — `none` | `sm` | `md` | `lg` | `full` (default: `md`)
+- `icons` (string, CSV, optional): Icon names aligned by position to each tab label
+- `flat` (boolean, optional): Flat underline style — active tab shows a colored bottom indicator, no filled background (default: `false`)
 
 **Example**:
 ```wire
 component Tabs items: "Overview,Details,Comments" active: 0
-component Tabs items: "Profile,Settings,Privacy,Security" active: 1
+component Tabs items: "Profile,Settings,Privacy" active: 1 variant: primary
+component Tabs items: "Home,Stats,History" icons: "home,bar-chart,clock" active: 0
+component Tabs items: "All,Active,Archived" active: 0 flat: true variant: indigo
+component Tabs items: "Files,Shared,Trash" size: sm radius: full
 ```
 
 **Rendering**: Horizontal tabs with one highlighted as active
@@ -429,24 +470,24 @@ component List title: "Cities" itemsMock: 5 mock: "city" random: true
 Placeholder for image content.
 
 **Properties**:
-- `placeholder` (string): Shape - `square` | `landscape` | `portrait` | `avatar` | `icon`
-- `height` (number, optional): Height in pixels (default: 200)
-- `icon` (string, optional): Icon name — used when `placeholder: icon`. The icon fills the component area directly, without an inner border box.
-- `variant` (string, optional): When `placeholder: icon`, tints the background and icon with the specified color (e.g., `primary`, `success`, `danger`, or custom color). Behaves similarly to `IconButton` variants.
+- `type` (enum): Shape — `landscape` | `portrait` | `square` | `avatar` | `icon`
+- `height` (number, optional): Height in pixels. When set, the image scales to cover the full area and clips to the specified dimensions (object-fit: cover behavior).
+- `circle` (boolean, optional): Clips the image to a circular shape (avatar style). Also enables cover scaling (default: `false`).
+- `icon` (string, optional): Icon name — used when `type: icon`. The icon fills the component area directly.
+- `variant` (string, optional): when `type: icon`, tints the background and icon with the specified color.
 
 > The background color adapts to the active theme — light gray in `light` mode, dark gray in `dark` mode.
 
 **Example**:
 ```wire
-component Image placeholder: "square" height: 250
-component Image placeholder: "landscape" height: 300
-component Image placeholder: "avatar" height: 100
-component Image placeholder: "icon" icon: "image" height: 120
-component Image placeholder: "icon" icon: "user" variant: primary height: 80
-component Image placeholder: "icon" icon: "shield" variant: success height: 80
+component Image type: square height: 250
+component Image type: landscape height: 300
+component Image type: avatar height: 100 circle: true
+component Image type: icon icon: "image" height: 120
+component Image type: icon icon: "user" variant: primary height: 80 circle: true
 ```
 
-**Rendering**: Rectangular placeholder with appropriate aspect ratio; when `placeholder: icon`, the specified icon is centered and fills the available space
+**Rendering**: Rectangular (or circular) placeholder with appropriate aspect ratio; when `height` is set or `circle: true`, cover-mode clipping is applied
 
 ---
 
@@ -456,16 +497,18 @@ Icon symbol.
 
 **Properties**:
 - `icon` (string): Icon identifier (e.g., "search", "star", "heart")
-- `size` (enum): `sm` | `md` | `lg` (default: `md`)
+- `size` (enum): `xs` | `sm` | `md` | `lg` | `xl` (default: `md`)
+- `variant` (string, optional): Icon color variant — semantic or Material Design color
+- `circle` (boolean, optional): Renders the icon inside a circular background (default: `false`)
 
 **Example**:
 ```wire
 component Icon icon: "search"
-component Icon icon: "settings"
-component Icon icon: "download"
+component Icon icon: "settings" size: lg
+component Icon icon: "user" size: md variant: primary circle: true
 ```
 
-**Rendering**: Small icon symbol inline with text
+**Rendering**: Small icon symbol inline with text; when `circle: true`, shows inside a tinted circular badge
 
 ---
 
@@ -511,12 +554,15 @@ Small label/tag for status or categorization.
 **Properties**:
 - `text` (string): Badge label
 - `variant` (string): Style - `default` | `primary` | `secondary` | `success` | `warning` | `danger` | `info` (default: `default`)
+- `size` (enum, optional): `xs` | `sm` | `md` | `lg` | `xl` (default: `md`) — controls badge height and font size
+- `padding` (number, optional): Custom horizontal padding in px (overrides default for the chosen size)
 
 **Example**:
 ```wire
 component Badge text: "New" variant: primary
-component Badge text: "Active" variant: success
-component Badge text: "Alert" variant: warning
+component Badge text: "Active" variant: success size: sm
+component Badge text: "Alert" variant: warning size: lg
+component Badge text: "Tag" variant: info padding: 12
 ```
 
 **Rendering**: Small rounded label with colored background
@@ -629,8 +675,6 @@ Placeholder for various chart types.
 **Properties**:
 - `type` (string): Chart type - `bar` | `line` | `pie` | `area` (default: `bar`)
 - `height` (number): Height in pixels (default: 200)
-- `ChartPlaceholder`: backward-compatible alias of `Chart`
-
 **Example**:
 ```wire
 component Chart type: "bar" height: 250
@@ -685,7 +729,7 @@ component Modal title: "Delete User" visible: false
 | Tabs | Navigation | Tabbed content |
 | Table | Data | Data grid |
 | List | Data | Item list |
-| Image | Media | Image placeholder |
+| Image | Media | image type |
 | Icon | Media | Icon symbol |
 | Divider | Display | Visual separator |
 | Separate | Display | Invisible spacer |

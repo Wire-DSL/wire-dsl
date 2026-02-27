@@ -394,7 +394,7 @@ describe('IR Generator', () => {
               }
             }
 
-            component ChartPlaceholder type: "bar" height: 300
+            component Chart type: "bar" height: 300
           }
         }
       }

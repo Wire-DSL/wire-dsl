@@ -682,10 +682,10 @@ Defines dimensions flexibly.
 }
 ```
 
-**ChartPlaceholder**
+**Chart**
 ```json
 {
-  "componentType": "ChartPlaceholder",
+  "componentType": "Chart",
   "props": {
     "type": "bar",
     "height": 300

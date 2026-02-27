@@ -24,7 +24,7 @@ project "Component Composition Demo" {
 
   define Component "ProductCard" {
     layout card(padding: md, gap: md, radius: md, border: true) {
-      component Image placeholder: "square" height: 200
+      component Image type: square height: 200
       component Heading text: "Product Name"
       component Text text: "High-quality product with premium features"
       component Button text: "View Details" variant: primary

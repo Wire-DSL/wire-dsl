@@ -196,7 +196,7 @@ project "Component Composition" {
   
 	define Component "UserCard" {
 		layout card(padding: md, gap: sm) {
-			component Image placeholder: "avatar" height: 96
+			component Image type: avatar height: 96
 			component Heading text: "User Name"
 			component Text content: "user@example.com"
 		}

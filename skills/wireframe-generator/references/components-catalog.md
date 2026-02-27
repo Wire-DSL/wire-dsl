@@ -5,9 +5,9 @@ description: Complete reference of all 21 Wire DSL components with properties an
 
 # Wire DSL Components Catalog
 
-Wire DSL provides 21 UI components organized into 8 categories. This reference lists all components with their properties and usage examples.
+Wire DSL provides 22 UI components organized into 8 categories. This reference lists all components with their properties and usage examples.
 
-## Text Components (3)
+## Text Components (4)
 
 ### Heading
 Renders a large heading/title text.
@@ -27,13 +27,35 @@ component Heading text: "User Profile"
 Renders standard body text.
 
 **Properties:**
-- `content` (string, required): The text content
+- `text` (string, required): The text content
+- `size` (enum, optional): Font size — `xs` | `sm` | `md` | `lg` | `xl` (default: `md`)
+- `bold` (boolean, optional): Bold weight (default: `false`)
+- `italic` (boolean, optional): Italic style (default: `false`)
 
 **Example:**
 ```wire
-component Text content: "This is regular Text text"
-component Text content: "Description of the product"
-component Text content: "Long text wraps automatically into multiple lines"
+component Text text: "This is regular body text"
+component Text text: "Important notice" bold: true
+component Text text: "Side note" size: sm italic: true
+```
+
+---
+
+### Paragraph
+Multi-line body text block with alignment control.
+
+**Properties:**
+- `text` (string, required): The text content (wraps automatically)
+- `align` (enum, optional): Text alignment — `left` | `center` | `right` (default: `left`)
+- `size` (enum, optional): Font size — `xs` | `sm` | `md` | `lg` | `xl` (default: `md`)
+- `bold` (boolean, optional): Bold weight (default: `false`)
+- `italic` (boolean, optional): Italic style (default: `false`)
+
+**Example:**
+```wire
+component Paragraph text: "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+component Paragraph text: "Centered caption" align: center size: sm
+component Paragraph text: "Quoted text" italic: true align: center
 ```
 
 ---
@@ -168,15 +190,17 @@ Standard clickable button.
 
 **Properties:**
 - `text` (string, required): Button text
-- `variant` (enum, optional): Visual style (default: primary)
-  - Values: `primary`, `secondary`, `ghost`
+- `variant` (enum, optional): Visual style (default: `default`). Semantic: `default` | `primary` | `secondary` | `success` | `warning` | `danger` | `info`. Material Design families: `red` | `pink` | `purple` | `deep_purple` | `indigo` | `blue` | `light_blue` | `cyan` | `teal` | `green` | `light_green` | `lime` | `yellow` | `amber` | `orange` | `deep_orange` | `brown` | `grey` | `blue_grey`. Specific shades also work: `red_400`, `teal_700`, `purple_A200`, etc.
+- `icon` (string, optional): Icon name rendered beside text
+- `iconAlign` (enum, optional): `left` | `right` (default: `left`)
+- `disabled` (boolean, optional): Dims the button (default: `false`)
 
 **Example:**
 ```wire
 component Button text: "Submit" variant: primary
 component Button text: "Cancel" variant: secondary
-component Button text: "Delete" variant: ghost
-component Button text: "Save"
+component Button text: "Delete" variant: danger
+component Button text: "Save" variant: teal
 ```
 
 ---
@@ -305,7 +329,7 @@ component List items: "Apple,Banana,Cherry,Date"
 ## Media Components (2)
 
 ### Image
-Image placeholder with aspect ratio.
+Image type with aspect ratio.
 
 **Properties:**
 - `placeholder` (enum, required): Aspect ratio type
@@ -314,10 +338,10 @@ Image placeholder with aspect ratio.
 
 **Example:**
 ```wire
-component Image placeholder: "square" height: 250
-component Image placeholder: "landscape" height: 400
-component Image placeholder: "portrait" height: 600
-component Image placeholder: "avatar"
+component Image type: square height: 250
+component Image type: landscape height: 400
+component Image type: portrait height: 600
+component Image type: avatar
 ```
 
 ---
@@ -439,7 +463,7 @@ component Code code: "SELECT * FROM users WHERE active = true;"
 
 ---
 
-### ChartPlaceholder
+### Chart
 Chart visualization placeholder.
 
 **Properties:**
@@ -449,10 +473,10 @@ Chart visualization placeholder.
 
 **Example:**
 ```wire
-component ChartPlaceholder type: "bar" height: 250
-component ChartPlaceholder type: "line" height: 400
-component ChartPlaceholder type: "pie" height: 300
-component ChartPlaceholder type: "area" height: 350
+component Chart type: "bar" height: 250
+component Chart type: "line" height: 400
+component Chart type: "pie" height: 300
+component Chart type: "area" height: 350
 ```
 
 ---
@@ -498,7 +522,7 @@ component Spinner
 | **Data** | Table, List | 2 |
 | **Media** | Image, Icon | 2 |
 | **Display** | Divider, Badge, Link, Alert | 4 |
-| **Info** | Stat, Code, ChartPlaceholder | 3 |
+| **Info** | Stat, Code, Chart | 3 |
 | **Modal** | Modal, Spinner | 2 |
 | **TOTAL** | | **21** |
 

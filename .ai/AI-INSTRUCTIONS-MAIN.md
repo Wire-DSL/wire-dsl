@@ -136,7 +136,7 @@ Output (SVG / IR / AST)
 | **Button** | Button, IconButton |
 | **Navigation** | Topbar, SidebarMenu, Breadcrumbs, Tabs |
 | **Data Display** | Table, List |
-| **Media & Display** | Image, Icon, Avatar, Divider, Badge, Link, Alert, Stat, Code, ChartPlaceholder |
+| **Media & Display** | Image, Icon, Avatar, Divider, Badge, Link, Alert, Stat, Code, Chart |
 | **Modal & Feedback** | Modal, Spinner |
 
 **5 Layout Containers:**

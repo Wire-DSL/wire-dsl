@@ -423,7 +423,7 @@ project "ECommerceStore" {
       layout grid(columns: 12, gap: lg) {
         cell span: 4 {
           layout card(padding: lg, gap: md, radius: lg, border: true) {
-            component Image placeholder: "square" height: 250
+            component Image type: square height: 250
             component Heading text: "Product 1"
             component Text content: "High quality product"
             component Button text: "View Details" block: true
@@ -431,7 +431,7 @@ project "ECommerceStore" {
         }
         cell span: 4 {
           layout card(padding: lg, gap: md, radius: lg, border: true) {
-            component Image placeholder: "square" height: 250
+            component Image type: square height: 250
             component Heading text: "Product 2"
             component Text content: "Best seller"
             component Button text: "View Details" block: true
@@ -439,7 +439,7 @@ project "ECommerceStore" {
         }
         cell span: 4 {
           layout card(padding: lg, gap: md, radius: lg, border: true) {
-            component Image placeholder: "square" height: 250
+            component Image type: square height: 250
             component Heading text: "Product 3"
             component Text content: "New arrival"
             component Button text: "View Details" block: true

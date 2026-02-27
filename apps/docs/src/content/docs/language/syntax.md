@@ -289,7 +289,7 @@ Flexible vertical container for grouping related content.
 
 ```wire
 layout card(padding: lg, gap: md, radius: md, border: true) {
-  component Image placeholder: "landscape"
+  component Image type: landscape
   component Heading text: "Product Title"
   component Text content: "Product description"
   component Button text: "Learn More"
