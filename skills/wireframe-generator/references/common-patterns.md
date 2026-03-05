@@ -13,7 +13,7 @@ This reference provides reusable, copy-paste-ready patterns for common UI scenar
 
 ```wire
 project "Contact Form" {
-  theme {
+  style {
     density: "normal"
     spacing: "md"
     radius: "md"
@@ -24,20 +24,20 @@ project "Contact Form" {
   screen ContactForm {
     layout stack(direction: vertical, gap: lg, padding: xl) {
       component Heading text: "Get in Touch"
-      component Text content: "Fill out the form below and we'll get back to you soon."
+      component Text text: "Fill out the form below and we'll get back to you soon."
 
       layout stack(direction: vertical, gap: md) {
         component Input label: "Name" placeholder: "John Doe"
-        component Input label: "Email" placeholder: "john@example.com"
+        component Input label: "Email" placeholder: "john@example.com" iconLeft: "mail"
         component Input label: "Subject" placeholder: "How can we help?"
         component Textarea label: "Message" placeholder: "Your message here..." rows: 6
       }
 
       component Checkbox label: "I agree to the privacy policy"
 
-      layout stack(direction: horizontal, gap: md, align: right) {
+      layout stack(direction: horizontal, gap: md, justify: end) {
         component Button text: "Cancel" variant: secondary
-        component Button text: "Send Message" variant: primary
+        component Button text: "Send Message" variant: primary icon: "send"
       }
     }
   }
@@ -48,7 +48,7 @@ project "Contact Form" {
 
 ```wire
 project "Registration" {
-  theme {
+  style {
     density: "normal"
     spacing: "md"
     radius: "md"
@@ -72,8 +72,8 @@ project "Registration" {
             component Input label: "Last Name" placeholder: "Doe"
           }
         }
-        component Input label: "Email" placeholder: "john@example.com"
-        component Input label: "Phone" placeholder: "+1 (555) 123-4567"
+        component Input label: "Email" placeholder: "john@example.com" iconLeft: "mail"
+        component Input label: "Phone" placeholder: "+1 (555) 123-4567" iconLeft: "phone"
       }
 
       component Divider
@@ -81,9 +81,9 @@ project "Registration" {
       // Account Details
       component Label text: "Account Details"
       layout stack(direction: vertical, gap: md) {
-        component Input label: "Username" placeholder: "johndoe"
-        component Input label: "Password" placeholder: "••••••••"
-        component Input label: "Confirm Password" placeholder: "••••••••"
+        component Input label: "Username" placeholder: "johndoe" iconLeft: "user"
+        component Input label: "Password" placeholder: "Enter password" iconRight: "eye-off"
+        component Input label: "Confirm Password" placeholder: "Re-enter password" iconRight: "eye-off"
       }
 
       component Divider
@@ -102,7 +102,7 @@ project "Registration" {
       component Checkbox label: "I agree to the Terms of Service and Privacy Policy" checked: false
 
       // Actions
-      layout stack(direction: horizontal, gap: md, align: right) {
+      layout stack(direction: horizontal, gap: md, justify: end) {
         component Button text: "Cancel" variant: secondary
         component Button text: "Create Account" variant: primary
       }
@@ -115,7 +115,7 @@ project "Registration" {
 
 ```wire
 project "Login" {
-  theme {
+  style {
     density: "normal"
     spacing: "md"
     radius: "md"
@@ -126,22 +126,22 @@ project "Login" {
   screen Login {
     layout stack(direction: vertical, gap: lg, padding: xl) {
       component Heading text: "Sign In"
-      component Text content: "Enter your credentials to access your account"
+      component Text text: "Enter your credentials to access your account"
 
       layout stack(direction: vertical, gap: md) {
-        component Input label: "Email" placeholder: "your@email.com"
-        component Input label: "Password" placeholder: "Enter password"
+        component Input label: "Email" placeholder: "your@email.com" iconLeft: "mail"
+        component Input label: "Password" placeholder: "Enter password" iconRight: "eye-off"
       }
 
-      layout stack(direction: horizontal, gap: md, align: justify) {
+      layout stack(direction: horizontal, gap: md, justify: spaceBetween) {
         component Checkbox label: "Remember me"
         component Link text: "Forgot password?"
       }
 
       component Button text: "Sign In" variant: primary
 
-      layout stack(direction: horizontal, gap: sm, align: center) {
-        component Text content: "Don't have an account?"
+      layout stack(direction: horizontal, gap: sm, justify: center) {
+        component Text text: "Don't have an account?"
         component Link text: "Sign up"
       }
     }
@@ -157,7 +157,7 @@ project "Login" {
 
 ```wire
 project "Admin Dashboard" {
-  theme {
+  style {
     density: "normal"
     spacing: "md"
     radius: "md"
@@ -166,38 +166,42 @@ project "Admin Dashboard" {
   }
 
   screen Dashboard {
-    layout split(sidebar: 260, gap: md) {
-      // Sidebar
+    layout split(left: 260, gap: md) {
+      // Left panel
       layout stack(direction: vertical, gap: md, padding: md) {
         component Heading text: "Admin Panel"
-        component SidebarMenu items: "Dashboard,Users,Products,Orders,Analytics,Settings" active: 0
+        component SidebarMenu items: "Dashboard,Users,Products,Orders,Analytics,Settings" icons: "home,users,box,shopping-cart,bar-chart-2,settings" active: 0
         component Divider
-        layout stack(direction: horizontal, gap: sm, align: left) {
-          component Image type: square
-          layout stack(direction: vertical, gap: xs) {
-            component Text content: "Admin User"
-            component Badge text: "Online" variant: success
+        layout grid(columns: 5, gap: sm) {
+          cell span: 2 {
+            component Image type: icon icon: "user" circle: true height: 65
+          }
+          cell span: 3 {
+            layout stack(direction: vertical, gap: none) {
+              component Heading text: "Admin User" level: h4
+              component Badge text: "Online" variant: success size: xs
+            }
           }
         }
       }
 
       // Main Content
-      layout stack(direction: vertical, gap: lg, padding: lg) {
-        component Topbar title: "Dashboard" subtitle: "Welcome back!" user: "admin@example.com"
+      layout stack(direction: vertical, gap: lg) {
+        component Topbar title: "Dashboard" subtitle: "Welcome back!" user: "admin@example.com" border: true background: true
 
         // Stats Grid
         layout grid(columns: 12, gap: md) {
           cell span: 3 {
-            component Stat title: "Total Users" value: "2,543"
+            component Stat title: "Total Users" value: "2,543" icon: "users" variant: primary
           }
           cell span: 3 {
-            component Stat title: "Revenue" value: "$45,230"
+            component Stat title: "Revenue" value: "$45,230" icon: "dollar-sign" variant: success
           }
           cell span: 3 {
-            component Stat title: "Active Orders" value: "892"
+            component Stat title: "Active Orders" value: "892" icon: "shopping-cart" variant: info
           }
           cell span: 3 {
-            component Stat title: "Growth" value: "+12.5%"
+            component Stat title: "Growth" value: "+12.5%" icon: "trending-up" variant: success
           }
         }
 
@@ -207,7 +211,7 @@ project "Admin Dashboard" {
             layout panel(padding: md) {
               layout stack(direction: vertical, gap: md) {
                 component Heading text: "Revenue Overview"
-                component Chart type: "line" height: 300
+                component Chart type: line height: 300
               }
             }
           }
@@ -215,7 +219,7 @@ project "Admin Dashboard" {
             layout panel(padding: md) {
               layout stack(direction: vertical, gap: md) {
                 component Heading text: "Traffic Sources"
-                component Chart type: "pie" height: 300
+                component Chart type: pie height: 300
               }
             }
           }
@@ -223,7 +227,7 @@ project "Admin Dashboard" {
 
         // Recent Activity
         component Heading text: "Recent Orders"
-        component Table columns: "Order ID,Customer,Product,Amount,Status" rows: 8
+        component Table columns: "Order ID,Customer,Product,Amount,Status" rows: 8 pagination: true
       }
     }
   }
@@ -234,7 +238,7 @@ project "Admin Dashboard" {
 
 ```wire
 project "Metrics Dashboard" {
-  theme {
+  style {
     density: "comfortable"
     spacing: "lg"
     radius: "md"
@@ -249,8 +253,10 @@ project "Metrics Dashboard" {
         cell span: 8 {
           component Heading text: "Performance Metrics"
         }
-        cell span: 4 align: end {
-          component Select label: "Time Period" items: "Last 7 days,Last 30 days,Last 90 days,This year"
+        cell span: 4 {
+          layout stack(direction: horizontal, justify: end) {
+            component Select label: "Time Period" items: "Last 7 days,Last 30 days,Last 90 days,This year"
+          }
         }
       }
 
@@ -258,28 +264,28 @@ project "Metrics Dashboard" {
       layout grid(columns: 12, gap: lg) {
         cell span: 3 {
           layout card(padding: lg, gap: sm) {
-            component Icon name: "users"
+            component Icon icon: "users" variant: primary
             component Stat title: "Active Users" value: "1,234"
             component Badge text: "+15% vs last week" variant: success
           }
         }
         cell span: 3 {
           layout card(padding: lg, gap: sm) {
-            component Icon name: "dollar-sign"
+            component Icon icon: "dollar-sign" variant: success
             component Stat title: "Revenue" value: "$45,230"
             component Badge text: "+8% vs last week" variant: success
           }
         }
         cell span: 3 {
           layout card(padding: lg, gap: sm) {
-            component Icon name: "shopping-cart"
+            component Icon icon: "shopping-cart" variant: warning
             component Stat title: "Orders" value: "892"
             component Badge text: "-3% vs last week" variant: warning
           }
         }
         cell span: 3 {
           layout card(padding: lg, gap: sm) {
-            component Icon name: "trending-up"
+            component Icon icon: "trending-up" variant: info
             component Stat title: "Conversion" value: "3.2%"
             component Badge text: "+0.5% vs last week" variant: success
           }
@@ -289,16 +295,16 @@ project "Metrics Dashboard" {
       // Charts Row
       layout grid(columns: 12, gap: lg) {
         cell span: 8 {
-          component Chart type: "area" height: 400
+          component Chart type: area height: 400
         }
         cell span: 4 {
-          component Chart type: "bar" height: 400
+          component Chart type: bar height: 400
         }
       }
 
       // Data Table
       component Heading text: "Recent Transactions"
-      component Table columns: "Date,Transaction ID,Customer,Amount,Status" rows: 10
+      component Table columns: "Date,Transaction ID,Customer,Amount,Status" rows: 10 pagination: true
     }
   }
 }
@@ -314,7 +320,7 @@ Note: Using user-defined component.
 
 ```wire
 project "Product Catalog" {
-  theme {
+  style {
     density: "comfortable"
     spacing: "lg"
     radius: "lg"
@@ -326,9 +332,9 @@ project "Product Catalog" {
     layout card(padding: md, gap: md, radius: lg, border: true) {
       component Image type: square height: 250
       component Heading text: "Smart Watch"
-      component Text content: "Track fitness and health metrics"
+      component Text text: "Track fitness and health metrics"
       component Badge text: "Sale" variant: success
-      layout stack(direction: horizontal, gap: md, align: justify) {
+      layout stack(direction: horizontal, gap: md, justify: spaceBetween) {
         component Heading text: "$199.99"
         component Button text: "Add to Cart" variant: primary
       }
@@ -343,10 +349,12 @@ project "Product Catalog" {
           component Heading text: "Featured Products"
         }
         cell span: 4 {
-          component Input label: "Search" placeholder: "Search products..."
+          component Input label: "Search" placeholder: "Search products..." iconLeft: "search"
         }
-        cell span: 2 align: end {
-          component Button text: "Filter" variant: secondary
+        cell span: 2 {
+          layout stack(direction: horizontal, justify: end) {
+            component Button text: "Filter" variant: secondary icon: "filter" labelSpace: true block: true size: md
+          }
         }
       }
 
@@ -356,9 +364,9 @@ project "Product Catalog" {
           layout card(padding: md, gap: md, radius: lg, border: true) {
             component Image type: square height: 250
             component Heading text: "Wireless Headphones"
-            component Text content: "Premium noise-cancelling headphones"
+            component Text text: "Premium noise-cancelling headphones"
             component Badge text: "New" variant: primary
-            layout stack(direction: horizontal, gap: md, align: justify) {
+            layout stack(direction: horizontal, gap: md, justify: spaceBetween) {
               component Heading text: "$129.99"
               component Button text: "Add to Cart" variant: primary
             }
@@ -389,9 +397,9 @@ project "Product Catalog" {
       component Divider
 
       // Pagination
-      layout stack(direction: horizontal, gap: sm, align: center) {
+      layout stack(direction: horizontal, gap: sm, justify: center) {
         component Button text: "Previous"
-        component Text content: "Page 1 of 5"
+        component Text text: "Page 1 of 5"
         component Button text: "Next" variant: primary
       }
     }
@@ -403,7 +411,7 @@ project "Product Catalog" {
 
 ```wire
 project "Product Detail" {
-  theme {
+  style {
     density: "normal"
     spacing: "md"
     radius: "md"
@@ -445,7 +453,7 @@ project "Product Detail" {
 
             component Stat title: "Price" value: "$129.99"
 
-            component Text content: "Experience superior sound quality with our premium wireless headphones featuring active noise cancellation and 30-hour battery life."
+            component Paragraph text: "Experience superior sound quality with our premium wireless headphones featuring active noise cancellation and 30-hour battery life."
 
             component Divider
 
@@ -454,8 +462,8 @@ project "Product Detail" {
             component Select label: "Quantity" items: "1,2,3,4,5"
 
             // Actions
-            layout stack(direction: horizontal, gap: md, align: left) {
-              component Button text: "Add to Cart" variant: primary
+            layout stack(direction: horizontal, gap: md, justify: start) {
+              component Button text: "Add to Cart" variant: primary icon: "shopping-cart"
               component IconButton icon: "heart"
               component IconButton icon: "share-2"
             }
@@ -465,23 +473,23 @@ project "Product Detail" {
             // Features
             component Label text: "Features"
             layout stack(direction: vertical, gap: xs) {
-              component Text content: "✓ Active Noise Cancellation"
-              component Text content: "✓ 30-hour battery life"
-              component Text content: "✓ Bluetooth 5.0"
-              component Text content: "✓ Premium materials"
-              component Text content: "✓ Foldable design"
+              component Text text: "Active Noise Cancellation"
+              component Text text: "30-hour battery life"
+              component Text text: "Bluetooth 5.0"
+              component Text text: "Premium materials"
+              component Text text: "Foldable design"
             }
           }
         }
       }
 
       // Tabs for Details
-      component Tabs items: "Description,Specifications,Reviews,Shipping" activeIndex: 0
+      component Tabs items: "Description,Specifications,Reviews,Shipping" active: 0
 
       layout panel(padding: lg) {
         layout stack(direction: vertical, gap: md) {
-          component Text content: "These premium wireless headphones deliver exceptional sound quality with deep bass and crystal-clear highs. The active noise cancellation technology blocks out ambient noise, allowing you to focus on your music."
-          component Text content: "Designed for all-day comfort with soft ear cushions and an adjustable headband. The 30-hour battery life ensures you can enjoy your music for days without recharging."
+          component Paragraph text: "These premium wireless headphones deliver exceptional sound quality with deep bass and crystal-clear highs. The active noise cancellation technology blocks out ambient noise, allowing you to focus on your music."
+          component Paragraph text: "Designed for all-day comfort with soft ear cushions and an adjustable headband. The 30-hour battery life ensures you can enjoy your music for days without recharging."
         }
       }
     }
@@ -497,7 +505,7 @@ project "Product Detail" {
 
 ```wire
 project "User Profile" {
-  theme {
+  style {
     density: "normal"
     spacing: "md"
     radius: "md"
@@ -509,13 +517,13 @@ project "User Profile" {
     layout stack(direction: vertical, gap: lg, padding: lg) {
       // Profile Header
       layout card(padding: lg, gap: md) {
-        layout stack(direction: horizontal, gap: lg, align: left) {
-          component Image type: square
+        layout stack(direction: horizontal, gap: lg, justify: start) {
+          component Image type: avatar circle: true
           layout stack(direction: vertical, gap: sm) {
             component Heading text: "John Doe"
-            component Text content: "Senior Developer"
-            component Text content: "john.doe@example.com"
-            layout stack(direction: horizontal, gap: sm, align: left) {
+            component Text text: "Senior Developer"
+            component Text text: "john.doe@example.com"
+            layout stack(direction: horizontal, gap: sm, justify: start) {
               component Badge text: "Pro Member" variant: primary
               component Badge text: "Verified" variant: success
             }
@@ -524,7 +532,7 @@ project "User Profile" {
       }
 
       // Tabs
-      component Tabs items: "Overview,Settings,Activity,Billing" activeIndex: 0
+      component Tabs items: "Overview,Settings,Activity,Billing" active: 0
 
       // Tab Content
       layout grid(columns: 12, gap: lg) {
@@ -534,7 +542,7 @@ project "User Profile" {
             layout panel(padding: md) {
               layout stack(direction: vertical, gap: md) {
                 component Heading text: "About"
-                component Text content: "Passionate developer with 10+ years of experience in full-stack development. Specializing in JavaScript, React, and Node.js."
+                component Paragraph text: "Passionate developer with 10+ years of experience in full-stack development. Specializing in JavaScript, React, and Node.js."
               }
             }
 
@@ -552,19 +560,19 @@ project "User Profile" {
           layout stack(direction: vertical, gap: md) {
             layout card(padding: md, gap: sm) {
               component Heading text: "Stats"
-              component Stat title: "Projects" value: "47"
-              component Stat title: "Contributions" value: "1,234"
-              component Stat title: "Followers" value: "892"
+              component Stat title: "Projects" value: "47" icon: "folder"
+              component Stat title: "Contributions" value: "1,234" icon: "git-commit"
+              component Stat title: "Followers" value: "892" icon: "users"
             }
 
             layout card(padding: md, gap: sm) {
               component Heading text: "Skills"
-              layout stack(direction: horizontal, gap: xs, align: left) {
+              layout stack(direction: horizontal, gap: xs, justify: start) {
                 component Badge text: "JavaScript" variant: info
                 component Badge text: "React" variant: info
                 component Badge text: "Node.js" variant: info
               }
-              layout stack(direction: horizontal, gap: xs, align: left) {
+              layout stack(direction: horizontal, gap: xs, justify: start) {
                 component Badge text: "TypeScript" variant: info
                 component Badge text: "GraphQL" variant: info
               }
@@ -585,7 +593,7 @@ project "User Profile" {
 
 ```wire
 project "Settings" {
-  theme {
+  style {
     density: "normal"
     spacing: "md"
     radius: "md"
@@ -594,11 +602,11 @@ project "Settings" {
   }
 
   screen Settings {
-    layout split(sidebar: 240, gap: md) {
+    layout split(left: 240, gap: md) {
       // Settings Navigation
       layout stack(direction: vertical, gap: sm, padding: md) {
         component Heading text: "Settings"
-        component SidebarMenu items: "Profile,Account,Privacy,Notifications,Billing,Security" active: 0
+        component SidebarMenu items: "Profile,Account,Privacy,Notifications,Billing,Security" icons: "user,settings,lock,bell,credit-card,shield" active: 0
       }
 
       // Settings Content
@@ -606,13 +614,13 @@ project "Settings" {
         component Heading text: "Profile Settings"
 
         // Profile Photo
-        layout panel(padding: md) {
-          layout stack(direction: vertical, gap: md) {
-            component Label text: "Profile Photo"
-            component Image type: square
-            layout stack(direction: horizontal, gap: sm, align: left) {
-              component Button text: "Upload New" variant: primary
-              component Button text: "Remove"
+        layout card(padding: md) {
+          component Label text: "Profile Photo"
+          layout grid(columns: 5, gap: md) {
+            component Image type: icon icon: "user" circle: true height: 100
+            layout stack(direction: horizontal, gap: sm, justify: start) {
+              component Button text: "Upload New" variant: primary icon: "upload"
+              component Button text: "Remove" variant: secondary
             }
           }
         }
@@ -629,8 +637,8 @@ project "Settings" {
                 component Input label: "Last Name" placeholder: "Doe"
               }
             }
-            component Input label: "Email" placeholder: "john@example.com"
-            component Input label: "Phone" placeholder: "+1 (555) 123-4567"
+            component Input label: "Email" placeholder: "john@example.com" iconLeft: "mail"
+            component Input label: "Phone" placeholder: "+1 (555) 123-4567" iconLeft: "phone"
             component Textarea label: "Bio" placeholder: "Tell us about yourself" rows: 4
           }
         }
@@ -639,17 +647,17 @@ project "Settings" {
         layout panel(padding: md) {
           layout stack(direction: vertical, gap: md) {
             component Label text: "Preferences"
-            component Select label: "Language" items: "English,Spanish,French,German"
-            component Select label: "Timezone" items: "UTC-8,UTC-5,UTC,UTC+1,UTC+8"
+            component Select label: "Language" items: "English,Spanish,French,German" iconLeft: "globe"
+            component Select label: "Timezone" items: "UTC-8,UTC-5,UTC,UTC+1,UTC+8" iconLeft: "clock"
             component Toggle label: "Dark Mode" enabled: false
             component Toggle label: "Email Notifications" enabled: true
           }
         }
 
         // Actions
-        layout stack(direction: horizontal, gap: md, align: right) {
+        layout stack(direction: horizontal, gap: md, justify: end) {
           component Button text: "Cancel" variant: secondary
-          component Button text: "Save Changes" variant: primary
+          component Button text: "Save Changes" variant: primary icon: "save"
         }
       }
     }
@@ -665,7 +673,7 @@ project "Settings" {
 
 ```wire
 project "Users Management" {
-  theme {
+  style {
     density: "normal"
     spacing: "md"
     radius: "md"
@@ -681,24 +689,26 @@ project "Users Management" {
           component Heading text: "Users"
         }
         cell span: 4 {
-          component Input label: "Search" placeholder: "Search by name or email..."
+          component Input label: "Search" placeholder: "Search by name or email..." iconLeft: "search"
         }
-        cell span: 2 align: end {
-          component Button text: "Add User" variant: primary
+        cell span: 2 {
+          layout stack(direction: horizontal, justify: end) {
+            component Button text: "Add User" variant: primary icon: "plus" labelSpace: true block: true size: md
+          }
         }
       }
 
       // Filters
-      layout card (padding: lg) {
-        layout stack(direction: horizontal, gap: md, align: justify) {
+      layout card(padding: lg) {
+        layout stack(direction: horizontal, gap: md, justify: spaceBetween) {
           component Select label: "Role" items: "All,Admin,User,Guest"
           component Select label: "Status" items: "All,Active,Inactive,Pending"
-          component Button text: "Apply Filters"
+          component Button text: "Apply Filters" icon: "filter"
         }
       }
 
       // Users Table
-      component Table columns: "Name,Email,Role,Status,Last Login,Actions" rows: 10 pagination: true
+      component Table columns: "Name,Email,Role,Status,Last Login,Actions" rows: 10 pagination: true actions: "Edit,Delete"
     }
   }
 }
@@ -708,13 +718,13 @@ project "Users Management" {
 
 ## Quick Selection Guide
 
-**Need a form?** → Use Form Patterns
-**Need a dashboard?** → Use Dashboard Patterns
-**Need product cards?** → Use Product Grid Patterns
-**Need user profile?** → Use User Profile Patterns
-**Need settings page?** → Use Settings Page Patterns
-**Need data table?** → Use Data Table Patterns
+**Need a form?** -> Use Form Patterns
+**Need a dashboard?** -> Use Dashboard Patterns
+**Need product cards?** -> Use Product Grid Patterns
+**Need user profile?** -> Use User Profile Patterns
+**Need settings page?** -> Use Settings Page Patterns
+**Need data table?** -> Use Data Table Patterns
 
 All patterns are production-ready and can be customized by changing text, colors, and spacing values.
 
-<!-- Source: examples/*.wire, .ai/AI-INSTRUCTIONS-MAIN.md, docs/EXAMPLES.md -->
+<!-- Source: @wire-dsl/language-support components.ts -->
