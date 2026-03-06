@@ -13,8 +13,9 @@ Every `.wire` file follows this hierarchical structure:
 
 ```wire
 project "ProjectName" {
-  theme {
-    // theme configuration
+  // style block is optional (defaults apply when omitted)
+  style {
+    // each property is also optional
   }
 
   screen ScreenName {
@@ -31,10 +32,22 @@ project "ProjectName" {
 
 **Key Points:**
 - One `project` block per file
-- One `theme` block per project (required)
+- Zero or one `style` block per project (optional; defaults apply when omitted)
 - One or more `screen` blocks
 - Each screen contains exactly one root layout
 - Layouts can contain components and nested layouts
+
+## Top-Level Keywords
+
+The following keywords are valid at the project level:
+
+| Keyword | Purpose |
+|---------|---------|
+| `project` | Root wrapper for the entire file |
+| `style` | Global style tokens (optional; density, spacing, radius, stroke, font) |
+| `colors` | Project color tokens (variants and semantic tokens) |
+| `mocks` | Mock data definitions for components |
+| `define` | Reusable custom component definitions |
 
 ## Property Syntax
 
@@ -46,7 +59,6 @@ Properties use the `key: value` format with specific quoting rules:
 text: "Hello World"
 label: "Email Address"
 placeholder: "Enter text here"
-content: "Lorem ipsum dolor sit amet"
 title: "Dashboard"
 ```
 
@@ -58,7 +70,7 @@ width: 400
 rows: 5
 columns: 12
 span: 6
-sidebar: 260
+left: 260
 ```
 
 ### Boolean Values (NO quotes)
@@ -67,6 +79,7 @@ sidebar: 260
 checked: true
 enabled: false
 border: true
+disabled: true
 ```
 
 ### Enum Values (NO quotes)
@@ -76,20 +89,23 @@ variant: primary
 direction: vertical
 gap: md
 type: bar
-placeholder: square
 ```
 
 **Valid Enum Values:**
-- **Spacing:** `xs`, `sm`, `md`, `lg`, `xl`
-- **Variants:** `primary`, `secondary`, `ghost`, `success`, `warning`, `error`, `info`
+- **Spacing:** `none`, `xs`, `sm`, `md`, `lg`, `xl`
+- **Variants (semantic):** `default`, `primary`, `secondary`, `success`, `warning`, `danger`, `info`
+- **Variants (Material Design):** `red`, `pink`, `purple`, `deep_purple`, `indigo`, `blue`, `light_blue`, `cyan`, `teal`, `green`, `light_green`, `lime`, `yellow`, `amber`, `orange`, `deep_orange`, `brown`, `grey`, `blue_grey`
 - **Direction:** `vertical`, `horizontal`
-- **Align:** `start`, `center`, `end`, `left`, `right`, `justify`
+- **Justify:** `stretch`, `start`, `center`, `end`, `spaceBetween`, `spaceAround`
+- **Align (layout):** `start`, `center`, `end`
+- **Align (component):** `left`, `center`, `right`
 - **Density:** `compact`, `normal`, `comfortable`
 - **Radius:** `none`, `sm`, `md`, `lg`
 - **Stroke:** `thin`, `normal`
 - **Font:** `base`, `title`, `mono`
-- **Placeholder:** `square`, `landscape`, `portrait`, `avatar`
-- **Chart Types:** `bar`, `line`, `pie`, `area`
+- **Image type:** `landscape`, `portrait`, `square`, `icon`, `avatar`
+- **Chart types:** `bar`, `line`, `pie`, `area`
+- **Heading level:** `h1`, `h2`, `h3`, `h4`, `h5`, `h6`
 
 ### CSV Lists (Quoted strings with commas)
 
@@ -97,6 +113,7 @@ placeholder: square
 items: "Home,Users,Settings,Analytics"
 columns: "Name,Email,Status,Role"
 actions: "Edit,Delete,View"
+icons: "home,users,settings"
 ```
 
 ## Naming Conventions
@@ -115,13 +132,12 @@ actions: "Edit,Delete,View"
 ### Component Names
 - Use exact PascalCase matching
 - Case-sensitive (must match exactly)
-- Examples: `Button`, `Input`, `Heading`, `Stat`
-- ❌ Wrong: `button`, `INPUT`, `heading`, `stat`
+- Examples: `Button`, `Input`, `Heading`, `Stat`, `SidebarMenu`
+- Wrong: `button`, `INPUT`, `heading`, `sidebarMenu`
 
 ### Property Names
-- Use lowercase
-- No camelCase or PascalCase
-- Examples: `gap`, `padding`, `placeholder`, `activeIndex`
+- Use camelCase
+- Examples: `gap`, `padding`, `placeholder`, `iconLeft`, `iconAlign`, `labelSpace`
 
 ## Comments
 
@@ -157,7 +173,7 @@ layout <type> {
 ```wire
 layout stack(direction: vertical, gap: md, padding: lg) {
   component Heading text: "Title"
-  component Text content: "Body"
+  component Text text: "Body"
 }
 ```
 
@@ -175,15 +191,15 @@ Components are UI elements that render visual content.
 ```wire
 component Heading text: "Page Title"
 component Divider
-component Spinner
+component Separate size: md
 ```
 
 ### Multi-Property Components
 
 ```wire
-component Input label: "Email" placeholder: "your@email.com"
+component Input label: "Email" placeholder: "your@email.com" iconLeft: "mail"
 component Image type: square height: 250
-component Button text: "Submit" variant: primary
+component Button text: "Submit" variant: primary icon: "check"
 ```
 
 **Component Format:**
@@ -192,23 +208,26 @@ component Button text: "Submit" variant: primary
 - Properties separated by spaces
 - Each property: `key: value`
 
-## Theme Configuration
+## Style Configuration
 
-The theme block configures global visual settings:
+The style block configures global visual settings. Both the block itself and each individual property are **optional**. Omitted properties use their defaults.
 
 ```wire
-theme {
-  density: "normal"      // compact | normal | comfortable
-  spacing: "md"          // xs | sm | md | lg | xl
-  radius: "md"           // none | sm | md | lg
-  stroke: "normal"       // thin | normal
-  font: "base"           // base | title | mono
+style {
+  density: "normal"      // compact | normal | comfortable  (default: "normal")
+  spacing: "md"          // xs | sm | md | lg | xl          (default: "md")
+  radius: "md"           // none | sm | md | lg | full      (default: "md")
+  stroke: "normal"       // thin | normal | thick            (default: "normal")
+  font: "base"           // sm | base | lg                   (default: "base")
+  background: "#f0f0f0"  // optional CSS color
+  theme: "light"         // light | dark                     (optional)
+  device: "mobile"       // mobile | tablet | desktop | print | a4  (optional)
 }
 ```
 
 **Key Points:**
-- Theme is required in every project
-- All properties are required
+- The `style` block is optional (defaults apply when omitted)
+- Each property inside `style` is also optional (individual defaults apply)
 - Values must be from valid enum sets
 - String values must be quoted
 
@@ -250,13 +269,14 @@ layout stack(direction: vertical, gap: md) {
 
 ### Split Layout
 - Must have **exactly 2** children
-- First child is sidebar, second is main content
+- First child is left panel, second is right/main content
 - Both children are typically stacks
+- Use `left` or `right` to set fixed-width side (in pixels)
 
 ```wire
-layout split(sidebar: 260, gap: md) {
-  layout stack { /* sidebar */ }
-  layout stack { /* main */ }
+layout split(left: 260, gap: md) {
+  layout stack { /* left panel */ }
+  layout stack { /* main content */ }
 }
 ```
 
@@ -268,7 +288,7 @@ layout split(sidebar: 260, gap: md) {
 layout panel(padding: lg) {
   layout stack(gap: md) {
     component Heading text: "Panel Title"
-    component Text content: "Content"
+    component Text text: "Content"
   }
 }
 ```
@@ -296,7 +316,7 @@ Define reusable components:
 define Component "CustomCard" {
   layout card(padding: md, gap: sm) {
     component Heading text: "Title"
-    component Text content: "Description"
+    component Text text: "Description"
   }
 }
 ```
@@ -305,8 +325,8 @@ define Component "CustomCard" {
 ```wire
 screen MyScreen {
   layout stack {
-    Component "CustomCard"
-    Component "CustomCard"
+    component "CustomCard"
+    component "CustomCard"
   }
 }
 ```
@@ -333,7 +353,7 @@ component Input
 
 ```wire
 project "E-Commerce App" {
-  theme {
+  style {
     density: "normal"
     spacing: "md"
     radius: "md"
@@ -349,10 +369,12 @@ project "E-Commerce App" {
       // Search and filter
       layout grid(columns: 12, gap: md) {
         cell span: 9 {
-          component Input label: "Search" placeholder: "Product name..."
+          component Input label: "Search" placeholder: "Product name..." iconLeft: "search"
         }
-        cell span: 3 align: end {
-          component Button text: "Filter" variant: secondary
+        cell span: 3 {
+          layout stack(direction: horizontal, justify: end) {
+            component Button text: "Filter" variant: secondary icon: "filter"
+          }
         }
       }
 
@@ -362,7 +384,7 @@ project "E-Commerce App" {
           layout card(padding: md, gap: sm) {
             component Image type: square height: 200
             component Heading text: "Product 1"
-            component Text content: "$99.99"
+            component Text text: "$99.99"
             component Button text: "Add to Cart" variant: primary
           }
         }
@@ -370,7 +392,7 @@ project "E-Commerce App" {
           layout card(padding: md, gap: sm) {
             component Image type: square height: 200
             component Heading text: "Product 2"
-            component Text content: "$79.99"
+            component Text text: "$79.99"
             component Button text: "Add to Cart" variant: primary
           }
         }
@@ -378,7 +400,7 @@ project "E-Commerce App" {
           layout card(padding: md, gap: sm) {
             component Image type: square height: 200
             component Heading text: "Product 3"
-            component Text content: "$129.99"
+            component Text text: "$129.99"
             component Button text: "Add to Cart" variant: primary
           }
         }
@@ -392,28 +414,28 @@ project "E-Commerce App" {
 
 Before outputting Wire DSL code, verify:
 
-✅ **Structure:**
+**Structure:**
 - File starts with `project` block
-- Project contains one `theme` block
+- Project may contain one `style` block (optional)
 - Project contains at least one `screen` block
 - Each screen has exactly one root layout
 
-✅ **Syntax:**
+**Syntax:**
 - All string values are quoted
 - Numbers, booleans, enums are NOT quoted
 - All opening braces `{` have matching closing braces `}`
 - Properties use `key: value` format
-- CSV lists are comma-separated, no spaces
+- CSV lists are comma-separated, no spaces after commas
 
-✅ **Naming:**
+**Naming:**
 - Screen names are CamelCase
 - Component names match exactly (case-sensitive)
-- Property names are lowercase
+- Property names use camelCase
 
-✅ **Special Rules:**
+**Special Rules:**
 - Split layouts have exactly 2 children
 - Panel layouts have exactly 1 child
 - Grid cells have `span` values 1-12
 - Grid cells are inside grid layouts only
 
-<!-- Source: docs/DSL-SYNTAX.md, .ai/AI-INSTRUCTIONS-MAIN.md, specs/IR-CONTRACT.md -->
+<!-- Source: @wire-dsl/language-support components.ts, engine parser/index.ts -->

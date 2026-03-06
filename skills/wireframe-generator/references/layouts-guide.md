@@ -13,7 +13,7 @@ Layouts are containers that organize components and other layouts. Wire DSL prov
 |--------|---------|----------|------------------|
 | **Stack** | Linear arrangement | Multiple | Forms, lists, vertical/horizontal sections |
 | **Grid** | Multi-column layout | Cells (span 1-12) | Dashboards, product grids, responsive layouts |
-| **Split** | Sidebar + main area | Exactly 2 | Admin panels, navigation + content |
+| **Split** | Two-column area | Exactly 2 | Admin panels, navigation + content |
 | **Panel** | Bordered section | Exactly 1 | Highlighted sections, form groups |
 | **Card** | Content card | Multiple | Product cards, user profiles, info boxes |
 
@@ -27,10 +27,11 @@ Linear arrangement of children (vertical or horizontal).
 
 | Property | Type | Values | Default | Description |
 |----------|------|--------|---------|-------------|
-| `direction` | enum | `vertical`, `horizontal` | `vertical` | Stack direction |
-| `gap` | enum | `xs`, `sm`, `md`, `lg`, `xl` | - | Space between children |
-| `padding` | enum | `xs`, `sm`, `md`, `lg`, `xl` | `0px` | Inner padding |
-| `align` | enum | `justify`, `left`, `center`, `right` | `justify` | Horizontal alignment (horizontal stacks only) |
+| `direction` | enum | `vertical`, `horizontal` | required | Stack direction |
+| `justify` | enum | `stretch`, `start`, `center`, `end`, `spaceBetween`, `spaceAround` | `stretch` | Distribution along main axis |
+| `align` | enum | `start`, `center`, `end` | - | Cross-axis alignment |
+| `gap` | enum | `none`, `xs`, `sm`, `md`, `lg`, `xl` | - | Space between children |
+| `padding` | enum | `none`, `xs`, `sm`, `md`, `lg`, `xl` | `0px` | Inner padding |
 
 **Spacing Values:**
 - `xs` = 4px
@@ -53,7 +54,7 @@ layout stack(direction: vertical, gap: md, padding: lg) {
 ```wire
 layout stack(direction: vertical, gap: md, padding: lg) {
   component Heading text: "User Profile"
-  component Text content: "Personal information"
+  component Text text: "Personal information"
   component Input label: "Name" placeholder: "Full name"
   component Input label: "Email" placeholder: "email@example.com"
   component Button text: "Save" variant: primary
@@ -86,47 +87,53 @@ layout stack(direction: vertical, gap: xl, padding: lg) {
   }
 
   // Actions
-  layout stack(direction: horizontal, gap: md) {
-    component Button text: "Create Account" variant: primary
+  layout stack(direction: horizontal, gap: md, justify: end) {
     component Button text: "Cancel"
+    component Button text: "Create Account" variant: primary
   }
 }
 ```
 
 ### Horizontal Stack Examples
 
-**Alignment Options:**
+**Using justify for distribution:**
 
 ```wire
-// justify: equal width, fills 100% (default)
-layout stack(direction: horizontal, gap: md, align: justify) {
+// stretch: children fill available space equally (default)
+layout stack(direction: horizontal, gap: md, justify: stretch) {
   component Button text: "Option A"
   component Button text: "Option B"
   component Button text: "Option C"
 }
 
-// left: natural width, grouped left
-layout stack(direction: horizontal, gap: sm, align: left) {
+// start: children grouped at start
+layout stack(direction: horizontal, gap: sm, justify: start) {
   component Button text: "Edit"
   component Button text: "Delete"
 }
 
-// center: natural width, centered
-layout stack(direction: horizontal, gap: sm, align: center) {
+// center: children centered
+layout stack(direction: horizontal, gap: sm, justify: center) {
   component Button text: "Submit" variant: primary
 }
 
-// right: natural width, grouped right
-layout stack(direction: horizontal, gap: sm, align: right) {
+// end: children grouped at end
+layout stack(direction: horizontal, gap: sm, justify: end) {
   component IconButton icon: "settings"
   component IconButton icon: "bell"
   component IconButton icon: "user"
+}
+
+// spaceBetween: equal space between children
+layout stack(direction: horizontal, gap: sm, justify: spaceBetween) {
+  component Text text: "Left content"
+  component Text text: "Right content"
 }
 ```
 
 **Action Buttons:**
 ```wire
-layout stack(direction: horizontal, gap: md, align: right) {
+layout stack(direction: horizontal, gap: md, justify: end) {
   component Button text: "Cancel" variant: secondary
   component Button text: "Save" variant: primary
 }
@@ -134,33 +141,31 @@ layout stack(direction: horizontal, gap: md, align: right) {
 
 **Toolbar:**
 ```wire
-layout stack(direction: horizontal, gap: sm, padding: md, align: justify) {
+layout stack(direction: horizontal, gap: sm, padding: md) {
   component IconButton icon: "menu"
-  component Input label: "Search" placeholder: "Search..."
+  component Input label: "Search" placeholder: "Search..." iconLeft: "search"
   component IconButton icon: "settings"
-  component Image type: square
+  component Image type: avatar
 }
 ```
 
 ### Critical Rules
 
-⚠️ **Padding Default:** Stack layouts have **0px padding by default**. Always specify `padding` when needed.
+**Padding Default:** Stack layouts have **0px padding by default**. Always specify `padding` when needed.
 
-❌ Wrong (no padding):
+Wrong (no padding):
 ```wire
 layout stack(direction: vertical, gap: md) {
   // content touches edges
 }
 ```
 
-✅ Correct (with padding):
+Correct (with padding):
 ```wire
 layout stack(direction: vertical, gap: md, padding: lg) {
   // content has breathing room
 }
 ```
-
-⚠️ **Align Property:** Only works with `direction: horizontal`. Ignored on vertical stacks.
 
 ---
 
@@ -172,8 +177,10 @@ layout stack(direction: vertical, gap: md, padding: lg) {
 
 | Property | Type | Values | Default | Description |
 |----------|------|--------|---------|-------------|
-| `columns` | number | 1-12 | 12 | Total columns in grid |
-| `gap` | enum | `xs`, `sm`, `md`, `lg`, `xl` | - | Space between cells |
+| `columns` | number | 1-12 | required | Total columns in grid |
+| `gap` | enum | `none`, `xs`, `sm`, `md`, `lg`, `xl` | - | Space between cells |
+| `justify` | enum | `stretch`, `start`, `center`, `end`, `spaceBetween`, `spaceAround` | - | Cell distribution |
+| `padding` | enum | `none`, `xs`, `sm`, `md`, `lg`, `xl` | - | Inner padding |
 
 ### Cell Properties
 
@@ -213,16 +220,16 @@ layout grid(columns: 12, gap: lg) {
 ```wire
 layout grid(columns: 12, gap: md) {
   cell span: 3 {
-    component Stat title: "Total Users" value: "2,543"
+    component Stat title: "Total Users" value: "2,543" icon: "users"
   }
   cell span: 3 {
-    component Stat title: "Revenue" value: "$45,230"
+    component Stat title: "Revenue" value: "$45,230" icon: "dollar-sign"
   }
   cell span: 3 {
-    component Stat title: "Active" value: "892"
+    component Stat title: "Active" value: "892" icon: "activity"
   }
   cell span: 3 {
-    component Stat title: "Growth" value: "+12.5%"
+    component Stat title: "Growth" value: "+12.5%" icon: "trending-up"
   }
 }
 ```
@@ -234,7 +241,7 @@ layout grid(columns: 12, gap: lg) {
     layout card(padding: md, gap: md) {
       component Image type: square height: 200
       component Heading text: "Product 1"
-      component Text content: "$99.99"
+      component Text text: "$99.99"
       component Button text: "Buy Now" variant: primary
     }
   }
@@ -242,7 +249,7 @@ layout grid(columns: 12, gap: lg) {
     layout card(padding: md, gap: md) {
       component Image type: square height: 200
       component Heading text: "Product 2"
-      component Text content: "$79.99"
+      component Text text: "$79.99"
       component Button text: "Buy Now" variant: primary
     }
   }
@@ -250,7 +257,7 @@ layout grid(columns: 12, gap: lg) {
     layout card(padding: md, gap: md) {
       component Image type: square height: 200
       component Heading text: "Product 3"
-      component Text content: "$129.99"
+      component Text text: "$129.99"
       component Button text: "Buy Now" variant: primary
     }
   }
@@ -261,10 +268,12 @@ layout grid(columns: 12, gap: lg) {
 ```wire
 layout grid(columns: 12, gap: md) {
   cell span: 9 {
-    component Input label: "Search" placeholder: "Enter keywords..."
+    component Input label: "Search" placeholder: "Enter keywords..." iconLeft: "search"
   }
-  cell span: 3 align: end {
-    component Button text: "Search" variant: primary
+  cell span: 3 {
+    layout stack(direction: horizontal, justify: end) {
+      component Button text: "Search" variant: primary
+    }
   }
 }
 ```
@@ -275,8 +284,8 @@ layout grid(columns: 12, gap: lg) {
   cell span: 8 {
     layout stack(direction: vertical, gap: md) {
       component Heading text: "Main Content"
-      component Text content: "This is the main content area..."
-      component Chart type: "line" height: 300
+      component Text text: "This is the main content area..."
+      component Chart type: line height: 300
     }
   }
   cell span: 4 {
@@ -293,39 +302,47 @@ layout grid(columns: 12, gap: lg) {
 
 ## Split Layout
 
-Two-column layout with fixed-width sidebar and flexible main area.
+Two-column layout with fixed-width side and flexible main area.
 
 ### Properties
 
 | Property | Type | Values | Description |
 |----------|------|--------|-------------|
-| `sidebar` | number | pixels | Width of sidebar in pixels |
-| `gap` | enum | `xs`, `sm`, `md`, `lg`, `xl` | Space between sidebar and main |
+| `left` | number | pixels | Width of left panel in pixels |
+| `right` | number | pixels | Width of right panel in pixels |
+| `background` | string | color | Background color |
+| `border` | boolean | `true`, `false` | Show border between panels |
+| `gap` | enum | `none`, `xs`, `sm`, `md`, `lg`, `xl` | Space between panels |
+| `padding` | enum | `none`, `xs`, `sm`, `md`, `lg`, `xl` | Inner padding |
+
+Use either `left` or `right` to specify which panel has a fixed width. The other panel fills remaining space.
 
 ### Syntax
 
 ```wire
-layout split(sidebar: 260, gap: md) {
-  layout stack { /* sidebar */ }
+layout split(left: 260, gap: md, border: true) {
+  layout stack { /* left panel */ }
   layout stack { /* main content */ }
 }
 ```
 
 ### Critical Rules
 
-⚠️ **Exactly 2 Children:** Split layout must have exactly 2 children (no more, no less).
+**Exactly 2 Children:** Split layout must have exactly 2 children (no more, no less).
+
+**Deprecated:** The `sidebar` parameter was removed. Use `left` or `right` instead.
 
 ### Split Examples
 
 **Admin Dashboard:**
 ```wire
-layout split(sidebar: 240, gap: md) {
-  // Sidebar (first child)
+layout split(left: 240, gap: md) {
+  // Left panel (first child)
   layout stack(direction: vertical, gap: md, padding: md) {
     component Heading text: "Admin Panel"
-    component SidebarMenu items: "Dashboard,Users,Settings,Reports" active: 0
+    component SidebarMenu items: "Dashboard,Users,Settings,Reports" icons: "home,users,settings,file-text" active: 0
     component Divider
-    component Button text: "Logout" variant: ghost
+    component Button text: "Logout" variant: secondary
   }
 
   // Main content (second child)
@@ -335,16 +352,16 @@ layout split(sidebar: 240, gap: md) {
 
     layout grid(columns: 12, gap: md) {
       cell span: 3 {
-        component Stat title: "Users" value: "1,234"
+        component Stat title: "Users" value: "1,234" icon: "users"
       }
       cell span: 3 {
-        component Stat title: "Revenue" value: "$45K"
+        component Stat title: "Revenue" value: "$45K" icon: "dollar-sign"
       }
       cell span: 3 {
-        component Stat title: "Orders" value: "892"
+        component Stat title: "Orders" value: "892" icon: "shopping-cart"
       }
       cell span: 3 {
-        component Stat title: "Growth" value: "+12%"
+        component Stat title: "Growth" value: "+12%" icon: "trending-up"
       }
     }
 
@@ -355,11 +372,11 @@ layout split(sidebar: 240, gap: md) {
 
 **Documentation Layout:**
 ```wire
-layout split(sidebar: 280, gap: lg) {
-  // Navigation sidebar
+layout split(left: 280, gap: lg, border: true) {
+  // Navigation left panel
   layout stack(direction: vertical, gap: sm, padding: lg) {
     component Heading text: "Documentation"
-    component Input label: "Search" placeholder: "Search docs..."
+    component Input label: "Search" placeholder: "Search docs..." iconLeft: "search"
     component SidebarMenu items: "Getting Started,Components,Layouts,Examples" active: 1
   }
 
@@ -367,16 +384,16 @@ layout split(sidebar: 280, gap: lg) {
   layout stack(direction: vertical, gap: md, padding: xl) {
     component Breadcrumbs items: "Home,Documentation,Components"
     component Heading text: "Components Guide"
-    component Text content: "Learn about all available UI components..."
+    component Text text: "Learn about all available UI components..."
     component Code code: "component Button text: 'Click me'"
   }
 }
 ```
 
-**Common Sidebar Widths:**
-- Small sidebar: `200-240px`
-- Medium sidebar: `260-280px`
-- Wide sidebar: `300-320px`
+**Common Fixed-Width Sizes:**
+- Small panel: `200-240px`
+- Medium panel: `260-280px`
+- Wide panel: `300-320px`
 
 ---
 
@@ -388,20 +405,21 @@ Bordered/highlighted container for a single child layout.
 
 | Property | Type | Values | Description |
 |----------|------|--------|-------------|
-| `padding` | enum | `xs`, `sm`, `md`, `lg`, `xl` | Inner padding |
+| `padding` | enum | `none`, `xs`, `sm`, `md`, `lg`, `xl` | Inner padding |
+| `gap` | enum | `none`, `xs`, `sm`, `md`, `lg`, `xl` | Space between children |
 | `background` | string | color name or hex | Background color |
 
 ### Syntax
 
 ```wire
-layout panel(padding: md, background: white) {
+layout panel(padding: md) {
   // exactly one child layout
 }
 ```
 
 ### Critical Rules
 
-⚠️ **Exactly 1 Child:** Panel layout must contain exactly one child.
+**Exactly 1 Child:** Panel layout must contain exactly one child.
 
 ### Panel Examples
 
@@ -425,9 +443,9 @@ layout stack(direction: vertical, gap: lg, padding: lg) {
   layout panel(padding: md) {
     layout stack(direction: vertical, gap: sm) {
       component Label text: "Personal Information"
-      component Text content: "Name: John Doe"
-      component Text content: "Email: john@example.com"
-      component Text content: "Role: Administrator"
+      component Text text: "Name: John Doe"
+      component Text text: "Email: john@example.com"
+      component Text text: "Role: Administrator"
     }
   }
 
@@ -435,7 +453,7 @@ layout stack(direction: vertical, gap: lg, padding: lg) {
     layout stack(direction: vertical, gap: sm) {
       component Label text: "Account Status"
       component Badge text: "Active" variant: success
-      component Text content: "Member since: January 2024"
+      component Text text: "Member since: January 2024"
     }
   }
 }
@@ -451,10 +469,11 @@ Content card container with multiple children, border, and rounded corners.
 
 | Property | Type | Values | Default | Description |
 |----------|------|--------|---------|-------------|
-| `padding` | enum | `xs`, `sm`, `md`, `lg`, `xl` | `md` | Inner padding |
-| `gap` | enum | `xs`, `sm`, `md`, `lg`, `xl` | `md` | Space between children |
+| `padding` | enum | `none`, `xs`, `sm`, `md`, `lg`, `xl` | `md` | Inner padding |
+| `gap` | enum | `none`, `xs`, `sm`, `md`, `lg`, `xl` | `md` | Space between children |
 | `radius` | enum | `none`, `sm`, `md`, `lg` | `md` | Corner radius |
 | `border` | boolean | `true`, `false` | `true` | Show border |
+| `background` | string | color name or hex | - | Background color |
 
 **Radius Values:**
 - `none` = 0px
@@ -477,10 +496,10 @@ layout card(padding: lg, gap: md, radius: md, border: true) {
 layout card(padding: md, gap: md, radius: lg, border: true) {
   component Image type: square height: 250
   component Heading text: "Wireless Headphones"
-  component Text content: "Premium sound quality with noise cancellation"
+  component Text text: "Premium sound quality with noise cancellation"
   component Badge text: "New Arrival" variant: primary
-  layout stack(direction: horizontal, gap: sm, align: justify) {
-    component Text content: "$129.99"
+  layout stack(direction: horizontal, gap: sm, justify: spaceBetween) {
+    component Text text: "$129.99"
     component Button text: "Add to Cart" variant: primary
   }
 }
@@ -489,14 +508,14 @@ layout card(padding: md, gap: md, radius: lg, border: true) {
 **User Profile Card:**
 ```wire
 layout card(padding: lg, gap: md, radius: md, border: true) {
-  component Image type: square
+  component Image type: avatar circle: true
   component Heading text: "John Doe"
-  component Text content: "Senior Developer"
+  component Text text: "Senior Developer"
   component Divider
   layout stack(direction: vertical, gap: sm) {
-    component Text content: "Email: john@example.com"
-    component Text content: "Location: San Francisco, CA"
-    component Text content: "Member since: 2020"
+    component Text text: "Email: john@example.com"
+    component Text text: "Location: San Francisco, CA"
+    component Text text: "Member since: 2020"
   }
   layout stack(direction: horizontal, gap: sm) {
     component Button text: "Message" variant: primary
@@ -508,9 +527,9 @@ layout card(padding: lg, gap: md, radius: md, border: true) {
 **Stats Card:**
 ```wire
 layout card(padding: lg, gap: sm, radius: md, border: true) {
-  component Icon name: "users"
+  component Icon icon: "users" variant: primary
   component Heading text: "Total Users"
-  component Text content: "2,543 active users"
+  component Text text: "2,543 active users"
   component Badge text: "+12% this month" variant: success
 }
 ```
@@ -523,10 +542,10 @@ layout card(padding: xl, gap: lg, radius: lg, border: true) {
   component Stat title: "Price" value: "$29/month"
   component Divider
   layout stack(direction: vertical, gap: xs) {
-    component Text content: "✓ Unlimited projects"
-    component Text content: "✓ 100GB storage"
-    component Text content: "✓ Priority support"
-    component Text content: "✓ Advanced analytics"
+    component Text text: "Unlimited projects"
+    component Text text: "100GB storage"
+    component Text text: "Priority support"
+    component Text text: "Advanced analytics"
   }
   component Button text: "Choose Plan" variant: primary
 }
@@ -543,13 +562,13 @@ layout grid(columns: 12, gap: lg) {
   cell span: 6 {
     layout stack(direction: vertical, gap: md, padding: lg) {
       component Heading text: "Section A"
-      component Text content: "Content here"
+      component Text text: "Content here"
     }
   }
   cell span: 6 {
     layout stack(direction: vertical, gap: md, padding: lg) {
       component Heading text: "Section B"
-      component Text content: "Content here"
+      component Text text: "Content here"
     }
   }
 }
@@ -637,7 +656,7 @@ layout stack(direction: vertical, gap: lg, padding: lg) {
 - Building admin interfaces
 - Creating documentation layouts
 - Need persistent sidebar navigation
-- Sidebar + main content pattern
+- Left panel + main content pattern
 
 **Use Panel when:**
 - Highlighting a specific section
@@ -651,4 +670,4 @@ layout stack(direction: vertical, gap: lg, padding: lg) {
 - Creating pricing cards
 - Need self-contained content boxes with styling
 
-<!-- Source: docs/LAYOUT-ENGINE.md, .ai/AI-INSTRUCTIONS-MAIN.md, specs/LAYOUT-ENGINE.md -->
+<!-- Source: @wire-dsl/language-support components.ts LAYOUTS -->

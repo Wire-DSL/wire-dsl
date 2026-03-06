@@ -11,10 +11,10 @@ This guide covers validation rules, common mistakes, gotchas, and quality guidel
 
 Use this checklist before outputting Wire DSL code to ensure validity.
 
-### ✅ Structure Validation
+### Structure Validation
 
 - [ ] File starts with `project` block
-- [ ] Project has exactly one `theme` block
+- [ ] If using a `style` block, use `style` (not `theme`)
 - [ ] Project has at least one `screen` block
 - [ ] Each screen has exactly one root layout
 - [ ] All opening braces `{` have matching closing braces `}`
@@ -22,7 +22,7 @@ Use this checklist before outputting Wire DSL code to ensure validity.
 - [ ] Panel layouts have exactly 1 child
 - [ ] Grid cells are inside grid layouts only
 
-### ✅ Syntax Validation
+### Syntax Validation
 
 - [ ] All string values are quoted: `text: "Hello"`
 - [ ] Numbers are NOT quoted: `height: 200`
@@ -32,44 +32,68 @@ Use this checklist before outputting Wire DSL code to ensure validity.
 - [ ] CSV lists use comma-separated strings: `items: "A,B,C"`
 - [ ] No trailing commas or semicolons
 
-### ✅ Naming Validation
+### Naming Validation
 
 - [ ] Screen names use CamelCase: `UsersList`, `Dashboard`
 - [ ] Component names match exactly (case-sensitive): `Button`, `Input`
-- [ ] Property names are lowercase: `gap`, `padding`, `placeholder`
+- [ ] Property names use camelCase: `gap`, `padding`, `iconLeft`
 - [ ] Screen names are unique within the project
 
-### ✅ Properties Validation
+### Properties Validation
 
 - [ ] All required properties are present
 - [ ] Property values match valid options/enums
 - [ ] Icon names are valid Feather Icons
 - [ ] Grid cell `span` values are 1-12
-- [ ] Sidebar widths are reasonable (200-320px)
 - [ ] Chart types are: `bar`, `line`, `pie`, `area`
-- [ ] Image `type` values are: `square`, `landscape`, `portrait`, `avatar`
+- [ ] Image `type` values are: `landscape`, `portrait`, `square`, `icon`, `avatar`
+- [ ] Variants use `danger` (not `error`) and `default` (not `ghost`)
 
-### ✅ Layout Validation
+### Layout Validation
 
 - [ ] `padding` specified when needed (default is 0px)
-- [ ] `align` only used in horizontal stacks
+- [ ] `justify` and `align` used correctly (not interchanged)
 - [ ] `columns` specified for grid layouts
-- [ ] `sidebar` specified for split layouts
-- [ ] Spacing tokens are valid: `xs`, `sm`, `md`, `lg`, `xl`
+- [ ] Split uses `left` or `right` (not deprecated `sidebar`)
+- [ ] Spacing tokens are valid: `none`, `xs`, `sm`, `md`, `lg`, `xl`
 
 ---
 
 ## Common Mistakes
 
-### Mistake #1: Forgetting Quotes on Strings
+### Mistake #1: Using `theme` Instead of `style`
 
-❌ **Wrong:**
+Wrong:
+```wire
+project "My App" {
+  theme {
+    density: "normal"
+  }
+}
+```
+
+Correct:
+```wire
+project "My App" {
+  style {
+    density: "normal"
+  }
+}
+```
+
+**Rule:** The style block keyword is `style`, not `theme`. Both the block and its properties are optional.
+
+---
+
+### Mistake #2: Forgetting Quotes on Strings
+
+Wrong:
 ```wire
 component Heading text: Hello World
 component Input label: Email
 ```
 
-✅ **Correct:**
+Correct:
 ```wire
 component Heading text: "Hello World"
 component Input label: "Email"
@@ -79,16 +103,16 @@ component Input label: "Email"
 
 ---
 
-### Mistake #2: Adding Quotes to Numbers/Booleans
+### Mistake #3: Adding Quotes to Numbers/Booleans
 
-❌ **Wrong:**
+Wrong:
 ```wire
 component Image height: "200"
 component Checkbox checked: "true"
 component Table rows: "8"
 ```
 
-✅ **Correct:**
+Correct:
 ```wire
 component Image height: 200
 component Checkbox checked: true
@@ -99,16 +123,16 @@ component Table rows: 8
 
 ---
 
-### Mistake #3: Wrong Component Case
+### Mistake #4: Wrong Component Case
 
-❌ **Wrong:**
+Wrong:
 ```wire
 component button text: "Click"
 component INPUT label: "Name"
 component heading text: "Title"
 ```
 
-✅ **Correct:**
+Correct:
 ```wire
 component Button text: "Click"
 component Input label: "Name"
@@ -119,16 +143,16 @@ component Heading text: "Title"
 
 ---
 
-### Mistake #4: Wrong Screen Naming
+### Mistake #5: Wrong Screen Naming
 
-❌ **Wrong:**
+Wrong:
 ```wire
 screen user-list { }
 screen Users_List { }
 screen userslist { }
 ```
 
-✅ **Correct:**
+Correct:
 ```wire
 screen UsersList { }
 screen UsersListPage { }
@@ -139,9 +163,97 @@ screen DashboardView { }
 
 ---
 
-### Mistake #5: Missing Padding
+### Mistake #6: Using `content` Instead of `text` on Text Component
 
-❌ **Wrong (content touches edges):**
+Wrong:
+```wire
+component Text content: "Hello world"
+```
+
+Correct:
+```wire
+component Text text: "Hello world"
+```
+
+**Rule:** The Text component property is `text`, not `content`.
+
+---
+
+### Mistake #7: Using `name` Instead of `icon` on Icon Component
+
+Wrong:
+```wire
+component Icon name: "star"
+```
+
+Correct:
+```wire
+component Icon icon: "star"
+```
+
+**Rule:** The Icon component property is `icon`, not `name`.
+
+---
+
+### Mistake #8: Using `activeIndex` Instead of `active` on Tabs
+
+Wrong:
+```wire
+component Tabs items: "A,B,C" activeIndex: 0
+```
+
+Correct:
+```wire
+component Tabs items: "A,B,C" active: 0
+```
+
+**Rule:** The Tabs property is `active`, not `activeIndex`.
+
+---
+
+### Mistake #9: Using `error` Variant Instead of `danger`
+
+Wrong:
+```wire
+component Badge text: "Error" variant: error
+component Alert type: "error" message: "Failed"
+```
+
+Correct:
+```wire
+component Badge text: "Error" variant: danger
+component Alert variant: danger text: "Failed"
+```
+
+**Rule:** Use `danger`, not `error`. Alert uses `variant`/`title`/`text` properties.
+
+---
+
+### Mistake #10: Using Deprecated `sidebar` on Split
+
+Wrong:
+```wire
+layout split(sidebar: 260, gap: md) {
+  layout stack { }
+  layout stack { }
+}
+```
+
+Correct:
+```wire
+layout split(left: 260, gap: md) {
+  layout stack { }
+  layout stack { }
+}
+```
+
+**Rule:** `sidebar` was removed. Use `left` or `right` instead.
+
+---
+
+### Mistake #11: Missing Padding
+
+Wrong (content touches edges):
 ```wire
 layout stack(direction: vertical, gap: md) {
   component Heading text: "Title"
@@ -149,7 +261,7 @@ layout stack(direction: vertical, gap: md) {
 }
 ```
 
-✅ **Correct (with padding):**
+Correct (with padding):
 ```wire
 layout stack(direction: vertical, gap: md, padding: lg) {
   component Heading text: "Title"
@@ -161,28 +273,50 @@ layout stack(direction: vertical, gap: md, padding: lg) {
 
 ---
 
-### Mistake #6: Wrong Number of Children
+### Mistake #12: Confusing `justify` and `align` on Stacks
 
-❌ **Wrong (Split needs exactly 2):**
+Wrong:
 ```wire
-layout split(sidebar: 260, gap: md) {
-  layout stack { }
-  layout stack { }
-  layout stack { }  // ❌ Too many!
+layout stack(direction: horizontal, gap: md, align: justify) {
+  component Button text: "Left"
+  component Button text: "Right"
 }
 ```
 
-❌ **Wrong (Panel needs exactly 1):**
+Correct:
+```wire
+layout stack(direction: horizontal, gap: md, justify: spaceBetween) {
+  component Button text: "Left"
+  component Button text: "Right"
+}
+```
+
+**Rule:** `justify` controls distribution along main axis (`stretch`, `start`, `center`, `end`, `spaceBetween`, `spaceAround`). `align` controls cross-axis alignment (`start`, `center`, `end`).
+
+---
+
+### Mistake #13: Wrong Number of Children
+
+Wrong (Split needs exactly 2):
+```wire
+layout split(left: 260, gap: md) {
+  layout stack { }
+  layout stack { }
+  layout stack { }  // Too many!
+}
+```
+
+Wrong (Panel needs exactly 1):
 ```wire
 layout panel(padding: md) {
   component Heading text: "Title"
-  component Text content: "Body"  // ❌ Too many!
+  component Text text: "Body"  // Too many!
 }
 ```
 
-✅ **Correct:**
+Correct:
 ```wire
-layout split(sidebar: 260, gap: md) {
+layout split(left: 260, gap: md) {
   layout stack { }
   layout stack { }
 }
@@ -190,7 +324,7 @@ layout split(sidebar: 260, gap: md) {
 layout panel(padding: md) {
   layout stack(gap: md) {
     component Heading text: "Title"
-    component Text content: "Body"
+    component Text text: "Body"
   }
 }
 ```
@@ -199,42 +333,21 @@ layout panel(padding: md) {
 
 ---
 
-### Mistake #7: Using Align on Vertical Stacks
+### Mistake #14: Invalid Grid Span
 
-❌ **Wrong (align ignored):**
-```wire
-layout stack(direction: vertical, gap: md, align: center) {
-  component Button text: "Click"
-}
-```
-
-✅ **Correct:**
-```wire
-// Only use align with horizontal stacks
-layout stack(direction: horizontal, gap: md, align: center) {
-  component Button text: "Click"
-}
-```
-
-**Rule:** `align` property only works on `direction: horizontal` stacks.
-
----
-
-### Mistake #8: Invalid Grid Span
-
-❌ **Wrong:**
+Wrong:
 ```wire
 layout grid(columns: 12, gap: md) {
-  cell span: 15 {  // ❌ Max is 12
+  cell span: 15 {  // Max is 12
     component Input label: "Name"
   }
-  cell span: 0 {   // ❌ Min is 1
+  cell span: 0 {   // Min is 1
     component Button text: "Submit"
   }
 }
 ```
 
-✅ **Correct:**
+Correct:
 ```wire
 layout grid(columns: 12, gap: md) {
   cell span: 12 {
@@ -250,44 +363,22 @@ layout grid(columns: 12, gap: md) {
 
 ---
 
-### Mistake #9: CSV Lists with Spaces
+### Mistake #15: Using `theme` Instead of `style` for the Style Block
 
-❌ **Wrong:**
-```wire
-component Select items: "Admin, User, Guest"  // ❌ Spaces!
-component Tabs items: "Home , About , Contact"
-```
-
-✅ **Correct:**
-```wire
-component Select items: "Admin,User,Guest"
-component Tabs items: "Home,About,Contact"
-```
-
-**Rule:** CSV lists use commas with NO spaces.
-
----
-
-### Mistake #10: Missing Theme Block
-
-❌ **Wrong:**
-```wire
-project "My App" {
-  screen Home {
-    layout stack { }
-  }
-}
-```
-
-✅ **Correct:**
+Wrong:
 ```wire
 project "My App" {
   theme {
     density: "normal"
-    spacing: "md"
-    radius: "md"
-    stroke: "normal"
-    font: "base"
+  }
+}
+```
+
+Correct:
+```wire
+project "My App" {
+  style {
+    density: "normal"
   }
 
   screen Home {
@@ -296,7 +387,7 @@ project "My App" {
 }
 ```
 
-**Rule:** Theme block is required in every project.
+**Rule:** The style block keyword is `style`, not `theme`. The style block itself is optional — if omitted, all tokens use their defaults (density: "normal", spacing: "md", radius: "md", stroke: "normal", font: "base").
 
 ---
 
@@ -304,7 +395,7 @@ project "My App" {
 
 ### Gotcha #1: Padding Defaults to 0px
 
-**Issue:** Layouts do NOT inherit padding from theme. Default is 0px.
+**Issue:** Layouts do NOT inherit padding from style. Default is 0px.
 
 **Impact:** Content touches edges without explicit padding.
 
@@ -318,23 +409,27 @@ layout stack(direction: vertical, gap: md, padding: lg) {
 
 ---
 
-### Gotcha #2: Align Only Works on Horizontal Stacks
+### Gotcha #2: `justify` vs `align` on Stacks
 
-**Issue:** `align` property is ignored on `direction: vertical` stacks.
+**Issue:** These are two separate properties with different purposes.
 
-**Impact:** Alignment won't work as expected.
+- `justify` = distribution along main axis (stretch, start, center, end, spaceBetween, spaceAround)
+- `align` = cross-axis alignment (start, center, end)
 
-**Solution:** Only use `align` with `direction: horizontal`:
+**Impact:** Using wrong values or wrong property name.
 
+**Solution:**
 ```wire
-// This works
-layout stack(direction: horizontal, gap: md, align: center) {
-  component Button text: "Click"
+// Push buttons to the right
+layout stack(direction: horizontal, gap: md, justify: end) {
+  component Button text: "Cancel"
+  component Button text: "Save" variant: primary
 }
 
-// This doesn't work (align ignored)
-layout stack(direction: vertical, gap: md, align: center) {
-  component Button text: "Click"
+// Center children on cross axis
+layout stack(direction: horizontal, gap: md, align: center) {
+  component Icon icon: "info" size: lg
+  component Text text: "Small text" size: sm
 }
 ```
 
@@ -352,7 +447,7 @@ layout stack(direction: vertical, gap: md, align: center) {
 layout panel(padding: md) {
   layout stack(gap: md) {
     component Heading text: "Title"
-    component Text content: "Body"
+    component Text text: "Body"
     component Button text: "Action"
   }
 }
@@ -369,12 +464,12 @@ layout panel(padding: md) {
 **Solution:** Always wrap grid content in cells:
 
 ```wire
-// ❌ Wrong
+// Wrong
 layout grid(columns: 12, gap: md) {
   component Input label: "Name"
 }
 
-// ✅ Correct
+// Correct
 layout grid(columns: 12, gap: md) {
   cell span: 12 {
     component Input label: "Name"
@@ -384,23 +479,33 @@ layout grid(columns: 12, gap: md) {
 
 ---
 
-### Gotcha #5: Theme Properties Are Required
+### Gotcha #5: Style Block and Properties Are Optional
 
-**Issue:** All theme properties must be specified.
+**Issue:** The `style` block and each of its properties are optional. Omitted properties use defaults.
 
-**Impact:** Missing any theme property causes validation errors.
+**Defaults:** `density: "normal"`, `spacing: "md"`, `radius: "md"`, `stroke: "normal"`, `font: "base"`
 
-**Solution:** Always include all 5 theme properties:
+**Solution:** Only specify properties you want to override:
 
 ```wire
-theme {
-  density: "normal"   // required
-  spacing: "md"       // required
-  radius: "md"        // required
-  stroke: "normal"    // required
-  font: "base"        // required
+// Override just what you need
+style {
+  density: "compact"
+  radius: "lg"
 }
+
+// Or omit the style block entirely for all defaults
 ```
+
+**Valid values:**
+- `density`: `"compact"` | `"normal"` | `"comfortable"`
+- `spacing`: `"xs"` | `"sm"` | `"md"` | `"lg"` | `"xl"`
+- `radius`: `"none"` | `"sm"` | `"md"` | `"lg"` | `"full"`
+- `stroke`: `"thin"` | `"normal"` | `"thick"`
+- `font`: `"sm"` | `"base"` | `"lg"`
+- `background`: any CSS color string (optional)
+- `theme`: `"light"` | `"dark"` (optional)
+- `device`: `"mobile"` | `"tablet"` | `"desktop"` | `"print"` | `"a4"` (optional)
 
 ---
 
@@ -408,33 +513,22 @@ theme {
 
 ### 1. Use Realistic Content
 
-❌ **Generic:**
+Generic:
 ```wire
 component Input label: "Input 1"
 component Button text: "Button"
 component Heading text: "Heading"
 ```
 
-✅ **Realistic:**
+Realistic:
 ```wire
-component Input label: "Email Address" placeholder: "john@example.com"
+component Input label: "Email Address" placeholder: "john@example.com" iconLeft: "mail"
 component Button text: "Create Account" variant: primary
 component Heading text: "User Registration"
 ```
 
 ### 2. Appropriate Spacing
 
-**Too Tight:**
-```wire
-layout stack(gap: xs, padding: xs)
-```
-
-**Too Loose:**
-```wire
-layout stack(gap: xl, padding: xl)
-```
-
-**Balanced:**
 ```wire
 // Forms: md-lg padding, md gap
 layout stack(gap: md, padding: lg)
@@ -448,18 +542,7 @@ layout stack(gap: sm, padding: md)
 
 ### 3. Logical Grouping
 
-**Poor Grouping:**
-```wire
-layout stack(gap: md, padding: lg) {
-  component Heading text: "Form"
-  component Input label: "Name"
-  component Heading text: "Section 2"
-  component Input label: "Email"
-  component Button text: "Submit"
-}
-```
-
-**Good Grouping:**
+Good Grouping:
 ```wire
 layout stack(gap: xl, padding: lg) {
   // Header
@@ -476,7 +559,7 @@ layout stack(gap: xl, padding: lg) {
   component Divider
 
   // Actions
-  layout stack(direction: horizontal, gap: md) {
+  layout stack(direction: horizontal, gap: md, justify: end) {
     component Button text: "Submit" variant: primary
     component Button text: "Cancel"
   }
@@ -485,14 +568,7 @@ layout stack(gap: xl, padding: lg) {
 
 ### 4. Consistent Naming
 
-**Inconsistent:**
-```wire
-screen userlist { }
-screen ProductDetails { }
-screen settings_page { }
-```
-
-**Consistent:**
+Consistent:
 ```wire
 screen UsersList { }
 screen ProductDetails { }
@@ -501,34 +577,7 @@ screen SettingsPage { }
 
 ### 5. Proper Nesting Depth
 
-**Too Shallow (repetitive):**
-```wire
-screen Dashboard {
-  layout stack {
-    component Stat title: "Users" value: "100"
-  }
-}
-screen Analytics {
-  layout stack {
-    component Stat title: "Revenue" value: "$5K"
-  }
-}
-```
-
-**Too Deep (over-nested):**
-```wire
-layout stack {
-  layout stack {
-    layout stack {
-      layout stack {
-        component Button text: "Click"
-      }
-    }
-  }
-}
-```
-
-**Balanced:**
+Balanced:
 ```wire
 screen Dashboard {
   layout stack(gap: lg, padding: lg) {
@@ -536,14 +585,14 @@ screen Dashboard {
 
     layout grid(columns: 12, gap: md) {
       cell span: 3 {
-        component Stat title: "Users" value: "100"
+        component Stat title: "Users" value: "100" icon: "users"
       }
       cell span: 3 {
-        component Stat title: "Revenue" value: "$5K"
+        component Stat title: "Revenue" value: "$5K" icon: "dollar-sign"
       }
     }
 
-    component Chart type: "line" height: 300
+    component Chart type: line height: 300
   }
 }
 ```
@@ -555,93 +604,73 @@ screen Dashboard {
 Before outputting Wire DSL code, mentally run through this validation:
 
 1. **Syntax Check:**
-   - Strings quoted? ✅
-   - Numbers/booleans NOT quoted? ✅
-   - Braces balanced? ✅
+   - Strings quoted?
+   - Numbers/booleans NOT quoted?
+   - Braces balanced?
 
 2. **Structure Check:**
-   - Has project, theme, screen? ✅
-   - Split has 2 children? ✅
-   - Panel has 1 child? ✅
+   - Has project, screen? (style is optional)
+   - Split has 2 children?
+   - Panel has 1 child?
 
 3. **Naming Check:**
-   - Screens CamelCase? ✅
-   - Components PascalCase exact? ✅
+   - Screens CamelCase?
+   - Components PascalCase exact?
 
 4. **Properties Check:**
-   - Required props present? ✅
-   - Values from valid enums? ✅
-   - Grid spans 1-12? ✅
+   - Required props present?
+   - Values from valid enums?
+   - Grid spans 1-12?
+   - Uses `text` not `content` for Text?
+   - Uses `icon` not `name` for Icon?
+   - Uses `active` not `activeIndex` for Tabs?
+   - Uses `variant`/`title`/`text` for Alert (not `type`/`message`)?
+   - Uses `danger` not `error`?
 
 5. **Layout Check:**
-   - Padding specified? ✅
-   - Align only on horizontal? ✅
+   - Uses `style` not `theme`?
+   - Uses `left`/`right` not `sidebar` on split?
+   - Padding specified?
+   - `justify` and `align` used correctly?
 
 6. **Content Check:**
-   - Realistic values? ✅
-   - Logical grouping? ✅
-   - Appropriate spacing? ✅
+   - Realistic values?
+   - Logical grouping?
+   - Appropriate spacing?
 
 ---
 
-## Common Valid Patterns
+## Alignment Tips
 
-### Pattern: Form
-```wire
-layout stack(direction: vertical, gap: md, padding: lg) {
-  component Heading text: "Contact Form"
-  component Input label: "Name" placeholder: "Full name"
-  component Input label: "Email" placeholder: "you@example.com"
-  component Textarea label: "Message" rows: 5
-  component Button text: "Send" variant: primary
-}
-```
+### Buttons Next to Inputs Should Match Size
 
-### Pattern: Dashboard Stats
+When a Button or IconButton sits on the same row as an Input or Select, give both the same `size` so their heights match:
+
+Wrong (mismatched heights):
 ```wire
 layout grid(columns: 12, gap: md) {
-  cell span: 3 {
-    component Stat title: "Users" value: "2,543"
+  cell span: 9 {
+    component Input label: "Search" placeholder: "Type..."
   }
   cell span: 3 {
-    component Stat title: "Revenue" value: "$45K"
-  }
-  cell span: 3 {
-    component Stat title: "Orders" value: "892"
-  }
-  cell span: 3 {
-    component Stat title: "Growth" value: "+12%"
+    component Button text: "Search" variant: primary
   }
 }
 ```
 
-### Pattern: Product Card
+Correct (matching size):
 ```wire
-layout card(padding: md, gap: md, radius: lg, border: true) {
-  component Image type: square height: 220
-  component Heading text: "Product Name"
-  component Text content: "Product description"
-  component Badge text: "In Stock" variant: success
-  layout stack(direction: horizontal, gap: sm) {
-    component Text content: "$99.99"
-    component Button text: "Buy" variant: primary
+layout grid(columns: 12, gap: md) {
+  cell span: 9 {
+    component Input label: "Search" placeholder: "Type..." size: md
+  }
+  cell span: 3 {
+    component Button text: "Search" variant: primary size: md labelSpace: true
   }
 }
 ```
 
-### Pattern: Sidebar Layout
-```wire
-layout split(sidebar: 260, gap: md) {
-  layout stack(gap: md, padding: md) {
-    component Heading text: "Menu"
-    component SidebarMenu items: "Home,Products,Settings" active: 0
-  }
-  layout stack(gap: lg, padding: lg) {
-    component Topbar title: "Dashboard"
-    // main content
-  }
-}
-```
+Use `labelSpace: true` on the Button so it reserves the same vertical space as the Input's label, keeping baselines aligned.
 
 ---
 
@@ -658,4 +687,4 @@ layout split(sidebar: 260, gap: md) {
 9. **Appropriate spacing** - md-lg for most cases
 10. **Complete examples** - Full runnable code, not snippets
 
-<!-- Source: specs/VALIDATION-RULES.md, .ai/AI-INSTRUCTIONS-MAIN.md, docs/TROUBLESHOOTING.md -->
+<!-- Source: @wire-dsl/language-support components.ts, engine parser/index.ts -->
