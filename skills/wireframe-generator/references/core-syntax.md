@@ -13,8 +13,9 @@ Every `.wire` file follows this hierarchical structure:
 
 ```wire
 project "ProjectName" {
+  // style block is optional (defaults apply when omitted)
   style {
-    // style configuration
+    // each property is also optional
   }
 
   screen ScreenName {
@@ -31,7 +32,7 @@ project "ProjectName" {
 
 **Key Points:**
 - One `project` block per file
-- One `style` block per project (required)
+- Zero or one `style` block per project (optional; defaults apply when omitted)
 - One or more `screen` blocks
 - Each screen contains exactly one root layout
 - Layouts can contain components and nested layouts
@@ -43,7 +44,7 @@ The following keywords are valid at the project level:
 | Keyword | Purpose |
 |---------|---------|
 | `project` | Root wrapper for the entire file |
-| `style` | Global style tokens (density, spacing, radius, stroke, font) |
+| `style` | Global style tokens (optional; density, spacing, radius, stroke, font) |
 | `colors` | Project color tokens (variants and semantic tokens) |
 | `mocks` | Mock data definitions for components |
 | `define` | Reusable custom component definitions |
@@ -209,21 +210,24 @@ component Button text: "Submit" variant: primary icon: "check"
 
 ## Style Configuration
 
-The style block configures global visual settings:
+The style block configures global visual settings. Both the block itself and each individual property are **optional**. Omitted properties use their defaults.
 
 ```wire
 style {
-  density: "normal"      // compact | normal | comfortable
-  spacing: "md"          // xs | sm | md | lg | xl
-  radius: "md"           // none | sm | md | lg
-  stroke: "normal"       // thin | normal
-  font: "base"           // base | title | mono
+  density: "normal"      // compact | normal | comfortable  (default: "normal")
+  spacing: "md"          // xs | sm | md | lg | xl          (default: "md")
+  radius: "md"           // none | sm | md | lg | full      (default: "md")
+  stroke: "normal"       // thin | normal | thick            (default: "normal")
+  font: "base"           // sm | base | lg                   (default: "base")
+  background: "#f0f0f0"  // optional CSS color
+  theme: "light"         // light | dark                     (optional)
+  device: "mobile"       // mobile | tablet | desktop | print | a4  (optional)
 }
 ```
 
 **Key Points:**
-- Style is required in every project
-- All properties are required
+- The `style` block is optional (defaults apply when omitted)
+- Each property inside `style` is also optional (individual defaults apply)
 - Values must be from valid enum sets
 - String values must be quoted
 
@@ -412,7 +416,7 @@ Before outputting Wire DSL code, verify:
 
 **Structure:**
 - File starts with `project` block
-- Project contains one `style` block
+- Project may contain one `style` block (optional)
 - Project contains at least one `screen` block
 - Each screen has exactly one root layout
 

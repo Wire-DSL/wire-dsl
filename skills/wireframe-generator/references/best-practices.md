@@ -14,7 +14,7 @@ Use this checklist before outputting Wire DSL code to ensure validity.
 ### Structure Validation
 
 - [ ] File starts with `project` block
-- [ ] Project has exactly one `style` block (not `theme`)
+- [ ] If using a `style` block, use `style` (not `theme`)
 - [ ] Project has at least one `screen` block
 - [ ] Each screen has exactly one root layout
 - [ ] All opening braces `{` have matching closing braces `}`
@@ -77,15 +77,11 @@ Correct:
 project "My App" {
   style {
     density: "normal"
-    spacing: "md"
-    radius: "md"
-    stroke: "normal"
-    font: "base"
   }
 }
 ```
 
-**Rule:** The style block keyword is `style`, not `theme`.
+**Rule:** The style block keyword is `style`, not `theme`. Both the block and its properties are optional.
 
 ---
 
@@ -367,13 +363,13 @@ layout grid(columns: 12, gap: md) {
 
 ---
 
-### Mistake #15: Missing Style Block
+### Mistake #15: Using `theme` Instead of `style` for the Style Block
 
 Wrong:
 ```wire
 project "My App" {
-  screen Home {
-    layout stack { }
+  theme {
+    density: "normal"
   }
 }
 ```
@@ -383,10 +379,6 @@ Correct:
 project "My App" {
   style {
     density: "normal"
-    spacing: "md"
-    radius: "md"
-    stroke: "normal"
-    font: "base"
   }
 
   screen Home {
@@ -395,7 +387,7 @@ project "My App" {
 }
 ```
 
-**Rule:** Style block is required in every project.
+**Rule:** The style block keyword is `style`, not `theme`. The style block itself is optional — if omitted, all tokens use their defaults (density: "normal", spacing: "md", radius: "md", stroke: "normal", font: "base").
 
 ---
 
@@ -487,23 +479,33 @@ layout grid(columns: 12, gap: md) {
 
 ---
 
-### Gotcha #5: Style Properties Are Required
+### Gotcha #5: Style Block and Properties Are Optional
 
-**Issue:** All style properties must be specified.
+**Issue:** The `style` block and each of its properties are optional. Omitted properties use defaults.
 
-**Impact:** Missing any style property causes validation errors.
+**Defaults:** `density: "normal"`, `spacing: "md"`, `radius: "md"`, `stroke: "normal"`, `font: "base"`
 
-**Solution:** Always include all 5 style properties:
+**Solution:** Only specify properties you want to override:
 
 ```wire
+// Override just what you need
 style {
-  density: "normal"   // required
-  spacing: "md"       // required
-  radius: "md"        // required
-  stroke: "normal"    // required
-  font: "base"        // required
+  density: "compact"
+  radius: "lg"
 }
+
+// Or omit the style block entirely for all defaults
 ```
+
+**Valid values:**
+- `density`: `"compact"` | `"normal"` | `"comfortable"`
+- `spacing`: `"xs"` | `"sm"` | `"md"` | `"lg"` | `"xl"`
+- `radius`: `"none"` | `"sm"` | `"md"` | `"lg"` | `"full"`
+- `stroke`: `"thin"` | `"normal"` | `"thick"`
+- `font`: `"sm"` | `"base"` | `"lg"`
+- `background`: any CSS color string (optional)
+- `theme`: `"light"` | `"dark"` (optional)
+- `device`: `"mobile"` | `"tablet"` | `"desktop"` | `"print"` | `"a4"` (optional)
 
 ---
 
@@ -607,7 +609,7 @@ Before outputting Wire DSL code, mentally run through this validation:
    - Braces balanced?
 
 2. **Structure Check:**
-   - Has project, style, screen?
+   - Has project, screen? (style is optional)
    - Split has 2 children?
    - Panel has 1 child?
 

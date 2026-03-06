@@ -29,7 +29,7 @@ Use this skill when you need to:
 
 **Structure:** Every Wire DSL file follows this hierarchy:
 ```
-project -> style -> screen -> layout -> components
+project -> [style] -> screen -> layout -> components  (style is optional)
 ```
 
 **Syntax Style:** Block-declarative with curly braces, similar to CSS/HCL:
@@ -52,16 +52,14 @@ project "App Name" {
 
 ### Step 1: Start with Project Structure
 
-Always begin with the project wrapper and style configuration:
+Begin with the project wrapper. The `style` block is **optional** — if omitted, defaults apply (density: "normal", spacing: "md", radius: "md", stroke: "normal", font: "base"). Each property inside `style` is also optional; only specify what you want to override:
 
 ```wire
 project "Project Name" {
+  // style block is optional; include only to override defaults
   style {
-    density: "normal"
-    spacing: "md"
-    radius: "md"
-    stroke: "normal"
-    font: "base"
+    density: "compact"   // compact | normal | comfortable
+    radius: "lg"         // none | sm | md | lg | full
   }
 
   // screens go here
@@ -287,7 +285,7 @@ project "Product Catalog" {
 - Wrong component case: `button` -> `Button`
 - Using kebab-case for screens: `user-list` -> `UserList`
 - Forgetting padding: Layouts default to 0px, not style spacing
-- Using `theme` instead of `style` for the style block
+- Using `theme` instead of `style` for the style block (and remember: the style block itself is optional)
 - Split with 3 children -> Must have exactly 2
 - Panel with multiple children -> Must have exactly 1
 - Invalid grid span: `span: 15` -> Must be 1-12
