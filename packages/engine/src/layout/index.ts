@@ -148,7 +148,8 @@ export class LayoutEngine {
     // For vertical stacks and cards, recalculate container height based on actual children positions.
     // When empty, preserve the height assigned by the parent — collapsing to just `padding` would
     // place the container at the wrong size (and effectively at 0,0 visually).
-    if ((isVerticalStack || node.containerType === 'card') && node.children.length > 0) {
+    const isHorizontalStack = node.containerType === 'stack' && !isVerticalStack;
+    if ((isVerticalStack || isHorizontalStack || node.containerType === 'card') && node.children.length > 0) {
       let containerMaxY = y;
       node.children.forEach((childRef) => {
         const childPos = this.result[childRef.ref];
