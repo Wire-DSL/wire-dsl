@@ -1,5 +1,11 @@
 # @wire-dsl/core
 
+## 0.9.1
+
+### Patch Changes
+
+- [#81](https://github.com/Wire-DSL/wire-dsl/pull/81) [`21bc34b`](https://github.com/Wire-DSL/wire-dsl/commit/21bc34b59f98a2163692254b15a97bf620350935) Thanks [@roxguel](https://github.com/roxguel)! - fix: enhance layout calculation to support horizontal stacks
+
 ## 0.9.0
 
 ### Minor Changes
