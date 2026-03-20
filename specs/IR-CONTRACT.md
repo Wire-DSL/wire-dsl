@@ -281,7 +281,119 @@ Common fields for all nodes:
 - `id`: Unique identifier
 - `kind`: Always `"component"`
 - `componentType`: Component type
-- `props`: Component-specific properties
+- `props`: Component-specific properties (excludes `id` and event props — see below)
+- `userDefinedId` *(optional)*: User-defined identifier declared with `id:` prop. Used for `show/hide/toggle` targeting and `data-user-id` in SVG.
+- `events` *(optional)*: Array of `IREventHandler` objects — see [Events](#events) below.
+
+---
+
+## Events
+
+Event annotations are stored in `IRComponentNode.events` (and `IRContainerNode.events` for card `onClick`). The engine is static — events are metadata for play test consumers.
+
+### IREventHandler
+
+```typescript
+interface IREventHandler {
+  event: 'onClick' | 'onChange' | 'onActive' | 'onInactive'
+       | 'onItemsClick' | 'onItemClick' | 'onRowClick' | 'onClose';
+  actions: IREventAction[];  // supports chaining with &
+}
+```
+
+### IREventAction
+
+```typescript
+type IREventAction =
+  | { type: 'navigate';      screen: string }
+  | { type: 'show';          targetId: string }   // '_self' for self-reference
+  | { type: 'hide';          targetId: string }
+  | { type: 'toggle';        targetId: string }
+  | { type: 'setTab';        tabsId: string; index: number }
+  | { type: 'navigateItems'; screens: string[] }; // SidebarMenu onItemsClick
+```
+
+### JSON Examples
+
+```json
+// Button: onClick: hide(userModal) & show(confirmModal)
+{
+  "kind": "component",
+  "componentType": "Button",
+  "props": { "text": "Delete" },
+  "events": [{
+    "event": "onClick",
+    "actions": [
+      { "type": "hide", "targetId": "userModal" },
+      { "type": "show", "targetId": "confirmModal" }
+    ]
+  }]
+}
+
+// Modal: id: confirmModal onClose: hide(self)
+{
+  "kind": "component",
+  "componentType": "Modal",
+  "userDefinedId": "confirmModal",
+  "props": { "title": "Confirm?" },
+  "events": [{ "event": "onClose", "actions": [{ "type": "hide", "targetId": "_self" }] }]
+}
+
+// Toggle: onChange: toggle(advPanel)
+{
+  "kind": "component",
+  "componentType": "Toggle",
+  "props": { "label": "Advanced" },
+  "events": [{ "event": "onChange", "actions": [{ "type": "toggle", "targetId": "advPanel" }] }]
+}
+```
+
+### SVG Data Attributes
+
+The renderer emits event metadata as SVG data attributes on the `<g>` wrapper:
+
+| IR field | SVG attribute | Example |
+|----------|--------------|---------|
+| `userDefinedId` | `data-user-id` | `data-user-id="confirmModal"` |
+| `events[onClick]` | `data-event-click` | `data-event-click="show:confirmModal"` |
+| `events[onClose]` | `data-event-close` | `data-event-close="hide:_self"` |
+| `events[onChange]` | `data-event-change` | `data-event-change="toggle:advPanel"` |
+| `events[onActive]` | `data-event-active` | `data-event-active="show:panel"` |
+| `events[onInactive]` | `data-event-inactive` | `data-event-inactive="hide:panel"` |
+| `events[onItemClick]` | `data-event-itemclick` | `data-event-itemclick="navigate:Detail"` |
+| `events[onRowClick]` | `data-event-rowclick` | `data-event-rowclick="navigate:UserDetail"` |
+| `events[onItemsClick]` | `data-event-itemsclick` | `data-event-itemsclick="navigate:Dashboard,navigate:Users"` |
+| tabs `params.id` | `data-tabs-id` | `data-tabs-id="mainTabs"` |
+| tabs `params.active` | `data-tabs-active` | `data-tabs-active="0"` |
+
+**Chained actions** are serialized with `|` separator:
+```xml
+<g data-event-click="hide:modal1|show:modal2|navigate:Summary">
+```
+
+### Tabs Layout Containers
+
+The `layout tabs` container type is represented in the IR as:
+
+```json
+{
+  "kind": "container",
+  "containerType": "tabs",
+  "params": { "id": "mainTabs", "active": 0 },
+  "children": [{ "ref": "node_tab_1" }, { "ref": "node_tab_2" }]
+}
+```
+
+Each `tab` block inside is a separate `containerType: "tab"` node:
+
+```json
+{
+  "kind": "container",
+  "containerType": "tab",
+  "params": {},
+  "children": [{ "ref": "node_heading_1" }]
+}
+```
 
 ---
 

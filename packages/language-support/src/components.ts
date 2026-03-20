@@ -8,18 +8,29 @@ import { ICON_NAME_OPTIONS } from './icon-names.js';
 
 export interface PropertyMetadata {
   name: string;
-  type: 'string' | 'enum' | 'boolean' | 'number' | 'color';
+  type: 'string' | 'enum' | 'boolean' | 'number' | 'color' | 'action';
   description?: string;
   defaultValue?: any;
   required?: boolean;
   options?: string[]; // For enums
 }
 
+export type EventName =
+  | 'onClick'
+  | 'onChange'
+  | 'onActive'
+  | 'onInactive'
+  | 'onItemsClick'
+  | 'onItemClick'
+  | 'onRowClick'
+  | 'onClose';
+
 export interface ComponentMetadata {
   name: string;
   description: string;
   category: ComponentCategory;
   properties: Record<string, PropertyMetadata>;
+  supportedEvents?: EventName[];
   example: string;
 }
 
@@ -166,6 +177,7 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     description: 'Clickable action button.',
     category: 'Action',
     properties: {
+      id: { name: 'id', type: 'string', description: 'Unique identifier for event targeting. Format: [a-zA-Z_][a-zA-Z0-9_]*' },
       text: { name: 'text', type: 'string', required: true },
       variant: variantWithDefaultEnum,
       size: controlSizeEnum,
@@ -176,19 +188,24 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
       padding: controlPaddingEnum,
       block: { name: 'block', type: 'boolean' },
       disabled: disabledProp,
+      onClick: { name: 'onClick', type: 'action', description: 'Action(s) triggered on click. Chain with &.' },
     },
-    example: 'component Button text: "Confirm" variant: primary icon: "check" iconAlign: left',
+    supportedEvents: ['onClick'],
+    example: 'component Button text: "Confirm" variant: primary onClick: navigate(Home)',
   },
   Link: {
     name: 'Link',
     description: 'Underlined text action without button background.',
     category: 'Action',
     properties: {
+      id: { name: 'id', type: 'string', description: 'Unique identifier for event targeting. Format: [a-zA-Z_][a-zA-Z0-9_]*' },
       text: { name: 'text', type: 'string', required: true },
       variant: variantEnum,
       size: controlSizeEnum,
+      onClick: { name: 'onClick', type: 'action', description: 'Action(s) triggered on click. Chain with &.' },
     },
-    example: 'component Link text: "Learn more" variant: info',
+    supportedEvents: ['onClick'],
+    example: 'component Link text: "Learn more" variant: info onClick: navigate(Home)',
   },
   Input: {
     name: 'Input',
@@ -235,33 +252,48 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     description: 'Checkbox control.',
     category: 'Input',
     properties: {
+      id: { name: 'id', type: 'string', description: 'Unique identifier for event targeting. Format: [a-zA-Z_][a-zA-Z0-9_]*' },
       label: { name: 'label', type: 'string', required: true },
       checked: { name: 'checked', type: 'boolean' },
       disabled: disabledProp,
+      onChange: { name: 'onChange', type: 'action', description: 'Action(s) triggered on any state change. Mutually exclusive with onActive/onInactive.' },
+      onActive: { name: 'onActive', type: 'action', description: 'Action(s) triggered when checked. Mutually exclusive with onChange.' },
+      onInactive: { name: 'onInactive', type: 'action', description: 'Action(s) triggered when unchecked. Mutually exclusive with onChange.' },
     },
-    example: 'component Checkbox label: "I agree" checked: true',
+    supportedEvents: ['onChange', 'onActive', 'onInactive'],
+    example: 'component Checkbox label: "I agree" onChange: show(submitBtn)',
   },
   Radio: {
     name: 'Radio',
     description: 'Radio control.',
     category: 'Input',
     properties: {
+      id: { name: 'id', type: 'string', description: 'Unique identifier for event targeting. Format: [a-zA-Z_][a-zA-Z0-9_]*' },
       label: { name: 'label', type: 'string', required: true },
       checked: { name: 'checked', type: 'boolean' },
       disabled: disabledProp,
+      onChange: { name: 'onChange', type: 'action', description: 'Action(s) triggered on any state change. Mutually exclusive with onActive/onInactive.' },
+      onActive: { name: 'onActive', type: 'action', description: 'Action(s) triggered when selected. Mutually exclusive with onChange.' },
+      onInactive: { name: 'onInactive', type: 'action', description: 'Action(s) triggered when deselected. Mutually exclusive with onChange.' },
     },
-    example: 'component Radio label: "Option A" checked: true',
+    supportedEvents: ['onChange', 'onActive', 'onInactive'],
+    example: 'component Radio label: "Option A" onChange: show(optionPanel)',
   },
   Toggle: {
     name: 'Toggle',
     description: 'Toggle switch control.',
     category: 'Input',
     properties: {
+      id: { name: 'id', type: 'string', description: 'Unique identifier for event targeting. Format: [a-zA-Z_][a-zA-Z0-9_]*' },
       label: { name: 'label', type: 'string', required: true },
       enabled: { name: 'enabled', type: 'boolean' },
       disabled: disabledProp,
+      onChange: { name: 'onChange', type: 'action', description: 'Action(s) triggered on any state change. Mutually exclusive with onActive/onInactive.' },
+      onActive: { name: 'onActive', type: 'action', description: 'Action(s) triggered when enabled. Mutually exclusive with onChange.' },
+      onInactive: { name: 'onInactive', type: 'action', description: 'Action(s) triggered when disabled. Mutually exclusive with onChange.' },
     },
-    example: 'component Toggle label: "Dark mode" enabled: true',
+    supportedEvents: ['onChange', 'onActive', 'onInactive'],
+    example: 'component Toggle label: "Dark mode" onChange: toggle(darkPanel)',
   },
   Topbar: {
     name: 'Topbar',
@@ -288,12 +320,15 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     description: 'Vertical menu list.',
     category: 'Navigation',
     properties: {
+      id: { name: 'id', type: 'string', description: 'Unique identifier for event targeting. Format: [a-zA-Z_][a-zA-Z0-9_]*' },
       items: { name: 'items', type: 'string', required: true },
       icons: { name: 'icons', type: 'string' },
       active: { name: 'active', type: 'number' },
       variant: variantWithDefaultEnum,
+      onItemsClick: { name: 'onItemsClick', type: 'string', description: 'Comma-separated screen names aligned by index with items. e.g. "HomeScreen,UsersScreen,SettingsScreen"' },
     },
-    example: 'component SidebarMenu items: "Dashboard,Users,Settings" icons: "home,users,settings" active: 0 variant: primary',
+    supportedEvents: ['onItemsClick'],
+    example: 'component SidebarMenu items: "Dashboard,Users,Settings" onItemsClick: "DashboardScreen,UsersScreen,SettingsScreen"',
   },
   Sidebar: {
     name: 'Sidebar',
@@ -319,11 +354,13 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
   },
   Tabs: {
     name: 'Tabs',
-    description: 'Tabbed navigation component.',
+    description: 'Tabbed navigation component. Link to a layout tabs container via tabsId.',
     category: 'Navigation',
     properties: {
+      id: { name: 'id', type: 'string', description: 'Unique identifier for event targeting. Format: [a-zA-Z_][a-zA-Z0-9_]*' },
       items: { name: 'items', type: 'string', required: true },
       active: { name: 'active', type: 'number' },
+      tabsId: { name: 'tabsId', type: 'string', description: 'ID of the layout tabs container this component controls.' },
       variant: variantWithDefaultEnum,
       radius: { name: 'radius', type: 'enum', options: ['none', 'sm', 'md', 'lg', 'full'], defaultValue: 'md' },
       size: { name: 'size', type: 'enum', options: ['sm', 'md', 'lg'], defaultValue: 'md' },
@@ -332,13 +369,14 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
       border: { name: 'border', type: 'boolean', defaultValue: true, description: 'Show/hide borders between tabs and around the container.' },
       color: { name: 'color', type: 'color', description: 'Text color for tab labels. Overrides default white (active) and muted (inactive).' },
     },
-    example: 'component Tabs items: "Overview,Details,Activity" active: 1',
+    example: 'component Tabs items: "Overview,Details,Activity" active: 1 tabsId: mainTabs',
   },
   Table: {
     name: 'Table',
     description: 'Tabular data placeholder.',
     category: 'Data',
     properties: {
+      id: { name: 'id', type: 'string', description: 'Unique identifier for event targeting. Format: [a-zA-Z_][a-zA-Z0-9_]*' },
       title: { name: 'title', type: 'string' },
       columns: { name: 'columns', type: 'string', required: true },
       rows: { name: 'rows', type: 'number' },
@@ -354,21 +392,26 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
       border: { name: 'border', type: 'boolean' },
       innerBorder: { name: 'innerBorder', type: 'boolean' },
       background: { name: 'background', type: 'boolean' },
+      onRowClick: { name: 'onRowClick', type: 'action', description: 'Action triggered when a row is clicked.' },
     },
-    example: 'component Table columns: "User,City,Amount" rows: 8 mock: "name,city,amount"',
+    supportedEvents: ['onRowClick'],
+    example: 'component Table columns: "User,City,Amount" rows: 8 onRowClick: navigate(UserDetail)',
   },
   List: {
     name: 'List',
     description: 'Vertical list component.',
     category: 'Data',
     properties: {
+      id: { name: 'id', type: 'string', description: 'Unique identifier for event targeting. Format: [a-zA-Z_][a-zA-Z0-9_]*' },
       title: { name: 'title', type: 'string' },
       items: { name: 'items', type: 'string' },
       itemsMock: { name: 'itemsMock', type: 'number' },
       mock: { name: 'mock', type: 'string' },
       random: { name: 'random', type: 'boolean' },
+      onItemClick: { name: 'onItemClick', type: 'action', description: 'Action triggered when a list item is clicked.' },
     },
-    example: 'component List title: "Cities" itemsMock: 6 mock: "city"',
+    supportedEvents: ['onItemClick'],
+    example: 'component List title: "Cities" itemsMock: 6 onItemClick: navigate(CityDetail)',
   },
   Stat: {
     name: 'Stat',
@@ -443,14 +486,17 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     description: 'Button that renders an icon.',
     category: 'Action',
     properties: {
+      id: { name: 'id', type: 'string', description: 'Unique identifier for event targeting. Format: [a-zA-Z_][a-zA-Z0-9_]*' },
       icon: { name: 'icon', type: 'enum', options: ICON_NAME_OPTIONS, required: true },
       size: controlSizeEnum,
       variant: variantWithDefaultEnum,
       disabled: { name: 'disabled', type: 'boolean' },
       labelSpace: { name: 'labelSpace', type: 'boolean' },
       padding: controlPaddingEnum,
+      onClick: { name: 'onClick', type: 'action', description: 'Action(s) triggered on click. Chain with &.' },
     },
-    example: 'component IconButton icon: "search" variant: default size: md',
+    supportedEvents: ['onClick'],
+    example: 'component IconButton icon: "search" variant: default onClick: show(searchPanel)',
   },
   Divider: {
     name: 'Divider',
@@ -496,10 +542,13 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     description: 'Modal overlay container.',
     category: 'Feedback',
     properties: {
+      id: { name: 'id', type: 'string', description: 'Unique identifier for show/hide targeting. Format: [a-zA-Z_][a-zA-Z0-9_]*' },
       title: { name: 'title', type: 'string', required: true },
       visible: { name: 'visible', type: 'boolean', defaultValue: true },
+      onClose: { name: 'onClose', type: 'action', description: 'Action(s) triggered when the modal is closed. Use hide(self) to auto-hide.' },
     },
-    example: 'component Modal title: "Confirm action" visible: false',
+    supportedEvents: ['onClose'],
+    example: 'component Modal id: confirmModal title: "Confirm action" onClose: hide(self)',
   },
 };
 
@@ -553,15 +602,27 @@ export const LAYOUTS: Record<string, LayoutMetadata> = {
   },
   card: {
     name: 'card',
-    description: 'Card container with spacing/radius options.',
+    description: 'Card container with spacing/radius options. Supports onClick event.',
     properties: {
+      id: { name: 'id', type: 'string', description: 'Unique identifier for event targeting. Format: [a-zA-Z_][a-zA-Z0-9_]*' },
       padding: { name: 'padding', type: 'enum', options: spacingEnum.options },
       gap: { name: 'gap', type: 'enum', options: spacingEnum.options },
       radius: { name: 'radius', type: 'enum', options: ['none', 'sm', 'md', 'lg'] },
       border: { name: 'border', type: 'boolean' },
       background: { name: 'background', type: 'string' },
+      onClick: { name: 'onClick', type: 'action', description: 'Action(s) triggered when the card is clicked. Chain with &.' },
     },
-    example: 'layout card(padding: md, gap: md, radius: md, border: true) { ... }',
+    example: 'layout card(padding: md, onClick: navigate(Detail)) { ... }',
+  },
+  tabs: {
+    name: 'tabs',
+    description: 'Tab panel container. Children are tab blocks. Link to a component Tabs via matching id.',
+    properties: {
+      id: { name: 'id', type: 'string', description: 'Required. ID to link with a component Tabs tabsId. Format: [a-zA-Z_][a-zA-Z0-9_]*', required: true },
+      active: { name: 'active', type: 'number', description: 'Index of the initially active tab (0-based).' },
+    },
+    requiredProperties: ['id'],
+    example: 'layout tabs(id: mainTabs) { tab { ... } tab { ... } }',
   },
 };
 
@@ -585,5 +646,7 @@ export const KEYWORDS = {
   layout: ['layout'],
   component: ['component'],
   cell: ['cell'],
+  tab: ['tab'],
   special: ['span', 'columns', 'left', 'right', 'gap', 'padding', 'direction', 'background', 'border', 'Component'],
+  events: ['navigate', 'show', 'hide', 'toggle', 'setTab', 'self'],
 };

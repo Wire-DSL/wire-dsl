@@ -15,7 +15,7 @@ import type {
  *
  * Converts .wire files to AST using Chevrotain
  *
- * Supported layout types: stack, grid, split, panel, card
+ * Supported layout types: stack, grid, split, panel, card, tabs
  * Component example: Stat, Image, Button, Heading, Text, etc.
  *
  * Example:
@@ -66,6 +66,15 @@ const Style = createToken({ name: 'Style', pattern: /style\b/ });
 const Mocks = createToken({ name: 'Mocks', pattern: /mocks\b/ });
 const Colors = createToken({ name: 'Colors', pattern: /colors(?=\s*\{)/ });
 const Cell = createToken({ name: 'Cell', pattern: /cell\b/ });
+const Tab = createToken({ name: 'Tab', pattern: /tab\b/ });
+
+// Event action keywords (must come before Identifier)
+const Navigate = createToken({ name: 'Navigate', pattern: /navigate\b/ });
+const Show = createToken({ name: 'Show', pattern: /show\b/ });
+const Hide = createToken({ name: 'Hide', pattern: /hide\b/ });
+const ToggleAction = createToken({ name: 'ToggleAction', pattern: /toggle\b/ });
+const SetTab = createToken({ name: 'SetTab', pattern: /setTab\b/ });
+const Self = createToken({ name: 'Self', pattern: /self\b/ });
 
 // Punctuation
 const LCurly = createToken({ name: 'LCurly', pattern: /{/ });
@@ -74,6 +83,7 @@ const LParen = createToken({ name: 'LParen', pattern: /\(/ });
 const RParen = createToken({ name: 'RParen', pattern: /\)/ });
 const Colon = createToken({ name: 'Colon', pattern: /:/ });
 const Comma = createToken({ name: 'Comma', pattern: /,/ });
+const Ampersand = createToken({ name: 'Ampersand', pattern: /&/ });
 
 // Literals
 const StringLiteral = createToken({
@@ -134,6 +144,14 @@ const allTokens = [
   Mocks,
   Colors,
   Cell,
+  Tab,
+  // Event action keywords (must come before Identifier)
+  Navigate,
+  Show,
+  Hide,
+  ToggleAction,
+  SetTab,
+  Self,
   // Punctuation
   LCurly,
   RCurly,
@@ -141,6 +159,7 @@ const allTokens = [
   RParen,
   Colon,
   Comma,
+  Ampersand,
   // Literals
   StringLiteral,
   NumberLiteral,
@@ -267,6 +286,67 @@ class WireDSLParser extends CstParser {
     this.CONSUME(RCurly);
   });
 
+  // singleAction: navigate(Screen) | show(id|self) | hide(id|self) | toggle(id|self) | setTab(tabsId, index)
+  private singleAction = this.RULE('singleAction', () => {
+    this.OR([
+      {
+        ALT: () => {
+          this.CONSUME(Navigate, { LABEL: 'navigate' });
+          this.CONSUME(LParen);
+          this.CONSUME(Identifier, { LABEL: 'targetScreen' });
+          this.CONSUME(RParen);
+        },
+      },
+      {
+        ALT: () => {
+          this.OR2([
+            { ALT: () => this.CONSUME(Show, { LABEL: 'sht' }) },
+            { ALT: () => this.CONSUME(Hide, { LABEL: 'sht' }) },
+            { ALT: () => this.CONSUME(ToggleAction, { LABEL: 'sht' }) },
+          ]);
+          this.CONSUME2(LParen);
+          this.OR3([
+            { ALT: () => this.CONSUME(Self, { LABEL: 'targetId' }) },
+            { ALT: () => this.CONSUME2(Identifier, { LABEL: 'targetId' }) },
+          ]);
+          this.CONSUME2(RParen);
+        },
+      },
+      {
+        ALT: () => {
+          this.CONSUME(SetTab, { LABEL: 'setTab' });
+          this.CONSUME3(LParen);
+          this.CONSUME3(Identifier, { LABEL: 'tabsId' });
+          this.CONSUME(Comma);
+          this.CONSUME(NumberLiteral, { LABEL: 'tabIndex' });
+          this.CONSUME3(RParen);
+        },
+      },
+    ]);
+  });
+
+  // actionChain: singleAction (& singleAction)*
+  private actionChain = this.RULE('actionChain', () => {
+    this.SUBRULE(this.singleAction);
+    this.MANY(() => {
+      this.CONSUME(Ampersand);
+      this.SUBRULE2(this.singleAction);
+    });
+  });
+
+  // tab { ... } — children block inside layout tabs
+  private tab = this.RULE('tab', () => {
+    this.CONSUME(Tab);
+    this.CONSUME(LCurly);
+    this.MANY(() => {
+      this.OR([
+        { ALT: () => this.SUBRULE(this.component) },
+        { ALT: () => this.SUBRULE(this.layout) },
+      ]);
+    });
+    this.CONSUME(RCurly);
+  });
+
   // layout stack(...) { ... }
   private layout = this.RULE('layout', () => {
     this.CONSUME(Layout);
@@ -280,6 +360,7 @@ class WireDSLParser extends CstParser {
         { ALT: () => this.SUBRULE(this.component) },
         { ALT: () => this.SUBRULE2(this.layout) },
         { ALT: () => this.SUBRULE(this.cell) },
+        { ALT: () => this.SUBRULE(this.tab) },
       ]);
     });
     this.CONSUME(RCurly);
@@ -310,11 +391,12 @@ class WireDSLParser extends CstParser {
     });
   });
 
-  // property: key: value
+  // property: key: value  (value can be string, number, identifier, or action chain)
   private property = this.RULE('property', () => {
     this.CONSUME(Identifier, { LABEL: 'propKey' });
     this.CONSUME(Colon);
     this.OR([
+      { ALT: () => this.SUBRULE(this.actionChain) },
       { ALT: () => this.CONSUME(StringLiteral, { LABEL: 'propValue' }) },
       { ALT: () => this.CONSUME(NumberLiteral, { LABEL: 'propValue' }) },
       { ALT: () => this.CONSUME2(Identifier, { LABEL: 'propValue' }) },
@@ -371,11 +453,39 @@ export interface ASTScreen {
   };
 }
 
+// Event action types
+export type ASTEventActionType = 'navigate' | 'show' | 'hide' | 'toggle' | 'setTab';
+
+export interface ASTEventAction {
+  type: ASTEventActionType;
+  // navigate: target screen name
+  screen?: string;
+  // show | hide | toggle: target id ('_self' for self-reference)
+  targetId?: string;
+  // setTab: tabs layout id + tab index
+  tabsId?: string;
+  index?: number;
+}
+
+export interface ASTEventHandler {
+  event: string; // 'onClick' | 'onChange' | 'onActive' | 'onInactive' | 'onClose' | 'onItemClick' | 'onRowClick'
+  actions: ASTEventAction[];
+}
+
+export interface ASTTab {
+  type: 'tab';
+  children: (ASTComponent | ASTLayout)[];
+  _meta?: {
+    nodeId: string;
+  };
+}
+
 export interface ASTLayout {
   type: 'layout';
   layoutType: string;
   params: Record<string, string | number>;
-  children: (ASTComponent | ASTLayout | ASTCell)[];
+  events: ASTEventHandler[];
+  children: (ASTComponent | ASTLayout | ASTCell | ASTTab)[];
   _meta?: {
     nodeId: string;
   };
@@ -394,6 +504,7 @@ export interface ASTComponent {
   type: 'component';
   componentType: string;
   props: Record<string, string | number>;
+  events: ASTEventHandler[];
   _meta?: {
     nodeId: string;
   };
@@ -549,7 +660,7 @@ class WireDSLVisitor extends BaseCstVisitor {
   }
 
   screen(ctx: any): ASTScreen {
-    const params = ctx.paramList ? this.visit(ctx.paramList[0]) : {};
+    const { params } = ctx.paramList ? this.visit(ctx.paramList[0]) : { params: {} };
     return {
       type: 'screen',
       name: ctx.screenName[0].image,
@@ -561,20 +672,20 @@ class WireDSLVisitor extends BaseCstVisitor {
   layout(ctx: any): ASTLayout {
     const layoutType = ctx.layoutType[0].image;
     const params: Record<string, string | number> = {};
-    const children: (ASTComponent | ASTLayout | ASTCell)[] = [];
+    const events: ASTEventHandler[] = [];
+    const children: (ASTComponent | ASTLayout | ASTCell | ASTTab)[] = [];
 
     if (ctx.paramList) {
       const paramResult = this.visit(ctx.paramList);
-      Object.assign(params, paramResult);
+      Object.assign(params, paramResult.params);
+      events.push(...paramResult.events);
     }
 
     // Process children in the order they appear in the input
-    // We need to merge component, layout, and cell arrays while preserving order
     const childNodes: Array<{ type: string; node: any; index: number }> = [];
 
     if (ctx.component) {
       ctx.component.forEach((comp: any) => {
-        // Get the token position from the CST node (always present in Chevrotain)
         const startToken = comp.children?.Component?.[0] || comp.children?.componentType?.[0];
         childNodes.push({ type: 'component', node: comp, index: startToken.startOffset });
       });
@@ -591,24 +702,25 @@ class WireDSLVisitor extends BaseCstVisitor {
         childNodes.push({ type: 'cell', node: cell, index: startToken.startOffset });
       });
     }
+    if (ctx.tab) {
+      ctx.tab.forEach((tab: any) => {
+        const startToken = tab.children?.Tab?.[0];
+        childNodes.push({ type: 'tab', node: tab, index: startToken.startOffset });
+      });
+    }
 
     // Sort by token position in source
     childNodes.sort((a, b) => a.index - b.index);
 
     childNodes.forEach((item) => {
-      if (item.type === 'component') {
-        children.push(this.visit(item.node));
-      } else if (item.type === 'layout') {
-        children.push(this.visit(item.node));
-      } else if (item.type === 'cell') {
-        children.push(this.visit(item.node));
-      }
+      children.push(this.visit(item.node));
     });
 
     return {
       type: 'layout',
       layoutType,
       params,
+      events,
       children,
     };
   }
@@ -658,14 +770,76 @@ class WireDSLVisitor extends BaseCstVisitor {
     };
   }
 
+  singleAction(ctx: any): ASTEventAction {
+    if (ctx.navigate) {
+      return { type: 'navigate', screen: ctx.targetScreen[0].image };
+    }
+    if (ctx.sht) {
+      const tokenName: string = ctx.sht[0].tokenType.name;
+      const type = tokenName === 'Show' ? 'show' : tokenName === 'Hide' ? 'hide' : 'toggle';
+      const targetToken = ctx.targetId[0];
+      const isSelf = targetToken.tokenType.name === 'Self';
+      const targetId = isSelf ? '_self' : targetToken.image;
+      return { type: type as 'show' | 'hide' | 'toggle', targetId };
+    }
+    if (ctx.setTab) {
+      return {
+        type: 'setTab',
+        tabsId: ctx.tabsId[0].image,
+        index: Number(ctx.tabIndex[0].image),
+      };
+    }
+    throw new Error('Unknown action type in singleAction visitor');
+  }
+
+  actionChain(ctx: any): ASTEventAction[] {
+    const actions: ASTEventAction[] = [];
+    if (ctx.singleAction) {
+      ctx.singleAction.forEach((action: any) => {
+        actions.push(this.visit(action));
+      });
+    }
+    return actions;
+  }
+
+  tab(ctx: any): ASTTab {
+    const children: (ASTComponent | ASTLayout)[] = [];
+    const childNodes: Array<{ type: string; node: any; index: number }> = [];
+
+    if (ctx.component) {
+      ctx.component.forEach((comp: any) => {
+        const startToken = comp.children?.Component?.[0] || comp.children?.componentType?.[0];
+        childNodes.push({ type: 'component', node: comp, index: startToken.startOffset });
+      });
+    }
+    if (ctx.layout) {
+      ctx.layout.forEach((layout: any) => {
+        const startToken = layout.children?.Layout?.[0] || layout.children?.layoutType?.[0];
+        childNodes.push({ type: 'layout', node: layout, index: startToken.startOffset });
+      });
+    }
+
+    childNodes.sort((a, b) => a.index - b.index);
+    childNodes.forEach((item) => {
+      children.push(this.visit(item.node));
+    });
+
+    return { type: 'tab', children };
+  }
+
   component(ctx: any): ASTComponent {
     const componentType = ctx.componentType[0].image;
     const props: Record<string, string | number> = {};
+    const events: ASTEventHandler[] = [];
 
     if (ctx.property) {
       ctx.property.forEach((prop: any) => {
         const result = this.visit(prop);
-        props[result.key] = result.value;
+        if (result.isEvent) {
+          events.push({ event: result.key, actions: result.actions });
+        } else {
+          props[result.key] = result.value;
+        }
       });
     }
 
@@ -673,11 +847,19 @@ class WireDSLVisitor extends BaseCstVisitor {
       type: 'component',
       componentType,
       props,
+      events,
     };
   }
 
-  property(ctx: any) {
+  property(ctx: any): { key: string; isEvent?: true; actions?: ASTEventAction[]; value?: string | number } {
     const key = ctx.propKey[0].image;
+
+    // Check if it's an action chain value
+    if (ctx.actionChain && ctx.actionChain.length > 0) {
+      const actions: ASTEventAction[] = this.visit(ctx.actionChain[0]);
+      return { key, isEvent: true, actions };
+    }
+
     const rawValue: string = ctx.propValue[0].image;
     let value: string | number = rawValue;
 
@@ -693,17 +875,22 @@ class WireDSLVisitor extends BaseCstVisitor {
     return { key, value };
   }
 
-  paramList(ctx: any): Record<string, string | number> {
+  paramList(ctx: any): { params: Record<string, string | number>; events: ASTEventHandler[] } {
     const params: Record<string, string | number> = {};
+    const events: ASTEventHandler[] = [];
 
     if (ctx.property) {
       ctx.property.forEach((prop: any) => {
         const result = this.visit(prop);
-        params[result.key] = result.value;
+        if (result.isEvent) {
+          events.push({ event: result.key, actions: result.actions! });
+        } else {
+          params[result.key] = result.value!;
+        }
       });
     }
 
-    return params;
+    return { params, events };
   }
 }
 
@@ -801,7 +988,7 @@ class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
 
   screen(ctx: any): ASTScreen {
     // Build AST manually (same as parent, but with SourceMap tracking)
-    const params = ctx.paramList ? this.visit(ctx.paramList[0]) : {};
+    const { params } = ctx.paramList ? this.visit(ctx.paramList[0]) : { params: {} };
     const screenName = ctx.screenName[0].image;
     
     // Capture tokens
@@ -847,10 +1034,12 @@ class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
     // Build AST manually
     const layoutType = ctx.layoutType[0].image;
     const params: Record<string, string | number> = {};
+    const events: ASTEventHandler[] = [];
 
     if (ctx.paramList) {
       const paramResult = this.visit(ctx.paramList);
-      Object.assign(params, paramResult);
+      Object.assign(params, paramResult.params);
+      events.push(...paramResult.events);
     }
 
     // Capture tokens
@@ -865,6 +1054,7 @@ class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
       type: 'layout',
       layoutType,
       params,
+      events,
       children: [],  // Will be filled after push
     };
 
@@ -882,10 +1072,12 @@ class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
       if (ctx.paramList && ctx.paramList[0]?.children?.property) {
         ctx.paramList[0].children.property.forEach((propCtx: any) => {
           const propResult = this.visit(propCtx);
+          // Skip event properties (they have no scalar propValue)
+          if (propResult.isEvent) return;
           this.sourceMapBuilder!.addProperty(
             nodeId,
             propResult.key,
-            propResult.value,
+            propResult.value!,
             {
               name: propCtx.children.propKey[0],
               value: propCtx.children.propValue[0],
@@ -917,6 +1109,12 @@ class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
       ctx.cell.forEach((cell: any) => {
         const startToken = cell.children?.Cell?.[0];
         childNodes.push({ type: 'cell', node: cell, index: startToken.startOffset });
+      });
+    }
+    if (ctx.tab) {
+      ctx.tab.forEach((tab: any) => {
+        const startToken = tab.children?.Tab?.[0];
+        childNodes.push({ type: 'tab', node: tab, index: startToken.startOffset });
       });
     }
 
@@ -973,10 +1171,12 @@ class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
       if (ctx.property) {
         ctx.property.forEach((propCtx: any) => {
           const propResult = this.visit(propCtx);
+          // Skip event properties (they have no scalar propValue)
+          if (propResult.isEvent) return;
           this.sourceMapBuilder!.addProperty(
             nodeId,
             propResult.key,
-            propResult.value,
+            propResult.value!,
             {
               name: propCtx.children.propKey[0],
               value: propCtx.children.propValue[0],
@@ -1050,10 +1250,12 @@ class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
       if (ctx.property) {
         ctx.property.forEach((propCtx: any) => {
           const propResult = this.visit(propCtx);
+          // Skip event properties (they have no scalar propValue)
+          if (propResult.isEvent) return;
           this.sourceMapBuilder!.addProperty(
             nodeId,
             propResult.key,
-            propResult.value,
+            propResult.value!,
             {
               name: propCtx.children.propKey[0],
               value: propCtx.children.propValue[0],
@@ -1615,6 +1817,14 @@ function validateSemanticDiagnostics(ast: AST, sourceMap: SourceMapEntry[]): Par
             count += countChildrenSlots(cellChild);
           }
         }
+      } else if (child.type === 'tab') {
+        for (const tabChild of child.children) {
+          if (tabChild.type === 'component') {
+            if (tabChild.componentType === 'Children') count += 1;
+          } else if (tabChild.type === 'layout') {
+            count += countChildrenSlots(tabChild);
+          }
+        }
       }
     }
     return count;
@@ -1897,6 +2107,11 @@ function validateSemanticDiagnostics(ast: AST, sourceMap: SourceMapEntry[]): Par
         checkLayout(child, insideDefinedLayout);
       } else if (child.type === 'cell') {
         checkCell(child, insideDefinedLayout);
+      } else if (child.type === 'tab') {
+        for (const tabChild of child.children) {
+          if (tabChild.type === 'component') checkComponent(tabChild, insideDefinedLayout);
+          if (tabChild.type === 'layout') checkLayout(tabChild, insideDefinedLayout);
+        }
       }
     }
   };
@@ -2163,6 +2378,16 @@ function validateDefinitionCycles(ast: AST): void {
             }
           } else if (cellChild.type === 'layout') {
             collectLayoutDependencies(cellChild, deps);
+          }
+        }
+      } else if (child.type === 'tab') {
+        for (const tabChild of child.children) {
+          if (tabChild.type === 'component') {
+            if (shouldTrackComponentDependency(tabChild.componentType)) {
+              deps.add(makeComponentKey(tabChild.componentType));
+            }
+          } else if (tabChild.type === 'layout') {
+            collectLayoutDependencies(tabChild, deps);
           }
         }
       }

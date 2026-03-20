@@ -12,8 +12,11 @@ import type {
   ASTLayout,
   ASTComponent,
   ASTCell,
+  ASTTab,
   ASTDefinedComponent,
   ASTDefinedLayout,
+  ASTEventHandler,
+  ASTEventAction,
 } from '../parser/index';
 import { resolveDevicePreset } from './device-presets';
 
@@ -64,14 +67,39 @@ export interface IRScreen {
   root: { ref: string };
 }
 
+// ============================================================================
+// EVENT TYPES
+// ============================================================================
+
+export type IREventAction =
+  | { type: 'navigate'; screen: string }
+  | { type: 'show'; targetId: string }     // targetId can be '_self'
+  | { type: 'hide'; targetId: string }     // targetId can be '_self'
+  | { type: 'toggle'; targetId: string }   // targetId can be '_self'
+  | { type: 'setTab'; tabsId: string; index: number }
+  | { type: 'navigateItems'; screens: string[] }; // SidebarMenu onItemsClick
+
+export type IREventName =
+  | 'onClick' | 'onChange' | 'onActive' | 'onInactive'
+  | 'onItemsClick' | 'onItemClick' | 'onRowClick' | 'onClose';
+
+export interface IREventHandler {
+  event: IREventName;
+  actions: IREventAction[];
+}
+
+/** Special target id used when event target is self (hide(self), show(self), toggle(self)) */
+export const SELF_TARGET = '_self';
+
 export type IRNode = IRContainerNode | IRComponentNode | IRInstanceNode;
 
 export interface IRContainerNode {
   id: string;
   kind: 'container';
-  containerType: 'stack' | 'grid' | 'split' | 'panel' | 'card';
+  containerType: 'stack' | 'grid' | 'split' | 'panel' | 'card' | 'tabs' | 'tab';
   params: Record<string, string | number>;
   children: Array<{ ref: string }>;
+  events?: IREventHandler[];
   style: IRNodeStyle;
   meta: IRMeta;
 }
@@ -81,6 +109,8 @@ export interface IRComponentNode {
   kind: 'component';
   componentType: string;
   props: Record<string, string | number>;
+  userDefinedId?: string;
+  events?: IREventHandler[];
   style: IRNodeStyle;
   meta: IRMeta;
 }
@@ -144,12 +174,27 @@ const IRMetaSchema = z.object({
   nodeId: z.string().optional(),
 });
 
+const IREventActionSchema: z.ZodType<IREventAction> = z.union([
+  z.object({ type: z.literal('navigate'), screen: z.string() }),
+  z.object({ type: z.literal('show'), targetId: z.string() }),
+  z.object({ type: z.literal('hide'), targetId: z.string() }),
+  z.object({ type: z.literal('toggle'), targetId: z.string() }),
+  z.object({ type: z.literal('setTab'), tabsId: z.string(), index: z.number().int().min(0) }),
+  z.object({ type: z.literal('navigateItems'), screens: z.array(z.string()) }),
+]);
+
+const IREventHandlerSchema = z.object({
+  event: z.enum(['onClick', 'onChange', 'onActive', 'onInactive', 'onItemsClick', 'onItemClick', 'onRowClick', 'onClose']),
+  actions: z.array(IREventActionSchema),
+});
+
 const IRContainerNodeSchema = z.object({
   id: z.string(),
   kind: z.literal('container'),
-  containerType: z.enum(['stack', 'grid', 'split', 'panel', 'card']),
+  containerType: z.enum(['stack', 'grid', 'split', 'panel', 'card', 'tabs', 'tab']),
   params: z.record(z.string(), z.union([z.string(), z.number()])),
   children: z.array(z.object({ ref: z.string() })),
+  events: z.array(IREventHandlerSchema).optional(),
   style: IRNodeStyleSchema,
   meta: IRMetaSchema,
 });
@@ -159,6 +204,8 @@ const IRComponentNodeSchema = z.object({
   kind: z.literal('component'),
   componentType: z.string(),
   props: z.record(z.string(), z.union([z.string(), z.number()])),
+  userDefinedId: z.string().optional(),
+  events: z.array(IREventHandlerSchema).optional(),
   style: IRNodeStyleSchema,
   meta: IRMetaSchema,
 });
@@ -440,23 +487,26 @@ export class IRGenerator {
     if (layout.children && layout.children.length > 0) {
       layout.children.forEach((child) => {
         if (child.type === 'component') {
-          found.push({
-            componentType: child.componentType,
-            location: 'layout',
-          });
+          found.push({ componentType: child.componentType, location: 'layout' });
         } else if (child.type === 'layout') {
           this.findComponentsInLayout(child, found);
         } else if (child.type === 'cell') {
-          // For cells, check their children
           if (child.children) {
             child.children.forEach((cellChild) => {
               if (cellChild.type === 'component') {
-                found.push({
-                  componentType: cellChild.componentType,
-                  location: 'cell',
-                });
+                found.push({ componentType: cellChild.componentType, location: 'cell' });
               } else if (cellChild.type === 'layout') {
                 this.findComponentsInLayout(cellChild, found);
+              }
+            });
+          }
+        } else if (child.type === 'tab') {
+          if (child.children) {
+            child.children.forEach((tabChild) => {
+              if (tabChild.type === 'component') {
+                found.push({ componentType: tabChild.componentType, location: 'tab' });
+              } else if (tabChild.type === 'layout') {
+                this.findComponentsInLayout(tabChild, found);
               }
             });
           }
@@ -478,18 +528,19 @@ export class IRGenerator {
     if (layout.layoutType === 'split') {
       layoutParams = this.normalizeSplitParams(layoutParams);
     }
-    const layoutChildren = layout.children;
 
+    // Filter out tab children for defined layout expansion (tabs not valid there)
+    const nonTabChildren = layout.children.filter(c => c.type !== 'tab') as (ASTComponent | ASTLayout | ASTCell)[];
     const layoutDefinition = this.definedLayouts.get(layout.layoutType);
     if (layoutDefinition) {
-      return this.expandDefinedLayout(layoutDefinition, layoutParams, layoutChildren, context, layout._meta?.nodeId);
+      return this.expandDefinedLayout(layoutDefinition, layoutParams, nonTabChildren, context, layout._meta?.nodeId);
     }
 
     const nodeId = this.idGen.generate('node');
     const childRefs: Array<{ ref: string }> = [];
 
-    // Process children
-    for (const child of layoutChildren) {
+    // Process children in order
+    for (const child of layout.children) {
       if (child.type === 'layout') {
         const childId = this.convertLayout(child, context);
         if (childId) childRefs.push({ ref: childId });
@@ -499,6 +550,9 @@ export class IRGenerator {
       } else if (child.type === 'cell') {
         const childId = this.convertCell(child, context);
         if (childId) childRefs.push({ ref: childId });
+      } else if (child.type === 'tab') {
+        const childId = this.convertTab(child, context);
+        if (childId) childRefs.push({ ref: childId });
       }
     }
 
@@ -507,7 +561,6 @@ export class IRGenerator {
     if (layoutParams.padding !== undefined) {
       style.padding = String(layoutParams.padding);
     } else {
-      // Layouts without explicit padding have no padding by default
       style.padding = 'none';
     }
     if (layoutParams.gap !== undefined) {
@@ -523,18 +576,53 @@ export class IRGenerator {
       style.background = String(layoutParams.background);
     }
 
+    // Convert layout events (e.g. card onClick)
+    const irEvents = this.convertASTEvents(layout.events || []);
+
     const containerNode: IRContainerNode = {
       id: nodeId,
       kind: 'container',
-      containerType: layout.layoutType as 'stack' | 'grid' | 'split' | 'panel' | 'card',
+      containerType: layout.layoutType as IRContainerNode['containerType'],
       params: this.cleanParams(layoutParams),
       children: childRefs,
+      ...(irEvents.length > 0 ? { events: irEvents } : {}),
       style,
       meta: {
-        // Scope nodeId per instance so each expansion gets a unique identifier
         nodeId: context?.instanceScope
           ? `${layout._meta?.nodeId}@${context.instanceScope}`
           : layout._meta?.nodeId,
+      },
+    };
+
+    this.nodes[nodeId] = containerNode;
+    return nodeId;
+  }
+
+  private convertTab(tab: ASTTab, context?: ExpansionContext): string {
+    const nodeId = this.idGen.generate('node');
+    const childRefs: Array<{ ref: string }> = [];
+
+    for (const child of tab.children) {
+      if (child.type === 'layout') {
+        const childId = this.convertLayout(child, context);
+        if (childId) childRefs.push({ ref: childId });
+      } else if (child.type === 'component') {
+        const childId = this.convertComponent(child, context);
+        if (childId) childRefs.push({ ref: childId });
+      }
+    }
+
+    const containerNode: IRContainerNode = {
+      id: nodeId,
+      kind: 'container',
+      containerType: 'tab',
+      params: {},
+      children: childRefs,
+      style: { padding: 'none' },
+      meta: {
+        nodeId: context?.instanceScope
+          ? `${tab._meta?.nodeId}@${context.instanceScope}`
+          : tab._meta?.nodeId,
       },
     };
 
@@ -620,14 +708,28 @@ export class IRGenerator {
     // Create IR node for built-in component (or undefined - will error later)
     const nodeId = this.idGen.generate('node');
 
+    // Extract user-defined id from props
+    const userDefinedId = resolvedProps.id !== undefined ? String(resolvedProps.id) : undefined;
+    const propsWithoutId: Record<string, string | number> = { ...resolvedProps };
+    delete propsWithoutId.id;
+
+    // Convert events from AST events + handle onItemsClick from props
+    const irEvents: IREventHandler[] = this.convertASTEvents(component.events || []);
+    const onItemsClickEvent = this.extractOnItemsClickEvent(propsWithoutId);
+    if (onItemsClickEvent) {
+      irEvents.push(onItemsClickEvent);
+      delete propsWithoutId.onItemsClick;
+    }
+
     const componentNode: IRComponentNode = {
       id: nodeId,
       kind: 'component',
       componentType: component.componentType,
-      props: resolvedProps,
+      props: propsWithoutId,
+      ...(userDefinedId ? { userDefinedId } : {}),
+      ...(irEvents.length > 0 ? { events: irEvents } : {}),
       style: {},
       meta: {
-        // Scope nodeId per instance so each expansion gets a unique identifier
         nodeId: context?.instanceScope
           ? `${component._meta?.nodeId}@${context.instanceScope}`
           : component._meta?.nodeId,
@@ -636,6 +738,33 @@ export class IRGenerator {
 
     this.nodes[nodeId] = componentNode;
     return nodeId;
+  }
+
+  private convertASTEventAction(action: ASTEventAction): IREventAction {
+    switch (action.type) {
+      case 'navigate': return { type: 'navigate', screen: action.screen! };
+      case 'show': return { type: 'show', targetId: action.targetId! };
+      case 'hide': return { type: 'hide', targetId: action.targetId! };
+      case 'toggle': return { type: 'toggle', targetId: action.targetId! };
+      case 'setTab': return { type: 'setTab', tabsId: action.tabsId!, index: action.index! };
+    }
+  }
+
+  private convertASTEvents(events: ASTEventHandler[]): IREventHandler[] {
+    return events.map(handler => ({
+      event: handler.event as IREventHandler['event'],
+      actions: handler.actions.map(a => this.convertASTEventAction(a)),
+    }));
+  }
+
+  private extractOnItemsClickEvent(props: Record<string, string | number>): IREventHandler | null {
+    const value = props.onItemsClick;
+    if (!value) return null;
+    const screens = String(value).split(',').map(s => s.trim()).filter(Boolean);
+    return {
+      event: 'onItemsClick',
+      actions: [{ type: 'navigateItems', screens }],
+    };
   }
 
   private expandDefinedComponent(
