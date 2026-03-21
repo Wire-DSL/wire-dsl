@@ -398,6 +398,213 @@ Error at line 5, column 12:
 ### Level 1: Syntax (Critical)
 Must pass or file cannot be parsed.
 
+---
+
+## Event System Validation Rules (EVT-001 – EVT-014)
+
+Validated during semantic analysis when events are present.
+
+### EVT-001 — Unsupported event for component type
+
+The event must be supported by the target component type.
+
+**Invalid**:
+```wire
+component Heading text: "Title" onClick: navigate(Home)  // Heading has no onClick
+component Input label: "Name" onClose: hide(self)         // Input has no onClose
+```
+
+**Valid**:
+```wire
+component Button text: "Go" onClick: navigate(Home)
+component Modal id: m1 title: "Sure?" onClose: hide(self)
+```
+
+---
+
+### EVT-002 — navigate() target screen must exist
+
+The screen name passed to `navigate()` must be declared within the same project.
+
+**Invalid**:
+```wire
+component Button text: "Go" onClick: navigate(NonExistentScreen)
+```
+
+**Valid**:
+```wire
+// Screen "Dashboard" is declared elsewhere in the project
+component Button text: "Go" onClick: navigate(Dashboard)
+```
+
+---
+
+### EVT-003 — show/hide/toggle target must have a matching id
+
+The `id` argument of `show`, `hide`, or `toggle` must match an `id: X` on a component in the same screen. Exception: `self` is always valid.
+
+**Invalid**:
+```wire
+component Button text: "Open" onClick: show(undeclaredId)
+```
+
+**Valid**:
+```wire
+component Modal id: confirmModal title: "Sure?"
+component Button text: "Open" onClick: show(confirmModal)
+```
+
+---
+
+### EVT-004 — Duplicate id within the same screen
+
+Component IDs must be unique within a screen.
+
+**Invalid**:
+```wire
+component Modal id: myModal title: "A"
+component Modal id: myModal title: "B"  // ERROR: duplicate id
+```
+
+---
+
+### EVT-005 — Reserved event action keywords
+
+`navigate`, `show`, `hide`, `toggle`, `setTab`, and `self` are reserved keywords in the lexer. They cannot be used as identifiers.
+
+---
+
+### EVT-006 — tabsId must reference a layout tabs container
+
+The `tabsId` prop on `component Tabs` must reference the `id` of a `layout tabs(id: ...)` declared in the same screen.
+
+**Invalid**:
+```wire
+component Tabs items: "A,B" tabsId: nonExistentTabs
+```
+
+**Valid**:
+```wire
+component Tabs items: "A,B" tabsId: mainTabs
+layout tabs(id: mainTabs) {
+  tab { component Heading text: "A" }
+  tab { component Heading text: "B" }
+}
+```
+
+---
+
+### EVT-007 — onItemsClick screen count must match items count
+
+For `SidebarMenu`, the number of screen names in `onItemsClick` must equal the number of items in `items`.
+
+**Invalid**:
+```wire
+component SidebarMenu items: "A,B,C" onItemsClick: "Screen1,Screen2"  // 3 items, 2 screens
+```
+
+**Valid**:
+```wire
+component SidebarMenu items: "A,B,C" onItemsClick: "Screen1,Screen2,Screen3"
+```
+
+---
+
+### EVT-008 — active index must be in range
+
+For `component Tabs`, `active` must be a valid 0-based index within the number of tabs.
+
+**Invalid**:
+```wire
+component Tabs items: "A,B" active: 5  // only 2 tabs, index out of range
+```
+
+---
+
+### EVT-009 — ID must be a valid identifier
+
+IDs must match `[a-zA-Z_][a-zA-Z0-9_]*`. They cannot start with a digit or contain hyphens.
+
+**Invalid**:
+```wire
+component Modal id: 1modal title: "Error"   // starts with digit
+component Modal id: my-modal title: "Error" // contains hyphen
+```
+
+**Valid**:
+```wire
+component Modal id: confirmModal title: "OK"
+component Modal id: _hidden title: "OK"
+component Modal id: modal_v2 title: "OK"
+```
+
+---
+
+### EVT-010 — onChange/onActive/onInactive only valid on Toggle, Checkbox, Radio
+
+These events are exclusive to boolean-state components.
+
+**Invalid**:
+```wire
+component Button text: "X" onChange: show(panel)  // Button has no onChange
+```
+
+---
+
+### EVT-012 — onChange is mutually exclusive with onActive/onInactive
+
+A component cannot have both `onChange` and `onActive`/`onInactive` at the same time.
+
+**Invalid**:
+```wire
+component Toggle label: "Mode"
+  onChange: show(panel)
+  onActive: show(panel)   // ERROR: cannot combine onChange with onActive
+```
+
+**Valid** — use one or the other:
+```wire
+// Option A: bidirectional
+component Toggle label: "Mode" onChange: toggle(panel)
+
+// Option B: directional
+component Toggle label: "Mode"
+  onActive: show(panel)
+  onInactive: hide(panel)
+```
+
+---
+
+### EVT-013 — setTab arguments must be valid
+
+`setTab(tabsId, index)` requires:
+- `tabsId` to reference a `layout tabs(id: ...)` in the same screen
+- `index` to be an integer ≥ 0
+
+**Invalid**:
+```wire
+component Button text: "Tab" onClick: setTab(noSuchTabs, 0)
+component Button text: "Tab" onClick: setTab(mainTabs, -1)
+```
+
+---
+
+### EVT-014 — self is only valid in show, hide, toggle
+
+The `self` keyword can only be used as the argument to `show`, `hide`, or `toggle`, not to `navigate` or `setTab`.
+
+**Invalid**:
+```wire
+component Button text: "Go" onClick: navigate(self)  // self is not a screen
+```
+
+**Valid**:
+```wire
+component Modal id: m onClose: hide(self)
+```
+
+---
+
 ### Level 2: Semantic (Critical)
 Must pass or file cannot be rendered.
 

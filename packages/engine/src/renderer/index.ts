@@ -1,4 +1,4 @@
-import type { IRContract, IRNode, IRComponentNode, IRContainerNode, IRInstanceNode } from '../ir/index';
+import type { IRContract, IRNode, IRComponentNode, IRContainerNode, IRInstanceNode, IREventHandler, IREventAction } from '../ir/index';
 import type { LayoutResult } from '../layout/index';
 import { MockDataGenerator } from './mock-data';
 import { ColorResolver } from './colors';
@@ -1065,6 +1065,14 @@ export class SVGRenderer {
           currentX += buttonSize + buttonGap;
         });
       }
+
+      const rowEventAttrs = this.getScopedEventAttrs(node, 'onRowClick', { index: rowIdx });
+      if (rowEventAttrs) {
+        svg += `
+    <rect x="${pos.x}" y="${rowY}"
+          width="${pos.width}" height="${rowHeight}"
+          fill="transparent" stroke="none" pointer-events="all"${rowEventAttrs}/>`;
+      }
     });
 
     const footerTop = headerY + headerHeight + mockRows.length * rowHeight + 16;
@@ -1805,6 +1813,14 @@ export class SVGRenderer {
           text-anchor="middle">${this.escapeXml(tab)}</text>`;
         }
       }
+
+      const tabsTriggerAttrs = this.getTabsTriggerAttrs(node, i);
+      if (tabsTriggerAttrs) {
+        svg += `
+    <rect x="${tabX}" y="${pos.y}"
+          width="${tabWidth}" height="${tabHeight}"
+          fill="transparent" stroke="none" pointer-events="all"${tabsTriggerAttrs}/>`;
+      }
     });
 
     // Content area / separator
@@ -1968,6 +1984,10 @@ export class SVGRenderer {
     const overlayHeight = Math.max(this.options.height, this.calculateContentHeight());
     const modalX = (this.options.width - pos.width) / 2;
     const modalY = Math.max(40, (overlayHeight - pos.height) / 2);
+    const closeButtonSize = 28;
+    const closeButtonX = modalX + pos.width - padding - closeButtonSize / 2 - 2;
+    const closeButtonY = modalY + padding - closeButtonSize / 2;
+    const closeEventAttrs = this.getScopedEventAttrs(node, 'onClose');
 
     return `<g${this.getDataNodeId(node)}>
     <!-- Modal backdrop -->
@@ -1996,6 +2016,10 @@ export class SVGRenderer {
           fill="${this.renderTheme.text}">${this.escapeXml(title)}</text>
     
     <!-- Close button -->
+      ${closeEventAttrs ? `<rect x="${closeButtonX}" y="${closeButtonY}"
+        width="${closeButtonSize}" height="${closeButtonSize}"
+        rx="6"
+        fill="transparent" stroke="none" pointer-events="all"${closeEventAttrs}/>` : ''}
       <text x="${modalX + pos.width - 16}" y="${modalY + padding + 12}" 
           font-family="Arial, Helvetica, sans-serif" 
           font-size="18" 
@@ -2060,6 +2084,7 @@ export class SVGRenderer {
     items.forEach((item, i) => {
       const itemY = pos.y + titleHeight + i * itemHeight;
       if (itemY + itemHeight <= pos.y + pos.height) {
+        const itemEventAttrs = this.getScopedEventAttrs(node, 'onItemClick', { index: i });
         svg += `
     <line x1="${pos.x}" y1="${itemY + itemHeight}" 
           x2="${pos.x + pos.width}" y2="${itemY + itemHeight}" 
@@ -2068,7 +2093,10 @@ export class SVGRenderer {
     <text x="${pos.x + padding}" y="${itemY + 24}" 
           font-family="Arial, Helvetica, sans-serif" 
           font-size="13" 
-          fill="${this.renderTheme.text}">${this.escapeXml(item)}</text>`;
+          fill="${this.renderTheme.text}">${this.escapeXml(item)}</text>
+    ${itemEventAttrs ? `<rect x="${pos.x}" y="${itemY}"
+          width="${pos.width}" height="${itemHeight}"
+          fill="transparent" stroke="none" pointer-events="all"${itemEventAttrs}/>` : ''}`;
       }
     });
 
@@ -2475,6 +2503,14 @@ export class SVGRenderer {
           font-size="${fontSize}"
           font-weight="${fontWeight}"
           fill="${textColor}">${this.escapeXml(item)}</text>`;
+
+      const itemEventAttrs = this.getScopedEventAttrs(node, 'onItemsClick', { index });
+      if (itemEventAttrs) {
+        svg += `
+    <rect x="${pos.x}" y="${itemY}"
+          width="${pos.width}" height="${itemHeight}"
+          fill="transparent" stroke="none" pointer-events="all"${itemEventAttrs}/>`;
+      }
     });
 
     svg += '\n  </g>';
@@ -3053,11 +3089,105 @@ export class SVGRenderer {
   }
 
   /**
-   * Get data-node-id attribute string for SVG elements
-   * Enables bidirectional selection between code and canvas
+   * Get data-node-id and event data attributes for SVG elements.
+   * Enables bidirectional selection between code and canvas (data-node-id)
+   * and play test interactivity (data-event-*, data-user-id, data-tabs-id).
    */
   protected getDataNodeId(node: IRComponentNode | IRContainerNode | IRInstanceNode): string {
-    return node.meta.nodeId ? ` data-node-id="${node.meta.nodeId}"` : '';
+    let attrs = '';
+
+    if (node.meta.nodeId) {
+      attrs += ` data-node-id="${node.meta.nodeId}"`;
+    }
+
+    if (node.kind === 'component') {
+      if (node.userDefinedId) {
+        attrs += ` data-user-id="${node.userDefinedId}"`;
+      }
+      if (node.events && node.events.length > 0) {
+        for (const handler of node.events) {
+          if (!this.isScopedEvent(handler.event)) {
+            attrs += this.serializeEventHandler(handler);
+          }
+        }
+      }
+    }
+
+    if (node.kind === 'container') {
+      if (node.containerType === 'tabs' && node.params.id) {
+        attrs += ` data-tabs-id="${node.params.id}"`;
+        if (node.params.active !== undefined) {
+          attrs += ` data-tabs-active="${node.params.active}"`;
+        }
+      }
+      if (node.events && node.events.length > 0) {
+        for (const handler of node.events) {
+          attrs += this.serializeEventHandler(handler);
+        }
+      }
+    }
+
+    return attrs;
+  }
+
+  private isScopedEvent(event: IREventHandler['event']): boolean {
+    return event === 'onClose' || event === 'onItemClick' || event === 'onRowClick' || event === 'onItemsClick';
+  }
+
+  private getScopedEventAttrs(
+    node: IRComponentNode,
+    eventName: IREventHandler['event'],
+    options: { index?: number } = {}
+  ): string {
+    const handler = node.events?.find((event) => event.event === eventName);
+    if (!handler) return '';
+
+    let attrs = '';
+    if (node.meta.nodeId) {
+      attrs += ` data-node-id="${node.meta.nodeId}"`;
+    }
+    if (node.userDefinedId) {
+      attrs += ` data-user-id="${node.userDefinedId}"`;
+    }
+    attrs += this.serializeEventHandler(handler);
+    if (options.index !== undefined) {
+      attrs += ` data-event-index="${options.index}"`;
+    }
+    return attrs;
+  }
+
+  private getTabsTriggerAttrs(node: IRComponentNode, index: number): string {
+    const tabsId = String(node.props.tabsId || '').trim();
+    if (!tabsId) return '';
+
+    let attrs = '';
+    if (node.meta.nodeId) {
+      attrs += ` data-node-id="${node.meta.nodeId}"`;
+    }
+    attrs += ` data-tabs-id="${tabsId}" data-tabs-trigger-index="${index}"`;
+    return attrs;
+  }
+
+  private serializeEventHandler(handler: IREventHandler): string {
+    const attrName = this.eventNameToDataAttr(handler.event);
+    const value = handler.actions.map(a => this.serializeEventAction(a)).join('|');
+    return ` data-event-${attrName}="${value}"`;
+  }
+
+  private eventNameToDataAttr(event: string): string {
+    // onClick → click, onChange → change, onActive → active, onItemsClick → itemsclick, etc.
+    return event.replace(/^on/, '').toLowerCase();
+  }
+
+  private serializeEventAction(action: IREventAction): string {
+    switch (action.type) {
+      case 'navigate': return `navigate:${action.screen}`;
+      case 'show': return `show:${action.targetId}`;
+      case 'hide': return `hide:${action.targetId}`;
+      case 'toggle': return `toggle:${action.targetId}`;
+      case 'setTab': return `setTab:${action.tabsId}:${action.index}`;
+      case 'navigateItems': return action.screens.map(s => `navigate:${s}`).join(',');
+    }
   }
 
 }

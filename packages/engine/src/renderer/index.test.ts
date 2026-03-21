@@ -2536,3 +2536,208 @@ describe('Sketch SVG Renderer', () => {
     expect(svg).toContain('M1 12s4-8 11-8 11 8');
   });
 });
+
+// ============================================================================
+// EVENT SYSTEM RENDERER TESTS
+// ============================================================================
+
+describe('SVG Renderer – Event System', () => {
+  function renderInput(input: string): string {
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    return renderToSVG(ir, layout);
+  }
+
+  describe('data-node-id attributes', () => {
+    it('should emit data-node-id on component wrapper when parsed with sourcemap', () => {
+      const input = `
+        project "NodeId" {
+          screen Main {
+            layout stack {
+              component Button text: "Click"
+            }
+          }
+        }
+      `;
+      const { ast } = parseWireDSLWithSourceMap(input);
+      const ir = generateIR(ast);
+      const layout = calculateLayout(ir);
+      const svg = renderToSVG(ir, layout);
+      expect(svg).toContain('data-node-id=');
+    });
+  });
+
+  describe('data-user-id attribute', () => {
+    it('should emit data-user-id when component has userDefinedId', () => {
+      const input = `
+        project "UserId" {
+          screen Main {
+            layout stack {
+              component Modal id: confirmModal title: "Sure?"
+            }
+          }
+        }
+      `;
+      const svg = renderInput(input);
+      expect(svg).toContain('data-user-id="confirmModal"');
+    });
+
+    it('should NOT emit data-user-id when component has no id', () => {
+      const input = `
+        project "NoUserId" {
+          screen Main {
+            layout stack {
+              component Button text: "Click"
+            }
+          }
+        }
+      `;
+      const svg = renderInput(input);
+      expect(svg).not.toContain('data-user-id=');
+    });
+  });
+
+  describe('data-event-click attribute', () => {
+    it('should emit data-event-click for onClick: navigate()', () => {
+      const input = `
+        project "Nav" {
+          screen Main {
+            layout stack {
+              component Button text: "Go" onClick: navigate(Detail)
+            }
+          }
+          screen Detail {
+            layout stack { component Heading text: "Detail" }
+          }
+        }
+      `;
+      const svg = renderInput(input);
+      expect(svg).toContain('data-event-click="navigate:Detail"');
+    });
+
+    it('should emit data-event-click for onClick: show()', () => {
+      const input = `
+        project "Show" {
+          screen Main {
+            layout stack {
+              component Modal id: confirmModal title: "Sure?"
+              component Button text: "Open" onClick: show(confirmModal)
+            }
+          }
+        }
+      `;
+      const svg = renderInput(input);
+      expect(svg).toContain('data-event-click="show:confirmModal"');
+    });
+
+    it('should emit chained actions separated by | in data-event-click', () => {
+      const input = `
+        project "Chain" {
+          screen Main {
+            layout stack {
+              component Modal id: listModal title: "List"
+              component Modal id: confirmModal title: "Confirm"
+              component Button text: "Delete" onClick: hide(listModal) & show(confirmModal)
+            }
+          }
+        }
+      `;
+      const svg = renderInput(input);
+      expect(svg).toContain('data-event-click="hide:listModal|show:confirmModal"');
+    });
+
+    it('should emit data-event-click with setTab serialization', () => {
+      const input = `
+        project "SetTab" {
+          screen Main {
+            layout stack {
+              component Button text: "Profile" onClick: setTab(mainTabs, 2)
+              layout tabs(id: mainTabs) {
+                tab { component Heading text: "A" }
+                tab { component Heading text: "B" }
+                tab { component Heading text: "C" }
+              }
+            }
+          }
+        }
+      `;
+      const svg = renderInput(input);
+      expect(svg).toContain('data-event-click="setTab:mainTabs:2"');
+    });
+  });
+
+  describe('data-event-close attribute', () => {
+    it('should emit data-event-close for onClose: hide(self)', () => {
+      const input = `
+        project "Close" {
+          screen Main {
+            layout stack {
+              component Modal id: confirmModal title: "Sure?" onClose: hide(self)
+            }
+          }
+        }
+      `;
+      const svg = renderInput(input);
+      expect(svg).toContain('data-event-close="hide:_self"');
+    });
+  });
+
+  describe('data-event-change / data-event-active / data-event-inactive', () => {
+    it('should emit data-event-change for onChange', () => {
+      const input = `
+        project "Change" {
+          screen Main {
+            layout stack {
+              component Modal id: myPanel title: "Panel"
+              component Toggle text: "Show panel" onChange: toggle(myPanel)
+            }
+          }
+        }
+      `;
+      const svg = renderInput(input);
+      expect(svg).toContain('data-event-change="toggle:myPanel"');
+    });
+
+    it('should emit data-event-active and data-event-inactive for onActive/onInactive', () => {
+      const input = `
+        project "ActiveInactive" {
+          screen Main {
+            layout stack {
+              component Modal id: submitBtn title: "Submit"
+              component Checkbox text: "Terms"
+                onActive: show(submitBtn)
+                onInactive: hide(submitBtn)
+            }
+          }
+        }
+      `;
+      const svg = renderInput(input);
+      expect(svg).toContain('data-event-active="show:submitBtn"');
+      expect(svg).toContain('data-event-inactive="hide:submitBtn"');
+    });
+  });
+
+  describe('data-tabs-id and data-tabs-active attributes', () => {
+    it('should emit data-tabs-id on tabs container when parsed with sourcemap', () => {
+      const input = `
+        project "Tabs" {
+          screen Main {
+            layout stack {
+              component Heading text: "Tabs Demo"
+              layout tabs(id: mainTabs) {
+                tab { component Heading text: "Tab 1" }
+                tab { component Heading text: "Tab 2" }
+              }
+            }
+          }
+        }
+      `;
+      const { ast } = parseWireDSLWithSourceMap(input);
+      const ir = generateIR(ast);
+      const layout = calculateLayout(ir);
+      const svg = renderToSVG(ir, layout);
+      expect(svg).toContain('data-tabs-id="mainTabs"');
+    });
+  });
+});

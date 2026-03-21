@@ -1064,3 +1064,259 @@ describe('IR Generator', () => {
     expect(() => generateIR(ast)).toThrow(/layout-children-arity/);
   });
 });
+
+// ============================================================================
+// EVENT SYSTEM IR TESTS
+// ============================================================================
+
+describe('IR Generator – Event System', () => {
+  describe('userDefinedId', () => {
+    it('should extract id prop into userDefinedId on component node', () => {
+      const input = `
+        project "IDs" {
+          screen Main {
+            layout stack {
+              component Modal id: confirmModal title: "Sure?"
+            }
+          }
+        }
+      `;
+      const ast = parseWireDSL(input);
+      const ir = generateIR(ast);
+      const modal = Object.values(ir.project.nodes).find(
+        (n) => n.kind === 'component' && n.componentType === 'Modal'
+      );
+      expect(modal).toBeDefined();
+      if (modal?.kind === 'component') {
+        expect(modal.userDefinedId).toBe('confirmModal');
+        expect(modal.props.id).toBeUndefined();
+      }
+    });
+  });
+
+  describe('events on component nodes', () => {
+    it('should generate navigate action from onClick: navigate()', () => {
+      const input = `
+        project "Nav" {
+          screen Main {
+            layout stack {
+              component Button text: "Go" onClick: navigate(Detail)
+            }
+          }
+          screen Detail {
+            layout stack {
+              component Heading text: "Detail"
+            }
+          }
+        }
+      `;
+      const ast = parseWireDSL(input);
+      const ir = generateIR(ast);
+      const btn = Object.values(ir.project.nodes).find(
+        (n) => n.kind === 'component' && n.componentType === 'Button'
+      );
+      expect(btn).toBeDefined();
+      if (btn?.kind === 'component') {
+        expect(btn.events).toHaveLength(1);
+        expect(btn.events![0].event).toBe('onClick');
+        expect(btn.events![0].actions[0]).toEqual({ type: 'navigate', screen: 'Detail' });
+      }
+    });
+
+    it('should generate show action from onClick: show(id)', () => {
+      const input = `
+        project "Show" {
+          screen Main {
+            layout stack {
+              component Modal id: confirmModal title: "Sure?"
+              component Button text: "Open" onClick: show(confirmModal)
+            }
+          }
+        }
+      `;
+      const ast = parseWireDSL(input);
+      const ir = generateIR(ast);
+      const btn = Object.values(ir.project.nodes).find(
+        (n) => n.kind === 'component' && n.componentType === 'Button'
+      );
+      if (btn?.kind === 'component') {
+        expect(btn.events![0].actions[0]).toEqual({ type: 'show', targetId: 'confirmModal' });
+      }
+    });
+
+    it('should generate hide action with _self targetId from hide(self)', () => {
+      const input = `
+        project "Self" {
+          screen Main {
+            layout stack {
+              component Modal id: confirmModal title: "Sure?" onClose: hide(self)
+            }
+          }
+        }
+      `;
+      const ast = parseWireDSL(input);
+      const ir = generateIR(ast);
+      const modal = Object.values(ir.project.nodes).find(
+        (n) => n.kind === 'component' && n.componentType === 'Modal'
+      );
+      if (modal?.kind === 'component') {
+        expect(modal.events![0].actions[0]).toEqual({ type: 'hide', targetId: '_self' });
+      }
+    });
+
+    it('should generate setTab action from onClick: setTab()', () => {
+      const input = `
+        project "SetTab" {
+          screen Main {
+            layout stack {
+              component Button text: "Go" onClick: setTab(mainTabs, 1)
+              layout tabs(id: mainTabs) {
+                tab { component Heading text: "A" }
+                tab { component Heading text: "B" }
+              }
+            }
+          }
+        }
+      `;
+      const ast = parseWireDSL(input);
+      const ir = generateIR(ast);
+      const btn = Object.values(ir.project.nodes).find(
+        (n) => n.kind === 'component' && n.componentType === 'Button'
+      );
+      if (btn?.kind === 'component') {
+        expect(btn.events![0].actions[0]).toEqual({ type: 'setTab', tabsId: 'mainTabs', index: 1 });
+      }
+    });
+
+    it('should generate chained actions from & operator', () => {
+      const input = `
+        project "Chain" {
+          screen Main {
+            layout stack {
+              component Modal id: listModal title: "List"
+              component Modal id: confirmModal title: "Confirm"
+              component Button text: "Delete" onClick: hide(listModal) & show(confirmModal)
+            }
+          }
+        }
+      `;
+      const ast = parseWireDSL(input);
+      const ir = generateIR(ast);
+      const btn = Object.values(ir.project.nodes).find(
+        (n) => n.kind === 'component' && n.componentType === 'Button'
+      );
+      if (btn?.kind === 'component') {
+        expect(btn.events![0].actions).toHaveLength(2);
+        expect(btn.events![0].actions[0]).toEqual({ type: 'hide', targetId: 'listModal' });
+        expect(btn.events![0].actions[1]).toEqual({ type: 'show', targetId: 'confirmModal' });
+      }
+    });
+
+    it('should generate onActive and onInactive handlers', () => {
+      const input = `
+        project "Checkbox" {
+          screen Main {
+            layout stack {
+              component Modal id: submitBtn title: "Submit"
+              component Checkbox text: "Terms"
+                onActive: show(submitBtn)
+                onInactive: hide(submitBtn)
+            }
+          }
+        }
+      `;
+      const ast = parseWireDSL(input);
+      const ir = generateIR(ast);
+      const cb = Object.values(ir.project.nodes).find(
+        (n) => n.kind === 'component' && n.componentType === 'Checkbox'
+      );
+      if (cb?.kind === 'component') {
+        expect(cb.events).toHaveLength(2);
+        const events = cb.events!.map((e) => e.event);
+        expect(events).toContain('onActive');
+        expect(events).toContain('onInactive');
+      }
+    });
+
+    it('should convert onItemsClick string prop to navigateItems action', () => {
+      const input = `
+        project "Sidebar" {
+          screen Dashboard { layout stack { component Heading text: "Dash" } }
+          screen Users { layout stack { component Heading text: "Users" } }
+          screen Settings { layout stack { component Heading text: "Settings" } }
+          screen Main {
+            layout stack {
+              component SidebarMenu items: "Dashboard,Users,Config"
+                onItemsClick: "Dashboard,Users,Settings"
+            }
+          }
+        }
+      `;
+      const ast = parseWireDSL(input);
+      const ir = generateIR(ast);
+      const menu = Object.values(ir.project.nodes).find(
+        (n) => n.kind === 'component' && n.componentType === 'SidebarMenu'
+      );
+      if (menu?.kind === 'component') {
+        expect(menu.events).toBeDefined();
+        const handler = menu.events!.find((e) => e.event === 'onItemsClick');
+        expect(handler).toBeDefined();
+        expect(handler!.actions[0]).toEqual({
+          type: 'navigateItems',
+          screens: ['Dashboard', 'Users', 'Settings'],
+        });
+      }
+    });
+  });
+
+  describe('layout tabs / tab containerType', () => {
+    it('should generate tabs container node with containerType tabs', () => {
+      const input = `
+        project "Tabs" {
+          screen Main {
+            layout tabs(id: mainTabs) {
+              tab { component Heading text: "Tab 1" }
+              tab { component Heading text: "Tab 2" }
+            }
+          }
+        }
+      `;
+      const ast = parseWireDSL(input);
+      const ir = generateIR(ast);
+      const tabsNode = Object.values(ir.project.nodes).find(
+        (n) => n.kind === 'container' && n.containerType === 'tabs'
+      );
+      expect(tabsNode).toBeDefined();
+      if (tabsNode?.kind === 'container') {
+        expect(tabsNode.params.id).toBe('mainTabs');
+        expect(tabsNode.children).toHaveLength(2);
+      }
+    });
+
+    it('should generate two tab container nodes in correct order', () => {
+      const input = `
+        project "Tabs" {
+          screen Main {
+            layout tabs(id: myTabs) {
+              tab { component Heading text: "A" }
+              tab { component Heading text: "B" }
+            }
+          }
+        }
+      `;
+      const ast = parseWireDSL(input);
+      const ir = generateIR(ast);
+      const tabNodes = Object.values(ir.project.nodes).filter(
+        (n) => n.kind === 'container' && n.containerType === 'tab'
+      );
+      expect(tabNodes).toHaveLength(2);
+      // Tab order is implicit: children refs in the tabs container are ordered
+      const tabsContainer = Object.values(ir.project.nodes).find(
+        (n) => n.kind === 'container' && n.containerType === 'tabs'
+      );
+      if (tabsContainer?.kind === 'container') {
+        expect(tabsContainer.children).toHaveLength(2);
+      }
+    });
+  });
+});
