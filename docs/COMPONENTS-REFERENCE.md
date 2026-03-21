@@ -183,15 +183,27 @@ component Select label: "Category" iconLeft: "tag" iconRight: "filter" items: "A
 Boolean checkbox input.
 
 **Properties**:
+- `id` (identifier, optional): Unique ID for event targeting (e.g., `id: termsCheck`)
 - `label` (string): Checkbox label
 - `checked` (boolean, optional): Whether checkbox is checked (default: false)
 - `disabled` (boolean, optional): Visually dims the checkbox (default: false)
+
+**Events** (optional — makes the checkbox interactive in play test):
+- `onChange: <action>` — fires on any state change (checked ↔ unchecked)
+- `onActive: <action>` — fires only when transitioning to checked
+- `onInactive: <action>` — fires only when transitioning to unchecked
+- `onChange` is mutually exclusive with `onActive`/`onInactive`
 
 **Example**:
 ```wire
 component Checkbox label: "I agree to terms" checked: true
 component Checkbox label: "Subscribe to newsletter"
 component Checkbox label: "Remember me" checked: false
+
+// With events
+component Checkbox id: termsCheck label: "I agree to terms"
+  onActive: show(submitBtn)
+  onInactive: hide(submitBtn)
 ```
 
 **Rendering**: Small square checkbox with label text
@@ -203,15 +215,25 @@ component Checkbox label: "Remember me" checked: false
 Single-select radio button (typically used in groups).
 
 **Properties**:
+- `id` (identifier, optional): Unique ID for event targeting
 - `label` (string): Radio button label
 - `checked` (boolean, optional): Whether radio is selected (default: false)
 - `disabled` (boolean, optional): Visually dims the radio button (default: false)
+
+**Events** (optional — makes the radio interactive in play test):
+- `onChange: <action>` — fires on any state change
+- `onActive: <action>` — fires only when selected
+- `onInactive: <action>` — fires only when deselected
+- `onChange` is mutually exclusive with `onActive`/`onInactive`
 
 **Example**:
 ```wire
 component Radio label: "Option A" checked: true
 component Radio label: "Option B"
-component Radio label: "Personal" checked: false
+
+// With events
+component Radio label: "Personal" onChange: show(personalFields)
+component Radio label: "Business" onChange: show(businessFields)
 ```
 
 **Rendering**: Circular radio button with label text
@@ -223,15 +245,27 @@ component Radio label: "Personal" checked: false
 Boolean toggle switch.
 
 **Properties**:
+- `id` (identifier, optional): Unique ID for event targeting
 - `label` (string): Toggle label
 - `enabled` (boolean, optional): Whether toggle is enabled (default: false)
 - `disabled` (boolean, optional): Visually dims the toggle (default: false)
+
+**Events** (optional — makes the toggle interactive in play test):
+- `onChange: <action>` — fires on any state change (on ↔ off)
+- `onActive: <action>` — fires only when switching on
+- `onInactive: <action>` — fires only when switching off
+- `onChange` is mutually exclusive with `onActive`/`onInactive`
 
 **Example**:
 ```wire
 component Toggle label: "Dark Mode" enabled: true
 component Toggle label: "Enable notifications"
-component Toggle label: "Auto-save" enabled: false
+
+// With events
+component Toggle label: "Show advanced panel" onChange: toggle(advancedPanel)
+component Toggle label: "Two-factor auth"
+  onActive: show(twoFactorSetup)
+  onInactive: hide(twoFactorSetup)
 ```
 
 **Rendering**: Sliding toggle switch with label
@@ -245,12 +279,16 @@ component Toggle label: "Auto-save" enabled: false
 Clickable action button.
 
 **Properties**:
+- `id` (identifier, optional): Unique ID for event targeting
 - `text` (string): Button label
 - `variant` (string): Visual style (default: `default`). Accepts semantic names or Material Design color families.
 - `size` (enum, optional): `xs` | `sm` | `md` | `lg` | `xl` (default: `md`)
 - `icon` (string, optional): Icon name to render alongside the text (e.g., `"check"`, `"trash"`, `"plus"`)
 - `iconAlign` (string, optional): Icon placement - `left` | `right` (default: `left`)
 - `disabled` (boolean, optional): Visually dims the button (default: `false`)
+
+**Events**:
+- `onClick: <action>` — fires when the button is clicked; supports action chaining with `&`
 
 **Semantic variants**: `default` | `primary` | `secondary` | `success` | `warning` | `danger` | `info`
 
@@ -266,6 +304,12 @@ component Button text: "Delete" variant: danger
 component Button text: "Confirm" variant: success icon: "check"
 component Button text: "Remove" variant: danger icon: "trash-2" iconAlign: right
 component Button text: "Add Item" icon: "plus"
+
+// With events
+component Button text: "Open dialog" onClick: show(confirmModal)
+component Button text: "Go to dashboard" onClick: navigate(Dashboard)
+component Button text: "Delete" variant: danger onClick: hide(listPanel) & show(confirmDelete)
+component Button text: "Switch tab" onClick: setTab(mainTabs, 2)
 ```
 
 **Rendering**: Rectangular button with text (and optional leading/trailing icon), styled according to variant
@@ -277,16 +321,24 @@ component Button text: "Add Item" icon: "plus"
 Button with icon instead of text.
 
 **Properties**:
+- `id` (identifier, optional): Unique ID for event targeting
 - `icon` (string): Icon name (e.g., "search", "menu", "close")
 - `size` (enum): `xs` | `sm` | `md` | `lg` | `xl` (default: `md`)
 - `variant` (enum): `default` | `primary` | `secondary` | `success` | `warning` | `danger` | `info`
 - `disabled` (boolean): disabled state (`true` | `false`, default: `false`)
+
+**Events**:
+- `onClick: <action>` — fires when the button is clicked; supports action chaining with `&`
 
 **Example**:
 ```wire
 component IconButton icon: "search" size: sm variant: default
 component IconButton icon: "menu" size: md variant: primary
 component IconButton icon: "settings" size: lg variant: info disabled: true
+
+// With events
+component IconButton icon: "x" onClick: hide(self)
+component IconButton icon: "trash-2" variant: danger onClick: show(confirmDelete)
 ```
 
 **Rendering**: Square button containing icon symbol
@@ -331,12 +383,17 @@ component Topbar title: "Portal" size: sm background: indigo user: "alice"
 Vertical menu for navigation.
 
 **Properties**:
+- `id` (identifier, optional): Unique ID for event targeting
 - `items` (string, CSV): Menu item labels
 - `active` (number): Index of active item (default: 0)
 - `icons` (string, CSV, optional): Icon names per menu item (same order as `items`)
 - `variant` (string, optional): Color applied to the active item and its icon. If omitted, falls back to the `accent` color. Accepts semantic variants (`primary`, `success`, etc.) or custom color names from the `colors` block.
+- `onItemsClick` (string, CSV): Comma-separated screen names aligned by index with `items`. Clicking item N navigates to screen N.
 
 > When `icons` are set, the active item's icon is automatically colored using the same active color as the text, matching the highlighted state.
+
+**Events**:
+- `onItemsClick: "Screen1,Screen2,Screen3"` — navigates to the corresponding screen when a menu item is clicked. The number of screens must match the number of `items`.
 
 **Example**:
 ```wire
@@ -344,6 +401,10 @@ component SidebarMenu items: "Home,Users,Settings,Help" active: 0
 component SidebarMenu items: "Dashboard,Analytics,Reports,Admin" active: 1
 component SidebarMenu items: "Dashboard,Users,Settings" icons: "home,users,settings" active: 0
 component SidebarMenu items: "Dashboard,Users,Settings" icons: "home,users,settings" active: 1 variant: primary
+
+// With navigation events
+component SidebarMenu items: "Dashboard,Users,Settings"
+  onItemsClick: "DashboardScreen,UsersScreen,SettingsScreen"
 ```
 
 **Rendering**: Vertical list of menu items with one highlighted as active; icons (if provided) match the active color for the selected item
@@ -389,11 +450,13 @@ component Breadcrumbs items: "Admin,Settings,Preferences" separator: " > "
 
 ### Tabs
 
-Tabbed interface with multiple panels.
+Tabbed interface navigation bar (visual component). Pair with `layout tabs` to control tab content.
 
 **Properties**:
+- `id` (identifier, optional): Unique ID for event targeting
 - `items` (string, CSV): Tab labels
 - `active` (number): Index of active tab (default: 0)
+- `tabsId` (identifier, optional): References the `id` of a `layout tabs` container in the same screen. When a tab is clicked, the canvas calls `setTab(tabsId, clickedIndex)` internally.
 - `variant` (string, optional): Active tab color — semantic name or Material Design color family (default: `default` = accent color)
 - `size` (enum, optional): `sm` | `md` | `lg` (default: `md`) — controls tab bar height (32px / 44px / 52px)
 - `radius` (enum, optional): Tab corner rounding — `none` | `sm` | `md` | `lg` | `full` (default: `md`)
@@ -407,6 +470,14 @@ component Tabs items: "Profile,Settings,Privacy" active: 1 variant: primary
 component Tabs items: "Home,Stats,History" icons: "home,bar-chart,clock" active: 0
 component Tabs items: "All,Active,Archived" active: 0 flat: true variant: indigo
 component Tabs items: "Files,Shared,Trash" size: sm radius: full
+
+// Linked to a layout tabs container
+component Tabs items: "Profile,Settings,Billing" active: 0 tabsId: mainTabs
+layout tabs(id: mainTabs) {
+  tab { component Heading text: "Profile" }
+  tab { component Heading text: "Settings" }
+  tab { component Heading text: "Billing" }
+}
 ```
 
 **Rendering**: Horizontal tabs with one highlighted as active
@@ -420,11 +491,15 @@ component Tabs items: "Files,Shared,Trash" size: sm radius: full
 Data table with rows and columns.
 
 **Properties**:
+- `id` (identifier, optional): Unique ID for event targeting
 - `columns` (string, CSV): Column headers (required)
 - `rows` (number): Number of rows to display (default: 5)
 - `rowsMock` (number): Alias for `rows`
 - `mock` (string, CSV): Mock type by column position (for example: `"name,city,amount"`)
 - `random` (boolean): If `true`, mock values vary on each render (default: deterministic)
+
+**Events**:
+- `onRowClick: navigate(<Screen>)` — navigates to the given screen when a table row is clicked
 
 **Example**:
 ```wire
@@ -433,6 +508,9 @@ component Table columns: "ID,Name,Email,Role" rows: 10
 component Table columns: "Date,Amount,Status,Notes" rows: 15
 component Table columns: "User,City,Amount" rows: 6 mock: "name,city,amount"
 component Table columns: "User,City,Amount" rows: 6 random: true
+
+// With row navigation
+component Table columns: "Name,Email,Role" rows: 8 onRowClick: navigate(UserDetail)
 ```
 
 **Rendering**: Grid table with header row and mock data rows
@@ -444,11 +522,15 @@ component Table columns: "User,City,Amount" rows: 6 random: true
 Simple list of items.
 
 **Properties**:
+- `id` (identifier, optional): Unique ID for event targeting
 - `items` (string, CSV): List item labels
 - `title` (string, optional): List title/header
 - `itemsMock` (number, optional): Number of mock items to generate
 - `mock` (string, optional): Mock type used when `items` is not provided
 - `random` (boolean): If `true`, mock values vary on each render (default: deterministic)
+
+**Events**:
+- `onItemClick: navigate(<Screen>)` — navigates to the given screen when a list item is clicked
 
 **Example**:
 ```wire
@@ -457,6 +539,10 @@ component List items: "Feature 1,Feature 2,Feature 3,Feature 4"
 component List title: "Recent Activity" items: "Login,Purchase,Invite,Export"
 component List title: "Cities" itemsMock: 5 mock: "city"
 component List title: "Cities" itemsMock: 5 mock: "city" random: true
+
+// With item navigation
+component List title: "Recent Files" items: "report.pdf,data.xlsx,notes.md"
+  onItemClick: navigate(FileDetail)
 ```
 
 **Rendering**: Vertical list with bullet points or numbers
@@ -574,13 +660,21 @@ component Badge text: "Tag" variant: info padding: 12
 Hyperlink text.
 
 **Properties**:
+- `id` (identifier, optional): Unique ID for event targeting
 - `text` (string): Link text
 - `variant` (string): Link color variant - `primary` | `secondary` | `success` | `warning` | `danger` | `info` (default: `primary`)
+
+**Events**:
+- `onClick: <action>` — fires when the link is clicked; supports action chaining with `&`
 
 **Example**:
 ```wire
 component Link text: "Click here" variant: primary
 component Link text: "Learn more" variant: info
+
+// With events
+component Link text: "Back to list" onClick: navigate(UserList)
+component Link text: "Show details" onClick: show(detailsPanel)
 ```
 
 **Rendering**: Underlined text using the selected variant color
@@ -693,17 +787,80 @@ component Chart type: "pie" height: 200
 Modal dialog box.
 
 **Properties**:
+- `id` (identifier, optional): Unique ID — required when other components reference this modal via `show`/`hide`/`toggle`
 - `title` (string): Modal title
 - `visible` (boolean): Show/hide modal overlay (default: `true`)
+
+**Events**:
+- `onClose: <action>` — fires when the modal is closed. Use `hide(self)` to self-close without needing an explicit `id`.
 
 **Example**:
 ```wire
 component Modal title: "Confirm Action"
 component Modal title: "Delete User"
 component Modal title: "Delete User" visible: false
+
+// With id and events
+component Modal id: confirmModal title: "Confirm deletion?" onClose: hide(self)
+
+// Controlled by a button
+component Button text: "Delete" variant: danger onClick: show(confirmModal)
+component Modal id: confirmModal title: "Are you sure?" onClose: hide(confirmModal)
 ```
 
 **Rendering**: Centered overlay dialog with title and generic content placeholder
+
+---
+
+## Events & Interactivity
+
+Events turn static wireframes into interactive prototypes during play test. They are **declarative metadata** — the engine stays 100% static. The canvas interprets event data attributes in the rendered SVG and applies state changes.
+
+### Component ID
+
+Assign a stable identifier to a component so other events can target it:
+
+```wire
+component Modal id: confirmModal title: "Sure?"
+component Button text: "Open" onClick: show(confirmModal)
+```
+
+ID rules: must match `[a-zA-Z_][a-zA-Z0-9_]*` — no hyphens, cannot start with a digit.
+
+### Actions
+
+| Action | Syntax | Description |
+|--------|--------|-------------|
+| `navigate` | `navigate(ScreenName)` | Navigate to another screen |
+| `show` | `show(id \| self)` | Make a node visible |
+| `hide` | `hide(id \| self)` | Hide a node |
+| `toggle` | `toggle(id \| self)` | Toggle visibility |
+| `setTab` | `setTab(tabsId, index)` | Activate a tab by index (0-based) |
+
+`self` is a special keyword meaning the component itself — useful for modals that close themselves (`onClose: hide(self)`).
+
+### Action Chaining
+
+Multiple actions can be chained with `&`:
+
+```wire
+component Button text: "Confirm" onClick: hide(listModal) & show(confirmModal)
+component Button text: "Next" onClick: hide(step1) & show(step2) & navigate(Summary)
+```
+
+### Events per Component
+
+| Component | Supported Events |
+|-----------|-----------------|
+| Button, IconButton, Link | `onClick` |
+| Toggle, Checkbox, Radio | `onChange` **or** `onActive` + `onInactive` |
+| Table | `onRowClick` |
+| List | `onItemClick` |
+| SidebarMenu | `onItemsClick` (string prop) |
+| Modal | `onClose` |
+| layout card | `onClick` (layout parameter) |
+
+> `onChange` and `onActive`/`onInactive` are mutually exclusive on the same component.
 
 ---
 
