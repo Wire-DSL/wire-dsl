@@ -30,7 +30,9 @@ export function generateGrammar(): TextMateGrammar {
       ...KEYWORDS.layout,
       ...KEYWORDS.component,
       ...KEYWORDS.cell,
+      ...KEYWORDS.tab,
       ...KEYWORDS.special,
+      ...KEYWORDS.events,
     ])
   );
   const components: string[] = Object.keys(COMPONENTS);

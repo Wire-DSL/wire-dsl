@@ -1072,8 +1072,13 @@ class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
       if (ctx.paramList && ctx.paramList[0]?.children?.property) {
         ctx.paramList[0].children.property.forEach((propCtx: any) => {
           const propResult = this.visit(propCtx);
-          // Skip event properties (they have no scalar propValue)
-          if (propResult.isEvent) return;
+          if (propResult.isEvent) {
+            this.sourceMapBuilder!.addEvent(nodeId, propResult.key, {
+              name: propCtx.children.propKey[0],
+              value: propCtx.children.actionChain[0],
+            });
+            return;
+          }
           this.sourceMapBuilder!.addProperty(
             nodeId,
             propResult.key,
@@ -1171,8 +1176,13 @@ class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
       if (ctx.property) {
         ctx.property.forEach((propCtx: any) => {
           const propResult = this.visit(propCtx);
-          // Skip event properties (they have no scalar propValue)
-          if (propResult.isEvent) return;
+          if (propResult.isEvent) {
+            this.sourceMapBuilder!.addEvent(nodeId, propResult.key, {
+              name: propCtx.children.propKey[0],
+              value: propCtx.children.actionChain[0],
+            });
+            return;
+          }
           this.sourceMapBuilder!.addProperty(
             nodeId,
             propResult.key,
@@ -1250,8 +1260,13 @@ class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
       if (ctx.property) {
         ctx.property.forEach((propCtx: any) => {
           const propResult = this.visit(propCtx);
-          // Skip event properties (they have no scalar propValue)
-          if (propResult.isEvent) return;
+          if (propResult.isEvent) {
+            this.sourceMapBuilder!.addEvent(nodeId, propResult.key, {
+              name: propCtx.children.propKey[0],
+              value: propCtx.children.actionChain[0],
+            });
+            return;
+          }
           this.sourceMapBuilder!.addProperty(
             nodeId,
             propResult.key,

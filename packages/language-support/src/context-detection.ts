@@ -156,10 +156,7 @@ export function getComponentPropertiesForCompletion(
   const properties = Object.values(component.properties) || [];
 
   for (const prop of properties) {
-    // Skip if this property is already declared
-    if (alreadyDeclared.has(prop.name)) {
-      continue;
-    }
+    if (alreadyDeclared.has(prop.name)) continue;
 
     const item: CompletionItem = {
       label: prop.name,
@@ -168,12 +165,23 @@ export function getComponentPropertiesForCompletion(
       insertText: `${prop.name}: `,
     };
 
-    // Add property values if available
     if (prop.type === 'enum' && prop.options && prop.options.length > 0) {
       item.insertText = `${prop.name}: ${prop.options.length === 1 ? prop.options[0] : ''}`;
     }
 
     items.push(item);
+  }
+
+  // Include event handlers from supportedEvents
+  for (const ev of component.supportedEvents ?? []) {
+    if (alreadyDeclared.has(ev)) continue;
+    items.push({
+      label: ev,
+      kind: 'Property',
+      detail: `Event handler of ${componentName}`,
+      documentation: `${ev}: navigate(Screen) | show(id) | hide(id) | toggle(id) | setTab(tabsId, n)`,
+      insertText: `${ev}: `,
+    });
   }
 
   return items;

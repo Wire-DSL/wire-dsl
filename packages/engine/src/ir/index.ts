@@ -204,7 +204,7 @@ const IRComponentNodeSchema = z.object({
   kind: z.literal('component'),
   componentType: z.string(),
   props: z.record(z.string(), z.union([z.string(), z.number()])),
-  userDefinedId: z.string().optional(),
+  userDefinedId: z.string().regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/, 'ID must match [a-zA-Z_][a-zA-Z0-9_]*').optional(),
   events: z.array(IREventHandlerSchema).optional(),
   style: IRNodeStyleSchema,
   meta: IRMetaSchema,
@@ -576,6 +576,17 @@ export class IRGenerator {
       style.background = String(layoutParams.background);
     }
 
+    // EVT-009: validate layout id (e.g. layout tabs(id: mainTabs))
+    if (layoutParams.id !== undefined) {
+      const layoutId = String(layoutParams.id);
+      if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(layoutId)) {
+        this.errors.push({
+          type: 'evt-009-invalid-id',
+          message: `EVT-009: id "${layoutId}" is not a valid identifier. Must match [a-zA-Z_][a-zA-Z0-9_]* (cannot start with a digit or contain hyphens).`,
+        });
+      }
+    }
+
     // Convert layout events (e.g. card onClick)
     const irEvents = this.convertASTEvents(layout.events || []);
 
@@ -708,8 +719,15 @@ export class IRGenerator {
     // Create IR node for built-in component (or undefined - will error later)
     const nodeId = this.idGen.generate('node');
 
-    // Extract user-defined id from props
-    const userDefinedId = resolvedProps.id !== undefined ? String(resolvedProps.id) : undefined;
+    // Extract user-defined id from props — EVT-009: must match [a-zA-Z_][a-zA-Z0-9_]*
+    const rawId = resolvedProps.id !== undefined ? String(resolvedProps.id) : undefined;
+    if (rawId !== undefined && !/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(rawId)) {
+      this.errors.push({
+        type: 'evt-009-invalid-id',
+        message: `EVT-009: id "${rawId}" is not a valid identifier. Must match [a-zA-Z_][a-zA-Z0-9_]* (cannot start with a digit or contain hyphens).`,
+      });
+    }
+    const userDefinedId = rawId;
     const propsWithoutId: Record<string, string | number> = { ...resolvedProps };
     delete propsWithoutId.id;
 
