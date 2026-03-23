@@ -113,6 +113,19 @@ const headingSpacingEnum: PropertyMetadata = {
   type: 'enum',
   options: spacingEnum.options,
 };
+const idProp: PropertyMetadata = {
+  name: 'id',
+  type: 'string',
+  description: 'Unique identifier for show/hide/toggle targeting. Format: [a-zA-Z_][a-zA-Z0-9_]*',
+};
+
+const visibleProp: PropertyMetadata = {
+  name: 'visible',
+  type: 'boolean',
+  defaultValue: true,
+  description: 'Controls element visibility. When false, the element is not rendered in the SVG.',
+};
+
 const disabledProp: PropertyMetadata = {
   name: 'disabled',
   type: 'boolean',
@@ -131,6 +144,8 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     description: 'Large heading text with level-based typography.',
     category: 'Text',
     properties: {
+      id: idProp,
+      visible: visibleProp,
       text: { name: 'text', type: 'string', required: true },
       level: headingLevelEnum,
       spacing: headingSpacingEnum,
@@ -143,6 +158,8 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     description: 'Body text content.',
     category: 'Text',
     properties: {
+      id: idProp,
+      visible: visibleProp,
       text: { name: 'text', type: 'string', required: true },
       size: textSizeEnum,
       bold: { name: 'bold', type: 'boolean', description: 'Applies bold weight to the text.' },
@@ -155,6 +172,8 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     description: 'Small label text.',
     category: 'Text',
     properties: {
+      id: idProp,
+      visible: visibleProp,
       text: { name: 'text', type: 'string', required: true },
     },
     example: 'component Label text: "Field label"',
@@ -164,6 +183,8 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     description: 'Full-width text block with alignment, size, and formatting options.',
     category: 'Text',
     properties: {
+      id: idProp,
+      visible: visibleProp,
       text: { name: 'text', type: 'string', required: true },
       align: alignEnum,
       size: textSizeEnum,
@@ -177,7 +198,8 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     description: 'Clickable action button.',
     category: 'Action',
     properties: {
-      id: { name: 'id', type: 'string', description: 'Unique identifier for event targeting. Format: [a-zA-Z_][a-zA-Z0-9_]*' },
+      id: idProp,
+      visible: visibleProp,
       text: { name: 'text', type: 'string', required: true },
       variant: variantWithDefaultEnum,
       size: controlSizeEnum,
@@ -198,7 +220,8 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     description: 'Underlined text action without button background.',
     category: 'Action',
     properties: {
-      id: { name: 'id', type: 'string', description: 'Unique identifier for event targeting. Format: [a-zA-Z_][a-zA-Z0-9_]*' },
+      id: idProp,
+      visible: visibleProp,
       text: { name: 'text', type: 'string', required: true },
       variant: variantEnum,
       size: controlSizeEnum,
@@ -212,6 +235,8 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     description: 'Single-line input field.',
     category: 'Input',
     properties: {
+      id: idProp,
+      visible: visibleProp,
       label: { name: 'label', type: 'string' },
       placeholder: { name: 'placeholder', type: 'string' },
       size: controlSizeEnum,
@@ -226,6 +251,8 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     description: 'Multi-line input field.',
     category: 'Input',
     properties: {
+      id: idProp,
+      visible: visibleProp,
       label: { name: 'label', type: 'string' },
       placeholder: { name: 'placeholder', type: 'string' },
       rows: { name: 'rows', type: 'number' },
@@ -237,6 +264,8 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     description: 'Select-style input control.',
     category: 'Input',
     properties: {
+      id: idProp,
+      visible: visibleProp,
       label: { name: 'label', type: 'string' },
       placeholder: { name: 'placeholder', type: 'string' },
       items: { name: 'items', type: 'string' },
@@ -252,7 +281,8 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     description: 'Checkbox control.',
     category: 'Input',
     properties: {
-      id: { name: 'id', type: 'string', description: 'Unique identifier for event targeting. Format: [a-zA-Z_][a-zA-Z0-9_]*' },
+      id: idProp,
+      visible: visibleProp,
       label: { name: 'label', type: 'string', required: true },
       checked: { name: 'checked', type: 'boolean' },
       disabled: disabledProp,
@@ -268,7 +298,8 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     description: 'Radio control.',
     category: 'Input',
     properties: {
-      id: { name: 'id', type: 'string', description: 'Unique identifier for event targeting. Format: [a-zA-Z_][a-zA-Z0-9_]*' },
+      id: idProp,
+      visible: visibleProp,
       label: { name: 'label', type: 'string', required: true },
       checked: { name: 'checked', type: 'boolean' },
       disabled: disabledProp,
@@ -284,7 +315,8 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     description: 'Toggle switch control.',
     category: 'Input',
     properties: {
-      id: { name: 'id', type: 'string', description: 'Unique identifier for event targeting. Format: [a-zA-Z_][a-zA-Z0-9_]*' },
+      id: idProp,
+      visible: visibleProp,
       label: { name: 'label', type: 'string', required: true },
       enabled: { name: 'enabled', type: 'boolean' },
       disabled: disabledProp,
@@ -300,6 +332,8 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     description: 'Top navigation/header bar.',
     category: 'Navigation',
     properties: {
+      id: idProp,
+      visible: visibleProp,
       title: { name: 'title', type: 'string', required: true },
       subtitle: { name: 'subtitle', type: 'string' },
       icon: iconNameEnum,
@@ -320,7 +354,8 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     description: 'Vertical menu list.',
     category: 'Navigation',
     properties: {
-      id: { name: 'id', type: 'string', description: 'Unique identifier for event targeting. Format: [a-zA-Z_][a-zA-Z0-9_]*' },
+      id: idProp,
+      visible: visibleProp,
       items: { name: 'items', type: 'string', required: true },
       icons: { name: 'icons', type: 'string' },
       active: { name: 'active', type: 'number' },
@@ -335,6 +370,8 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     description: 'Sidebar panel with title and items.',
     category: 'Navigation',
     properties: {
+      id: idProp,
+      visible: visibleProp,
       title: { name: 'title', type: 'string' },
       items: { name: 'items', type: 'string', required: true },
       active: { name: 'active', type: 'string' },
@@ -347,6 +384,8 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     description: 'Navigation path component.',
     category: 'Navigation',
     properties: {
+      id: idProp,
+      visible: visibleProp,
       items: { name: 'items', type: 'string', required: true },
       separator: { name: 'separator', type: 'string' },
     },
@@ -357,7 +396,8 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     description: 'Tabbed navigation component. Link to a layout tabs container via tabsId.',
     category: 'Navigation',
     properties: {
-      id: { name: 'id', type: 'string', description: 'Unique identifier for event targeting. Format: [a-zA-Z_][a-zA-Z0-9_]*' },
+      id: idProp,
+      visible: visibleProp,
       items: { name: 'items', type: 'string', required: true },
       active: { name: 'active', type: 'number' },
       tabsId: { name: 'tabsId', type: 'string', description: 'ID of the layout tabs container this component controls.' },
@@ -376,7 +416,8 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     description: 'Tabular data placeholder.',
     category: 'Data',
     properties: {
-      id: { name: 'id', type: 'string', description: 'Unique identifier for event targeting. Format: [a-zA-Z_][a-zA-Z0-9_]*' },
+      id: idProp,
+      visible: visibleProp,
       title: { name: 'title', type: 'string' },
       columns: { name: 'columns', type: 'string', required: true },
       rows: { name: 'rows', type: 'number' },
@@ -402,7 +443,8 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     description: 'Vertical list component.',
     category: 'Data',
     properties: {
-      id: { name: 'id', type: 'string', description: 'Unique identifier for event targeting. Format: [a-zA-Z_][a-zA-Z0-9_]*' },
+      id: idProp,
+      visible: visibleProp,
       title: { name: 'title', type: 'string' },
       items: { name: 'items', type: 'string' },
       itemsMock: { name: 'itemsMock', type: 'number' },
@@ -418,6 +460,8 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     description: 'Metric card with optional caption, icon, and variant color.',
     category: 'Data',
     properties: {
+      id: idProp,
+      visible: visibleProp,
       title: { name: 'title', type: 'string', required: true },
       value: { name: 'value', type: 'string', required: true },
       caption: { name: 'caption', type: 'string' },
@@ -431,6 +475,8 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     description: 'Generic content card placeholder.',
     category: 'Layout',
     properties: {
+      id: idProp,
+      visible: visibleProp,
       title: { name: 'title', type: 'string' },
       text: { name: 'text', type: 'string' },
     },
@@ -441,6 +487,8 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     description: 'Chart placeholder with deterministic trend data.',
     category: 'Data',
     properties: {
+      id: idProp,
+      visible: visibleProp,
       type: { name: 'type', type: 'enum', options: ['bar', 'line', 'pie', 'area'], required: true },
       height: { name: 'height', type: 'number' },
     },
@@ -451,6 +499,8 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     description: 'Code snippet display.',
     category: 'Text',
     properties: {
+      id: idProp,
+      visible: visibleProp,
       code: { name: 'code', type: 'string', required: true },
     },
     example: 'component Code code: "const x = 42;"',
@@ -460,6 +510,8 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     description: 'Image placeholder block.',
     category: 'Media',
     properties: {
+      id: idProp,
+      visible: visibleProp,
       type: imageTypeEnum,
       icon: iconNameEnum,
       variant: variantWithDefaultEnum,
@@ -473,6 +525,8 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     description: 'Standalone icon component.',
     category: 'Media',
     properties: {
+      id: idProp,
+      visible: visibleProp,
       icon: { name: 'icon', type: 'enum', options: ICON_NAME_OPTIONS, required: true },
       size: sizeEnum,
       variant: variantWithDefaultEnum,
@@ -486,7 +540,8 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     description: 'Button that renders an icon.',
     category: 'Action',
     properties: {
-      id: { name: 'id', type: 'string', description: 'Unique identifier for event targeting. Format: [a-zA-Z_][a-zA-Z0-9_]*' },
+      id: idProp,
+      visible: visibleProp,
       icon: { name: 'icon', type: 'enum', options: ICON_NAME_OPTIONS, required: true },
       size: controlSizeEnum,
       variant: variantWithDefaultEnum,
@@ -502,7 +557,7 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     name: 'Divider',
     description: 'Horizontal separator line.',
     category: 'Layout',
-    properties: {},
+    properties: { id: idProp, visible: visibleProp },
     example: 'component Divider',
   },
   Separate: {
@@ -510,6 +565,8 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     description: 'Invisible spacing separator.',
     category: 'Layout',
     properties: {
+      id: idProp,
+      visible: visibleProp,
       size: { name: 'size', type: 'enum', options: ['none', 'xs', 'sm', 'md', 'lg', 'xl'] },
     },
     example: 'component Separate size: md',
@@ -519,6 +576,8 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     description: 'Small status label.',
     category: 'Feedback',
     properties: {
+      id: idProp,
+      visible: visibleProp,
       text: { name: 'text', type: 'string', required: true },
       variant: variantWithDefaultEnum,
       size: { name: 'size', type: 'enum', options: ['xs', 'sm', 'md', 'lg', 'xl'], defaultValue: 'md' },
@@ -531,24 +590,13 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
     description: 'Alert/message box.',
     category: 'Feedback',
     properties: {
+      id: idProp,
+      visible: visibleProp,
       variant: variantEnum,
       title: { name: 'title', type: 'string' },
       text: { name: 'text', type: 'string' },
     },
     example: 'component Alert variant: warning title: "Warning" text: "Review this action"',
-  },
-  Modal: {
-    name: 'Modal',
-    description: 'Modal overlay container.',
-    category: 'Feedback',
-    properties: {
-      id: { name: 'id', type: 'string', description: 'Unique identifier for show/hide targeting. Format: [a-zA-Z_][a-zA-Z0-9_]*' },
-      title: { name: 'title', type: 'string', required: true },
-      visible: { name: 'visible', type: 'boolean', defaultValue: true },
-      onClose: { name: 'onClose', type: 'action', description: 'Action(s) triggered when the modal is closed. Use hide(self) to auto-hide.' },
-    },
-    supportedEvents: ['onClose'],
-    example: 'component Modal id: confirmModal title: "Confirm action" onClose: hide(self)',
   },
 };
 
@@ -557,11 +605,13 @@ export const LAYOUTS: Record<string, LayoutMetadata> = {
     name: 'stack',
     description: 'Linear layout container.',
     properties: {
+      id:        { name: 'id',        type: 'string', description: 'Identifier for show/hide/toggle targeting. Format: [a-zA-Z_][a-zA-Z0-9_]*' },
+      visible:   visibleProp,
       direction: { name: 'direction', type: 'enum', options: ['horizontal', 'vertical'], required: true },
-      justify: { name: 'justify', type: 'enum', options: ['stretch', 'start', 'center', 'end', 'spaceBetween', 'spaceAround'] },
-      align: { name: 'align', type: 'enum', options: ['start', 'center', 'end'] },
-      gap: { name: 'gap', type: 'enum', options: spacingEnum.options },
-      padding: { name: 'padding', type: 'enum', options: spacingEnum.options },
+      justify:   { name: 'justify',   type: 'enum', options: ['stretch', 'start', 'center', 'end', 'spaceBetween', 'spaceAround'] },
+      align:     { name: 'align',     type: 'enum', options: ['start', 'center', 'end'] },
+      gap:       { name: 'gap',       type: 'enum', options: spacingEnum.options },
+      padding:   { name: 'padding',   type: 'enum', options: spacingEnum.options },
     },
     example: 'layout stack(direction: vertical, gap: md, padding: md) { ... }',
   },
@@ -569,8 +619,10 @@ export const LAYOUTS: Record<string, LayoutMetadata> = {
     name: 'grid',
     description: 'Grid layout container.',
     properties: {
+      id:      { name: 'id',      type: 'string', description: 'Identifier for show/hide/toggle targeting. Format: [a-zA-Z_][a-zA-Z0-9_]*' },
+      visible: visibleProp,
       columns: { name: 'columns', type: 'number' },
-      gap: { name: 'gap', type: 'enum', options: spacingEnum.options },
+      gap:     { name: 'gap',     type: 'enum', options: spacingEnum.options },
       justify: { name: 'justify', type: 'enum', options: ['stretch', 'start', 'center', 'end', 'spaceBetween', 'spaceAround'] },
       padding: { name: 'padding', type: 'enum', options: spacingEnum.options },
     },
@@ -581,12 +633,14 @@ export const LAYOUTS: Record<string, LayoutMetadata> = {
     name: 'split',
     description: 'Two-column split layout.',
     properties: {
-      left: { name: 'left', type: 'number' },
-      right: { name: 'right', type: 'number' },
+      id:         { name: 'id',         type: 'string', description: 'Identifier for show/hide/toggle targeting. Format: [a-zA-Z_][a-zA-Z0-9_]*' },
+      visible:    visibleProp,
+      left:       { name: 'left',       type: 'number' },
+      right:      { name: 'right',      type: 'number' },
       background: { name: 'background', type: 'string' },
-      border: { name: 'border', type: 'boolean' },
-      gap: { name: 'gap', type: 'enum', options: spacingEnum.options },
-      padding: { name: 'padding', type: 'enum', options: spacingEnum.options },
+      border:     { name: 'border',     type: 'boolean' },
+      gap:        { name: 'gap',        type: 'enum', options: spacingEnum.options },
+      padding:    { name: 'padding',    type: 'enum', options: spacingEnum.options },
     },
     example: 'layout split(left: 260, gap: md, border: true) { ... }',
   },
@@ -594,8 +648,10 @@ export const LAYOUTS: Record<string, LayoutMetadata> = {
     name: 'panel',
     description: 'Panel container with border/background support.',
     properties: {
-      padding: { name: 'padding', type: 'enum', options: spacingEnum.options },
-      gap: { name: 'gap', type: 'enum', options: spacingEnum.options },
+      id:         { name: 'id',         type: 'string', description: 'Identifier for show/hide/toggle targeting. Format: [a-zA-Z_][a-zA-Z0-9_]*' },
+      visible:    visibleProp,
+      padding:    { name: 'padding',    type: 'enum', options: spacingEnum.options },
+      gap:        { name: 'gap',        type: 'enum', options: spacingEnum.options },
       background: { name: 'background', type: 'string' },
     },
     example: 'layout panel(padding: md) { ... }',
@@ -604,7 +660,8 @@ export const LAYOUTS: Record<string, LayoutMetadata> = {
     name: 'card',
     description: 'Card container with spacing/radius options. Supports onClick event.',
     properties: {
-      id: { name: 'id', type: 'string', description: 'Unique identifier for event targeting. Format: [a-zA-Z_][a-zA-Z0-9_]*' },
+      id: idProp,
+      visible: visibleProp,
       padding: { name: 'padding', type: 'enum', options: spacingEnum.options },
       gap: { name: 'gap', type: 'enum', options: spacingEnum.options },
       radius: { name: 'radius', type: 'enum', options: ['none', 'sm', 'md', 'lg'] },
@@ -619,10 +676,24 @@ export const LAYOUTS: Record<string, LayoutMetadata> = {
     description: 'Tab panel container. Children are tab blocks. Link to a component Tabs via matching id.',
     properties: {
       id: { name: 'id', type: 'string', description: 'Required. ID to link with a component Tabs tabsId. Format: [a-zA-Z_][a-zA-Z0-9_]*', required: true },
+      visible: visibleProp,
       active: { name: 'active', type: 'number', description: 'Index of the initially active tab (0-based).' },
     },
     requiredProperties: ['id'],
     example: 'layout tabs(id: mainTabs) { tab { ... } tab { ... } }',
+  },
+  modal: {
+    name: 'modal',
+    description: 'Modal overlay. Optional title shows a header. Closable adds a close button (requires title). Use body/footer sections for structured content.',
+    properties: {
+      id:       { name: 'id',       type: 'string',  description: 'Identifier for show/hide/toggle targeting. Format: [a-zA-Z_][a-zA-Z0-9_]*' },
+      title:    { name: 'title',    type: 'string',  description: 'Header text. Omit for a header-less modal.' },
+      visible:  { name: 'visible',  type: 'boolean', defaultValue: true },
+      closable: { name: 'closable', type: 'boolean', defaultValue: true, description: 'Show close button. Requires title.' },
+      size:     { name: 'size',     type: 'enum',    options: ['sm', 'md', 'lg'], defaultValue: 'md' },
+      onClose:  { name: 'onClose',  type: 'action',  description: 'Action when close button is clicked.' },
+    },
+    example: 'layout modal(id: confirmModal, title: "Confirm?", visible: false, closable: true, onClose: hide(self)) { ... }',
   },
 };
 
@@ -645,8 +716,7 @@ export const KEYWORDS = {
   screen: ['screen'],
   layout: ['layout'],
   component: ['component'],
-  cell: ['cell'],
-  tab: ['tab'],
+  sections: ['cell', 'tab', 'body', 'footer'],
   special: ['span', 'columns', 'left', 'right', 'gap', 'padding', 'direction', 'background', 'border', 'Component'],
   events: ['navigate', 'show', 'hide', 'toggle', 'setTab', 'self'],
 };

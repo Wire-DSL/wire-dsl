@@ -59,6 +59,8 @@ export type SourceMapNodeType =
   | 'component-definition'  // For user-defined components (define Component "Name")
   | 'layout-definition'     // For user-defined layouts (define Layout "Name")
   | 'cell'                  // For grid cells
+  | 'modal-body'            // Body section inside layout modal
+  | 'modal-footer'          // Footer section inside layout modal
   | 'style'                 // Style configuration block
   | 'mocks'                 // Mocks data block
   | 'colors';               // Colors palette block

@@ -13,6 +13,8 @@ import type {
   ASTComponent,
   ASTCell,
   ASTTab,
+  ASTModalBody,
+  ASTModalFooter,
   ASTDefinedComponent,
   ASTDefinedLayout,
   ASTEventHandler,
@@ -96,7 +98,7 @@ export type IRNode = IRContainerNode | IRComponentNode | IRInstanceNode;
 export interface IRContainerNode {
   id: string;
   kind: 'container';
-  containerType: 'stack' | 'grid' | 'split' | 'panel' | 'card' | 'tabs' | 'tab';
+  containerType: 'stack' | 'grid' | 'split' | 'panel' | 'card' | 'tabs' | 'tab' | 'modal' | 'modal-body' | 'modal-footer';
   params: Record<string, string | number>;
   children: Array<{ ref: string }>;
   events?: IREventHandler[];
@@ -191,7 +193,7 @@ const IREventHandlerSchema = z.object({
 const IRContainerNodeSchema = z.object({
   id: z.string(),
   kind: z.literal('container'),
-  containerType: z.enum(['stack', 'grid', 'split', 'panel', 'card', 'tabs', 'tab']),
+  containerType: z.enum(['stack', 'grid', 'split', 'panel', 'card', 'tabs', 'tab', 'modal', 'modal-body', 'modal-footer']),
   params: z.record(z.string(), z.union([z.string(), z.number()])),
   children: z.array(z.object({ ref: z.string() })),
   events: z.array(IREventHandlerSchema).optional(),
@@ -539,9 +541,49 @@ export class IRGenerator {
     const nodeId = this.idGen.generate('node');
     const childRefs: Array<{ ref: string }> = [];
 
+    // Modal-specific validations
+    if (layout.layoutType === 'modal') {
+      const bodyChildren = layout.children.filter(c => c.type === 'modal-body');
+      const footerChildren = layout.children.filter(c => c.type === 'modal-footer');
+      const normalChildren = layout.children.filter(c => c.type !== 'modal-body' && c.type !== 'modal-footer');
+
+      if (bodyChildren.length > 1 || footerChildren.length > 1) {
+        if (bodyChildren.length > 1) {
+          this.warnings.push({
+            type: 'modal-003-duplicate-body',
+            message: 'MODAL-003: A modal can only have one body section.',
+          });
+        }
+        if (footerChildren.length > 1) {
+          this.warnings.push({
+            type: 'modal-004-duplicate-footer',
+            message: 'MODAL-004: A modal can only have one footer section.',
+          });
+        }
+      }
+      if ((bodyChildren.length > 0 || footerChildren.length > 0) && normalChildren.length > 0) {
+        this.warnings.push({
+          type: 'modal-002-mixed-children',
+          message: 'MODAL-002: Cannot mix body/footer sections with direct children in a modal. Use either body/footer sections or direct children, not both.',
+        });
+      }
+    }
+
     // Process children in order
     for (const child of layout.children) {
-      if (child.type === 'layout') {
+      if (child.type === 'modal-body' || child.type === 'modal-footer') {
+        if (layout.layoutType !== 'modal') {
+          this.warnings.push({
+            type: 'modal-001-invalid-context',
+            message: `MODAL-001: "${child.type}" sections are only valid inside layout modal.`,
+          });
+          continue;
+        }
+        const childId = child.type === 'modal-body'
+          ? this.convertModalBody(child as ASTModalBody, context)
+          : this.convertModalFooter(child as ASTModalFooter, context);
+        if (childId) childRefs.push({ ref: childId });
+      } else if (child.type === 'layout') {
         const childId = this.convertLayout(child, context);
         if (childId) childRefs.push({ ref: childId });
       } else if (child.type === 'component') {
@@ -641,6 +683,70 @@ export class IRGenerator {
     return nodeId;
   }
 
+  private convertModalBody(body: ASTModalBody, context?: ExpansionContext): string {
+    const nodeId = this.idGen.generate('node');
+    const childRefs: Array<{ ref: string }> = [];
+
+    for (const child of body.children) {
+      if (child.type === 'layout') {
+        const childId = this.convertLayout(child, context);
+        if (childId) childRefs.push({ ref: childId });
+      } else if (child.type === 'component') {
+        const childId = this.convertComponent(child, context);
+        if (childId) childRefs.push({ ref: childId });
+      }
+    }
+
+    const containerNode: IRContainerNode = {
+      id: nodeId,
+      kind: 'container',
+      containerType: 'modal-body',
+      params: {},
+      children: childRefs,
+      style: { padding: 'none' },
+      meta: {
+        nodeId: context?.instanceScope
+          ? `${body._meta?.nodeId}@${context.instanceScope}`
+          : body._meta?.nodeId,
+      },
+    };
+
+    this.nodes[nodeId] = containerNode;
+    return nodeId;
+  }
+
+  private convertModalFooter(footer: ASTModalFooter, context?: ExpansionContext): string {
+    const nodeId = this.idGen.generate('node');
+    const childRefs: Array<{ ref: string }> = [];
+
+    for (const child of footer.children) {
+      if (child.type === 'layout') {
+        const childId = this.convertLayout(child, context);
+        if (childId) childRefs.push({ ref: childId });
+      } else if (child.type === 'component') {
+        const childId = this.convertComponent(child, context);
+        if (childId) childRefs.push({ ref: childId });
+      }
+    }
+
+    const containerNode: IRContainerNode = {
+      id: nodeId,
+      kind: 'container',
+      containerType: 'modal-footer',
+      params: {},
+      children: childRefs,
+      style: { padding: 'none', justify: 'spaceBetween' },
+      meta: {
+        nodeId: context?.instanceScope
+          ? `${footer._meta?.nodeId}@${context.instanceScope}`
+          : footer._meta?.nodeId,
+      },
+    };
+
+    this.nodes[nodeId] = containerNode;
+    return nodeId;
+  }
+
   private convertCell(cell: ASTCell, context?: ExpansionContext): string {
     const nodeId = this.idGen.generate('node');
     const childRefs: Array<{ ref: string }> = [];
@@ -708,7 +814,7 @@ export class IRGenerator {
       'Button', 'Input', 'Heading', 'Text', 'Label', 'Paragraph', 'Image',
       'Card', 'Stat', 'Topbar', 'Table', 'Chart',
       'Textarea', 'Select', 'Checkbox', 'Toggle', 'Divider', 'Breadcrumbs',
-      'SidebarMenu', 'Radio', 'Icon', 'IconButton', 'Alert', 'Badge', 'Modal', 'List', 'Sidebar', 'Tabs', 'Code', 'Link', 'Separate'
+      'SidebarMenu', 'Radio', 'Icon', 'IconButton', 'Alert', 'Badge', 'List', 'Sidebar', 'Tabs', 'Code', 'Link', 'Separate'
     ]);
 
     if (!builtInComponents.has(component.componentType)) {

@@ -1227,16 +1227,16 @@ describe('WireDSL Parser – Event System', () => {
         project "IDs" {
           screen Main {
             layout stack {
-              component Modal id: confirmModal title: "Sure?"
+              component Button id: myBtn text: "Click"
             }
           }
         }
       `;
       const ast = parseWireDSL(input);
-      const modal = ast.screens[0].layout.children[0];
-      expect(modal.type).toBe('component');
-      if (modal.type === 'component') {
-        expect(modal.props.id).toBe('confirmModal');
+      const btn = ast.screens[0].layout.children[0];
+      expect(btn.type).toBe('component');
+      if (btn.type === 'component') {
+        expect(btn.props.id).toBe('myBtn');
       }
     });
 
@@ -1292,7 +1292,7 @@ describe('WireDSL Parser – Event System', () => {
         project "Show" {
           screen Main {
             layout stack {
-              component Modal id: confirmModal title: "Sure?"
+              layout modal(id: confirmModal, title: "Sure?") {}
               component Button text: "Open" onClick: show(confirmModal)
             }
           }
@@ -1314,7 +1314,7 @@ describe('WireDSL Parser – Event System', () => {
         project "Hide" {
           screen Main {
             layout stack {
-              component Modal id: myPanel title: "Panel"
+              layout modal(id: myPanel, title: "Panel") {}
               component Button text: "Close" onClick: hide(myPanel)
             }
           }
@@ -1333,7 +1333,7 @@ describe('WireDSL Parser – Event System', () => {
         project "ToggleBtn" {
           screen Main {
             layout stack {
-              component Modal id: sidePanel title: "Side"
+              layout modal(id: sidePanel, title: "Side") {}
               component Button text: "Toggle" onClick: toggle(sidePanel)
             }
           }
@@ -1352,14 +1352,14 @@ describe('WireDSL Parser – Event System', () => {
         project "Self" {
           screen Main {
             layout stack {
-              component Modal id: confirmModal title: "Sure?" onClose: hide(self)
+              layout modal(id: confirmModal, title: "Sure?", onClose: hide(self)) {}
             }
           }
         }
       `;
       const ast = parseWireDSL(input);
       const modal = ast.screens[0].layout.children[0];
-      if (modal.type === 'component') {
+      if (modal.type === 'layout') {
         expect(modal.events).toHaveLength(1);
         expect(modal.events[0].event).toBe('onClose');
         const action = modal.events[0].actions[0];
@@ -1404,8 +1404,8 @@ describe('WireDSL Parser – Event System', () => {
         project "Chain" {
           screen Main {
             layout stack {
-              component Modal id: listModal title: "List"
-              component Modal id: confirmModal title: "Confirm"
+              layout modal(id: listModal, title: "List") {}
+              layout modal(id: confirmModal, title: "Confirm") {}
               component Button text: "Delete" onClick: hide(listModal) & show(confirmModal)
             }
           }
@@ -1425,8 +1425,8 @@ describe('WireDSL Parser – Event System', () => {
         project "Chain3" {
           screen Main {
             layout stack {
-              component Modal id: step1 title: "Step 1"
-              component Modal id: step2 title: "Step 2"
+              layout modal(id: step1, title: "Step 1") {}
+              layout modal(id: step2, title: "Step 2") {}
               component Button text: "Continue" onClick: hide(step1) & show(step2) & navigate(Summary)
             }
           }
@@ -1450,7 +1450,7 @@ describe('WireDSL Parser – Event System', () => {
         project "ToggleChange" {
           screen Main {
             layout stack {
-              component Modal id: myPanel title: "Panel"
+              layout modal(id: myPanel, title: "Panel") {}
               component Toggle text: "Show panel" onChange: toggle(myPanel)
             }
           }

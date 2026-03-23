@@ -1791,4 +1791,50 @@ describe('Layout Engine', () => {
     )!;
     expect(layout[id].height).toBe(56);
   });
+
+  describe('layout modal positioning', () => {
+    function buildModalLayout(extra = '') {
+      const input = `
+        project "M" {
+          screen Main {
+            layout stack {
+              layout modal(title: "Test"${extra}) {
+                component Text text: "Content"
+              }
+            }
+          }
+        }
+      `;
+      const ir = generateIR(parseWireDSL(input));
+      const layout = calculateLayout(ir);
+      const [modalId] = Object.entries(ir.project.nodes).find(
+        ([, n]) => n.kind === 'container' && (n as any).containerType === 'modal'
+      )!;
+      return { layout, modalId, ir };
+    }
+
+    it('should position modal 64px from top of canvas', () => {
+      const { layout, modalId } = buildModalLayout();
+      expect(layout[modalId].y).toBe(64);
+    });
+
+    it('should center modal horizontally on canvas (md size = 520px)', () => {
+      const { layout, modalId } = buildModalLayout();
+      const canvasWidth = 1280;
+      const modalWidth = 520;
+      const expectedX = Math.round((canvasWidth - modalWidth) / 2);
+      expect(layout[modalId].x).toBe(expectedX);
+      expect(layout[modalId].width).toBe(modalWidth);
+    });
+
+    it('should use sm width (380px) for size: sm', () => {
+      const { layout, modalId } = buildModalLayout(', size: sm');
+      expect(layout[modalId].width).toBe(380);
+    });
+
+    it('should use lg width (720px) for size: lg', () => {
+      const { layout, modalId } = buildModalLayout(', size: lg');
+      expect(layout[modalId].width).toBe(720);
+    });
+  });
 });

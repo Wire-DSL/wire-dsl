@@ -218,6 +218,11 @@ export class SVGRenderer {
     this.renderedNodeIds.add(nodeId);
 
     if (node.kind === 'container') {
+      // All containers respect params.visible — skip rendering if explicitly false
+      if (String(node.params.visible) === 'false') {
+        return;
+      }
+
       // Wrapper group for all containers (enables selection in editor)
       const containerGroup: string[] = [];
       const hasNodeId = node.meta?.nodeId;
@@ -248,6 +253,12 @@ export class SVGRenderer {
       }
       if (node.containerType === 'split') {
         this.renderSplitDecoration(node, pos, containerGroup);
+      }
+      if (node.containerType === 'modal') {
+        this.renderModalDecoration(node, pos, containerGroup);
+      }
+      if (node.containerType === 'modal-footer') {
+        this.renderModalFooterDecoration(pos, containerGroup);
       }
 
       // Render container children, or a diagnostic placeholder when empty
@@ -289,6 +300,10 @@ export class SVGRenderer {
       }
       output.push(...instanceGroup);
     } else if (node.kind === 'component') {
+      // Skip rendering if explicitly hidden
+      if (String(node.props.visible) === 'false') {
+        return;
+      }
       // Render built-in component
       const componentSvg = this.renderComponent(node, pos);
       if (componentSvg) {
@@ -359,8 +374,6 @@ export class SVGRenderer {
         return this.renderAlert(node, pos);
       case 'Badge':
         return this.renderBadge(node, pos);
-      case 'Modal':
-        return this.renderModal(node, pos);
       case 'List':
         return this.renderList(node, pos);
       case 'Stat':
@@ -1969,69 +1982,55 @@ export class SVGRenderer {
   </g>`;
   }
 
-  protected renderModal(node: IRComponentNode, pos: any): string {
-    const visible = this.parseBooleanProp(node.props.visible, true);
-    if (!visible) {
-      return '';
-    }
+  protected renderModalDecoration(node: IRNode, pos: any, output: string[]): void {
+    if (node.kind !== 'container') return;
 
-    const title = String(node.props.title || 'Modal');
-
+    const canvasWidth = this.options.width;
+    const canvasHeight = Math.max(this.options.height, this.calculateContentHeight());
     const padding = 16;
     const headerHeight = 48;
+    const hasTitle = node.params.title !== undefined && node.params.title !== '';
+    const closable = node.params.closable !== 'false' && node.params.closable !== 0;
+    const title = hasTitle ? String(node.params.title) : '';
 
-    // Use full-canvas overlay so it sits above prior content
-    const overlayHeight = Math.max(this.options.height, this.calculateContentHeight());
-    const modalX = (this.options.width - pos.width) / 2;
-    const modalY = Math.max(40, (overlayHeight - pos.height) / 2);
-    const closeButtonSize = 28;
-    const closeButtonX = modalX + pos.width - padding - closeButtonSize / 2 - 2;
-    const closeButtonY = modalY + padding - closeButtonSize / 2;
-    const closeEventAttrs = this.getScopedEventAttrs(node, 'onClose');
+    // Backdrop
+    output.push(
+      `<rect x="0" y="0" width="${canvasWidth}" height="${canvasHeight}" fill="black" opacity="0.28"/>`
+    );
 
-    return `<g${this.getDataNodeId(node)}>
-    <!-- Modal backdrop -->
-      <rect x="0" y="0" 
-        width="${this.options.width}" height="${overlayHeight}" 
-        fill="black" opacity="0.28"/>
-    
-    <!-- Modal box -->
-      <rect x="${modalX}" y="${modalY}" 
-        width="${pos.width}" height="${pos.height}" 
-          rx="8" 
-          fill="${this.renderTheme.cardBg}" 
-        stroke="${this.renderTheme.border}" 
-          stroke-width="1"/>
-    
-    <!-- Header -->
-      <line x1="${modalX}" y1="${modalY + headerHeight}" 
-        x2="${modalX + pos.width}" y2="${modalY + headerHeight}" 
-          stroke="${this.renderTheme.border}" 
-          stroke-width="1"/>
-    
-      <text x="${modalX + padding}" y="${modalY + padding + 16}" 
-          font-family="Arial, Helvetica, sans-serif" 
-          font-size="16" 
-          font-weight="600" 
-          fill="${this.renderTheme.text}">${this.escapeXml(title)}</text>
-    
-    <!-- Close button -->
-      ${closeEventAttrs ? `<rect x="${closeButtonX}" y="${closeButtonY}"
-        width="${closeButtonSize}" height="${closeButtonSize}"
-        rx="6"
-        fill="transparent" stroke="none" pointer-events="all"${closeEventAttrs}/>` : ''}
-      <text x="${modalX + pos.width - 16}" y="${modalY + padding + 12}" 
-          font-family="Arial, Helvetica, sans-serif" 
-          font-size="18" 
-          fill="${this.renderTheme.textMuted}">✕</text>
-    
-    <!-- Content placeholder -->
-      <text x="${modalX + pos.width / 2}" y="${modalY + headerHeight + (pos.height - headerHeight) / 2}" 
-          font-family="Arial, Helvetica, sans-serif" 
-          font-size="13" 
-          fill="${this.renderTheme.textMuted}" 
-          text-anchor="middle">Modal content</text>
-  </g>`;
+    // Modal box
+    output.push(
+      `<rect x="${pos.x}" y="${pos.y}" width="${pos.width}" height="${pos.height}" rx="8" fill="${this.renderTheme.cardBg}" stroke="${this.renderTheme.border}" stroke-width="1"/>`
+    );
+
+    if (hasTitle) {
+      // Header separator
+      output.push(
+        `<line x1="${pos.x}" y1="${pos.y + headerHeight}" x2="${pos.x + pos.width}" y2="${pos.y + headerHeight}" stroke="${this.renderTheme.border}" stroke-width="1"/>`
+      );
+      // Title text
+      output.push(
+        `<text x="${pos.x + padding}" y="${pos.y + padding + 15}" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="600" fill="${this.renderTheme.text}">${this.escapeXml(title)}</text>`
+      );
+      // Close button (only if closable and has title)
+      if (closable) {
+        const events = node.events?.find(e => e.event === 'onClose');
+        const closeEventAttr = events ? this.serializeEventHandler(events) : '';
+        const closeX = pos.x + pos.width - padding - 14;
+        const closeY = pos.y + padding + 14;
+        output.push(
+          `<rect x="${closeX - 10}" y="${closeY - 12}" width="24" height="24" rx="4" fill="transparent" stroke="none" pointer-events="all"${closeEventAttr}/>`,
+          `<text x="${closeX}" y="${closeY}" font-family="Arial, Helvetica, sans-serif" font-size="16" fill="${this.renderTheme.textMuted}" text-anchor="middle">✕</text>`
+        );
+      }
+    }
+  }
+
+  protected renderModalFooterDecoration(pos: any, output: string[]): void {
+    // Separator line above footer
+    output.push(
+      `<line x1="${pos.x}" y1="${pos.y}" x2="${pos.x + pos.width}" y2="${pos.y}" stroke="${this.renderTheme.border}" stroke-width="1"/>`
+    );
   }
 
   protected renderList(node: IRComponentNode, pos: any): string {
@@ -3122,6 +3121,8 @@ export class SVGRenderer {
       }
       if (node.events && node.events.length > 0) {
         for (const handler of node.events) {
+          // onClose on modal is scoped to the close button — not emitted on the wrapper <g>
+          if (node.containerType === 'modal' && handler.event === 'onClose') continue;
           attrs += this.serializeEventHandler(handler);
         }
       }

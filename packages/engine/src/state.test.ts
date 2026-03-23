@@ -15,12 +15,12 @@ function buildIRWithSourceMap(input: string) {
 
 describe('applyStateChange', () => {
   describe('setVisible', () => {
-    it('should set visible: true on a node matched by userDefinedId', () => {
+    it('should set visible: true on a node matched by params.id (container modal)', () => {
       const ir = buildIR(`
         project "Test" {
           screen Main {
             layout stack {
-              component Modal id: confirmModal title: "Sure?"
+              layout modal(id: confirmModal, title: "Sure?") {}
             }
           }
         }
@@ -29,20 +29,20 @@ describe('applyStateChange', () => {
       const newIR = applyStateChange(ir, { type: 'setVisible', targetId: 'confirmModal', visible: true });
 
       const modal = Object.values(newIR.project.nodes).find(
-        (n) => n.kind === 'component' && n.userDefinedId === 'confirmModal'
+        (n) => n.kind === 'container' && n.containerType === 'modal' && String(n.params.id) === 'confirmModal'
       );
       expect(modal).toBeDefined();
-      if (modal?.kind === 'component') {
-        expect(modal.props.visible).toBe('true');
+      if (modal?.kind === 'container') {
+        expect(modal.params.visible).toBe('true');
       }
     });
 
-    it('should set visible: false on a node matched by userDefinedId', () => {
+    it('should set visible: false on a node matched by params.id (container modal)', () => {
       const ir = buildIR(`
         project "Test" {
           screen Main {
             layout stack {
-              component Modal id: myModal title: "Hello"
+              layout modal(id: myModal, title: "Hello") {}
             }
           }
         }
@@ -51,10 +51,10 @@ describe('applyStateChange', () => {
       const newIR = applyStateChange(ir, { type: 'setVisible', targetId: 'myModal', visible: false });
 
       const modal = Object.values(newIR.project.nodes).find(
-        (n) => n.kind === 'component' && n.userDefinedId === 'myModal'
+        (n) => n.kind === 'container' && n.containerType === 'modal' && String(n.params.id) === 'myModal'
       );
-      if (modal?.kind === 'component') {
-        expect(modal.props.visible).toBe('false');
+      if (modal?.kind === 'container') {
+        expect(modal.params.visible).toBe('false');
       }
     });
 
@@ -63,41 +63,41 @@ describe('applyStateChange', () => {
         project "Test" {
           screen Main {
             layout stack {
-              component Modal id: myModal title: "Hello"
+              layout modal(id: myModal, title: "Hello") {}
             }
           }
         }
       `);
 
       const originalModal = Object.values(ir.project.nodes).find(
-        (n) => n.kind === 'component' && n.userDefinedId === 'myModal'
+        (n) => n.kind === 'container' && n.containerType === 'modal' && String(n.params.id) === 'myModal'
       );
-      const originalVisible = originalModal?.kind === 'component' ? originalModal.props.visible : undefined;
+      const originalVisible = originalModal?.kind === 'container' ? originalModal.params.visible : undefined;
 
       applyStateChange(ir, { type: 'setVisible', targetId: 'myModal', visible: false });
 
       // Original should be unchanged
       const stillOriginal = Object.values(ir.project.nodes).find(
-        (n) => n.kind === 'component' && n.userDefinedId === 'myModal'
+        (n) => n.kind === 'container' && n.containerType === 'modal' && String(n.params.id) === 'myModal'
       );
-      if (stillOriginal?.kind === 'component') {
-        expect(stillOriginal.props.visible).toBe(originalVisible);
+      if (stillOriginal?.kind === 'container') {
+        expect(stillOriginal.params.visible).toBe(originalVisible);
       }
     });
 
-    it('should resolve _self via originNodeId', () => {
+    it('should resolve _self via originNodeId (container modal)', () => {
       const ir = buildIRWithSourceMap(`
         project "Test" {
           screen Main {
             layout stack {
-              component Modal id: confirmModal title: "Sure?" onClose: hide(self)
+              layout modal(id: confirmModal, title: "Sure?", onClose: hide(self)) {}
             }
           }
         }
       `);
 
       const modal = Object.values(ir.project.nodes).find(
-        (n) => n.kind === 'component' && n.userDefinedId === 'confirmModal'
+        (n) => n.kind === 'container' && n.containerType === 'modal' && String(n.params.id) === 'confirmModal'
       );
       const nodeId = modal?.meta.nodeId;
       expect(nodeId).toBeDefined();
@@ -109,10 +109,10 @@ describe('applyStateChange', () => {
       );
 
       const updatedModal = Object.values(newIR.project.nodes).find(
-        (n) => n.kind === 'component' && n.meta.nodeId === nodeId
+        (n) => n.kind === 'container' && n.meta.nodeId === nodeId
       );
-      if (updatedModal?.kind === 'component') {
-        expect(updatedModal.props.visible).toBe('false');
+      if (updatedModal?.kind === 'container') {
+        expect(updatedModal.params.visible).toBe('false');
       }
     });
 
@@ -144,7 +144,7 @@ describe('applyStateChange', () => {
         project "Test" {
           screen Main {
             layout stack {
-              component Modal id: myPanel title: "Panel"
+              layout modal(id: myPanel, title: "Panel") {}
             }
           }
         }
@@ -153,10 +153,10 @@ describe('applyStateChange', () => {
       const newIR = applyStateChange(ir, { type: 'toggleVisible', targetId: 'myPanel' });
 
       const panel = Object.values(newIR.project.nodes).find(
-        (n) => n.kind === 'component' && n.userDefinedId === 'myPanel'
+        (n) => n.kind === 'container' && n.containerType === 'modal' && String(n.params.id) === 'myPanel'
       );
-      if (panel?.kind === 'component') {
-        expect(panel.props.visible).toBe('false');
+      if (panel?.kind === 'container') {
+        expect(panel.params.visible).toBe('false');
       }
     });
 
@@ -165,7 +165,7 @@ describe('applyStateChange', () => {
         project "Test" {
           screen Main {
             layout stack {
-              component Modal id: myPanel title: "Panel"
+              layout modal(id: myPanel, title: "Panel") {}
             }
           }
         }
@@ -177,10 +177,10 @@ describe('applyStateChange', () => {
       const toggledIR = applyStateChange(hiddenIR, { type: 'toggleVisible', targetId: 'myPanel' });
 
       const panel = Object.values(toggledIR.project.nodes).find(
-        (n) => n.kind === 'component' && n.userDefinedId === 'myPanel'
+        (n) => n.kind === 'container' && n.containerType === 'modal' && String(n.params.id) === 'myPanel'
       );
-      if (panel?.kind === 'component') {
-        expect(panel.props.visible).toBe('true');
+      if (panel?.kind === 'container') {
+        expect(panel.params.visible).toBe('true');
       }
     });
   });

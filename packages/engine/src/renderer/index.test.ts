@@ -495,7 +495,7 @@ describe('SVG Renderer', () => {
         screen Main {
           layout stack {
             component Heading text: "Dashboard"
-            component Modal title: "Confirm Delete" visible: false
+            layout modal(title: "Confirm Delete", visible: false) {}
           }
         }
       }
@@ -508,8 +508,6 @@ describe('SVG Renderer', () => {
 
     expect(svg).toContain('Dashboard');
     expect(svg).not.toContain('Confirm Delete');
-    expect(svg).not.toContain('Modal backdrop');
-    expect(svg).not.toContain('Modal content');
   });
 
   it('should render topbar component', () => {
@@ -2574,13 +2572,13 @@ describe('SVG Renderer – Event System', () => {
         project "UserId" {
           screen Main {
             layout stack {
-              component Modal id: confirmModal title: "Sure?"
+              component Button id: myBtn text: "Click"
             }
           }
         }
       `;
       const svg = renderInput(input);
-      expect(svg).toContain('data-user-id="confirmModal"');
+      expect(svg).toContain('data-user-id="myBtn"');
     });
 
     it('should NOT emit data-user-id when component has no id', () => {
@@ -2621,7 +2619,7 @@ describe('SVG Renderer – Event System', () => {
         project "Show" {
           screen Main {
             layout stack {
-              component Modal id: confirmModal title: "Sure?"
+              layout modal(id: confirmModal, title: "Sure?") {}
               component Button text: "Open" onClick: show(confirmModal)
             }
           }
@@ -2636,8 +2634,8 @@ describe('SVG Renderer – Event System', () => {
         project "Chain" {
           screen Main {
             layout stack {
-              component Modal id: listModal title: "List"
-              component Modal id: confirmModal title: "Confirm"
+              layout modal(id: listModal, title: "List") {}
+              layout modal(id: confirmModal, title: "Confirm") {}
               component Button text: "Delete" onClick: hide(listModal) & show(confirmModal)
             }
           }
@@ -2673,7 +2671,7 @@ describe('SVG Renderer – Event System', () => {
         project "Close" {
           screen Main {
             layout stack {
-              component Modal id: confirmModal title: "Sure?" onClose: hide(self)
+              layout modal(id: confirmModal, title: "Sure?", onClose: hide(self)) {}
             }
           }
         }
@@ -2689,7 +2687,7 @@ describe('SVG Renderer – Event System', () => {
         project "Change" {
           screen Main {
             layout stack {
-              component Modal id: myPanel title: "Panel"
+              layout modal(id: myPanel, title: "Panel") {}
               component Toggle text: "Show panel" onChange: toggle(myPanel)
             }
           }
@@ -2704,7 +2702,7 @@ describe('SVG Renderer – Event System', () => {
         project "ActiveInactive" {
           screen Main {
             layout stack {
-              component Modal id: submitBtn title: "Submit"
+              layout modal(id: submitBtn, title: "Submit") {}
               component Checkbox text: "Terms"
                 onActive: show(submitBtn)
                 onInactive: hide(submitBtn)
@@ -2738,6 +2736,109 @@ describe('SVG Renderer – Event System', () => {
       const layout = calculateLayout(ir);
       const svg = renderToSVG(ir, layout);
       expect(svg).toContain('data-tabs-id="mainTabs"');
+    });
+  });
+
+  describe('layout modal rendering', () => {
+    it('should render backdrop and modal box', () => {
+      const svg = renderInput(`
+        project "M" {
+          screen Main {
+            layout stack {
+              layout modal(title: "Hello") {
+                component Text text: "Body"
+              }
+            }
+          }
+        }
+      `);
+      expect(svg).toContain('opacity="0.28"'); // backdrop
+      expect(svg).toContain('rx="8"');         // modal box
+      expect(svg).toContain('Hello');           // title
+      expect(svg).toContain('Body');            // content
+    });
+
+    it('should render header only when title is present', () => {
+      const withTitle = renderInput(`
+        project "M" {
+          screen Main {
+            layout stack {
+              layout modal(title: "My Modal") { component Text text: "x" }
+            }
+          }
+        }
+      `);
+      const withoutTitle = renderInput(`
+        project "M" {
+          screen Main {
+            layout stack {
+              layout modal() { component Text text: "x" }
+            }
+          }
+        }
+      `);
+      expect(withTitle).toContain('My Modal');
+      expect(withTitle).toContain('✕'); // close button present when title + closable
+      expect(withoutTitle).not.toContain('✕'); // no close button without title
+    });
+
+    it('should not render close button when closable is false', () => {
+      const svg = renderInput(`
+        project "M" {
+          screen Main {
+            layout stack {
+              layout modal(title: "Modal", closable: false) { component Text text: "x" }
+            }
+          }
+        }
+      `);
+      expect(svg).toContain('Modal');
+      expect(svg).not.toContain('✕');
+    });
+
+    it('should not render modal when visible is false', () => {
+      const svg = renderInput(`
+        project "M" {
+          screen Main {
+            layout stack {
+              layout modal(title: "Hidden", visible: false) { component Text text: "x" }
+              component Heading text: "Visible"
+            }
+          }
+        }
+      `);
+      expect(svg).not.toContain('Hidden');
+      expect(svg).toContain('Visible');
+    });
+
+    it('should emit data-event-close on close button', () => {
+      const svg = renderInput(`
+        project "M" {
+          screen Main {
+            layout stack {
+              layout modal(title: "Confirm", onClose: hide(self)) { component Text text: "x" }
+            }
+          }
+        }
+      `);
+      expect(svg).toContain('data-event-close="hide:_self"');
+    });
+
+    it('should render footer separator line', () => {
+      const svg = renderInput(`
+        project "M" {
+          screen Main {
+            layout stack {
+              layout modal(title: "Confirm") {
+                body { component Text text: "Content" }
+                footer { component Button text: "OK" }
+              }
+            }
+          }
+        }
+      `);
+      expect(svg).toContain('Content');
+      expect(svg).toContain('OK');
     });
   });
 });

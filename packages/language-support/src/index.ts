@@ -104,8 +104,8 @@ export const ALL_KEYWORDS: KeywordDefinition[] = [
     type: 'keyword' as const,
     description: `Wire DSL keyword: ${name}`,
   })),
-  // Cell keyword
-  ...KEYWORDS.cell.map(name => ({
+  // Section keywords (cell, tab, body, footer)
+  ...KEYWORDS.sections.map(name => ({
     name,
     type: 'keyword' as const,
     description: `Wire DSL keyword: ${name}`,

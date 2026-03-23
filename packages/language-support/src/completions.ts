@@ -100,6 +100,13 @@ export const CONTAINER_COMPLETIONS: CompletionItem[] = [
     documentation: 'layout tabs(id: mainTabs) { tab { ... } tab { ... } }',
     insertText: 'tabs(',
   },
+  {
+    label: 'modal',
+    kind: 'Component',
+    detail: 'Modal overlay container',
+    documentation: 'layout modal(title: "Confirm?", visible: false) { ... }',
+    insertText: 'modal(',
+  },
 ];
 
 export const COMPONENT_COMPLETIONS: CompletionItem[] = [
@@ -547,15 +554,36 @@ export function getScopeBasedCompletions(
       return layoutCompletions;
 
     case 'inside-layout':
-      // Suggest components, nested layouts, and cells
+      // Suggest components, nested layouts, and section keywords (cell/tab/body/footer)
       return [
         ...CONTAINER_COMPLETIONS,  // Allow nested layouts
         {
           label: 'cell',
           kind: 'Keyword',
-          detail: 'Grid cell within layout',
+          detail: 'Grid cell — valid inside layout grid',
           documentation: 'cell span: 2 { ... }',
           insertText: 'cell span: ${1:1} {\n\t$0\n}',
+        },
+        {
+          label: 'tab',
+          kind: 'Keyword',
+          detail: 'Tab section — valid inside layout tabs',
+          documentation: 'tab { ... }',
+          insertText: 'tab {\n\t$0\n}',
+        },
+        {
+          label: 'body',
+          kind: 'Keyword',
+          detail: 'Body section — valid inside layout modal',
+          documentation: 'body { ... }',
+          insertText: 'body {\n\t$0\n}',
+        },
+        {
+          label: 'footer',
+          kind: 'Keyword',
+          detail: 'Footer section — valid inside layout modal',
+          documentation: 'footer { ... }',
+          insertText: 'footer {\n\t$0\n}',
         },
         {
           label: 'component',

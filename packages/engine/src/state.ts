@@ -111,13 +111,21 @@ function applyToggleVisible(
   const resolvedId = resolveTargetId(ir, targetId, originNodeId);
   if (!resolvedId) return ir;
 
-  // Find current visible state — default to true if not set
+  // Find current visible state — check both component and container nodes
   const targetNodeEntry = findNodeByUserDefinedId(ir.project.nodes, resolvedId) ||
     (resolvedId === originNodeId ? findNodeByMetaNodeId(ir.project.nodes, resolvedId) : null);
+  const targetContainerEntry = !targetNodeEntry
+    ? Object.values(ir.project.nodes).find(
+        n => n.kind === 'container' && (String(n.params.id) === resolvedId || n.meta.nodeId === resolvedId)
+      ) as IRContainerNode | undefined
+    : undefined;
 
-  const currentVisible = targetNodeEntry
-    ? (targetNodeEntry.props as any)?.visible !== 'false'
-    : true;
+  let currentVisible = true;
+  if (targetNodeEntry?.kind === 'component') {
+    currentVisible = targetNodeEntry.props?.visible !== 'false';
+  } else if (targetContainerEntry?.kind === 'container') {
+    currentVisible = String(targetContainerEntry.params.visible) !== 'false';
+  }
 
   const nodes = mutateNodeVisible(ir.project.nodes, resolvedId, !currentVisible);
   return { ...ir, project: { ...ir.project, nodes } };
@@ -260,7 +268,7 @@ function mutateNodeVisible(
   targetId: string,
   visible: boolean
 ): Record<string, IRNode> {
-  // targetId can be a userDefinedId or a meta.nodeId (for _self)
+  // targetId can be a userDefinedId, params.id (for containers), or a meta.nodeId (for _self)
   let found = false;
   const result: Record<string, IRNode> = {};
 
@@ -273,6 +281,19 @@ function mutateNodeVisible(
         result[key] = {
           ...node,
           props: { ...node.props, visible: visible ? 'true' : 'false' },
+        };
+        found = true;
+      } else {
+        result[key] = node;
+      }
+    } else if (node.kind === 'container') {
+      const matchByParamsId = node.params.id !== undefined && String(node.params.id) === targetId;
+      const matchByMetaNodeId = node.meta.nodeId === targetId;
+
+      if (matchByParamsId || matchByMetaNodeId) {
+        result[key] = {
+          ...node,
+          params: { ...node.params, visible: visible ? 'true' : 'false' },
         };
         found = true;
       } else {

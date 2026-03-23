@@ -110,6 +110,12 @@ export class LayoutEngine {
   ): void {
     if (node.kind !== 'container') return;
 
+    // Modal is an overlay — position is absolute relative to canvas, not parent flow
+    if (node.containerType === 'modal') {
+      this.calculateModal(node, nodeId, x, y, width, height);
+      return;
+    }
+
     // Most containers use inner padding at this level. Card handles its own padding internally.
     const usesOuterPadding = node.containerType !== 'card';
     const padding = usesOuterPadding ? this.resolveSpacing(node.style.padding) : 0;
@@ -129,6 +135,10 @@ export class LayoutEngine {
     // Calculate children based on container type
     switch (node.containerType) {
       case 'stack':
+      case 'modal-body':
+        this.calculateStack(node, innerX, innerY, innerWidth, innerHeight);
+        break;
+      case 'modal-footer':
         this.calculateStack(node, innerX, innerY, innerWidth, innerHeight);
         break;
       case 'grid':
@@ -149,7 +159,7 @@ export class LayoutEngine {
     // When empty, preserve the height assigned by the parent — collapsing to just `padding` would
     // place the container at the wrong size (and effectively at 0,0 visually).
     const isHorizontalStack = node.containerType === 'stack' && !isVerticalStack;
-    if ((isVerticalStack || isHorizontalStack || node.containerType === 'card') && node.children.length > 0) {
+    if ((isVerticalStack || isHorizontalStack || node.containerType === 'card' || node.containerType === 'modal-body' || node.containerType === 'modal-footer') && node.children.length > 0) {
       let containerMaxY = y;
       node.children.forEach((childRef) => {
         const childPos = this.result[childRef.ref];
@@ -173,8 +183,29 @@ export class LayoutEngine {
     if (direction === 'vertical') {
       let currentY = y;
 
-      children.forEach((childRef, index) => {
+      // Visible, non-modal children that participate in the normal flow
+      const flowChildren = children.filter((cr) => {
+        const n = this.nodes[cr.ref];
+        if (n?.kind === 'container' && n.containerType === 'modal') return false;
+        return this.isNodeVisible(cr.ref);
+      });
+      let flowCount = 0;
+
+      children.forEach((childRef) => {
         const childNode = this.nodes[childRef.ref];
+
+        // Modal containers are overlays — position them absolutely, skip flow
+        if (childNode?.kind === 'container' && childNode.containerType === 'modal') {
+          this.calculateNode(childRef.ref, x, currentY, width, 0, 'stack');
+          return;
+        }
+
+        // Invisible nodes collapse to 0 height and don't advance the cursor
+        if (!this.isNodeVisible(childRef.ref)) {
+          this.calculateNode(childRef.ref, x, currentY, width, 0, 'stack');
+          return;
+        }
+
         let childHeight = this.getComponentHeight();
 
         // If explicit height in props
@@ -192,33 +223,40 @@ export class LayoutEngine {
 
         this.calculateNode(childRef.ref, x, currentY, width, childHeight, 'stack');
         currentY += childHeight;
+        flowCount++;
 
-        // Add gap except after last child
-        if (index < children.length - 1) {
+        // Add gap only between visible flow siblings
+        if (flowCount < flowChildren.length) {
           currentY += gap;
         }
       });
 
-      // Post-processing: adjust Y positions based on actual container heights
-      // Some containers (like card) may have their heights recalculated after children are positioned
+      // Post-processing: adjust Y positions based on actual container heights.
+      // Skip modals (overlays) and invisible nodes.
       let adjustedY = y;
-      children.forEach((childRef, index) => {
+      let adjustedCount = 0;
+      children.forEach((childRef) => {
+        const childNode = this.nodes[childRef.ref];
+        if (childNode?.kind === 'container' && childNode.containerType === 'modal') return;
+        if (!this.isNodeVisible(childRef.ref)) return;
+
         const childPos = this.result[childRef.ref];
         if (childPos) {
           const deltaY = adjustedY - childPos.y;
-          
+
           // Update Y position to the adjusted position
           childPos.y = adjustedY;
-          
+
           // If this child is a container, recursively update all its descendants
           if (deltaY !== 0) {
             this.adjustNodeYPositions(childRef.ref, deltaY);
           }
-          
+
           adjustedY += childPos.height;
-          
-          // Add gap except after last child
-          if (index < children.length - 1) {
+          adjustedCount++;
+
+          // Add gap only between visible flow siblings
+          if (adjustedCount < flowChildren.length) {
             adjustedY += gap;
           }
         }
@@ -232,11 +270,12 @@ export class LayoutEngine {
         // Default behavior: equal width distribution — all children fill the same width.
         // Cross-axis align is a no-op here since all children receive stackHeight.
         let currentX = x;
-        const childWidth = this.calculateChildWidth(children.length, width, gap);
+        const visibleChildren = children.filter((cr) => this.isNodeVisible(cr.ref));
+        const childWidth = this.calculateChildWidth(visibleChildren.length, width, gap);
 
-        // Calculate max height of children
+        // Calculate max height of visible children
         let stackHeight = 0;
-        children.forEach((childRef) => {
+        visibleChildren.forEach((childRef) => {
           const childNode = this.nodes[childRef.ref];
           let childHeight = this.getComponentHeight();
 
@@ -251,8 +290,12 @@ export class LayoutEngine {
           stackHeight = Math.max(stackHeight, childHeight);
         });
 
-        // Position children with equal widths
+        // Position children — invisible ones collapse to 0 width and don't advance X
         children.forEach((childRef) => {
+          if (!this.isNodeVisible(childRef.ref)) {
+            this.calculateNode(childRef.ref, currentX, y, 0, 0, 'stack');
+            return;
+          }
           this.calculateNode(childRef.ref, currentX, y, childWidth, stackHeight, 'stack');
           currentX += childWidth + gap;
         });
@@ -266,10 +309,21 @@ export class LayoutEngine {
         const childHeights: number[] = [];
         const explicitHeightFlags: boolean[] = [];
         const flexIndices = new Set<number>();
+        const visibleFlags: boolean[] = [];
         let stackHeight = 0;
 
         children.forEach((childRef, index) => {
           const childNode = this.nodes[childRef.ref];
+          const visible = this.isNodeVisible(childRef.ref);
+          visibleFlags.push(visible);
+
+          if (!visible) {
+            childWidths.push(0);
+            childHeights.push(0);
+            explicitHeightFlags.push(false);
+            return;
+          }
+
           const hasExplicitHeight = childNode?.kind === 'component' && !!childNode.props.height;
           const hasExplicitWidth = childNode?.kind === 'component' && !!childNode.props.width;
 
@@ -301,7 +355,8 @@ export class LayoutEngine {
           explicitHeightFlags.push(hasExplicitHeight);
         });
 
-        const totalGapWidth = gap * Math.max(0, children.length - 1);
+        const visibleCount = visibleFlags.filter(Boolean).length;
+        const totalGapWidth = gap * Math.max(0, visibleCount - 1);
         if (flexIndices.size > 0) {
           const fixedWidth = childWidths.reduce((sum, w, idx) => {
             return flexIndices.has(idx) ? sum : sum + w;
@@ -315,6 +370,7 @@ export class LayoutEngine {
 
         // Resolve final heights after widths are finalized.
         children.forEach((childRef, index) => {
+          if (!visibleFlags[index]) return;
           const childNode = this.nodes[childRef.ref];
           const childWidth = childWidths[index];
           let childHeight = this.getComponentHeight();
@@ -331,7 +387,7 @@ export class LayoutEngine {
           stackHeight = Math.max(stackHeight, childHeight);
         });
 
-        // Calculate total natural content width
+        // Calculate total natural content width (visible children only)
         const totalChildWidth = childWidths.reduce((sum, w) => sum + w, 0);
         const totalContentWidth = totalChildWidth + totalGapWidth;
 
@@ -345,21 +401,27 @@ export class LayoutEngine {
           startX = x + width - totalContentWidth;
         } else if (justify === 'spaceBetween') {
           startX = x;
-          dynamicGap = children.length > 1
-            ? (width - totalChildWidth) / (children.length - 1)
+          dynamicGap = visibleCount > 1
+            ? (width - totalChildWidth) / (visibleCount - 1)
             : 0;
         } else if (justify === 'spaceAround') {
-          const spacing = children.length > 0
-            ? (width - totalChildWidth) / children.length
+          const spacing = visibleCount > 0
+            ? (width - totalChildWidth) / visibleCount
             : 0;
           startX = x + spacing / 2;
           dynamicGap = spacing;
         }
         // 'start' uses startX = x, dynamicGap = gap (no adjustment)
 
-        // Position children applying cross-axis alignment per child
+        // Position children applying cross-axis alignment per child.
+        // Invisible children get a collapsed position and don't advance X.
         let currentX = startX;
         children.forEach((childRef, index) => {
+          if (!visibleFlags[index]) {
+            this.calculateNode(childRef.ref, currentX, y, 0, 0, 'stack');
+            return;
+          }
+
           const childWidth = childWidths[index];
           const childHeight = childHeights[index];
 
@@ -403,6 +465,7 @@ export class LayoutEngine {
       const rowHeights: number[] = [0];
 
       node.children.forEach((childRef) => {
+        if (!this.isNodeVisible(childRef.ref)) return;
         const child = this.nodes[childRef.ref];
         let span = 1;
         let childHeight = this.getComponentHeight();
@@ -464,6 +527,7 @@ export class LayoutEngine {
 
       let maxHeight = 0;
       node.children.forEach((childRef, index) => {
+        if (!this.isNodeVisible(childRef.ref)) return;
         const child = this.nodes[childRef.ref];
         let childHeight = this.getComponentHeight();
         const isFirst = index === 0;
@@ -499,10 +563,11 @@ export class LayoutEngine {
     const direction = node.params.direction || 'vertical';
 
     if (node.containerType === 'stack' && direction === 'horizontal') {
-      // Horizontal stacks take the tallest child only
+      // Horizontal stacks take the tallest visible child only
       let maxHeight = 0;
 
       node.children.forEach((childRef) => {
+        if (!this.isNodeVisible(childRef.ref)) return;
         const child = this.nodes[childRef.ref];
         let childHeight = this.getComponentHeight();
 
@@ -523,8 +588,11 @@ export class LayoutEngine {
       return totalHeight;
     }
 
-    // Vertical stacks and other containers sum heights linearly
-    node.children.forEach((childRef, index) => {
+    // Vertical stacks and other containers sum visible children heights linearly
+    const visibleLinear = node.children.filter((cr) => this.isNodeVisible(cr.ref));
+    let linearIndex = 0;
+    node.children.forEach((childRef) => {
+      if (!this.isNodeVisible(childRef.ref)) return;
       const child = this.nodes[childRef.ref];
       let childHeight = this.getComponentHeight();
 
@@ -539,9 +607,10 @@ export class LayoutEngine {
       }
 
       totalHeight += childHeight;
+      linearIndex++;
 
-      // Add gap except after last child
-      if (index < node.children.length - 1) {
+      // Add gap only between visible siblings
+      if (linearIndex < visibleLinear.length) {
         totalHeight += gap;
       }
     });
@@ -557,9 +626,13 @@ export class LayoutEngine {
     const colWidth = (width - gap * (columns - 1)) / columns;
 
     // Multi-pass layout:
-    // Pass 1: Calculate heights of all cells
+    // Pass 1: Calculate heights of all visible cells
     const cellHeights: Record<number, number> = {}; // cellIndex -> height
     node.children.forEach((childRef, cellIndex) => {
+      if (!this.isNodeVisible(childRef.ref)) {
+        cellHeights[cellIndex] = 0;
+        return;
+      }
       const child = this.nodes[childRef.ref];
       let cellHeight = this.getComponentHeight();
       let span = 1;
@@ -582,14 +655,19 @@ export class LayoutEngine {
       cellHeights[cellIndex] = cellHeight;
     });
 
-    // Pass 2: Layout cells and determine row heights
+    // Pass 2: Layout visible cells and determine row heights
     let currentRow = 0;
     let currentCol = 0;
     let currentRowMaxHeight = 0;
     const rowHeights: number[] = [0];
-    const cellPositions: Array<{ row: number; col: number; span: number }> = [];
+    const cellPositions: Array<{ row: number; col: number; span: number; visible: boolean }> = [];
 
     node.children.forEach((childRef, cellIndex) => {
+      const visible = this.isNodeVisible(childRef.ref);
+      if (!visible) {
+        cellPositions.push({ row: currentRow, col: currentCol, span: 0, visible: false });
+        return;
+      }
       const child = this.nodes[childRef.ref];
       let span = 1;
 
@@ -606,7 +684,7 @@ export class LayoutEngine {
         currentRowMaxHeight = 0;
       }
 
-      cellPositions.push({ row: currentRow, col: currentCol, span });
+      cellPositions.push({ row: currentRow, col: currentCol, span, visible: true });
       currentRowMaxHeight = Math.max(currentRowMaxHeight, cellHeights[cellIndex]);
 
       currentCol += span;
@@ -617,7 +695,13 @@ export class LayoutEngine {
 
     // Pass 3: Position all cells using calculated row heights
     node.children.forEach((childRef, cellIndex) => {
-      const { row, col, span } = cellPositions[cellIndex];
+      const { row, col, span, visible } = cellPositions[cellIndex];
+
+      if (!visible) {
+        this.calculateNode(childRef.ref, x, y, 0, 0, 'grid');
+        return;
+      }
+
       const cellHeight = rowHeights[row];
 
       // Calculate y position (sum of all previous row heights + gaps)
@@ -712,8 +796,17 @@ export class LayoutEngine {
     const children = node.children;
     let currentY = y + cardPadding;
 
-    children.forEach((childRef, index) => {
+    const flowChildren = children.filter((cr) => this.isNodeVisible(cr.ref));
+    let flowCount = 0;
+
+    children.forEach((childRef) => {
       const childNode = this.nodes[childRef.ref];
+
+      if (!this.isNodeVisible(childRef.ref)) {
+        this.calculateNode(childRef.ref, x + cardPadding, currentY, innerCardWidth, 0, 'card');
+        return;
+      }
+
       let childHeight = this.getComponentHeight();
 
       // If explicit height in props
@@ -731,12 +824,61 @@ export class LayoutEngine {
 
       this.calculateNode(childRef.ref, x + cardPadding, currentY, innerCardWidth, childHeight, 'card');
       currentY += childHeight;
+      flowCount++;
 
-      // Add gap except after last child
-      if (index < children.length - 1) {
+      // Add gap only between visible siblings
+      if (flowCount < flowChildren.length) {
         currentY += gap;
       }
     });
+  }
+
+  private calculateModal(node: IRNode, nodeId: string, _canvasX: number, _canvasY: number, _canvasWidth: number, _canvasHeight: number): void {
+    if (node.kind !== 'container') return;
+
+    // Modal is an overlay — position is always absolute relative to the canvas origin (0, 0),
+    // regardless of where the modal node appears in the DSL tree.
+    const viewportWidth = this.viewport.width;
+
+    // Determine modal width based on size param
+    const size = String(node.params.size || 'md');
+    const modalWidths: Record<string, number> = { sm: 380, md: 520, lg: 720 };
+    const modalWidth = Math.min(modalWidths[size] ?? 520, viewportWidth - 32);
+
+    // Position: centered horizontally, 64px from canvas top
+    const modalX = Math.round((viewportWidth - modalWidth) / 2);
+    const modalY = 64;
+
+    // Header height: 48px if title param is present, else 0
+    const hasHeader = node.params.title !== undefined && node.params.title !== '';
+    const headerHeight = hasHeader ? 48 : 0;
+
+    // Calculate children heights
+    let childrenHeight = 0;
+    const innerWidth = modalWidth;
+    let currentY = modalY + headerHeight;
+
+    node.children.forEach((childRef, index) => {
+      const childNode = this.nodes[childRef.ref];
+      let childHeight = 0;
+      if (childNode?.kind === 'container') {
+        childHeight = this.calculateContainerHeight(childNode, innerWidth);
+      } else if (childNode?.kind === 'component') {
+        childHeight = this.getIntrinsicComponentHeight(childNode, innerWidth);
+      } else {
+        childHeight = this.getComponentHeight();
+      }
+      this.calculateNode(childRef.ref, modalX, currentY, innerWidth, childHeight, 'modal');
+      currentY += childHeight;
+      childrenHeight += childHeight;
+      if (index < node.children.length - 1) {
+        currentY += 8; // small gap between body/footer
+        childrenHeight += 8;
+      }
+    });
+
+    const modalHeight = headerHeight + childrenHeight;
+    this.result[nodeId] = { x: modalX, y: modalY, width: modalWidth, height: modalHeight };
   }
 
   /**
@@ -1311,6 +1453,18 @@ export class LayoutEngine {
       }
     }
     return width;
+  }
+
+  /**
+   * Returns false only when the node has an explicit `visible: 'false'` param/prop.
+   * Missing or any other value is treated as visible.
+   */
+  private isNodeVisible(nodeId: string): boolean {
+    const node = this.nodes[nodeId];
+    if (!node) return true;
+    if (node.kind === 'component') return String(node.props.visible) !== 'false';
+    if (node.kind === 'container') return String(node.params.visible) !== 'false';
+    return true;
   }
 
   private parseBooleanProp(value: unknown, fallback: boolean = false): boolean {

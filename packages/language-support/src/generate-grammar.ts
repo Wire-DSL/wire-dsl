@@ -29,8 +29,7 @@ export function generateGrammar(): TextMateGrammar {
       ...KEYWORDS.screen,
       ...KEYWORDS.layout,
       ...KEYWORDS.component,
-      ...KEYWORDS.cell,
-      ...KEYWORDS.tab,
+      ...KEYWORDS.sections,
       ...KEYWORDS.special,
       ...KEYWORDS.events,
     ])

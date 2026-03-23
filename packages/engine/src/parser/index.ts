@@ -67,6 +67,8 @@ const Mocks = createToken({ name: 'Mocks', pattern: /mocks\b/ });
 const Colors = createToken({ name: 'Colors', pattern: /colors(?=\s*\{)/ });
 const Cell = createToken({ name: 'Cell', pattern: /cell\b/ });
 const Tab = createToken({ name: 'Tab', pattern: /tab\b/ });
+const Body = createToken({ name: 'Body', pattern: /body\b/ });
+const Footer = createToken({ name: 'Footer', pattern: /footer\b/ });
 
 // Event action keywords (must come before Identifier)
 const Navigate = createToken({ name: 'Navigate', pattern: /navigate\b/ });
@@ -145,6 +147,8 @@ const allTokens = [
   Colors,
   Cell,
   Tab,
+  Body,
+  Footer,
   // Event action keywords (must come before Identifier)
   Navigate,
   Show,
@@ -347,6 +351,32 @@ class WireDSLParser extends CstParser {
     this.CONSUME(RCurly);
   });
 
+  // body { ... } — content section inside layout modal
+  private body = this.RULE('body', () => {
+    this.CONSUME(Body);
+    this.CONSUME(LCurly);
+    this.MANY(() => {
+      this.OR([
+        { ALT: () => this.SUBRULE(this.component) },
+        { ALT: () => this.SUBRULE(this.layout) },
+      ]);
+    });
+    this.CONSUME(RCurly);
+  });
+
+  // footer { ... } — footer section inside layout modal
+  private footer = this.RULE('footer', () => {
+    this.CONSUME(Footer);
+    this.CONSUME(LCurly);
+    this.MANY(() => {
+      this.OR([
+        { ALT: () => this.SUBRULE(this.component) },
+        { ALT: () => this.SUBRULE(this.layout) },
+      ]);
+    });
+    this.CONSUME(RCurly);
+  });
+
   // layout stack(...) { ... }
   private layout = this.RULE('layout', () => {
     this.CONSUME(Layout);
@@ -361,6 +391,8 @@ class WireDSLParser extends CstParser {
         { ALT: () => this.SUBRULE2(this.layout) },
         { ALT: () => this.SUBRULE(this.cell) },
         { ALT: () => this.SUBRULE(this.tab) },
+        { ALT: () => this.SUBRULE(this.body) },
+        { ALT: () => this.SUBRULE(this.footer) },
       ]);
     });
     this.CONSUME(RCurly);
@@ -480,12 +512,28 @@ export interface ASTTab {
   };
 }
 
+export interface ASTModalBody {
+  type: 'modal-body';
+  children: (ASTComponent | ASTLayout)[];
+  _meta?: {
+    nodeId: string;
+  };
+}
+
+export interface ASTModalFooter {
+  type: 'modal-footer';
+  children: (ASTComponent | ASTLayout)[];
+  _meta?: {
+    nodeId: string;
+  };
+}
+
 export interface ASTLayout {
   type: 'layout';
   layoutType: string;
   params: Record<string, string | number>;
   events: ASTEventHandler[];
-  children: (ASTComponent | ASTLayout | ASTCell | ASTTab)[];
+  children: (ASTComponent | ASTLayout | ASTCell | ASTTab | ASTModalBody | ASTModalFooter)[];
   _meta?: {
     nodeId: string;
   };
@@ -673,7 +721,7 @@ class WireDSLVisitor extends BaseCstVisitor {
     const layoutType = ctx.layoutType[0].image;
     const params: Record<string, string | number> = {};
     const events: ASTEventHandler[] = [];
-    const children: (ASTComponent | ASTLayout | ASTCell | ASTTab)[] = [];
+    const children: (ASTComponent | ASTLayout | ASTCell | ASTTab | ASTModalBody | ASTModalFooter)[] = [];
 
     if (ctx.paramList) {
       const paramResult = this.visit(ctx.paramList);
@@ -706,6 +754,18 @@ class WireDSLVisitor extends BaseCstVisitor {
       ctx.tab.forEach((tab: any) => {
         const startToken = tab.children?.Tab?.[0];
         childNodes.push({ type: 'tab', node: tab, index: startToken.startOffset });
+      });
+    }
+    if (ctx.body) {
+      ctx.body.forEach((body: any) => {
+        const startToken = body.children?.Body?.[0];
+        childNodes.push({ type: 'body', node: body, index: startToken.startOffset });
+      });
+    }
+    if (ctx.footer) {
+      ctx.footer.forEach((footer: any) => {
+        const startToken = footer.children?.Footer?.[0];
+        childNodes.push({ type: 'footer', node: footer, index: startToken.startOffset });
       });
     }
 
@@ -825,6 +885,56 @@ class WireDSLVisitor extends BaseCstVisitor {
     });
 
     return { type: 'tab', children };
+  }
+
+  body(ctx: any): ASTModalBody {
+    const children: (ASTComponent | ASTLayout)[] = [];
+    const childNodes: Array<{ type: string; node: any; index: number }> = [];
+
+    if (ctx.component) {
+      ctx.component.forEach((comp: any) => {
+        const startToken = comp.children?.Component?.[0] || comp.children?.componentType?.[0];
+        childNodes.push({ type: 'component', node: comp, index: startToken.startOffset });
+      });
+    }
+    if (ctx.layout) {
+      ctx.layout.forEach((layout: any) => {
+        const startToken = layout.children?.Layout?.[0] || layout.children?.layoutType?.[0];
+        childNodes.push({ type: 'layout', node: layout, index: startToken.startOffset });
+      });
+    }
+
+    childNodes.sort((a, b) => a.index - b.index);
+    childNodes.forEach((item) => {
+      children.push(this.visit(item.node));
+    });
+
+    return { type: 'modal-body', children };
+  }
+
+  footer(ctx: any): ASTModalFooter {
+    const children: (ASTComponent | ASTLayout)[] = [];
+    const childNodes: Array<{ type: string; node: any; index: number }> = [];
+
+    if (ctx.component) {
+      ctx.component.forEach((comp: any) => {
+        const startToken = comp.children?.Component?.[0] || comp.children?.componentType?.[0];
+        childNodes.push({ type: 'component', node: comp, index: startToken.startOffset });
+      });
+    }
+    if (ctx.layout) {
+      ctx.layout.forEach((layout: any) => {
+        const startToken = layout.children?.Layout?.[0] || layout.children?.layoutType?.[0];
+        childNodes.push({ type: 'layout', node: layout, index: startToken.startOffset });
+      });
+    }
+
+    childNodes.sort((a, b) => a.index - b.index);
+    childNodes.forEach((item) => {
+      children.push(this.visit(item.node));
+    });
+
+    return { type: 'modal-footer', children };
   }
 
   component(ctx: any): ASTComponent {
@@ -1122,6 +1232,18 @@ class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
         childNodes.push({ type: 'tab', node: tab, index: startToken.startOffset });
       });
     }
+    if (ctx.body) {
+      ctx.body.forEach((body: any) => {
+        const startToken = body.children?.Body?.[0];
+        childNodes.push({ type: 'body', node: body, index: startToken.startOffset });
+      });
+    }
+    if (ctx.footer) {
+      ctx.footer.forEach((footer: any) => {
+        const startToken = footer.children?.Footer?.[0];
+        childNodes.push({ type: 'footer', node: footer, index: startToken.startOffset });
+      });
+    }
 
     // Sort by position
     childNodes.sort((a, b) => a.index - b.index);
@@ -1222,6 +1344,90 @@ class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
     });
 
     // Pop parent
+    if (this.sourceMapBuilder) {
+      this.sourceMapBuilder.popParent();
+    }
+
+    return ast;
+  }
+
+  body(ctx: any): ASTModalBody {
+    const tokens: CapturedTokens = {
+      keyword: ctx.Body[0],
+      body: ctx.RCurly[0],
+    };
+
+    const ast: ASTModalBody = {
+      type: 'modal-body',
+      children: [],
+    };
+
+    if (this.sourceMapBuilder) {
+      const nodeId = this.sourceMapBuilder.addNode('modal-body', tokens);
+      ast._meta = { nodeId };
+      this.sourceMapBuilder.pushParent(nodeId);
+    }
+
+    const childNodes: Array<{ type: string; node: any; index: number }> = [];
+    if (ctx.component) {
+      ctx.component.forEach((comp: any) => {
+        const startToken = comp.children?.Component?.[0] || comp.children?.componentType?.[0];
+        childNodes.push({ type: 'component', node: comp, index: startToken.startOffset });
+      });
+    }
+    if (ctx.layout) {
+      ctx.layout.forEach((layout: any) => {
+        const startToken = layout.children?.Layout?.[0] || layout.children?.layoutType?.[0];
+        childNodes.push({ type: 'layout', node: layout, index: startToken.startOffset });
+      });
+    }
+    childNodes.sort((a, b) => a.index - b.index);
+    childNodes.forEach((item) => {
+      ast.children.push(this.visit(item.node));
+    });
+
+    if (this.sourceMapBuilder) {
+      this.sourceMapBuilder.popParent();
+    }
+
+    return ast;
+  }
+
+  footer(ctx: any): ASTModalFooter {
+    const tokens: CapturedTokens = {
+      keyword: ctx.Footer[0],
+      body: ctx.RCurly[0],
+    };
+
+    const ast: ASTModalFooter = {
+      type: 'modal-footer',
+      children: [],
+    };
+
+    if (this.sourceMapBuilder) {
+      const nodeId = this.sourceMapBuilder.addNode('modal-footer', tokens);
+      ast._meta = { nodeId };
+      this.sourceMapBuilder.pushParent(nodeId);
+    }
+
+    const childNodes: Array<{ type: string; node: any; index: number }> = [];
+    if (ctx.component) {
+      ctx.component.forEach((comp: any) => {
+        const startToken = comp.children?.Component?.[0] || comp.children?.componentType?.[0];
+        childNodes.push({ type: 'component', node: comp, index: startToken.startOffset });
+      });
+    }
+    if (ctx.layout) {
+      ctx.layout.forEach((layout: any) => {
+        const startToken = layout.children?.Layout?.[0] || layout.children?.layoutType?.[0];
+        childNodes.push({ type: 'layout', node: layout, index: startToken.startOffset });
+      });
+    }
+    childNodes.sort((a, b) => a.index - b.index);
+    childNodes.forEach((item) => {
+      ast.children.push(this.visit(item.node));
+    });
+
     if (this.sourceMapBuilder) {
       this.sourceMapBuilder.popParent();
     }
