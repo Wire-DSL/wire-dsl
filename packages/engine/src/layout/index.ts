@@ -135,6 +135,7 @@ export class LayoutEngine {
     // Calculate children based on container type
     switch (node.containerType) {
       case 'stack':
+      case 'tab':
       case 'modal-body':
         this.calculateStack(node, innerX, innerY, innerWidth, innerHeight);
         break;
@@ -153,13 +154,16 @@ export class LayoutEngine {
       case 'card':
         this.calculateCard(node, innerX, innerY, innerWidth, innerHeight);
         break;
+      case 'tabs':
+        this.calculateTabs(node, innerX, innerY, innerWidth);
+        break;
     }
 
     // For vertical stacks and cards, recalculate container height based on actual children positions.
     // When empty, preserve the height assigned by the parent — collapsing to just `padding` would
     // place the container at the wrong size (and effectively at 0,0 visually).
     const isHorizontalStack = node.containerType === 'stack' && !isVerticalStack;
-    if ((isVerticalStack || isHorizontalStack || node.containerType === 'card' || node.containerType === 'modal-body' || node.containerType === 'modal-footer') && node.children.length > 0) {
+    if ((isVerticalStack || isHorizontalStack || node.containerType === 'card' || node.containerType === 'tabs' || node.containerType === 'tab' || node.containerType === 'modal-body' || node.containerType === 'modal-footer') && node.children.length > 0) {
       let containerMaxY = y;
       node.children.forEach((childRef) => {
         const childPos = this.result[childRef.ref];
@@ -511,6 +515,20 @@ export class LayoutEngine {
       return totalHeight;
     }
 
+    // Tabs: height equals the active tab's content height only (inactive tabs are collapsed)
+    if (node.containerType === 'tabs') {
+      const activeIndex = Number(node.params.active) || 0;
+      const activeChildRef = node.children[activeIndex] ?? node.children[0];
+      if (!activeChildRef) return totalHeight;
+      const activeChild = this.nodes[activeChildRef.ref];
+      if (activeChild?.kind === 'container') {
+        totalHeight += this.calculateContainerHeight(activeChild, availableWidth);
+      } else if (activeChild?.kind === 'component') {
+        totalHeight += this.getIntrinsicComponentHeight(activeChild, availableWidth);
+      }
+      return totalHeight;
+    }
+
     // Split places children side by side — height = tallest child (like horizontal stack)
     if (node.containerType === 'split') {
       const splitGap = this.resolveSpacing(node.style.gap);
@@ -830,6 +848,27 @@ export class LayoutEngine {
       if (flowCount < flowChildren.length) {
         currentY += gap;
       }
+    });
+  }
+
+  private calculateTabs(node: IRNode, x: number, y: number, width: number): void {
+    if (node.kind !== 'container') return;
+
+    const activeIndex = Number(node.params.active) || 0;
+
+    node.children.forEach((childRef, index) => {
+      if (index === activeIndex) {
+        // Active tab: calculate its layout at the current position
+        const tabNode = this.nodes[childRef.ref];
+        let tabHeight = 40;
+        if (tabNode?.kind === 'container') {
+          tabHeight = this.calculateContainerHeight(tabNode, width);
+        } else if (tabNode?.kind === 'component') {
+          tabHeight = this.getIntrinsicComponentHeight(tabNode, width);
+        }
+        this.calculateNode(childRef.ref, x, y, width, tabHeight, 'tabs');
+      }
+      // Inactive tabs: no result entry — renderer's `if (!pos) return` guard skips them
     });
   }
 
