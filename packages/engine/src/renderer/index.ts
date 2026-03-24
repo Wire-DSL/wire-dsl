@@ -14,6 +14,7 @@ import {
 } from '../shared/component-sizes';
 import { resolveHeadingTypography } from '../shared/heading-levels';
 import { resolveHeadingVerticalPadding } from '../shared/heading-spacing';
+import { toStringArray } from '../shared/list-utils';
 
 /**
  * SVG Renderer
@@ -918,11 +919,8 @@ export class SVGRenderer {
 
   protected renderTable(node: IRComponentNode, pos: any): string {
     const title = String(node.props.title || '');
-    const columnsStr = String(node.props.columns || 'Col1,Col2,Col3');
-    const columns = columnsStr
-      .split(',')
-      .map((c) => c.trim())
-      .filter(Boolean);
+    const parsedColumns = toStringArray(node.props.columns);
+    const columns = parsedColumns.length > 0 ? parsedColumns : ['Col1', 'Col2', 'Col3'];
     const rowCount = Number(node.props.rows || node.props.rowsMock || 5);
     const mockStr = String(node.props.mock || '');
     const random = this.parseBooleanProp(node.props.random, false);
@@ -930,10 +928,7 @@ export class SVGRenderer {
     const parsedPageCount = Number(node.props.pages || 5);
     const pageCount = Number.isFinite(parsedPageCount) && parsedPageCount > 0 ? Math.floor(parsedPageCount) : 5;
     const paginationAlign = String(node.props.paginationAlign || 'right');
-    const actions = String(node.props.actions || '')
-      .split(',')
-      .map((value) => value.trim())
-      .filter(Boolean);
+    const actions = toStringArray(node.props.actions);
     const hasActions = actions.length > 0;
     const caption = String(node.props.caption || '').trim();
     const hasCaption = caption.length > 0;
@@ -953,12 +948,7 @@ export class SVGRenderer {
     const sameFooterAlign = hasCaption && pagination && captionAlign === paginationAlign;
 
     // Parse mock types by column. If not provided, infer from column names.
-    const mockTypes = mockStr
-      ? mockStr
-          .split(',')
-          .map((m) => m.trim())
-          .filter(Boolean)
-      : [];
+    const mockTypes = toStringArray(mockStr);
     const safeColumns = columns.length > 0 ? columns : ['Column'];
     while (mockTypes.length < safeColumns.length) {
       const inferred = MockDataGenerator.inferMockTypeFromColumn(safeColumns[mockTypes.length] || 'item');
@@ -1627,13 +1617,10 @@ export class SVGRenderer {
 
   protected renderSidebar(node: IRComponentNode, pos: any): string {
     const title = String(node.props.title || 'Sidebar');
-    const itemsStr = String(node.props.items || '');
     const activeItem = String(node.props.active || '');
 
-    let items: string[] = [];
-    if (itemsStr) {
-      items = itemsStr.split(',').map((i) => i.trim());
-    } else {
+    let items = toStringArray(node.props.items);
+    if (items.length === 0) {
       // Generate mock items
       const itemCount = Number(node.props.itemsMock || 6);
       items = MockDataGenerator.generateMockList('name', itemCount);
@@ -1680,8 +1667,8 @@ export class SVGRenderer {
   }
 
   protected renderTabs(node: IRComponentNode, pos: any): string {
-    const itemsStr = String(node.props.items || '');
-    const tabs = itemsStr ? itemsStr.split(',').map((t) => t.trim()) : ['Tab 1', 'Tab 2', 'Tab 3'];
+    const parsedTabs = toStringArray(node.props.items);
+    const tabs = parsedTabs.length > 0 ? parsedTabs : ['Tab 1', 'Tab 2', 'Tab 3'];
     const activeProp = node.props.active ?? 0;
     const activeIndex = Number.isFinite(Number(activeProp))
       ? Math.max(0, Math.floor(Number(activeProp)))
@@ -1701,8 +1688,7 @@ export class SVGRenderer {
     const fontSize = 13;
     const textY = pos.y + Math.round(tabHeight / 2) + Math.round(fontSize * 0.4);
 
-    const iconsStr = String(node.props.icons || '');
-    const iconList = iconsStr ? iconsStr.split(',').map((s) => s.trim()) : [];
+    const iconList = toStringArray(node.props.icons);
     const isFlat = this.parseBooleanProp(node.props.flat, false);
     const showBorder = this.parseBooleanProp(node.props.border, true);
     const tabWidth = pos.width / tabs.length;
@@ -2035,17 +2021,11 @@ export class SVGRenderer {
 
   protected renderList(node: IRComponentNode, pos: any): string {
     const title = String(node.props.title || '');
-    const itemsStr = String(node.props.items || '');
     const mockType = String(node.props.mock || '').trim();
     const random = this.parseBooleanProp(node.props.random, false);
 
-    let items: string[] = [];
-    if (itemsStr) {
-      items = itemsStr
-        .split(',')
-        .map((i) => i.trim())
-        .filter(Boolean);
-    } else {
+    let items = toStringArray(node.props.items);
+    if (items.length === 0) {
       // Generate mock items from provided mock type or fallback to deterministic names.
       const parsedItemsMock = Number(node.props.itemsMock ?? 4);
       const itemCount = Number.isFinite(parsedItemsMock)
@@ -2397,8 +2377,8 @@ export class SVGRenderer {
   }
 
   protected renderBreadcrumbs(node: IRComponentNode, pos: any): string {
-    const itemsStr = String(node.props.items || 'Home');
-    const items = itemsStr.split(',').map((s) => s.trim());
+    const parsedBreadcrumbs = toStringArray(node.props.items);
+    const items = parsedBreadcrumbs.length > 0 ? parsedBreadcrumbs : ['Home'];
     const separator = String(node.props.separator || '/');
     const fontSize = 12;
     const separatorWidth = 20; // Increased for spacing
@@ -2439,10 +2419,9 @@ export class SVGRenderer {
   }
 
   protected renderSidebarMenu(node: IRComponentNode, pos: any): string {
-    const itemsStr = String(node.props.items || 'Item 1,Item 2,Item 3');
-    const iconsStr = String(node.props.icons || '');
-    const items = itemsStr.split(',').map((s) => s.trim());
-    const icons = iconsStr ? iconsStr.split(',').map((s) => s.trim()) : [];
+    const parsedMenuItems = toStringArray(node.props.items);
+    const items = parsedMenuItems.length > 0 ? parsedMenuItems : ['Item 1', 'Item 2', 'Item 3'];
+    const icons = toStringArray(node.props.icons);
 
     const itemHeight = 40;
     const fontSize = 14;
@@ -2970,10 +2949,7 @@ export class SVGRenderer {
       rightCursor = x - 8;
     }
 
-    const actionLabels = actions
-      .split(',')
-      .map((a) => a.trim())
-      .filter(Boolean);
+    const actionLabels = toStringArray(actions);
     const actionHeight = 32;
     const actionY = pos.y + (pos.height - actionHeight) / 2;
     const actionGap = 8;

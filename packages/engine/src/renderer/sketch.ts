@@ -19,6 +19,7 @@ import { getIcon } from './icons/iconLibrary';
 import { MockDataGenerator } from './mock-data';
 import { resolveControlHeight, resolveControlHorizontalPadding } from '../shared/component-sizes';
 import type { DensityLevel } from '../shared/spacing';
+import { toStringArray } from '../shared/list-utils.js';
 
 export class SketchSVGRenderer extends SVGRenderer {
   /**
@@ -943,7 +944,8 @@ export class SketchSVGRenderer extends SVGRenderer {
     const itemsStr = String(node.props.items || '');
     const activeItem = String(node.props.active || '');
 
-    const items = itemsStr ? itemsStr.split(',').map((i) => i.trim()) : ['Item 1', 'Item 2', 'Item 3'];
+    const parsed = toStringArray(itemsStr);
+    const items = parsed.length ? parsed : ['Item 1', 'Item 2', 'Item 3'];
     const itemHeight = 40;
     const padding = 16;
     const titleHeight = 40;
@@ -991,7 +993,8 @@ export class SketchSVGRenderer extends SVGRenderer {
    */
   protected renderTabs(node: IRComponentNode, pos: any): string {
     const itemsStr = String(node.props.items || '');
-    const tabs = itemsStr ? itemsStr.split(',').map((t) => t.trim()) : ['Tab 1', 'Tab 2', 'Tab 3'];
+    const parsedTabs = toStringArray(itemsStr);
+    const tabs = parsedTabs.length ? parsedTabs : ['Tab 1', 'Tab 2', 'Tab 3'];
     const activeProp = node.props.active ?? 0;
     const activeIndex = Number.isFinite(Number(activeProp))
       ? Math.max(0, Math.floor(Number(activeProp)))
@@ -1012,7 +1015,7 @@ export class SketchSVGRenderer extends SVGRenderer {
     const textY = pos.y + Math.round(tabHeight / 2) + Math.round(fontSize * 0.4);
 
     const iconsStr = String(node.props.icons || '');
-    const iconList = iconsStr ? iconsStr.split(',').map((s) => s.trim()) : [];
+    const iconList = toStringArray(iconsStr);
     const isFlat = this.parseBooleanProp(node.props.flat, false);
     const showBorder = this.parseBooleanProp(node.props.border, true);
     const tabWidth = pos.width / tabs.length;
@@ -1248,13 +1251,8 @@ export class SketchSVGRenderer extends SVGRenderer {
     const mockType = String(node.props.mock || '').trim();
     const random = this.parseBooleanProp(node.props.random, false);
 
-    let items: string[] = [];
-    if (itemsStr) {
-      items = itemsStr
-        .split(',')
-        .map((i) => i.trim())
-        .filter(Boolean);
-    } else {
+    let items: string[] = toStringArray(itemsStr);
+    if (!items.length) {
       // Generate mock items from provided mock type or fallback to deterministic names.
       const parsedItemsMock = Number(node.props.itemsMock ?? 4);
       const itemCount = Number.isFinite(parsedItemsMock)
@@ -1520,7 +1518,7 @@ export class SketchSVGRenderer extends SVGRenderer {
    */
   protected renderBreadcrumbs(node: IRComponentNode, pos: any): string {
     const itemsStr = String(node.props.items || 'Home');
-    const items = itemsStr.split(',').map((s) => s.trim());
+    const items = toStringArray(itemsStr);
     const separator = String(node.props.separator || '/');
     const fontSize = 12;
     const separatorWidth = 20;
@@ -1564,8 +1562,8 @@ export class SketchSVGRenderer extends SVGRenderer {
   protected renderSidebarMenu(node: IRComponentNode, pos: any): string {
     const itemsStr = String(node.props.items || 'Item 1,Item 2,Item 3');
     const iconsStr = String(node.props.icons || '');
-    const items = itemsStr.split(',').map((s) => s.trim());
-    const icons = iconsStr ? iconsStr.split(',').map((s) => s.trim()) : [];
+    const items = toStringArray(itemsStr);
+    const icons = toStringArray(iconsStr);
 
     const itemHeight = 40;
     const fontSize = 14;

@@ -751,7 +751,7 @@ describe('IR Generator', () => {
     if (sidebarMenu) {
       const [id, node] = sidebarMenu;
       if (node.kind === 'component') {
-        expect(node.props.items).toBe('Users,Roles,Settings');
+        expect(node.props.items).toEqual(['Users', 'Roles', 'Settings']);
         expect(node.props.active).toBe(1);
       }
     }

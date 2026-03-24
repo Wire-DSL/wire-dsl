@@ -86,6 +86,8 @@ const RParen = createToken({ name: 'RParen', pattern: /\)/ });
 const Colon = createToken({ name: 'Colon', pattern: /:/ });
 const Comma = createToken({ name: 'Comma', pattern: /,/ });
 const Ampersand = createToken({ name: 'Ampersand', pattern: /&/ });
+const LBracket = createToken({ name: 'LBracket', pattern: /\[/ });
+const RBracket = createToken({ name: 'RBracket', pattern: /\]/ });
 
 // Literals
 const StringLiteral = createToken({
@@ -164,6 +166,8 @@ const allTokens = [
   Colon,
   Comma,
   Ampersand,
+  LBracket,
+  RBracket,
   // Literals
   StringLiteral,
   NumberLiteral,
@@ -429,10 +433,21 @@ class WireDSLParser extends CstParser {
     this.CONSUME(Colon);
     this.OR([
       { ALT: () => this.SUBRULE(this.actionChain) },
+      { ALT: () => this.SUBRULE(this.arrayLiteral) },
       { ALT: () => this.CONSUME(StringLiteral, { LABEL: 'propValue' }) },
       { ALT: () => this.CONSUME(NumberLiteral, { LABEL: 'propValue' }) },
       { ALT: () => this.CONSUME2(Identifier, { LABEL: 'propValue' }) },
     ]);
+  });
+
+  // ["item1", "item2", "item3"]
+  private arrayLiteral = this.RULE('arrayLiteral', () => {
+    this.CONSUME(LBracket);
+    this.MANY_SEP({
+      SEP: Comma,
+      DEF: () => this.CONSUME(StringLiteral, { LABEL: 'arrayItem' }),
+    });
+    this.CONSUME(RBracket);
   });
 
   // (param1: value1, param2: value2)
@@ -478,7 +493,7 @@ export interface ASTDefinedComponent {
 export interface ASTScreen {
   type: 'screen';
   name: string;
-  params: Record<string, string | number>;
+  params: Record<string, string | number | string[]>;
   layout: ASTLayout;
   _meta?: {
     nodeId: string;
@@ -531,7 +546,7 @@ export interface ASTModalFooter {
 export interface ASTLayout {
   type: 'layout';
   layoutType: string;
-  params: Record<string, string | number>;
+  params: Record<string, string | number | string[]>;
   events: ASTEventHandler[];
   children: (ASTComponent | ASTLayout | ASTCell | ASTTab | ASTModalBody | ASTModalFooter)[];
   _meta?: {
@@ -541,7 +556,7 @@ export interface ASTLayout {
 
 export interface ASTCell {
   type: 'cell';
-  props: Record<string, string | number>;
+  props: Record<string, string | number | string[]>;
   children: (ASTComponent | ASTLayout)[];
   _meta?: {
     nodeId: string;
@@ -551,7 +566,7 @@ export interface ASTCell {
 export interface ASTComponent {
   type: 'component';
   componentType: string;
-  props: Record<string, string | number>;
+  props: Record<string, string | number | string[]>;
   events: ASTEventHandler[];
   _meta?: {
     nodeId: string;
@@ -719,7 +734,7 @@ class WireDSLVisitor extends BaseCstVisitor {
 
   layout(ctx: any): ASTLayout {
     const layoutType = ctx.layoutType[0].image;
-    const params: Record<string, string | number> = {};
+    const params: Record<string, string | number | string[]> = {};
     const events: ASTEventHandler[] = [];
     const children: (ASTComponent | ASTLayout | ASTCell | ASTTab | ASTModalBody | ASTModalFooter)[] = [];
 
@@ -786,7 +801,7 @@ class WireDSLVisitor extends BaseCstVisitor {
   }
 
   cell(ctx: any): ASTCell {
-    const props: Record<string, string | number> = {};
+    const props: Record<string, string | number | string[]> = {};
     const children: (ASTComponent | ASTLayout)[] = [];
 
     if (ctx.property) {
@@ -939,7 +954,7 @@ class WireDSLVisitor extends BaseCstVisitor {
 
   component(ctx: any): ASTComponent {
     const componentType = ctx.componentType[0].image;
-    const props: Record<string, string | number> = {};
+    const props: Record<string, string | number | string[]> = {};
     const events: ASTEventHandler[] = [];
 
     if (ctx.property) {
@@ -961,13 +976,19 @@ class WireDSLVisitor extends BaseCstVisitor {
     };
   }
 
-  property(ctx: any): { key: string; isEvent?: true; actions?: ASTEventAction[]; value?: string | number } {
+  property(ctx: any): { key: string; isEvent?: true; actions?: ASTEventAction[]; value?: string | number | string[] } {
     const key = ctx.propKey[0].image;
 
     // Check if it's an action chain value
     if (ctx.actionChain && ctx.actionChain.length > 0) {
       const actions: ASTEventAction[] = this.visit(ctx.actionChain[0]);
       return { key, isEvent: true, actions };
+    }
+
+    // Check if it's an array literal value
+    if (ctx.arrayLiteral && ctx.arrayLiteral.length > 0) {
+      const items: string[] = this.visit(ctx.arrayLiteral[0]);
+      return { key, value: items };
     }
 
     const rawValue: string = ctx.propValue[0].image;
@@ -985,8 +1006,16 @@ class WireDSLVisitor extends BaseCstVisitor {
     return { key, value };
   }
 
-  paramList(ctx: any): { params: Record<string, string | number>; events: ASTEventHandler[] } {
-    const params: Record<string, string | number> = {};
+  arrayLiteral(ctx: any): string[] {
+    if (!ctx.arrayItem) return [];
+    return ctx.arrayItem.map((token: any) => {
+      const raw: string = token.image;
+      return raw.startsWith('"') ? raw.slice(1, -1) : raw;
+    });
+  }
+
+  paramList(ctx: any): { params: Record<string, string | number | string[]>; events: ASTEventHandler[] } {
+    const params: Record<string, string | number | string[]> = {};
     const events: ASTEventHandler[] = [];
 
     if (ctx.property) {
@@ -1143,7 +1172,7 @@ class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
   layout(ctx: any): ASTLayout {
     // Build AST manually
     const layoutType = ctx.layoutType[0].image;
-    const params: Record<string, string | number> = {};
+    const params: Record<string, string | number | string[]> = {};
     const events: ASTEventHandler[] = [];
 
     if (ctx.paramList) {
@@ -1189,13 +1218,15 @@ class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
             });
             return;
           }
+          // For array literals, use the arrayLiteral CST node for value range
+          const valueToken = propCtx.children.propValue?.[0] ?? propCtx.children.arrayLiteral?.[0];
           this.sourceMapBuilder!.addProperty(
             nodeId,
             propResult.key,
             propResult.value!,
             {
               name: propCtx.children.propKey[0],
-              value: propCtx.children.propValue[0],
+              value: valueToken,
             }
           );
         });
@@ -1263,7 +1294,7 @@ class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
 
   cell(ctx: any): ASTCell {
     // Build AST manually
-    const props: Record<string, string | number> = {};
+    const props: Record<string, string | number | string[]> = {};
 
     if (ctx.property) {
       ctx.property.forEach((prop: any) => {
@@ -1305,13 +1336,15 @@ class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
             });
             return;
           }
+          // For array literals, use the arrayLiteral CST node for value range
+          const valueToken = propCtx.children.propValue?.[0] ?? propCtx.children.arrayLiteral?.[0];
           this.sourceMapBuilder!.addProperty(
             nodeId,
             propResult.key,
             propResult.value!,
             {
               name: propCtx.children.propKey[0],
-              value: propCtx.children.propValue[0],
+              value: valueToken,
             }
           );
         });
@@ -1515,13 +1548,15 @@ class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
             });
             return;
           }
+          // For array literals, use the arrayLiteral CST node for value range
+          const valueToken = propCtx.children.propValue?.[0] ?? propCtx.children.arrayLiteral?.[0];
           this.sourceMapBuilder!.addProperty(
             nodeId,
             propResult.key,
             propResult.value!,
             {
               name: propCtx.children.propKey[0],
-              value: propCtx.children.propValue[0],
+              value: valueToken,
             }
           );
         });
@@ -1983,13 +2018,15 @@ function createParserDiagnostic(error: any): ParseError {
   };
 }
 
-function isBooleanLike(value: string | number): boolean {
+function isBooleanLike(value: string | number | string[]): boolean {
+  if (Array.isArray(value)) return false;
   if (typeof value === 'number') return value === 0 || value === 1;
   const normalized = String(value).trim().toLowerCase();
   return normalized === 'true' || normalized === 'false';
 }
 
-function parseBooleanLike(value: string | number, fallback: boolean = false): boolean {
+function parseBooleanLike(value: string | number | string[], fallback: boolean = false): boolean {
+  if (Array.isArray(value)) return fallback;
   if (typeof value === 'number') {
     if (value === 1) return true;
     if (value === 0) return false;
@@ -2019,7 +2056,7 @@ function formatAllowedNames(names: string[], emptyMessage: string): string {
 
 function getMissingRequiredNames(
   requiredNames: string[],
-  providedValues: Record<string, string | number>
+  providedValues: Record<string, string | number | string[]>
 ): string[] {
   return requiredNames.filter((name) => providedValues[name] === undefined);
 }

@@ -3,6 +3,8 @@
 // ============================================================================
 // Deterministic mock data for idempotent rendering
 
+import { toStringArray } from '../shared/list-utils.js';
+
 const MOCK_NAMES = ['Juan', 'María', 'Carlos', 'Sofia', 'Alex', 'Luna', 'Diego', 'Emma'];
 const MOCK_LAST_NAMES = [
   'García',
@@ -95,10 +97,7 @@ export class MockDataGenerator {
       let values: string[] = [];
 
       if (typeof rawValues === 'string') {
-        values = rawValues
-          .split(',')
-          .map((v) => v.trim())
-          .filter((v) => v.length > 0);
+        values = toStringArray(rawValues);
       } else if (Array.isArray(rawValues)) {
         values = rawValues
           .map((v) => (typeof v === 'string' ? v.trim() : ''))
@@ -209,8 +208,8 @@ export class MockDataGenerator {
    * Generate a row of mock data for a table given column types
    * columns: "id,name,status,amount"
    */
-  static generateMockRow(columns: string, rowIndex: number, random: boolean = false): Record<string, string> {
-    const columnNames = columns.split(',').map((c) => c.trim());
+  static generateMockRow(columns: string | string[], rowIndex: number, random: boolean = false): Record<string, string> {
+    const columnNames = toStringArray(columns);
     const row: Record<string, string> = {};
 
     columnNames.forEach((col) => {

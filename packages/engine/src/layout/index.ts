@@ -9,6 +9,7 @@ import {
 } from '../shared/component-sizes';
 import { resolveHeadingTypography } from '../shared/heading-levels';
 import { resolveHeadingVerticalPadding } from '../shared/heading-spacing';
+import { toStringArray } from '../shared/list-utils.js';
 
 /**
  * Layout Engine
@@ -1229,11 +1230,7 @@ export class LayoutEngine {
     }
 
     if (node.componentType === 'SidebarMenu') {
-      const itemsStr = String(node.props.items || 'Item 1,Item 2,Item 3');
-      const items = itemsStr
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean);
+      const items = toStringArray(node.props.items);
       const itemCount = items.length > 0 ? items.length : 3;
       const itemHeight = 40;
       return Math.max(this.getComponentHeight(), itemCount * itemHeight);
@@ -1246,10 +1243,7 @@ export class LayoutEngine {
     if (node.componentType === 'Stat') return 120;
     if (node.componentType === 'Chart') return 250;
     if (node.componentType === 'List') {
-      const itemsFromProps = String(node.props.items || '')
-        .split(',')
-        .map((item) => item.trim())
-        .filter(Boolean);
+      const itemsFromProps = toStringArray(node.props.items);
       const parsedItemsMock = Number(node.props.itemsMock ?? 4);
       const fallbackCount = Number.isFinite(parsedItemsMock)
         ? Math.max(0, Math.floor(parsedItemsMock))

@@ -6,6 +6,7 @@ import {
   type LayoutMetadata,
   type PropertyMetadata,
 } from '@wire-dsl/language-support/components';
+import { toStringArray } from '../shared/list-utils.js';
 import type {
   AST,
   ASTScreen,
@@ -99,7 +100,7 @@ export interface IRContainerNode {
   id: string;
   kind: 'container';
   containerType: 'stack' | 'grid' | 'split' | 'panel' | 'card' | 'tabs' | 'tab' | 'modal' | 'modal-body' | 'modal-footer';
-  params: Record<string, string | number>;
+  params: Record<string, string | number | string[]>;
   children: Array<{ ref: string }>;
   events?: IREventHandler[];
   style: IRNodeStyle;
@@ -110,7 +111,7 @@ export interface IRComponentNode {
   id: string;
   kind: 'component';
   componentType: string;
-  props: Record<string, string | number>;
+  props: Record<string, string | number | string[]>;
   userDefinedId?: string;
   events?: IREventHandler[];
   style: IRNodeStyle;
@@ -143,7 +144,7 @@ export interface IRInstanceNode {
   /** Whether it originated from a `define Component` or `define Layout` */
   definitionKind: 'component' | 'layout';
   /** Props/params passed at the call site (e.g. { text: "Hello" }) */
-  invocationProps: Record<string, string | number>;
+  invocationProps: Record<string, string | number | string[]>;
   /** Reference to the root IR node produced by expanding the definition */
   expandedRoot: { ref: string };
   style: IRNodeStyle;
@@ -194,7 +195,7 @@ const IRContainerNodeSchema = z.object({
   id: z.string(),
   kind: z.literal('container'),
   containerType: z.enum(['stack', 'grid', 'split', 'panel', 'card', 'tabs', 'tab', 'modal', 'modal-body', 'modal-footer']),
-  params: z.record(z.string(), z.union([z.string(), z.number()])),
+  params: z.record(z.string(), z.union([z.string(), z.number(), z.array(z.string())])),
   children: z.array(z.object({ ref: z.string() })),
   events: z.array(IREventHandlerSchema).optional(),
   style: IRNodeStyleSchema,
@@ -205,7 +206,7 @@ const IRComponentNodeSchema = z.object({
   id: z.string(),
   kind: z.literal('component'),
   componentType: z.string(),
-  props: z.record(z.string(), z.union([z.string(), z.number()])),
+  props: z.record(z.string(), z.union([z.string(), z.number(), z.array(z.string())])),
   userDefinedId: z.string().regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/, 'ID must match [a-zA-Z_][a-zA-Z0-9_]*').optional(),
   events: z.array(IREventHandlerSchema).optional(),
   style: IRNodeStyleSchema,
@@ -217,7 +218,7 @@ const IRInstanceNodeSchema = z.object({
   kind: z.literal('instance'),
   definitionName: z.string(),
   definitionKind: z.enum(['component', 'layout']),
-  invocationProps: z.record(z.string(), z.union([z.string(), z.number()])),
+  invocationProps: z.record(z.string(), z.union([z.string(), z.number(), z.array(z.string())])),
   expandedRoot: z.object({ ref: z.string() }),
   style: IRNodeStyleSchema,
   meta: IRMetaSchema,
@@ -278,7 +279,7 @@ class IDGenerator {
 type ExpansionTargetKind = 'component-property' | 'layout-parameter';
 
 interface ExpansionContext {
-  args: Record<string, string | number>;
+  args: Record<string, string | number | string[]>;
   providedArgNames: Set<string>;
   usedArgNames: Set<string>;
   definitionName: string;
@@ -834,7 +835,7 @@ export class IRGenerator {
       });
     }
     const userDefinedId = rawId;
-    const propsWithoutId: Record<string, string | number> = { ...resolvedProps };
+    const propsWithoutId: Record<string, string | number | string[]> = { ...resolvedProps };
     delete propsWithoutId.id;
 
     // Convert events from AST events + handle onItemsClick from props
@@ -881,10 +882,10 @@ export class IRGenerator {
     }));
   }
 
-  private extractOnItemsClickEvent(props: Record<string, string | number>): IREventHandler | null {
+  private extractOnItemsClickEvent(props: Record<string, string | number | string[]>): IREventHandler | null {
     const value = props.onItemsClick;
     if (!value) return null;
-    const screens = String(value).split(',').map(s => s.trim()).filter(Boolean);
+    const screens = toStringArray(value);
     return {
       event: 'onItemsClick',
       actions: [{ type: 'navigateItems', screens }],
@@ -893,7 +894,7 @@ export class IRGenerator {
 
   private expandDefinedComponent(
     definition: ASTDefinedComponent,
-    invocationArgs: Record<string, string | number>,
+    invocationArgs: Record<string, string | number | string[]>,
     callSiteNodeId: string | undefined,
     parentContext?: ExpansionContext
   ): string | null {
@@ -940,7 +941,7 @@ export class IRGenerator {
 
   private expandDefinedLayout(
     definition: ASTDefinedLayout,
-    invocationParams: Record<string, string | number>,
+    invocationParams: Record<string, string | number | string[]>,
     invocationChildren: (ASTComponent | ASTLayout | ASTCell)[],
     parentContext?: ExpansionContext,
     callSiteNodeId?: string
@@ -1015,10 +1016,10 @@ export class IRGenerator {
 
   private resolveLayoutParams(
     layoutType: string,
-    params: Record<string, string | number>,
+    params: Record<string, string | number | string[]>,
     context?: ExpansionContext
-  ): Record<string, string | number> {
-    const resolved: Record<string, string | number> = {};
+  ): Record<string, string | number | string[]> {
+    const resolved: Record<string, string | number | string[]> = {};
     for (const [key, value] of Object.entries(params)) {
       const resolvedValue = this.resolveBindingValue(
         value,
@@ -1049,9 +1050,9 @@ export class IRGenerator {
   }
 
   private normalizeSplitParams(
-    params: Record<string, string | number>
-  ): Record<string, string | number> {
-    const normalized: Record<string, string | number> = { ...params };
+    params: Record<string, string | number | string[]>
+  ): Record<string, string | number | string[]> {
+    const normalized: Record<string, string | number | string[]> = { ...params };
 
     if (
       normalized.sidebar !== undefined &&
@@ -1113,10 +1114,10 @@ export class IRGenerator {
 
   private resolveComponentProps(
     componentType: string,
-    props: Record<string, string | number>,
+    props: Record<string, string | number | string[]>,
     context?: ExpansionContext
-  ): Record<string, string | number> {
-    const resolved: Record<string, string | number> = {};
+  ): Record<string, string | number | string[]> {
+    const resolved: Record<string, string | number | string[]> = {};
     for (const [key, value] of Object.entries(props)) {
       const resolvedValue = this.resolveBindingValue(
         value,
@@ -1126,33 +1127,39 @@ export class IRGenerator {
         key
       );
       if (resolvedValue !== undefined) {
+        const metadata = COMPONENTS[componentType as keyof typeof COMPONENTS] as ComponentMetadata | undefined;
+        const propMeta = metadata?.properties?.[key] as PropertyMetadata | undefined;
+
+        // Validate enum bindings
         const wasPropReference = typeof value === 'string' && value.startsWith('prop_');
-        if (wasPropReference) {
-          const metadata = COMPONENTS[componentType as keyof typeof COMPONENTS] as ComponentMetadata | undefined;
-          const property = metadata?.properties?.[key] as PropertyMetadata | undefined;
-          if (property?.type === 'enum' && Array.isArray(property.options)) {
-            const normalizedValue = String(resolvedValue);
-            if (!property.options.includes(normalizedValue)) {
-              this.warnings.push({
-                type: 'invalid-bound-enum-value',
-                message: `Invalid value "${normalizedValue}" for property "${key}" in component "${componentType}". Expected one of: ${property.options.join(', ')}.`,
-              });
-            }
+        if (wasPropReference && propMeta?.type === 'enum' && Array.isArray(propMeta.options)) {
+          const normalizedValue = String(resolvedValue);
+          if (!propMeta.options.includes(normalizedValue)) {
+            this.warnings.push({
+              type: 'invalid-bound-enum-value',
+              message: `Invalid value "${normalizedValue}" for property "${key}" in component "${componentType}". Expected one of: ${propMeta.options.join(', ')}.`,
+            });
           }
         }
-        resolved[key] = resolvedValue;
+
+        // Normalize list properties: CSV string → string[]
+        if (propMeta?.type === 'list' && !Array.isArray(resolvedValue)) {
+          resolved[key] = toStringArray(resolvedValue);
+        } else {
+          resolved[key] = resolvedValue;
+        }
       }
     }
     return resolved;
   }
 
   private resolveBindingValue(
-    value: string | number,
+    value: string | number | string[],
     context: ExpansionContext | undefined,
     kind: ExpansionTargetKind,
     targetType: string,
     targetName: string
-  ): string | number | undefined {
+  ): string | number | string[] | undefined {
     if (typeof value !== 'string' || !value.startsWith('prop_')) {
       return value;
     }
@@ -1220,8 +1227,8 @@ export class IRGenerator {
     }
   }
 
-  private cleanParams(params: Record<string, string | number>): Record<string, string | number> {
-    const cleaned: Record<string, string | number> = {};
+  private cleanParams(params: Record<string, string | number | string[]>): Record<string, string | number | string[]> {
+    const cleaned: Record<string, string | number | string[]> = {};
     for (const [key, value] of Object.entries(params)) {
       // Skip style-related params (already in style object)
       if (!['padding', 'gap', 'align', 'justify'].includes(key)) {
