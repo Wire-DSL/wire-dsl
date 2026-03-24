@@ -167,7 +167,26 @@ export class SourceMapBuilder {
         this.counters.set('cell', idx + 1);
         return `cell-${idx}`;
       }
-        
+
+      case 'tab': {
+        // tab-0, tab-1, etc.
+        const idx = this.counters.get('tab') || 0;
+        this.counters.set('tab', idx + 1);
+        return `tab-${idx}`;
+      }
+
+      case 'modal-body': {
+        const idx = this.counters.get('modal-body') || 0;
+        this.counters.set('modal-body', idx + 1);
+        return `modal-body-${idx}`;
+      }
+
+      case 'modal-footer': {
+        const idx = this.counters.get('modal-footer') || 0;
+        this.counters.set('modal-footer', idx + 1);
+        return `modal-footer-${idx}`;
+      }
+
       case 'component-definition':
         // define-MyButton, define-Card, etc.
         return `define-${metadata?.name || 'unknown'}`;
@@ -368,10 +387,13 @@ export class SourceMapBuilder {
    */
   private calculateAllInsertionPoints(): void {
     const containerTypes: SourceMapNodeType[] = [
-      'project', 
-      'screen', 
-      'layout', 
-      'cell', 
+      'project',
+      'screen',
+      'layout',
+      'cell',
+      'tab',
+      'modal-body',
+      'modal-footer',
       'component-definition',
       'layout-definition',
     ];

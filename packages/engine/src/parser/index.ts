@@ -1393,6 +1393,48 @@ class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
     return ast;
   }
 
+  tab(ctx: any): ASTTab {
+    const tokens: CapturedTokens = {
+      keyword: ctx.Tab[0],
+      body: ctx.RCurly[0],
+    };
+
+    const ast: ASTTab = {
+      type: 'tab',
+      children: [],
+    };
+
+    if (this.sourceMapBuilder) {
+      const nodeId = this.sourceMapBuilder.addNode('tab', tokens);
+      ast._meta = { nodeId };
+      this.sourceMapBuilder.pushParent(nodeId);
+    }
+
+    const childNodes: Array<{ type: string; node: any; index: number }> = [];
+    if (ctx.component) {
+      ctx.component.forEach((comp: any) => {
+        const startToken = comp.children?.Component?.[0] || comp.children?.componentType?.[0];
+        childNodes.push({ type: 'component', node: comp, index: startToken.startOffset });
+      });
+    }
+    if (ctx.layout) {
+      ctx.layout.forEach((layout: any) => {
+        const startToken = layout.children?.Layout?.[0] || layout.children?.layoutType?.[0];
+        childNodes.push({ type: 'layout', node: layout, index: startToken.startOffset });
+      });
+    }
+    childNodes.sort((a, b) => a.index - b.index);
+    childNodes.forEach((item) => {
+      ast.children.push(this.visit(item.node));
+    });
+
+    if (this.sourceMapBuilder) {
+      this.sourceMapBuilder.popParent();
+    }
+
+    return ast;
+  }
+
   footer(ctx: any): ASTModalFooter {
     const tokens: CapturedTokens = {
       keyword: ctx.Footer[0],
