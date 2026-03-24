@@ -455,7 +455,8 @@ Tabbed interface navigation bar (visual component). Pair with `layout tabs` to c
 **Properties**:
 - `id` (identifier, optional): Unique ID for event targeting
 - `items` (string, CSV): Tab labels
-- `active` (number): Index of active tab (default: 0)
+- `initialActive` (number, optional): Starting tab index when the wireframe first loads or resets (default: `0`). Editors and play testers use this as the default state.
+- `active` (number, optional): Current active tab index. Managed at runtime by `setTab` events during play test. Takes precedence over `initialActive` if set.
 - `tabsId` (identifier, optional): References the `id` of a `layout tabs` container in the same screen. When a tab is clicked, the canvas calls `setTab(tabsId, clickedIndex)` internally.
 - `variant` (string, optional): Active tab color — semantic name or Material Design color family (default: `default` = accent color)
 - `size` (enum, optional): `sm` | `md` | `lg` (default: `md`) — controls tab bar height (32px / 44px / 52px)
@@ -471,8 +472,8 @@ component Tabs items: "Home,Stats,History" icons: "home,bar-chart,clock" active:
 component Tabs items: "All,Active,Archived" active: 0 flat: true variant: indigo
 component Tabs items: "Files,Shared,Trash" size: sm radius: full
 
-// Linked to a layout tabs container
-component Tabs items: "Profile,Settings,Billing" active: 0 tabsId: mainTabs
+// Linked to a layout tabs container — use initialActive for design-time default
+component Tabs items: "Profile,Settings,Billing" initialActive: 0 tabsId: mainTabs
 layout tabs(id: mainTabs) {
   tab { component Heading text: "Profile" }
   tab { component Heading text: "Settings" }
@@ -784,31 +785,50 @@ component Chart type: "pie" height: 200
 
 ### Modal
 
-Modal dialog box.
+Modal dialog overlay with optional title header, body content, and footer actions. Being a container, it accepts full child layouts inside `body` and `footer` sections.
 
-**Properties**:
-- `id` (identifier, optional): Unique ID — required when other components reference this modal via `show`/`hide`/`toggle`
-- `title` (string): Modal title
-- `visible` (boolean): Show/hide modal overlay (default: `true`)
+**Parameters**:
+- `id` (identifier, optional): Unique ID for `show`/`hide`/`toggle` targeting
+- `title` (string, optional): Modal header text. Omit for a header-less modal.
+- `visible` (boolean, optional): Initial visibility (default: `true`). When `false`, modal is not rendered and doesn't occupy space.
+- `closable` (boolean, optional): Show close button in header (default: `true`). Requires `title`.
+- `size` (enum, optional): `sm` | `md` | `lg` (default: `md`)
+- `onClose` (action, optional): Fires when the close button is clicked.
 
-**Events**:
-- `onClose: <action>` — fires when the modal is closed. Use `hide(self)` to self-close without needing an explicit `id`.
+**Sections** (optional):
+- `body { }` — main content area
+- `footer { }` — action area (buttons, etc.)
+
+Without `body`/`footer` the direct children go into the content area (implicit mode).
 
 **Example**:
 ```wire
-component Modal title: "Confirm Action"
-component Modal title: "Delete User"
-component Modal title: "Delete User" visible: false
+// Simple modal (implicit mode — no body/footer)
+layout modal(id: confirmModal, title: "Confirm Action", closable: true) {
+  component Text text: "Are you sure?"
+  component Button text: "Yes" onClick: hide(confirmModal)
+}
 
-// With id and events
-component Modal id: confirmModal title: "Confirm deletion?" onClose: hide(self)
+// Structured modal (explicit body + footer)
+layout modal(id: deleteUser, title: "Delete User?", size: md, onClose: hide(self)) {
+  body {
+    component Text text: "This action cannot be undone."
+  }
+  footer {
+    component Button text: "Cancel" variant: secondary onClick: hide(self)
+    component Button text: "Delete" variant: danger onClick: hide(self)
+  }
+}
 
-// Controlled by a button
+// Controlled by a button — modal starts hidden
+layout modal(id: confirmModal, title: "Are you sure?", visible: false) {
+  body { component Text text: "Confirm deletion?" }
+  footer { component Button text: "Delete" variant: danger onClick: hide(self) }
+}
 component Button text: "Delete" variant: danger onClick: show(confirmModal)
-component Modal id: confirmModal title: "Are you sure?" onClose: hide(confirmModal)
 ```
 
-**Rendering**: Centered overlay dialog with title and generic content placeholder
+**Rendering**: Centered overlay with backdrop, header (if `title` is set), close button (if `closable`), and body/footer content
 
 ---
 
@@ -821,7 +841,10 @@ Events turn static wireframes into interactive prototypes during play test. They
 Assign a stable identifier to a component so other events can target it:
 
 ```wire
-component Modal id: confirmModal title: "Sure?"
+layout modal(id: confirmModal, title: "Sure?") {
+  body { component Text text: "Confirm?" }
+  footer { component Button text: "OK" onClick: hide(confirmModal) }
+}
 component Button text: "Open" onClick: show(confirmModal)
 ```
 

@@ -594,7 +594,10 @@ When the user asks for an interactive prototype or clickable wireframe, add even
 Assign an `id` to components that will be shown/hidden/toggled by events:
 
 ```wire
-component Modal id: confirmModal title: "Confirm deletion?"
+layout modal(id: confirmModal, title: "Confirm deletion?") {
+  body { component Text text: "This cannot be undone." }
+  footer { component Button text: "Delete" variant: danger onClick: hide(confirmModal) }
+}
 component Button text: "Delete" onClick: show(confirmModal)
 ```
 
@@ -624,8 +627,11 @@ component Checkbox label: "I agree"
 component Table columns: "Name,Role" rows: 8 onRowClick: navigate(UserDetail)
 component List items: "A,B,C" onItemClick: navigate(ItemDetail)
 
-// Modal self-close
-component Modal id: confirmModal title: "Sure?" onClose: hide(self)
+// Modal (layout container — replaces component Modal)
+layout modal(id: confirmModal, title: "Sure?", onClose: hide(self)) {
+  body { component Text text: "Confirm?" }
+  footer { component Button text: "Yes" onClick: hide(self) }
+}
 
 // SidebarMenu navigation
 component SidebarMenu items: "Dashboard,Users,Settings"
@@ -637,7 +643,7 @@ component SidebarMenu items: "Dashboard,Users,Settings"
 Pair `component Tabs` with `layout tabs` using a shared `id`/`tabsId`:
 
 ```wire
-component Tabs items: "Profile,Settings,Billing" active: 0 tabsId: mainTabs
+component Tabs items: "Profile,Settings,Billing" initialActive: 0 tabsId: mainTabs
 
 layout tabs(id: mainTabs) {
   tab {
@@ -664,12 +670,31 @@ layout card(padding: md, gap: md, onClick: navigate(UserDetail)) {
 }
 ```
 
-### Self Reference
+### Modal Layout
 
-Use `self` when a component closes/hides itself — no explicit `id` needed on the action target, but the component still needs an `id` if other components reference it:
+Use `layout modal` (not `component Modal`) for overlay dialogs. Modal starts hidden, shown by a button:
 
 ```wire
-component Modal id: confirmModal title: "Done!" onClose: hide(self)
+layout modal(id: confirmModal, title: "Delete?", visible: false, closable: true) {
+  body {
+    component Text text: "This action cannot be undone."
+  }
+  footer {
+    component Button text: "Cancel" onClick: hide(self)
+    component Button text: "Delete" variant: danger onClick: hide(self)
+  }
+}
+component Button text: "Delete Item" variant: danger onClick: show(confirmModal)
+```
+
+### Self Reference
+
+Use `self` when a container/component closes itself — no explicit `id` needed on the action target:
+
+```wire
+layout modal(id: confirmModal, title: "Done?", onClose: hide(self)) {
+  footer { component Button text: "Close" onClick: hide(self) }
+}
 ```
 
 ### Validation Rules (brief)

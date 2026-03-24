@@ -417,7 +417,9 @@ Tabbed interface with multiple panels.
 
 **Properties**:
 - `items` (string, CSV): Tab labels
-- `active` (number): Index of active tab (default: 0)
+- `initialActive` (number, optional): Starting tab index for editors and play testers (default: `0`). Design-time default.
+- `active` (number, optional): Runtime active tab index. Managed by `setTab` events during play test.
+- `tabsId` (identifier, optional): Links to a `layout tabs(id: ...)` container on the same screen.
 - `variant` (string, optional): Active tab color - `default` | `primary` | `secondary` | `success` | `warning` | `danger` | `info` (default: `default`)
 - `size` (enum, optional): Tab bar height - `sm` (32 px) | `md` (44 px) | `lg` (52 px) (default: `md`)
 - `radius` (enum, optional): Active tab corner radius - `none` | `sm` | `md` | `lg` | `full` (default: `md`)
@@ -432,6 +434,9 @@ component Tabs items: "Dashboard,Analytics,Reports" active: 0 variant: primary
 component Tabs items: "Home,Users,Settings" active: 0 icons: "home,users,settings"
 component Tabs items: "Home,Profile,Settings" active: 1 flat: true
 component Tabs items: "Overview,Details" active: 0 size: sm radius: full
+
+// Linked to a layout tabs container
+component Tabs items: "Profile,Settings,Billing" active: 0 tabsId: mainTabs
 ```
 
 **Rendering**: Horizontal tabs with one highlighted as active. `flat: true` replaces filled active background with a slim underline indicator. `icons` embeds SVG icon symbols next to each tab label.
@@ -741,20 +746,29 @@ component Chart type: "pie" height: 200
 
 ### Modal
 
-Modal dialog box.
+Modal dialog overlay with optional title header, body content, and footer actions.
 
-**Properties**:
-- `title` (string): Modal title
-- `visible` (boolean): Show/hide modal overlay (default: `true`)
+**Parameters** (on `layout modal`):
+- `id` (identifier, optional): For `show`/`hide`/`toggle` targeting
+- `title` (string, optional): Header text
+- `visible` (boolean, optional): Initial visibility (default: `true`)
+- `closable` (boolean, optional): Show close button (default: `true`, requires `title`)
+- `size` (enum, optional): `sm` | `md` | `lg` (default: `md`)
+- `onClose` (action, optional): Fires when close button is clicked
 
 **Example**:
 ```wire
-component Modal title: "Confirm Action"
-component Modal title: "Delete User"
-component Modal title: "Delete User" visible: false
+layout modal(id: confirmModal, title: "Delete?", closable: true) {
+  body { component Text text: "This cannot be undone." }
+  footer {
+    component Button text: "Cancel" onClick: hide(self)
+    component Button text: "Delete" variant: danger onClick: hide(self)
+  }
+}
+component Button text: "Delete Item" variant: danger onClick: show(confirmModal)
 ```
 
-**Rendering**: Centered overlay dialog with title and generic content placeholder
+**Rendering**: Centered overlay with backdrop, header, and body/footer content
 
 ---
 

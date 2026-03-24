@@ -109,6 +109,8 @@ Common fields for all nodes:
 - `style`: Applied styles (optional)
 - `meta.nodeId`: SourceMap nodeId of the AST node that produced this IR node (enables bidirectional canvas↔code selection)
 
+**Universal visibility**: All nodes (components and containers) support a `visible` field in `params`/`props`. When `visible` is `"false"`, the node is **not rendered** in the SVG and **does not occupy space** in the layout. Siblings are positioned as if the invisible node doesn't exist.
+
 ---
 
 ## Container Nodes
@@ -264,6 +266,39 @@ Common fields for all nodes:
 
 ---
 
+### Container with Modal Layout
+
+```json
+{
+  "id": "node_modal",
+  "kind": "container",
+  "containerType": "modal",
+  "params": {
+    "id": "confirmModal",
+    "title": "Confirm Action?",
+    "visible": true,
+    "closable": true,
+    "size": "md"
+  },
+  "children": [
+    { "slot": "body",   "ref": "node_modal_body" },
+    { "slot": "footer", "ref": "node_modal_footer" }
+  ]
+}
+```
+
+**Modal Params**:
+- `id`: User-defined identifier for `show`/`hide`/`toggle` targeting
+- `title`: Header text. When absent, no header is rendered.
+- `visible`: Boolean (default `true`). When `false`, modal is not rendered and doesn't affect sibling layout.
+- `closable`: Show close button in header (default `true`). Requires `title`.
+- `size`: `"sm"` (380px) | `"md"` (520px) | `"lg"` (720px) — modal width. On mobile, always uses full viewport width minus margin.
+- `onClose`: Event fired when close button is clicked.
+
+**Modal sections** (`containerType: "modal-body"` / `containerType: "modal-footer"`): Implicit mode skips these — all children go directly under the modal node.
+
+---
+
 ## Component Nodes
 
 ```json
@@ -281,9 +316,11 @@ Common fields for all nodes:
 - `id`: Unique identifier
 - `kind`: Always `"component"`
 - `componentType`: Component type
-- `props`: Component-specific properties (excludes `id` and event props — see below)
+- `props`: Component-specific properties. Includes `visible` when declared. Excludes `id` and event props (see below).
 - `userDefinedId` *(optional)*: User-defined identifier declared with `id:` prop. Used for `show/hide/toggle` targeting and `data-user-id` in SVG.
 - `events` *(optional)*: Array of `IREventHandler` objects — see [Events](#events) below.
+
+> **Visibility**: when `props.visible === 'false'` the component is not rendered in SVG and does not occupy layout space.
 
 ---
 
@@ -306,9 +343,9 @@ interface IREventHandler {
 ```typescript
 type IREventAction =
   | { type: 'navigate';      screen: string }
-  | { type: 'show';          targetId: string }   // '_self' for self-reference
-  | { type: 'hide';          targetId: string }
-  | { type: 'toggle';        targetId: string }
+  | { type: 'show';          targetId: string }   // '_self' for self-reference. Makes element visible and occupies layout space.
+  | { type: 'hide';          targetId: string }   // Hides element. Does not occupy layout space.
+  | { type: 'toggle';        targetId: string }   // Toggles visible ↔ hidden (with layout effect).
   | { type: 'setTab';        tabsId: string; index: number }
   | { type: 'navigateItems'; screens: string[] }; // SidebarMenu onItemsClick
 ```

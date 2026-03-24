@@ -613,7 +613,7 @@ component Button text: "Click me" variant: primary
 | `Stat` | `title`, `value`, `caption`, `icon` | `component Stat title: "Total Users" value: "1,234" icon: "users"` |
 | `Separate` | `size` | `component Separate size: md` |
 | `Code` | `code` | `component Code code: "const x = 10;"` |
-| `Modal` | `title`, `visible` | `component Modal title: "Confirm?" visible: false` |
+| `Modal` | — | Use `layout modal(...)` container instead. |
 
 ---
 
@@ -693,7 +693,7 @@ Wire DSL supports **declarative event annotations** — metadata that describes 
 Any component that needs to be a target of `show`, `hide`, or `toggle` actions must declare an `id`:
 
 ```
-component Modal id: confirmModal title: "Confirm?"
+layout modal(id: confirmModal, title: "Confirm?") { ... }
 component Button id: submitBtn text: "Submit"
 ```
 
@@ -800,11 +800,34 @@ component SidebarMenu
 
 ---
 
-### Modal Self-Close
+### Modal Layout
+
+The `layout modal` container replaces `component Modal`. It floats as an overlay regardless of where it appears in the DSL tree:
 
 ```
-component Modal id: confirmModal title: "Confirm?" onClose: hide(self)
+// Modal with sections
+layout modal(id: confirmDelete, title: "Delete?", closable: true) {
+  body {
+    component Text text: "This cannot be undone."
+  }
+  footer {
+    component Button text: "Cancel" onClick: hide(self)
+    component Button text: "Delete" variant: danger onClick: hide(self)
+  }
+}
+
+// Trigger it from any component on the same screen
+component Button text: "Delete" variant: danger onClick: show(confirmDelete)
+
+// Start hidden — show on demand
+layout modal(id: editModal, title: "Edit", visible: false) {
+  component Input label: "Name"
+}
 ```
+
+**Modal parameters**: `id`, `title`, `visible` (default `true`), `closable` (default `true`), `size` (`sm`/`md`/`lg`, default `md`), `onClose`
+
+**Section keywords**: `body { }` and `footer { }` are optional. Without them all direct children go into the content area (implicit mode).
 
 ---
 
@@ -813,8 +836,8 @@ component Modal id: confirmModal title: "Confirm?" onClose: hide(self)
 The `layout tabs` container works parallel to `layout grid` — its children are `tab` blocks:
 
 ```
-// Tab bar component — links to the tabs container via tabsId
-component Tabs items: "Profile,Settings,Billing" active: 0 tabsId: mainTabs
+// Tab bar component — use initialActive for design-time default, active for runtime
+component Tabs items: "Profile,Settings,Billing" initialActive: 0 tabsId: mainTabs
 
 // Content panels — one tab block per panel
 layout tabs(id: mainTabs) {

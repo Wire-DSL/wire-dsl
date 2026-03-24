@@ -138,15 +138,16 @@ Output (SVG / IR / AST)
 | **Navigation** | Topbar, SidebarMenu, Breadcrumbs, Tabs |
 | **Data Display** | Table, List |
 | **Media & Display** | Image, Icon, Avatar, Divider, Badge, Link, Alert, Stat, Code, Chart |
-| **Modal & Feedback** | Modal, Spinner |
+| **Media & Display** | Image, Icon, Avatar, Divider, Badge, Link, Alert, Stat, Code, Chart, Spinner |
 
-**6 Layout Containers:**
+**7 Layout Containers:**
 - **Stack** - Vertical/horizontal flow
 - **Grid** - CSS Grid-based layout
 - **Split** - Side-by-side with divider
 - **Panel** - Card-like container
 - **Card** - Elevated container with shadow (supports `onClick`)
 - **Tabs** - Tabbed content container with `tab` children
+- **Modal** - Overlay dialog with optional `body`/`footer` sections; shown/hidden via events
 
 **References:**
 - Full catalog: [COMPONENTS-REFERENCE.md](../docs/COMPONENTS-REFERENCE.md)
@@ -173,27 +174,42 @@ Wire-DSL supports **declarative interaction annotations** — metadata that desc
 
 **Core principle:** The engine always produces static SVG. `data-event-*` attributes are the communication channel for play test. The canvas maintains a mutable copy of the IR for the session; events modify that IR and trigger re-rendering.
 
-**Component IDs:**
+**Component IDs** (all components and containers support `id` and `visible`):
 ```wire
-component Modal id: confirmModal title: "Confirm?"
+layout modal(id: confirmModal, title: "Confirm?") { ... }
 layout stack(id: sidePanel, padding: md) { ... }
+component Button id: submitBtn text: "Submit" visible: false
 ```
 
 **Events on components (inline):**
 ```wire
 component Button text: "Delete" onClick: hide(listModal) & show(confirmModal)
 component Toggle text: "Show panel" onChange: toggle(advPanel)
-component Modal id: m1 title: "Sure?" onClose: hide(self)
+layout modal(id: m1, title: "Sure?", onClose: hide(self)) { ... }
 ```
 
-**Tabs container:**
+**Tabs container** (`initialActive` for design-time, `active` for runtime):
 ```wire
-component Tabs items: "Profile,Settings" active: 0 tabsId: mainTabs
+component Tabs items: "Profile,Settings" initialActive: 0 tabsId: mainTabs
 layout tabs(id: mainTabs) {
   tab { component Heading text: "Profile" }
   tab { component Heading text: "Settings" }
 }
 ```
+
+**Modal container:**
+```wire
+layout modal(id: confirmModal, title: "Delete?", visible: false, closable: true) {
+  body { component Text text: "This cannot be undone." }
+  footer {
+    component Button text: "Cancel" onClick: hide(self)
+    component Button text: "Delete" variant: danger onClick: hide(self)
+  }
+}
+component Button text: "Delete" variant: danger onClick: show(confirmModal)
+```
+
+**Visibility:** `show/hide/toggle` affect both rendering AND layout space. Hidden elements don't occupy space.
 
 **Actions:**
 | Action | Description |

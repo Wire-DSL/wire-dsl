@@ -600,7 +600,89 @@ component Button text: "Go" onClick: navigate(self)  // self is not a screen
 
 **Valid**:
 ```wire
-component Modal id: m onClose: hide(self)
+layout modal(id: m, title: "Confirm?", onClose: hide(self)) { ... }
+```
+
+---
+
+## Modal Validation Rules (MODAL-001 – MODAL-004)
+
+These rules are validated during IR generation for `layout modal` containers. All MODAL-* rules emit **warnings** (non-fatal) — the file is still renderable even if they fire.
+
+### MODAL-001 — body/footer only valid inside layout modal
+
+`body` and `footer` section keywords are only valid as direct children of `layout modal`. Using them inside any other container type triggers this warning.
+
+**Invalid**:
+```wire
+layout stack(direction: vertical) {
+  body { component Text text: "Content" }  // MODAL-001 warning
+}
+```
+
+**Valid**:
+```wire
+layout modal(id: m, title: "T") {
+  body { component Text text: "Content" }
+}
+```
+
+---
+
+### MODAL-002 — Cannot mix body/footer sections with normal children
+
+A `layout modal` must use either implicit mode (normal components/layouts as direct children) or explicit mode (`body`/`footer` sections). Mixing both triggers this warning.
+
+**Invalid**:
+```wire
+layout modal(id: m, title: "T") {
+  component Text text: "Direct child"
+  body { component Button text: "OK" }  // MODAL-002 warning
+}
+```
+
+**Valid (implicit mode)**:
+```wire
+layout modal(id: m, title: "T") {
+  component Text text: "Content"
+  component Button text: "OK"
+}
+```
+
+**Valid (explicit mode)**:
+```wire
+layout modal(id: m, title: "T") {
+  body { component Text text: "Content" }
+  footer { component Button text: "OK" }
+}
+```
+
+---
+
+### MODAL-003 — Only one body section allowed per modal
+
+Declaring more than one `body` inside a `layout modal` triggers this warning. The first `body` is used and subsequent ones are ignored.
+
+**Invalid**:
+```wire
+layout modal(id: m, title: "T") {
+  body { component Text text: "First" }
+  body { component Text text: "Second" }  // MODAL-003 warning
+}
+```
+
+---
+
+### MODAL-004 — Only one footer section allowed per modal
+
+Declaring more than one `footer` inside a `layout modal` triggers this warning.
+
+**Invalid**:
+```wire
+layout modal(id: m, title: "T") {
+  footer { component Button text: "Cancel" }
+  footer { component Button text: "Confirm" }  // MODAL-004 warning
+}
 ```
 
 ---

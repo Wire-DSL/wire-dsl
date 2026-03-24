@@ -1,5 +1,5 @@
 # Wire-DSL — Complete Documentation
-# Generated: 2026-02-27
+# Generated: 2026-03-24
 # Index: llms.txt
 
 Wire-DSL is a block-declarative DSL for creating interactive wireframes using
@@ -641,7 +641,7 @@ component Button text: "Click me" variant: primary
 | `Stat` | `title`, `value`, `caption`, `icon` | `component Stat title: "Total Users" value: "1,234" icon: "users"` |
 | `Separate` | `size` | `component Separate size: md` |
 | `Code` | `code` | `component Code code: "const x = 10;"` |
-| `Modal` | `title`, `visible` | `component Modal title: "Confirm?" visible: false` |
+| `Modal` | — | Use `layout modal(...)` container instead. |
 
 ---
 
@@ -709,6 +709,205 @@ project "Admin Dashboard" {
   }
 }
 ```
+
+---
+
+## Events & Interactivity
+
+Wire DSL supports **declarative event annotations** — metadata that describes prototype interaction flows. The engine stays 100% static; events are recorded in the IR and interpreted by the canvas during play test.
+
+### Component IDs
+
+Any component that needs to be a target of `show`, `hide`, or `toggle` actions must declare an `id`:
+
+```
+layout modal(id: confirmModal, title: "Confirm?") { ... }
+component Button id: submitBtn text: "Submit"
+```
+
+**ID format**: `[a-zA-Z_][a-zA-Z0-9_]*` — same convention as JavaScript identifiers.
+
+Layouts that are `tabs` containers also take an `id` as a parameter (see [Tabs Layout](#tabs-layout) below).
+
+---
+
+### Event Props on Components
+
+Events are declared as inline properties on components:
+
+```
+component Button text: "Delete" onClick: show(confirmModal)
+component Link text: "Back" onClick: navigate(Home)
+component Table columns: "Name,Email" rows: 8 onRowClick: navigate(UserDetail)
+component List items: "A,B,C" onItemClick: navigate(Detail)
+```
+
+---
+
+### Supported Events per Component
+
+| Component | Supported Events |
+|-----------|-----------------|
+| `Button`, `IconButton` | `onClick` |
+| `Link` | `onClick` |
+| `Toggle`, `Checkbox`, `Radio` | `onChange` **or** `onActive` + `onInactive` (mutually exclusive) |
+| `SidebarMenu` | `onItemsClick` |
+| `List` | `onItemClick` |
+| `Table` | `onRowClick` |
+| `Modal` | `onClose` |
+| `layout card(...)` | `onClick` (in parentheses, like other params) |
+
+---
+
+### Actions
+
+| Action | Syntax | Description |
+|--------|--------|-------------|
+| Navigate | `navigate(ScreenName)` | Navigate to another screen |
+| Show | `show(id)` | Make a component visible |
+| Hide | `hide(id)` | Hide a component |
+| Toggle | `toggle(id)` | Toggle a component's visibility |
+| Set Tab | `setTab(tabsId, index)` | Switch to a tab by index (0-based) |
+
+**`self` keyword**: Use `hide(self)`, `show(self)`, `toggle(self)` to reference the component itself without needing an explicit `id`.
+
+---
+
+### Action Chaining with `&`
+
+Multiple actions can be chained with `&`:
+
+```
+component Button text: "Delete user"
+  onClick: hide(userListModal) & show(confirmDeleteModal)
+
+component Button text: "Next step"
+  onClick: hide(step1) & show(step2) & navigate(Summary)
+```
+
+---
+
+### Toggle / Checkbox / Radio Events
+
+Three options (mutually exclusive):
+
+```
+// onChange — fires on any state change (most common)
+component Toggle label: "Show panel" onChange: toggle(myPanel)
+
+// onActive + onInactive — control each direction separately
+component Checkbox label: "Accept terms"
+  onActive: show(submitBtn) & hide(disabledHint)
+  onInactive: hide(submitBtn) & show(disabledHint)
+```
+
+---
+
+### Card Layout with onClick
+
+For `layout card`, the `onClick` event goes inside the parentheses alongside other params:
+
+```
+layout card(padding: lg, onClick: navigate(UserDetail)) {
+  component Heading text: "User #1234"
+  component Text text: "View full profile"
+}
+```
+
+---
+
+### SidebarMenu Navigation
+
+`onItemsClick` uses a comma-separated string of screen names aligned by index with `items`:
+
+```
+component SidebarMenu
+  items: "Dashboard,Users,Settings"
+  onItemsClick: "DashboardScreen,UsersScreen,SettingsScreen"
+```
+
+---
+
+### Modal Layout
+
+The `layout modal` container replaces `component Modal`. It floats as an overlay regardless of where it appears in the DSL tree:
+
+```
+// Modal with sections
+layout modal(id: confirmDelete, title: "Delete?", closable: true) {
+  body {
+    component Text text: "This cannot be undone."
+  }
+  footer {
+    component Button text: "Cancel" onClick: hide(self)
+    component Button text: "Delete" variant: danger onClick: hide(self)
+  }
+}
+
+// Trigger it from any component on the same screen
+component Button text: "Delete" variant: danger onClick: show(confirmDelete)
+
+// Start hidden — show on demand
+layout modal(id: editModal, title: "Edit", visible: false) {
+  component Input label: "Name"
+}
+```
+
+**Modal parameters**: `id`, `title`, `visible` (default `true`), `closable` (default `true`), `size` (`sm`/`md`/`lg`, default `md`), `onClose`
+
+**Section keywords**: `body { }` and `footer { }` are optional. Without them all direct children go into the content area (implicit mode).
+
+---
+
+### Tabs Layout
+
+The `layout tabs` container works parallel to `layout grid` — its children are `tab` blocks:
+
+```
+// Tab bar component — use initialActive for design-time default, active for runtime
+component Tabs items: "Profile,Settings,Billing" initialActive: 0 tabsId: mainTabs
+
+// Content panels — one tab block per panel
+layout tabs(id: mainTabs) {
+  tab {
+    component Heading text: "Profile"
+    component Input label: "Name"
+  }
+  tab {
+    component Heading text: "Settings"
+    component Toggle label: "Notifications"
+  }
+  tab {
+    component Heading text: "Billing"
+    component Table columns: "Date,Amount" rows: 4
+  }
+}
+```
+
+**Rules:**
+- `tab` is a keyword (like `cell` inside `grid`) — children are components and layouts
+- Tabs are identified by **0-based index** (order of declaration)
+- `tabsId` in `component Tabs` must reference the `id` of a `layout tabs` on the same screen
+- `setTab(tabsId, index)` lets any component switch the active tab
+
+---
+
+### Event Validation Rules
+
+| Code | Rule |
+|------|------|
+| EVT-001 | Event must be supported by the component type |
+| EVT-002 | `navigate(X)` — X must be a declared screen |
+| EVT-003 | `show/hide/toggle(X)` — X must have `id: X` on the same screen |
+| EVT-004 | Duplicate `id` on the same screen |
+| EVT-006 | `tabsId` must reference a `layout tabs(id: ...)` on the same screen |
+| EVT-007 | `onItemsClick` screen count must match `items` count |
+| EVT-008 | `active` index must be valid (0 ≤ active < tab count) |
+| EVT-009 | ID must match `[a-zA-Z_][a-zA-Z0-9_]*` |
+| EVT-010 | `onChange`/`onActive`/`onInactive` only on Toggle, Checkbox, Radio |
+| EVT-012 | `onChange` is mutually exclusive with `onActive`/`onInactive` |
+| EVT-013 | `setTab` tabsId must exist; index must be ≥ 0 |
+| EVT-014 | `self` only valid inside `show`, `hide`, `toggle` |
 
 ---
 
@@ -926,15 +1125,27 @@ component Select label: "Category" iconLeft: "tag" iconRight: "filter" items: "A
 Boolean checkbox input.
 
 **Properties**:
+- `id` (identifier, optional): Unique ID for event targeting (e.g., `id: termsCheck`)
 - `label` (string): Checkbox label
 - `checked` (boolean, optional): Whether checkbox is checked (default: false)
 - `disabled` (boolean, optional): Visually dims the checkbox (default: false)
+
+**Events** (optional — makes the checkbox interactive in play test):
+- `onChange: <action>` — fires on any state change (checked ↔ unchecked)
+- `onActive: <action>` — fires only when transitioning to checked
+- `onInactive: <action>` — fires only when transitioning to unchecked
+- `onChange` is mutually exclusive with `onActive`/`onInactive`
 
 **Example**:
 ```wire
 component Checkbox label: "I agree to terms" checked: true
 component Checkbox label: "Subscribe to newsletter"
 component Checkbox label: "Remember me" checked: false
+
+// With events
+component Checkbox id: termsCheck label: "I agree to terms"
+  onActive: show(submitBtn)
+  onInactive: hide(submitBtn)
 ```
 
 **Rendering**: Small square checkbox with label text
@@ -946,15 +1157,25 @@ component Checkbox label: "Remember me" checked: false
 Single-select radio button (typically used in groups).
 
 **Properties**:
+- `id` (identifier, optional): Unique ID for event targeting
 - `label` (string): Radio button label
 - `checked` (boolean, optional): Whether radio is selected (default: false)
 - `disabled` (boolean, optional): Visually dims the radio button (default: false)
+
+**Events** (optional — makes the radio interactive in play test):
+- `onChange: <action>` — fires on any state change
+- `onActive: <action>` — fires only when selected
+- `onInactive: <action>` — fires only when deselected
+- `onChange` is mutually exclusive with `onActive`/`onInactive`
 
 **Example**:
 ```wire
 component Radio label: "Option A" checked: true
 component Radio label: "Option B"
-component Radio label: "Personal" checked: false
+
+// With events
+component Radio label: "Personal" onChange: show(personalFields)
+component Radio label: "Business" onChange: show(businessFields)
 ```
 
 **Rendering**: Circular radio button with label text
@@ -966,15 +1187,27 @@ component Radio label: "Personal" checked: false
 Boolean toggle switch.
 
 **Properties**:
+- `id` (identifier, optional): Unique ID for event targeting
 - `label` (string): Toggle label
 - `enabled` (boolean, optional): Whether toggle is enabled (default: false)
 - `disabled` (boolean, optional): Visually dims the toggle (default: false)
+
+**Events** (optional — makes the toggle interactive in play test):
+- `onChange: <action>` — fires on any state change (on ↔ off)
+- `onActive: <action>` — fires only when switching on
+- `onInactive: <action>` — fires only when switching off
+- `onChange` is mutually exclusive with `onActive`/`onInactive`
 
 **Example**:
 ```wire
 component Toggle label: "Dark Mode" enabled: true
 component Toggle label: "Enable notifications"
-component Toggle label: "Auto-save" enabled: false
+
+// With events
+component Toggle label: "Show advanced panel" onChange: toggle(advancedPanel)
+component Toggle label: "Two-factor auth"
+  onActive: show(twoFactorSetup)
+  onInactive: hide(twoFactorSetup)
 ```
 
 **Rendering**: Sliding toggle switch with label
@@ -988,12 +1221,16 @@ component Toggle label: "Auto-save" enabled: false
 Clickable action button.
 
 **Properties**:
+- `id` (identifier, optional): Unique ID for event targeting
 - `text` (string): Button label
 - `variant` (string): Visual style (default: `default`). Accepts semantic names or Material Design color families.
 - `size` (enum, optional): `xs` | `sm` | `md` | `lg` | `xl` (default: `md`)
 - `icon` (string, optional): Icon name to render alongside the text (e.g., `"check"`, `"trash"`, `"plus"`)
 - `iconAlign` (string, optional): Icon placement - `left` | `right` (default: `left`)
 - `disabled` (boolean, optional): Visually dims the button (default: `false`)
+
+**Events**:
+- `onClick: <action>` — fires when the button is clicked; supports action chaining with `&`
 
 **Semantic variants**: `default` | `primary` | `secondary` | `success` | `warning` | `danger` | `info`
 
@@ -1009,6 +1246,12 @@ component Button text: "Delete" variant: danger
 component Button text: "Confirm" variant: success icon: "check"
 component Button text: "Remove" variant: danger icon: "trash-2" iconAlign: right
 component Button text: "Add Item" icon: "plus"
+
+// With events
+component Button text: "Open dialog" onClick: show(confirmModal)
+component Button text: "Go to dashboard" onClick: navigate(Dashboard)
+component Button text: "Delete" variant: danger onClick: hide(listPanel) & show(confirmDelete)
+component Button text: "Switch tab" onClick: setTab(mainTabs, 2)
 ```
 
 **Rendering**: Rectangular button with text (and optional leading/trailing icon), styled according to variant
@@ -1020,16 +1263,24 @@ component Button text: "Add Item" icon: "plus"
 Button with icon instead of text.
 
 **Properties**:
+- `id` (identifier, optional): Unique ID for event targeting
 - `icon` (string): Icon name (e.g., "search", "menu", "close")
 - `size` (enum): `xs` | `sm` | `md` | `lg` | `xl` (default: `md`)
 - `variant` (enum): `default` | `primary` | `secondary` | `success` | `warning` | `danger` | `info`
 - `disabled` (boolean): disabled state (`true` | `false`, default: `false`)
+
+**Events**:
+- `onClick: <action>` — fires when the button is clicked; supports action chaining with `&`
 
 **Example**:
 ```wire
 component IconButton icon: "search" size: sm variant: default
 component IconButton icon: "menu" size: md variant: primary
 component IconButton icon: "settings" size: lg variant: info disabled: true
+
+// With events
+component IconButton icon: "x" onClick: hide(self)
+component IconButton icon: "trash-2" variant: danger onClick: show(confirmDelete)
 ```
 
 **Rendering**: Square button containing icon symbol
@@ -1074,12 +1325,17 @@ component Topbar title: "Portal" size: sm background: indigo user: "alice"
 Vertical menu for navigation.
 
 **Properties**:
+- `id` (identifier, optional): Unique ID for event targeting
 - `items` (string, CSV): Menu item labels
 - `active` (number): Index of active item (default: 0)
 - `icons` (string, CSV, optional): Icon names per menu item (same order as `items`)
 - `variant` (string, optional): Color applied to the active item and its icon. If omitted, falls back to the `accent` color. Accepts semantic variants (`primary`, `success`, etc.) or custom color names from the `colors` block.
+- `onItemsClick` (string, CSV): Comma-separated screen names aligned by index with `items`. Clicking item N navigates to screen N.
 
 > When `icons` are set, the active item's icon is automatically colored using the same active color as the text, matching the highlighted state.
+
+**Events**:
+- `onItemsClick: "Screen1,Screen2,Screen3"` — navigates to the corresponding screen when a menu item is clicked. The number of screens must match the number of `items`.
 
 **Example**:
 ```wire
@@ -1087,6 +1343,10 @@ component SidebarMenu items: "Home,Users,Settings,Help" active: 0
 component SidebarMenu items: "Dashboard,Analytics,Reports,Admin" active: 1
 component SidebarMenu items: "Dashboard,Users,Settings" icons: "home,users,settings" active: 0
 component SidebarMenu items: "Dashboard,Users,Settings" icons: "home,users,settings" active: 1 variant: primary
+
+// With navigation events
+component SidebarMenu items: "Dashboard,Users,Settings"
+  onItemsClick: "DashboardScreen,UsersScreen,SettingsScreen"
 ```
 
 **Rendering**: Vertical list of menu items with one highlighted as active; icons (if provided) match the active color for the selected item
@@ -1132,11 +1392,14 @@ component Breadcrumbs items: "Admin,Settings,Preferences" separator: " > "
 
 ### Tabs
 
-Tabbed interface with multiple panels.
+Tabbed interface navigation bar (visual component). Pair with `layout tabs` to control tab content.
 
 **Properties**:
+- `id` (identifier, optional): Unique ID for event targeting
 - `items` (string, CSV): Tab labels
-- `active` (number): Index of active tab (default: 0)
+- `initialActive` (number, optional): Starting tab index when the wireframe first loads or resets (default: `0`). Editors and play testers use this as the default state.
+- `active` (number, optional): Current active tab index. Managed at runtime by `setTab` events during play test. Takes precedence over `initialActive` if set.
+- `tabsId` (identifier, optional): References the `id` of a `layout tabs` container in the same screen. When a tab is clicked, the canvas calls `setTab(tabsId, clickedIndex)` internally.
 - `variant` (string, optional): Active tab color — semantic name or Material Design color family (default: `default` = accent color)
 - `size` (enum, optional): `sm` | `md` | `lg` (default: `md`) — controls tab bar height (32px / 44px / 52px)
 - `radius` (enum, optional): Tab corner rounding — `none` | `sm` | `md` | `lg` | `full` (default: `md`)
@@ -1150,6 +1413,14 @@ component Tabs items: "Profile,Settings,Privacy" active: 1 variant: primary
 component Tabs items: "Home,Stats,History" icons: "home,bar-chart,clock" active: 0
 component Tabs items: "All,Active,Archived" active: 0 flat: true variant: indigo
 component Tabs items: "Files,Shared,Trash" size: sm radius: full
+
+// Linked to a layout tabs container — use initialActive for design-time default
+component Tabs items: "Profile,Settings,Billing" initialActive: 0 tabsId: mainTabs
+layout tabs(id: mainTabs) {
+  tab { component Heading text: "Profile" }
+  tab { component Heading text: "Settings" }
+  tab { component Heading text: "Billing" }
+}
 ```
 
 **Rendering**: Horizontal tabs with one highlighted as active
@@ -1163,11 +1434,15 @@ component Tabs items: "Files,Shared,Trash" size: sm radius: full
 Data table with rows and columns.
 
 **Properties**:
+- `id` (identifier, optional): Unique ID for event targeting
 - `columns` (string, CSV): Column headers (required)
 - `rows` (number): Number of rows to display (default: 5)
 - `rowsMock` (number): Alias for `rows`
 - `mock` (string, CSV): Mock type by column position (for example: `"name,city,amount"`)
 - `random` (boolean): If `true`, mock values vary on each render (default: deterministic)
+
+**Events**:
+- `onRowClick: navigate(<Screen>)` — navigates to the given screen when a table row is clicked
 
 **Example**:
 ```wire
@@ -1176,6 +1451,9 @@ component Table columns: "ID,Name,Email,Role" rows: 10
 component Table columns: "Date,Amount,Status,Notes" rows: 15
 component Table columns: "User,City,Amount" rows: 6 mock: "name,city,amount"
 component Table columns: "User,City,Amount" rows: 6 random: true
+
+// With row navigation
+component Table columns: "Name,Email,Role" rows: 8 onRowClick: navigate(UserDetail)
 ```
 
 **Rendering**: Grid table with header row and mock data rows
@@ -1187,11 +1465,15 @@ component Table columns: "User,City,Amount" rows: 6 random: true
 Simple list of items.
 
 **Properties**:
+- `id` (identifier, optional): Unique ID for event targeting
 - `items` (string, CSV): List item labels
 - `title` (string, optional): List title/header
 - `itemsMock` (number, optional): Number of mock items to generate
 - `mock` (string, optional): Mock type used when `items` is not provided
 - `random` (boolean): If `true`, mock values vary on each render (default: deterministic)
+
+**Events**:
+- `onItemClick: navigate(<Screen>)` — navigates to the given screen when a list item is clicked
 
 **Example**:
 ```wire
@@ -1200,6 +1482,10 @@ component List items: "Feature 1,Feature 2,Feature 3,Feature 4"
 component List title: "Recent Activity" items: "Login,Purchase,Invite,Export"
 component List title: "Cities" itemsMock: 5 mock: "city"
 component List title: "Cities" itemsMock: 5 mock: "city" random: true
+
+// With item navigation
+component List title: "Recent Files" items: "report.pdf,data.xlsx,notes.md"
+  onItemClick: navigate(FileDetail)
 ```
 
 **Rendering**: Vertical list with bullet points or numbers
@@ -1317,13 +1603,21 @@ component Badge text: "Tag" variant: info padding: 12
 Hyperlink text.
 
 **Properties**:
+- `id` (identifier, optional): Unique ID for event targeting
 - `text` (string): Link text
 - `variant` (string): Link color variant - `primary` | `secondary` | `success` | `warning` | `danger` | `info` (default: `primary`)
+
+**Events**:
+- `onClick: <action>` — fires when the link is clicked; supports action chaining with `&`
 
 **Example**:
 ```wire
 component Link text: "Click here" variant: primary
 component Link text: "Learn more" variant: info
+
+// With events
+component Link text: "Back to list" onClick: navigate(UserList)
+component Link text: "Show details" onClick: show(detailsPanel)
 ```
 
 **Rendering**: Underlined text using the selected variant color
@@ -1433,20 +1727,105 @@ component Chart type: "pie" height: 200
 
 ### Modal
 
-Modal dialog box.
+Modal dialog overlay with optional title header, body content, and footer actions. Being a container, it accepts full child layouts inside `body` and `footer` sections.
 
-**Properties**:
-- `title` (string): Modal title
-- `visible` (boolean): Show/hide modal overlay (default: `true`)
+**Parameters**:
+- `id` (identifier, optional): Unique ID for `show`/`hide`/`toggle` targeting
+- `title` (string, optional): Modal header text. Omit for a header-less modal.
+- `visible` (boolean, optional): Initial visibility (default: `true`). When `false`, modal is not rendered and doesn't occupy space.
+- `closable` (boolean, optional): Show close button in header (default: `true`). Requires `title`.
+- `size` (enum, optional): `sm` | `md` | `lg` (default: `md`)
+- `onClose` (action, optional): Fires when the close button is clicked.
+
+**Sections** (optional):
+- `body { }` — main content area
+- `footer { }` — action area (buttons, etc.)
+
+Without `body`/`footer` the direct children go into the content area (implicit mode).
 
 **Example**:
 ```wire
-component Modal title: "Confirm Action"
-component Modal title: "Delete User"
-component Modal title: "Delete User" visible: false
+// Simple modal (implicit mode — no body/footer)
+layout modal(id: confirmModal, title: "Confirm Action", closable: true) {
+  component Text text: "Are you sure?"
+  component Button text: "Yes" onClick: hide(confirmModal)
+}
+
+// Structured modal (explicit body + footer)
+layout modal(id: deleteUser, title: "Delete User?", size: md, onClose: hide(self)) {
+  body {
+    component Text text: "This action cannot be undone."
+  }
+  footer {
+    component Button text: "Cancel" variant: secondary onClick: hide(self)
+    component Button text: "Delete" variant: danger onClick: hide(self)
+  }
+}
+
+// Controlled by a button — modal starts hidden
+layout modal(id: confirmModal, title: "Are you sure?", visible: false) {
+  body { component Text text: "Confirm deletion?" }
+  footer { component Button text: "Delete" variant: danger onClick: hide(self) }
+}
+component Button text: "Delete" variant: danger onClick: show(confirmModal)
 ```
 
-**Rendering**: Centered overlay dialog with title and generic content placeholder
+**Rendering**: Centered overlay with backdrop, header (if `title` is set), close button (if `closable`), and body/footer content
+
+---
+
+## Events & Interactivity
+
+Events turn static wireframes into interactive prototypes during play test. They are **declarative metadata** — the engine stays 100% static. The canvas interprets event data attributes in the rendered SVG and applies state changes.
+
+### Component ID
+
+Assign a stable identifier to a component so other events can target it:
+
+```wire
+layout modal(id: confirmModal, title: "Sure?") {
+  body { component Text text: "Confirm?" }
+  footer { component Button text: "OK" onClick: hide(confirmModal) }
+}
+component Button text: "Open" onClick: show(confirmModal)
+```
+
+ID rules: must match `[a-zA-Z_][a-zA-Z0-9_]*` — no hyphens, cannot start with a digit.
+
+### Actions
+
+| Action | Syntax | Description |
+|--------|--------|-------------|
+| `navigate` | `navigate(ScreenName)` | Navigate to another screen |
+| `show` | `show(id \| self)` | Make a node visible |
+| `hide` | `hide(id \| self)` | Hide a node |
+| `toggle` | `toggle(id \| self)` | Toggle visibility |
+| `setTab` | `setTab(tabsId, index)` | Activate a tab by index (0-based) |
+
+`self` is a special keyword meaning the component itself — useful for modals that close themselves (`onClose: hide(self)`).
+
+### Action Chaining
+
+Multiple actions can be chained with `&`:
+
+```wire
+component Button text: "Confirm" onClick: hide(listModal) & show(confirmModal)
+component Button text: "Next" onClick: hide(step1) & show(step2) & navigate(Summary)
+```
+
+### Events per Component
+
+| Component | Supported Events |
+|-----------|-----------------|
+| Button, IconButton, Link | `onClick` |
+| Toggle, Checkbox, Radio | `onChange` **or** `onActive` + `onInactive` |
+| Table | `onRowClick` |
+| List | `onItemClick` |
+| SidebarMenu | `onItemsClick` (string prop) |
+| Modal | `onClose` |
+| layout card | `onClick` (layout parameter) |
+
+> `onChange` and `onActive`/`onInactive` are mutually exclusive on the same component.
 
 ---
 
@@ -1507,7 +1886,7 @@ Complete guide to container types (layouts) for organizing content in Wire-DSL w
 
 ## Overview
 
-Containers are structural elements that organize and position child components. Wire-DSL provides 5 main container types, each with specific use cases and properties.
+Containers are structural elements that organize and position child components. Wire-DSL provides 6 main container types, each with specific use cases and properties.
 
 | Container | Purpose | Children | Use Case |
 |-----------|---------|----------|----------|
@@ -1516,6 +1895,7 @@ Containers are structural elements that organize and position child components. 
 | **Split** | Two-panel layout | Two stacks | Sidebar + content |
 | **Panel** | Single bordered container | Single | Grouped content sections |
 | **Card** | Flexible content box | Multiple | Product cards, profiles |
+| **Tabs** | Tabbed content container | Tab blocks | Multi-panel tabbed views |
 
 ---
 
@@ -1984,6 +2364,11 @@ layout card(padding: lg, gap: md, radius: md, border: true) {
 | `gap` | string | `xs`, `sm`, `md`, `lg`, `xl` | `md` | Spacing between children |
 | `radius` | string | `none`, `sm`, `md`, `lg` | `md` | Corner radius |
 | `border` | boolean | `true`, `false` | `true` | Show border |
+| `onClick` | action | any action | — | Makes the whole card clickable (play test) |
+
+**Events** (optional):
+- `onClick: navigate(Screen)` — navigates when the card is clicked
+- `onClick: show(id)` / `hide(id)` / `toggle(id)` — also supported, chainable with `&`
 
 ### Radius Values
 
@@ -2045,6 +2430,14 @@ layout card(padding: lg, gap: lg, radius: lg, border: false) {
 }
 ```
 
+**Clickable Card (play test)**:
+```
+layout card(padding: md, gap: md, onClick: navigate(UserDetail)) {
+  component Heading text: "User #1234"
+  component Text text: "Click to view profile"
+}
+```
+
 ### Important Notes
 
 ⚠️ **Automatic Stacking**: Children stack vertically automatically
@@ -2052,6 +2445,189 @@ layout card(padding: lg, gap: lg, radius: lg, border: false) {
 ⚠️ **Dynamic Height**: Card height adjusts based on content
 
 ⚠️ **Image Aspect Ratio**: Images within cards maintain proper aspect ratios
+
+---
+
+## Tabs Container
+
+Tabbed content container. Pairs with the `component Tabs` navigation bar to create a full tabbed interface.
+
+### Purpose
+
+Display different content sections under a tab bar. Each `tab` block maps to one tab panel — the active tab (zero-based index) controls which content is visible during play test.
+
+### Syntax
+
+```
+layout tabs(id: mainTabs) {
+  tab {
+    // content for tab 0
+  }
+  tab {
+    // content for tab 1
+  }
+}
+```
+
+### Properties
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `id` | identifier | **Yes** | Links this container to a `component Tabs tabsId: ...`. Must be unique within the screen. |
+| `active` | number | No | Initial active tab index (default: 0) |
+
+### Tab Children
+
+Each `tab` block is a content panel:
+- Tabs are identified by their **declaration order** (0-based index)
+- Each `tab` can contain any number of child components or layouts
+- Only the active tab's content is visible during play test
+
+### Examples
+
+**Full tabbed interface**:
+```
+component Tabs items: "Profile,Settings,Billing" initialActive: 0 tabsId: mainTabs
+
+layout tabs(id: mainTabs) {
+  tab {
+    component Heading text: "Profile"
+    component Input label: "Full name"
+    component Input label: "Email"
+    component Button text: "Save changes" variant: primary
+  }
+  tab {
+    component Heading text: "Settings"
+    component Toggle label: "Email notifications" enabled: true
+    component Toggle label: "Dark mode"
+  }
+  tab {
+    component Heading text: "Billing"
+    component Table columns: "Date,Amount,Status" rows: 4
+  }
+}
+```
+
+**Tabs without a navigation bar** (programmatically controlled):
+```
+layout tabs(id: wizardSteps) {
+  tab {
+    component Heading text: "Step 1: Personal Info"
+    component Input label: "Name"
+    component Button text: "Next" onClick: setTab(wizardSteps, 1)
+  }
+  tab {
+    component Heading text: "Step 2: Payment"
+    component Input label: "Card number"
+    component Button text: "Complete" onClick: navigate(Confirmation)
+  }
+}
+```
+
+### Important Notes
+
+⚠️ **`id` is required**: The `layout tabs` container must have an `id` parameter.
+
+⚠️ **`tab` is a keyword**: `tab { }` is special syntax only valid inside `layout tabs`. It is not a component.
+
+⚠️ **Order defines index**: The first `tab` block is index 0, the second is index 1, etc.
+
+⚠️ **`tabsId` must match `id`**: If using `component Tabs tabsId: X`, there must be a `layout tabs(id: X)` in the same screen.
+
+---
+
+## Modal Container
+
+Modal dialog overlay. Accepts child layouts inside `body` and `footer` sections.
+
+### Purpose
+
+Display a modal dialog that floats above the screen content. Can be shown/hidden via events (`show`, `hide`, `toggle`). When `visible: false`, the modal is not rendered and does not affect layout.
+
+### Syntax
+
+```
+layout modal(id: confirmDialog, title: "Confirm", closable: true) {
+  body {
+    component Text text: "Are you sure?"
+  }
+  footer {
+    component Button text: "Cancel" onClick: hide(self)
+    component Button text: "Confirm" variant: primary onClick: hide(self)
+  }
+}
+```
+
+### Properties
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `id` | identifier | No | ID for `show`/`hide`/`toggle` targeting. Format: `[a-zA-Z_][a-zA-Z0-9_]*`. |
+| `title` | string | No | Modal header text. Omit for a header-less modal. |
+| `visible` | boolean | No | Initial visibility (default: `true`). When `false`, modal is not rendered and doesn't occupy space. |
+| `closable` | boolean | No | Show close button in header (default: `true`). Only visible when `title` is set. |
+| `size` | enum | No | `sm` (380px) \| `md` (520px) \| `lg` (720px) (default: `md`). On mobile, all sizes use full viewport width. |
+| `onClose` | action | No | Event fired when the close button is clicked. |
+
+### Sections
+
+A modal supports two optional named sections:
+- **`body { }`** — main content area, stacks children vertically
+- **`footer { }`** — action area, stacks children horizontally
+
+Without `body`/`footer`, all direct children go into the content area (implicit mode).
+
+### Examples
+
+**Confirmation dialog (explicit sections)**:
+```
+layout modal(id: deleteConfirm, title: "Delete Item?", size: md, closable: true) {
+  body {
+    component Text text: "This action cannot be undone."
+  }
+  footer {
+    component Button text: "Cancel" variant: secondary onClick: hide(self)
+    component Button text: "Delete" variant: danger onClick: hide(self)
+  }
+}
+
+component Button text: "Delete Item" variant: danger onClick: show(deleteConfirm)
+```
+
+**Form modal with nested layout (explicit sections)**:
+```
+layout modal(id: editUser, title: "Edit User", size: lg) {
+  body {
+    layout stack(gap: md) {
+      component Input label: "Name"
+      component Input label: "Email"
+      component Select label: "Role" items: "Admin,User,Guest"
+    }
+  }
+  footer {
+    component Button text: "Save" variant: primary
+    component Button text: "Cancel" onClick: hide(self)
+  }
+}
+```
+
+**Modal hidden initially, shown by button**:
+```
+layout modal(id: infoModal, title: "Information", visible: false) {
+  component Text text: "This is important information."
+}
+component Button text: "More info" onClick: show(infoModal)
+```
+
+### Important Notes
+
+⚠️ **Overlay positioning**: Modals are positioned absolutely over the canvas — centered horizontally, 64px from the top. Their position in the DSL tree does not affect visual placement.
+
+⚠️ **Visibility and layout space**: When `visible: false`, the modal is not rendered and does not affect sibling layout.
+
+⚠️ **Close button requires title**: `closable` only shows the close button when a `title` is set.
+
+⚠️ **No section mixing**: Children inside a modal must be either all `body`/`footer` sections (explicit mode) or all normal components/layouts (implicit mode). Mixing both is a validation warning.
 
 ---
 
@@ -2153,13 +2729,14 @@ Rules:
 
 ### Do's ✅
 
-✅ Use Stack for sequential content  
-✅ Use Grid for responsive multi-column layouts  
-✅ Use Split for navigation + content pattern  
-✅ Use Panel for grouped content sections  
-✅ Use Card for self-contained items  
-✅ Limit nesting depth to 3-4 levels  
-✅ Use consistent spacing with style tokens  
+✅ Use Stack for sequential content
+✅ Use Grid for responsive multi-column layouts
+✅ Use Split for navigation + content pattern
+✅ Use Panel for grouped content sections
+✅ Use Card for self-contained items (add `onClick` to make them interactive)
+✅ Use Tabs container + `component Tabs` for multi-panel tabbed interfaces
+✅ Limit nesting depth to 3-4 levels
+✅ Use consistent spacing with style tokens
 
 ### Don'ts ❌
 

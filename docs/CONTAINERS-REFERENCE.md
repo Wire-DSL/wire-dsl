@@ -607,7 +607,7 @@ Each `tab` block is a content panel:
 
 **Full tabbed interface**:
 ```
-component Tabs items: "Profile,Settings,Billing" active: 0 tabsId: mainTabs
+component Tabs items: "Profile,Settings,Billing" initialActive: 0 tabsId: mainTabs
 
 layout tabs(id: mainTabs) {
   tab {
@@ -653,6 +653,101 @@ layout tabs(id: wizardSteps) {
 ⚠️ **Order defines index**: The first `tab` block is index 0, the second is index 1, etc.
 
 ⚠️ **`tabsId` must match `id`**: If using `component Tabs tabsId: X`, there must be a `layout tabs(id: X)` in the same screen.
+
+---
+
+## Modal Container
+
+Modal dialog overlay. Accepts child layouts inside `body` and `footer` sections.
+
+### Purpose
+
+Display a modal dialog that floats above the screen content. Can be shown/hidden via events (`show`, `hide`, `toggle`). When `visible: false`, the modal is not rendered and does not affect layout.
+
+### Syntax
+
+```
+layout modal(id: confirmDialog, title: "Confirm", closable: true) {
+  body {
+    component Text text: "Are you sure?"
+  }
+  footer {
+    component Button text: "Cancel" onClick: hide(self)
+    component Button text: "Confirm" variant: primary onClick: hide(self)
+  }
+}
+```
+
+### Properties
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `id` | identifier | No | ID for `show`/`hide`/`toggle` targeting. Format: `[a-zA-Z_][a-zA-Z0-9_]*`. |
+| `title` | string | No | Modal header text. Omit for a header-less modal. |
+| `visible` | boolean | No | Initial visibility (default: `true`). When `false`, modal is not rendered and doesn't occupy space. |
+| `closable` | boolean | No | Show close button in header (default: `true`). Only visible when `title` is set. |
+| `size` | enum | No | `sm` (380px) \| `md` (520px) \| `lg` (720px) (default: `md`). On mobile, all sizes use full viewport width. |
+| `onClose` | action | No | Event fired when the close button is clicked. |
+
+### Sections
+
+A modal supports two optional named sections:
+- **`body { }`** — main content area, stacks children vertically
+- **`footer { }`** — action area, stacks children horizontally
+
+Without `body`/`footer`, all direct children go into the content area (implicit mode).
+
+### Examples
+
+**Confirmation dialog (explicit sections)**:
+```
+layout modal(id: deleteConfirm, title: "Delete Item?", size: md, closable: true) {
+  body {
+    component Text text: "This action cannot be undone."
+  }
+  footer {
+    component Button text: "Cancel" variant: secondary onClick: hide(self)
+    component Button text: "Delete" variant: danger onClick: hide(self)
+  }
+}
+
+component Button text: "Delete Item" variant: danger onClick: show(deleteConfirm)
+```
+
+**Form modal with nested layout (explicit sections)**:
+```
+layout modal(id: editUser, title: "Edit User", size: lg) {
+  body {
+    layout stack(gap: md) {
+      component Input label: "Name"
+      component Input label: "Email"
+      component Select label: "Role" items: "Admin,User,Guest"
+    }
+  }
+  footer {
+    component Button text: "Save" variant: primary
+    component Button text: "Cancel" onClick: hide(self)
+  }
+}
+```
+
+**Modal hidden initially, shown by button**:
+```
+layout modal(id: infoModal, title: "Information", visible: false) {
+  component Text text: "This is important information."
+}
+component Button text: "More info" onClick: show(infoModal)
+```
+
+### Important Notes
+
+⚠️ **Overlay positioning**: Modals are positioned absolutely over the canvas — centered horizontally, 64px from the top. Their position in the DSL tree does not affect visual placement.
+
+⚠️ **Visibility and layout space**: When `visible: false`, the modal is not rendered and does not affect sibling layout.
+
+⚠️ **Close button requires title**: `closable` only shows the close button when a `title` is set.
+
+⚠️ **No section mixing**: Children inside a modal must be either all `body`/`footer` sections (explicit mode) or all normal components/layouts (implicit mode). Mixing both is a validation warning.
 
 ---
 
