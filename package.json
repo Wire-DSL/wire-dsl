@@ -9,12 +9,15 @@
     "packages/exporters",
     "packages/engine",
     "packages/cli",
+    "packages/mcp-server",
     "apps/web",
     "apps/docs"
   ],
   "scripts": {
     "dev:web": "turbo dev --filter=@wire-dsl/web",
     "dev:docs": "turbo dev --filter=@wire-dsl/docs",
+    "dev:mcp": "pnpm --filter=@wire-dsl/mcp-server dev",
+    "dev:mcp:http": "pnpm --filter=@wire-dsl/mcp-server dev:http",
     "build": "turbo build",
     "build:language-support": "turbo build --filter=@wire-dsl/language-support",
     "build:engine": "turbo build --filter=@wire-dsl/engine",
@@ -22,6 +25,7 @@
     "build:cli": "turbo build --filter=@wire-dsl/cli",
     "build:web": "turbo build --filter=@wire-dsl/web",
     "build:docs": "turbo build --filter=@wire-dsl/docs",
+    "build:mcp": "turbo build --filter=@wire-dsl/mcp-server",
     "test": "turbo test",
     "test:language-support": "turbo test --filter=@wire-dsl/language-support",
     "test:engine": "turbo test --filter=@wire-dsl/engine",
@@ -38,7 +42,8 @@
     "version": "changeset version",
     "release": "changeset publish",
     "wire": "node packages/cli/dist/index.js",
-    "docs:llms": "node scripts/generate-llms-full.js"
+    "docs:llms": "node scripts/generate-llms-full.js",
+    "docs:mcp": "node scripts/sync-mcp-docs.js"
   },
   "devDependencies": {
     "@changesets/changelog-github": "0.5.2",
