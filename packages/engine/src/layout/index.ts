@@ -909,8 +909,11 @@ export class LayoutEngine {
         childHeight = this.getComponentHeight();
       }
       this.calculateNode(childRef.ref, modalX, currentY, innerWidth, childHeight, 'modal');
-      currentY += childHeight;
-      childrenHeight += childHeight;
+      // Containers can refine their final height during calculateNode.
+      // Use the effective laid-out height so modal height matches visible content.
+      const resolvedChildHeight = this.result[childRef.ref]?.height ?? childHeight;
+      currentY += resolvedChildHeight;
+      childrenHeight += resolvedChildHeight;
       if (index < node.children.length - 1) {
         currentY += 8; // small gap between body/footer
         childrenHeight += 8;

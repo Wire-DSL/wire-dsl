@@ -1524,7 +1524,7 @@ describe('IR Generator – Event System', () => {
       expect(result).toBeDefined();
     });
 
-    it('footer should have justify: spaceBetween style', () => {
+    it('footer should default to horizontal stack semantics', () => {
       const input = `
         project "Modal" {
           screen Main {
@@ -1542,7 +1542,33 @@ describe('IR Generator – Event System', () => {
       );
       expect(footerNode).toBeDefined();
       if (footerNode?.kind === 'container') {
+        expect(footerNode.params.direction).toBe('horizontal');
+        expect(footerNode.style.padding).toBe('md');
         expect(footerNode.style.justify).toBe('spaceBetween');
+      }
+    });
+
+    it('body should default to vertical stack semantics', () => {
+      const input = `
+        project "Modal" {
+          screen Main {
+            layout stack {
+              layout modal(title: "Confirm?") {
+                body { component Text text: "Are you sure?" }
+              }
+            }
+          }
+        }
+      `;
+      const ir = generateIR(parseWireDSL(input));
+      const bodyNode = Object.values(ir.project.nodes).find(
+        (n) => n.kind === 'container' && n.containerType === 'modal-body'
+      );
+      expect(bodyNode).toBeDefined();
+      if (bodyNode?.kind === 'container') {
+        expect(bodyNode.params.direction).toBe('vertical');
+        expect(bodyNode.style.padding).toBe('md');
+        expect(bodyNode.style.gap).toBe('md');
       }
     });
   });

@@ -1836,5 +1836,123 @@ describe('Layout Engine', () => {
       const { layout, modalId } = buildModalLayout(', size: lg');
       expect(layout[modalId].width).toBe(720);
     });
+
+    it('should layout modal footer as horizontal stack with md padding and spaceBetween', () => {
+      const input = `
+        project "ModalFooterLayout" {
+          screen Main {
+            layout stack {
+              layout modal(title: "Confirm?") {
+                footer {
+                  component Button text: "Cancel"
+                  component Button text: "Confirm"
+                }
+              }
+            }
+          }
+        }
+      `;
+
+      const ir = generateIR(parseWireDSL(input));
+      const layout = calculateLayout(ir);
+
+      const footerEntry = Object.entries(ir.project.nodes).find(
+        ([, n]) => n.kind === 'container' && (n as any).containerType === 'modal-footer'
+      );
+      expect(footerEntry).toBeDefined();
+      const [footerId, footerNode] = footerEntry!;
+      expect(footerNode.kind).toBe('container');
+      if (footerNode.kind !== 'container') return;
+      expect(footerNode.params.direction).toBe('horizontal');
+      expect(footerNode.style.padding).toBe('md');
+      expect(footerNode.style.justify).toBe('spaceBetween');
+
+      const firstButtonPos = layout[footerNode.children[0].ref];
+      const secondButtonPos = layout[footerNode.children[1].ref];
+      const footerPos = layout[footerId];
+
+      expect(firstButtonPos.x).toBe(footerPos.x + 16);
+      expect(secondButtonPos.x + secondButtonPos.width).toBe(footerPos.x + footerPos.width - 16);
+      expect(firstButtonPos.y).toBe(secondButtonPos.y);
+    });
+
+    it('should layout modal body as vertical stack with md padding and md gap', () => {
+      const input = `
+        project "ModalBodyLayout" {
+          screen Main {
+            layout stack {
+              layout modal(title: "Confirm?") {
+                body {
+                  component Button text: "First"
+                  component Button text: "Second"
+                }
+              }
+            }
+          }
+        }
+      `;
+
+      const ir = generateIR(parseWireDSL(input));
+      const layout = calculateLayout(ir);
+
+      const bodyEntry = Object.entries(ir.project.nodes).find(
+        ([, n]) => n.kind === 'container' && (n as any).containerType === 'modal-body'
+      );
+      expect(bodyEntry).toBeDefined();
+      const [bodyId, bodyNode] = bodyEntry!;
+      expect(bodyNode.kind).toBe('container');
+      if (bodyNode.kind !== 'container') return;
+      expect(bodyNode.params.direction).toBe('vertical');
+      expect(bodyNode.style.padding).toBe('md');
+      expect(bodyNode.style.gap).toBe('md');
+
+      const firstButtonPos = layout[bodyNode.children[0].ref];
+      const secondButtonPos = layout[bodyNode.children[1].ref];
+      const bodyPos = layout[bodyId];
+
+      expect(firstButtonPos.x).toBe(bodyPos.x + 16);
+      expect(firstButtonPos.width).toBe(bodyPos.width - 32);
+      expect(secondButtonPos.y - (firstButtonPos.y + firstButtonPos.height)).toBe(16);
+    });
+
+    it('should not add extra bottom space after modal footer', () => {
+      const input = `
+        project "ModalFooterHeight" {
+          screen Main {
+            layout stack {
+              layout modal(id: confirmDelete, title: "Delete user?", visible: true, onClose: hide(self)) {
+                body {
+                  component Text text: "This action cannot be undone."
+                }
+                footer {
+                  component Button text: "Cancel" variant: secondary onClick: hide(self)
+                  component Button text: "Delete" variant: danger onClick: hide(self)
+                }
+              }
+            }
+          }
+        }
+      `;
+
+      const ir = generateIR(parseWireDSL(input));
+      const layout = calculateLayout(ir);
+
+      const modalEntry = Object.entries(ir.project.nodes).find(
+        ([, n]) => n.kind === 'container' && (n as any).containerType === 'modal'
+      );
+      const footerEntry = Object.entries(ir.project.nodes).find(
+        ([, n]) => n.kind === 'container' && (n as any).containerType === 'modal-footer'
+      );
+      expect(modalEntry).toBeDefined();
+      expect(footerEntry).toBeDefined();
+      const [modalId] = modalEntry!;
+      const [footerId] = footerEntry!;
+
+      const modalPos = layout[modalId];
+      const footerPos = layout[footerId];
+      const expectedModalHeight = footerPos.y + footerPos.height - modalPos.y;
+
+      expect(modalPos.height).toBe(expectedModalHeight);
+    });
   });
 });

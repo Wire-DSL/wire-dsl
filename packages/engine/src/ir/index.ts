@@ -706,9 +706,9 @@ export class IRGenerator {
       id: nodeId,
       kind: 'container',
       containerType: 'modal-body',
-      params: {},
+      params: { direction: 'vertical' },
       children: childRefs,
-      style: { padding: 'none' },
+      style: { padding: 'md', gap: 'md' },
       meta: {
         nodeId: context?.instanceScope
           ? `${body._meta?.nodeId}@${context.instanceScope}`
@@ -738,9 +738,9 @@ export class IRGenerator {
       id: nodeId,
       kind: 'container',
       containerType: 'modal-footer',
-      params: {},
+      params: { direction: 'horizontal' },
       children: childRefs,
-      style: { padding: 'none', justify: 'spaceBetween' },
+      style: { padding: 'md', justify: 'spaceBetween' },
       meta: {
         nodeId: context?.instanceScope
           ? `${footer._meta?.nodeId}@${context.instanceScope}`
