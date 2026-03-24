@@ -1984,7 +1984,7 @@ export class SVGRenderer {
 
     // Backdrop
     output.push(
-      `<rect x="0" y="0" width="${canvasWidth}" height="${canvasHeight}" fill="black" opacity="0.28"/>`
+      `<rect x="0" y="0" width="${canvasWidth}" height="${canvasHeight}" fill="black" opacity="0.28" pointer-events="none"/>`
     );
 
     // Modal box
@@ -2008,8 +2008,8 @@ export class SVGRenderer {
         const closeX = pos.x + pos.width - padding - 14;
         const closeY = pos.y + padding + 14;
         output.push(
-          `<rect x="${closeX - 10}" y="${closeY - 12}" width="24" height="24" rx="4" fill="transparent" stroke="none" pointer-events="all"${closeEventAttr}/>`,
-          `<text x="${closeX}" y="${closeY}" font-family="Arial, Helvetica, sans-serif" font-size="16" fill="${this.renderTheme.textMuted}" text-anchor="middle">✕</text>`
+          `<rect x="${closeX - 12}" y="${closeY - 12}" width="24" height="24" rx="4" fill="transparent" stroke="none" pointer-events="all"${closeEventAttr}/>`,
+          `<text x="${closeX}" y="${closeY}" font-family="Arial, Helvetica, sans-serif" font-size="16" fill="${this.renderTheme.textMuted}" text-anchor="middle" dominant-baseline="central" pointer-events="none">✕</text>`
         );
       }
     }

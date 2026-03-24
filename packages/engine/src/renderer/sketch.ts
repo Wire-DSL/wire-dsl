@@ -1203,7 +1203,7 @@ export class SketchSVGRenderer extends SVGRenderer {
     <!-- Modal backdrop -->
       <rect x="0" y="0"
         width="${this.options.width}" height="${overlayHeight}"
-        fill="black" opacity="0.28"/>
+        fill="black" opacity="0.28" pointer-events="none"/>
 
     <!-- Modal box -->
       <rect x="${modalX}" y="${modalY}"
@@ -1231,7 +1231,8 @@ export class SketchSVGRenderer extends SVGRenderer {
       <text x="${modalX + pos.width - 16}" y="${modalY + padding + 12}"
           font-family="${this.fontFamily}"
           font-size="18"
-          fill="${this.renderTheme.textMuted}">✕</text>
+          fill="${this.renderTheme.textMuted}"
+          pointer-events="none">✕</text>
 
     <!-- Content placeholder -->
       <text x="${modalX + pos.width / 2}" y="${modalY + headerHeight + (pos.height - headerHeight) / 2}"
