@@ -1669,7 +1669,7 @@ export class SVGRenderer {
   protected renderTabs(node: IRComponentNode, pos: any): string {
     const parsedTabs = toStringArray(node.props.items);
     const tabs = parsedTabs.length > 0 ? parsedTabs : ['Tab 1', 'Tab 2', 'Tab 3'];
-    const activeProp = node.props.active ?? 0;
+    const activeProp = node.props.active ?? node.props.initialActive ?? 0;
     const activeIndex = Number.isFinite(Number(activeProp))
       ? Math.max(0, Math.floor(Number(activeProp)))
       : 0;
