@@ -269,4 +269,65 @@ describe('applyStateChange', () => {
       expect(project.activeScreen).toBeUndefined();
     });
   });
+
+  describe('setDisabled', () => {
+    it('should set disabled: true on a component matched by userDefinedId', () => {
+      const ir = buildIR(`
+        project "Test" {
+          screen Main {
+            layout stack {
+              component Button id: submitBtn text: "Submit"
+            }
+          }
+        }
+      `);
+
+      const newIR = applyStateChange(ir, { type: 'setDisabled', targetId: 'submitBtn', disabled: true });
+
+      const btn = Object.values(newIR.project.nodes).find(
+        (n) => n.kind === 'component' && n.userDefinedId === 'submitBtn'
+      );
+      expect(btn).toBeDefined();
+      if (btn?.kind === 'component') {
+        expect(String(btn.props.disabled)).toBe('true');
+      }
+    });
+
+    it('should set disabled: false (enable) on a component matched by userDefinedId', () => {
+      const ir = buildIR(`
+        project "Test" {
+          screen Main {
+            layout stack {
+              component Input id: nameInput label: "Name" disabled: true
+            }
+          }
+        }
+      `);
+
+      const newIR = applyStateChange(ir, { type: 'setDisabled', targetId: 'nameInput', disabled: false });
+
+      const input = Object.values(newIR.project.nodes).find(
+        (n) => n.kind === 'component' && n.userDefinedId === 'nameInput'
+      );
+      expect(input).toBeDefined();
+      if (input?.kind === 'component') {
+        expect(String(input.props.disabled)).toBe('false');
+      }
+    });
+
+    it('should return original IR when targetId not found', () => {
+      const ir = buildIR(`
+        project "Test" {
+          screen Main {
+            layout stack {
+              component Button text: "Go"
+            }
+          }
+        }
+      `);
+
+      const newIR = applyStateChange(ir, { type: 'setDisabled', targetId: 'nonExistent', disabled: true });
+      expect(newIR).toBe(ir);
+    });
+  });
 });

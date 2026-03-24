@@ -79,6 +79,8 @@ export type IREventAction =
   | { type: 'show'; targetId: string }     // targetId can be '_self'
   | { type: 'hide'; targetId: string }     // targetId can be '_self'
   | { type: 'toggle'; targetId: string }   // targetId can be '_self'
+  | { type: 'enable'; targetId: string }   // sets disabled: false
+  | { type: 'disable'; targetId: string }  // sets disabled: true
   | { type: 'setTab'; tabsId: string; index: number }
   | { type: 'navigateItems'; screens: string[] }; // SidebarMenu onItemsClick
 
@@ -182,6 +184,8 @@ const IREventActionSchema: z.ZodType<IREventAction> = z.union([
   z.object({ type: z.literal('show'), targetId: z.string() }),
   z.object({ type: z.literal('hide'), targetId: z.string() }),
   z.object({ type: z.literal('toggle'), targetId: z.string() }),
+  z.object({ type: z.literal('enable'), targetId: z.string() }),
+  z.object({ type: z.literal('disable'), targetId: z.string() }),
   z.object({ type: z.literal('setTab'), tabsId: z.string(), index: z.number().int().min(0) }),
   z.object({ type: z.literal('navigateItems'), screens: z.array(z.string()) }),
 ]);
@@ -871,6 +875,8 @@ export class IRGenerator {
       case 'show': return { type: 'show', targetId: action.targetId! };
       case 'hide': return { type: 'hide', targetId: action.targetId! };
       case 'toggle': return { type: 'toggle', targetId: action.targetId! };
+      case 'enable': return { type: 'enable', targetId: action.targetId! };
+      case 'disable': return { type: 'disable', targetId: action.targetId! };
       case 'setTab': return { type: 'setTab', tabsId: action.tabsId!, index: action.index! };
     }
   }

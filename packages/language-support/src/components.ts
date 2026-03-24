@@ -132,6 +132,13 @@ const disabledProp: PropertyMetadata = {
   description: 'Visually dims the component to indicate it is non-interactive.',
   defaultValue: false,
 };
+
+const clickableProp: PropertyMetadata = {
+  name: 'clickable',
+  type: 'boolean',
+  defaultValue: true,
+  description: 'When true (default), the element toggles its internal state on click in play test without requiring explicit events. Set to false for a purely decorative, non-interactive element.',
+};
 const imageTypeEnum: PropertyMetadata = {
   name: 'type',
   type: 'enum',
@@ -286,6 +293,7 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
       label: { name: 'label', type: 'string', required: true },
       checked: { name: 'checked', type: 'boolean' },
       disabled: disabledProp,
+      clickable: clickableProp,
       onChange: { name: 'onChange', type: 'action', description: 'Action(s) triggered on any state change. Mutually exclusive with onActive/onInactive.' },
       onActive: { name: 'onActive', type: 'action', description: 'Action(s) triggered when checked. Mutually exclusive with onChange.' },
       onInactive: { name: 'onInactive', type: 'action', description: 'Action(s) triggered when unchecked. Mutually exclusive with onChange.' },
@@ -303,6 +311,7 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
       label: { name: 'label', type: 'string', required: true },
       checked: { name: 'checked', type: 'boolean' },
       disabled: disabledProp,
+      clickable: clickableProp,
       onChange: { name: 'onChange', type: 'action', description: 'Action(s) triggered on any state change. Mutually exclusive with onActive/onInactive.' },
       onActive: { name: 'onActive', type: 'action', description: 'Action(s) triggered when selected. Mutually exclusive with onChange.' },
       onInactive: { name: 'onInactive', type: 'action', description: 'Action(s) triggered when deselected. Mutually exclusive with onChange.' },
@@ -320,6 +329,7 @@ export const COMPONENTS: Record<string, ComponentMetadata> = {
       label: { name: 'label', type: 'string', required: true },
       enabled: { name: 'enabled', type: 'boolean' },
       disabled: disabledProp,
+      clickable: clickableProp,
       onChange: { name: 'onChange', type: 'action', description: 'Action(s) triggered on any state change. Mutually exclusive with onActive/onInactive.' },
       onActive: { name: 'onActive', type: 'action', description: 'Action(s) triggered when enabled. Mutually exclusive with onChange.' },
       onInactive: { name: 'onInactive', type: 'action', description: 'Action(s) triggered when disabled. Mutually exclusive with onChange.' },

@@ -1288,6 +1288,75 @@ describe('IR Generator – Event System', () => {
         });
       }
     });
+
+    it('should generate enable action from onClick: enable(id)', () => {
+      const input = `
+        project "Test" {
+          screen Main {
+            layout stack {
+              component Input id: nameInput label: "Name" disabled: true
+              component Button text: "Unlock" onClick: enable(nameInput)
+            }
+          }
+        }
+      `;
+      const ast = parseWireDSL(input);
+      const ir = generateIR(ast);
+
+      const btn = Object.values(ir.project.nodes).find(
+        (n) => n.kind === 'component' && n.componentType === 'Button'
+      );
+      expect(btn).toBeDefined();
+      if (btn?.kind === 'component') {
+        expect(btn.events).toBeDefined();
+        expect(btn.events![0].actions[0]).toEqual({ type: 'enable', targetId: 'nameInput' });
+      }
+    });
+
+    it('should generate disable action from onClick: disable(id)', () => {
+      const input = `
+        project "Test" {
+          screen Main {
+            layout stack {
+              component Input id: nameInput label: "Name"
+              component Button text: "Lock" onClick: disable(nameInput)
+            }
+          }
+        }
+      `;
+      const ast = parseWireDSL(input);
+      const ir = generateIR(ast);
+
+      const btn = Object.values(ir.project.nodes).find(
+        (n) => n.kind === 'component' && n.componentType === 'Button'
+      );
+      expect(btn).toBeDefined();
+      if (btn?.kind === 'component') {
+        expect(btn.events).toBeDefined();
+        expect(btn.events![0].actions[0]).toEqual({ type: 'disable', targetId: 'nameInput' });
+      }
+    });
+
+    it('should generate enable action with _self target from enable(self)', () => {
+      const input = `
+        project "Test" {
+          screen Main {
+            layout stack {
+              component Button id: myBtn text: "Enable Self" onClick: enable(self)
+            }
+          }
+        }
+      `;
+      const ast = parseWireDSL(input);
+      const ir = generateIR(ast);
+
+      const btn = Object.values(ir.project.nodes).find(
+        (n) => n.kind === 'component' && n.componentType === 'Button'
+      );
+      if (btn?.kind === 'component') {
+        expect(btn.events![0].actions[0]).toEqual({ type: 'enable', targetId: '_self' });
+      }
+    });
   });
 
   describe('layout tabs / tab containerType', () => {

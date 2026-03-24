@@ -75,6 +75,8 @@ const Navigate = createToken({ name: 'Navigate', pattern: /navigate\b/ });
 const Show = createToken({ name: 'Show', pattern: /show\b/ });
 const Hide = createToken({ name: 'Hide', pattern: /hide\b/ });
 const ToggleAction = createToken({ name: 'ToggleAction', pattern: /toggle\b/ });
+const EnableAction = createToken({ name: 'EnableAction', pattern: /enable\b/ });
+const DisableAction = createToken({ name: 'DisableAction', pattern: /disable\b/ });
 const SetTab = createToken({ name: 'SetTab', pattern: /setTab\b/ });
 const Self = createToken({ name: 'Self', pattern: /self\b/ });
 
@@ -156,6 +158,8 @@ const allTokens = [
   Show,
   Hide,
   ToggleAction,
+  EnableAction,
+  DisableAction,
   SetTab,
   Self,
   // Punctuation
@@ -311,6 +315,8 @@ class WireDSLParser extends CstParser {
             { ALT: () => this.CONSUME(Show, { LABEL: 'sht' }) },
             { ALT: () => this.CONSUME(Hide, { LABEL: 'sht' }) },
             { ALT: () => this.CONSUME(ToggleAction, { LABEL: 'sht' }) },
+            { ALT: () => this.CONSUME(EnableAction, { LABEL: 'sht' }) },
+            { ALT: () => this.CONSUME(DisableAction, { LABEL: 'sht' }) },
           ]);
           this.CONSUME2(LParen);
           this.OR3([
@@ -501,7 +507,7 @@ export interface ASTScreen {
 }
 
 // Event action types
-export type ASTEventActionType = 'navigate' | 'show' | 'hide' | 'toggle' | 'setTab';
+export type ASTEventActionType = 'navigate' | 'show' | 'hide' | 'toggle' | 'enable' | 'disable' | 'setTab';
 
 export interface ASTEventAction {
   type: ASTEventActionType;
@@ -851,11 +857,15 @@ class WireDSLVisitor extends BaseCstVisitor {
     }
     if (ctx.sht) {
       const tokenName: string = ctx.sht[0].tokenType.name;
-      const type = tokenName === 'Show' ? 'show' : tokenName === 'Hide' ? 'hide' : 'toggle';
+      const typeMap: Record<string, ASTEventActionType> = {
+        Show: 'show', Hide: 'hide', ToggleAction: 'toggle',
+        EnableAction: 'enable', DisableAction: 'disable',
+      };
+      const type = typeMap[tokenName] ?? 'show';
       const targetToken = ctx.targetId[0];
       const isSelf = targetToken.tokenType.name === 'Self';
       const targetId = isSelf ? '_self' : targetToken.image;
-      return { type: type as 'show' | 'hide' | 'toggle', targetId };
+      return { type, targetId };
     }
     if (ctx.setTab) {
       return {

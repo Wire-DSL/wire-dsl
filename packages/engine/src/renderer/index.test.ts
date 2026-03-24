@@ -2663,6 +2663,36 @@ describe('SVG Renderer – Event System', () => {
       const svg = renderInput(input);
       expect(svg).toContain('data-event-click="setTab:mainTabs:2"');
     });
+
+    it('should emit data-event-click with enable serialization', () => {
+      const input = `
+        project "Test" {
+          screen Main {
+            layout stack {
+              component Input id: nameInput label: "Name" disabled: true
+              component Button text: "Unlock" onClick: enable(nameInput)
+            }
+          }
+        }
+      `;
+      const svg = renderInput(input);
+      expect(svg).toContain('data-event-click="enable:nameInput"');
+    });
+
+    it('should emit data-event-click with disable serialization', () => {
+      const input = `
+        project "Test" {
+          screen Main {
+            layout stack {
+              component Input id: nameInput label: "Name"
+              component Button text: "Lock" onClick: disable(nameInput)
+            }
+          }
+        }
+      `;
+      const svg = renderInput(input);
+      expect(svg).toContain('data-event-click="disable:nameInput"');
+    });
   });
 
   describe('data-event-close attribute', () => {
@@ -2839,6 +2869,74 @@ describe('SVG Renderer – Event System', () => {
       `);
       expect(svg).toContain('Content');
       expect(svg).toContain('OK');
+    });
+  });
+
+  describe('data-clickable attribute on interactive components', () => {
+    it('should NOT emit data-clickable when clickable is default (true) on Checkbox', () => {
+      const svg = renderInput(`
+        project "Test" {
+          screen Main {
+            layout stack { component Checkbox label: "Accept" }
+          }
+        }
+      `);
+      expect(svg).not.toContain('data-clickable');
+    });
+
+    it('should emit data-clickable="false" when clickable: false on Checkbox', () => {
+      const svg = renderInput(`
+        project "Test" {
+          screen Main {
+            layout stack { component Checkbox label: "Completed" clickable: false }
+          }
+        }
+      `);
+      expect(svg).toContain('data-clickable="false"');
+    });
+
+    it('should NOT emit data-clickable when clickable is default (true) on Toggle', () => {
+      const svg = renderInput(`
+        project "Test" {
+          screen Main {
+            layout stack { component Toggle label: "Notifications" }
+          }
+        }
+      `);
+      expect(svg).not.toContain('data-clickable');
+    });
+
+    it('should emit data-clickable="false" when clickable: false on Toggle', () => {
+      const svg = renderInput(`
+        project "Test" {
+          screen Main {
+            layout stack { component Toggle label: "Notifications" clickable: false }
+          }
+        }
+      `);
+      expect(svg).toContain('data-clickable="false"');
+    });
+
+    it('should NOT emit data-clickable when clickable is default (true) on Radio', () => {
+      const svg = renderInput(`
+        project "Test" {
+          screen Main {
+            layout stack { component Radio label: "Option A" }
+          }
+        }
+      `);
+      expect(svg).not.toContain('data-clickable');
+    });
+
+    it('should emit data-clickable="false" when clickable: false on Radio', () => {
+      const svg = renderInput(`
+        project "Test" {
+          screen Main {
+            layout stack { component Radio label: "Option A" clickable: false }
+          }
+        }
+      `);
+      expect(svg).toContain('data-clickable="false"');
     });
   });
 });

@@ -377,6 +377,20 @@ export const ACTION_COMPLETIONS: CompletionItem[] = [
     insertText: 'toggle(${1:id})',
   },
   {
+    label: 'enable',
+    kind: 'Keyword',
+    detail: 'Enable a component (set disabled: false)',
+    documentation: 'enable(id) or enable(self)',
+    insertText: 'enable(${1:id})',
+  },
+  {
+    label: 'disable',
+    kind: 'Keyword',
+    detail: 'Disable a component (set disabled: true)',
+    documentation: 'disable(id) or disable(self)',
+    insertText: 'disable(${1:id})',
+  },
+  {
     label: 'setTab',
     kind: 'Keyword',
     detail: 'Change the active tab in a tabs container',
@@ -403,7 +417,7 @@ export function getComponentEventCompletions(
       label: ev,
       kind: 'Property' as const,
       detail: `Event handler for ${componentName}`,
-      documentation: `${ev}: navigate(Screen) | show(id) | hide(id) | toggle(id) | setTab(tabsId, n)`,
+      documentation: `${ev}: navigate(Screen) | show(id) | hide(id) | toggle(id) | enable(id) | disable(id) | setTab(tabsId, n)`,
       insertText: `${ev}: `,
     }));
 }
@@ -428,12 +442,14 @@ export function getActionValueCompletions(
     insertText: `navigate(${name})`,
   }));
 
-  // Enrich show/hide/toggle with known IDs + self
+  // Enrich show/hide/toggle/enable/disable with known IDs + self
   const idTargets = [...declaredIds, 'self'];
   const idItems: CompletionSuggestion[] = idTargets.flatMap((id) => [
-    { label: `show(${id})`, kind: 'Value' as const, detail: 'Show', insertText: `show(${id})` },
-    { label: `hide(${id})`, kind: 'Value' as const, detail: 'Hide', insertText: `hide(${id})` },
-    { label: `toggle(${id})`, kind: 'Value' as const, detail: 'Toggle', insertText: `toggle(${id})` },
+    { label: `show(${id})`,    kind: 'Value' as const, detail: 'Show',    insertText: `show(${id})` },
+    { label: `hide(${id})`,    kind: 'Value' as const, detail: 'Hide',    insertText: `hide(${id})` },
+    { label: `toggle(${id})`,  kind: 'Value' as const, detail: 'Toggle',  insertText: `toggle(${id})` },
+    { label: `enable(${id})`,  kind: 'Value' as const, detail: 'Enable',  insertText: `enable(${id})` },
+    { label: `disable(${id})`, kind: 'Value' as const, detail: 'Disable', insertText: `disable(${id})` },
   ]);
 
   return [...base, ...navigateItems, ...idItems];

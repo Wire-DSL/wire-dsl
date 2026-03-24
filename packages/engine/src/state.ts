@@ -35,6 +35,8 @@ export type IRStateChange =
   | { type: 'setEnabled'; targetId: string; enabled: boolean }
   /** Toggle enabled state on Toggle controls */
   | { type: 'toggleEnabled'; targetId: string }
+  /** Set disabled state on any component (enable = disabled false, disable = disabled true) */
+  | { type: 'setDisabled'; targetId: string; disabled: boolean }
   /** Navigate to a different screen (changes the active screen id in the IR) */
   | { type: 'navigateTo'; screen: string };
 
@@ -80,6 +82,9 @@ export function applyStateChange(
 
     case 'toggleEnabled':
       return applyToggleBooleanProp(ir, change.targetId, 'enabled', originNodeId);
+
+    case 'setDisabled':
+      return applySetBooleanProp(ir, change.targetId, 'disabled', change.disabled, originNodeId);
 
     case 'navigateTo':
       return applyNavigateTo(ir, change.screen);
@@ -172,12 +177,18 @@ function applySetActiveTab(ir: IRContract, tabsId: string, index: number): IRCon
 function applySetBooleanProp(
   ir: IRContract,
   targetId: string,
-  propName: 'checked' | 'enabled',
+  propName: 'checked' | 'enabled' | 'disabled',
   value: boolean,
   originNodeId?: string
 ): IRContract {
   const resolvedId = resolveTargetId(ir, targetId, originNodeId);
   if (!resolvedId) return ir;
+
+  const target = findTargetComponentNode(ir.project.nodes, resolvedId);
+  if (!target) {
+    console.warn(`[applyStateChange] ${propName}: no node found with id "${resolvedId}"`);
+    return ir;
+  }
 
   const nodes = mutateNodeBooleanProp(ir.project.nodes, resolvedId, propName, value);
   return { ...ir, project: { ...ir.project, nodes } };
@@ -186,7 +197,7 @@ function applySetBooleanProp(
 function applyToggleBooleanProp(
   ir: IRContract,
   targetId: string,
-  propName: 'checked' | 'enabled',
+  propName: 'checked' | 'enabled' | 'disabled',
   originNodeId?: string
 ): IRContract {
   const resolvedId = resolveTargetId(ir, targetId, originNodeId);
@@ -314,7 +325,7 @@ function mutateNodeVisible(
 function mutateNodeBooleanProp(
   nodes: Record<string, IRNode>,
   targetId: string,
-  propName: 'checked' | 'enabled',
+  propName: 'checked' | 'enabled' | 'disabled',
   value: boolean
 ): Record<string, IRNode> {
   let found = false;

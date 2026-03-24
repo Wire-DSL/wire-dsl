@@ -1528,16 +1528,17 @@ export class SVGRenderer {
     const label = String(node.props.label || 'Checkbox');
     const checked = String(node.props.checked || 'false').toLowerCase() === 'true';
     const disabled = this.parseBooleanProp(node.props.disabled, false);
+    const clickable = String(node.props.clickable ?? 'true') !== 'false';
     const controlColor = this.resolveControlColor();
 
     const checkboxSize = 18;
     const checkboxY = pos.y + pos.height / 2 - checkboxSize / 2;
 
-    return `<g${this.getDataNodeId(node)}${disabled ? ' opacity="0.45"' : ''}>
-    <rect x="${pos.x}" y="${checkboxY}" 
-          width="${checkboxSize}" height="${checkboxSize}" 
-          rx="4" 
-          fill="${checked ? controlColor : this.renderTheme.cardBg}" 
+    return `<g${this.getDataNodeId(node)}${disabled ? ' opacity="0.45"' : ''}${!clickable ? ' data-clickable="false"' : ''}>
+    <rect x="${pos.x}" y="${checkboxY}"
+          width="${checkboxSize}" height="${checkboxSize}"
+          rx="4"
+          fill="${checked ? controlColor : this.renderTheme.cardBg}"
           stroke="${this.renderTheme.border}" 
           stroke-width="1"/>
     ${
@@ -1560,15 +1561,16 @@ export class SVGRenderer {
     const label = String(node.props.label || 'Radio');
     const checked = String(node.props.checked || 'false').toLowerCase() === 'true';
     const disabled = this.parseBooleanProp(node.props.disabled, false);
+    const clickable = String(node.props.clickable ?? 'true') !== 'false';
     const controlColor = this.resolveControlColor();
 
     const radioSize = 16;
     const radioY = pos.y + pos.height / 2 - radioSize / 2;
 
-    return `<g${this.getDataNodeId(node)}${disabled ? ' opacity="0.45"' : ''}>
-    <circle cx="${pos.x + radioSize / 2}" cy="${radioY + radioSize / 2}" 
-            r="${radioSize / 2}" 
-            fill="${this.renderTheme.cardBg}" 
+    return `<g${this.getDataNodeId(node)}${disabled ? ' opacity="0.45"' : ''}${!clickable ? ' data-clickable="false"' : ''}>
+    <circle cx="${pos.x + radioSize / 2}" cy="${radioY + radioSize / 2}"
+            r="${radioSize / 2}"
+            fill="${this.renderTheme.cardBg}"
             stroke="${this.renderTheme.border}" 
             stroke-width="1"/>
     ${
@@ -1589,14 +1591,15 @@ export class SVGRenderer {
     const label = String(node.props.label || 'Toggle');
     const enabled = String(node.props.enabled || 'false').toLowerCase() === 'true';
     const disabled = this.parseBooleanProp(node.props.disabled, false);
+    const clickable = String(node.props.clickable ?? 'true') !== 'false';
     const controlColor = this.resolveControlColor();
 
     const toggleWidth = 40;
     const toggleHeight = 20;
     const toggleY = pos.y + pos.height / 2 - toggleHeight / 2;
 
-    return `<g${this.getDataNodeId(node)}${disabled ? ' opacity="0.45"' : ''}>
-    <rect x="${pos.x}" y="${toggleY}" 
+    return `<g${this.getDataNodeId(node)}${disabled ? ' opacity="0.45"' : ''}${!clickable ? ' data-clickable="false"' : ''}>
+    <rect x="${pos.x}" y="${toggleY}"
           width="${toggleWidth}" height="${toggleHeight}" 
           rx="10" 
           fill="${enabled ? controlColor : this.renderTheme.border}" 
@@ -3162,6 +3165,8 @@ export class SVGRenderer {
       case 'show': return `show:${action.targetId}`;
       case 'hide': return `hide:${action.targetId}`;
       case 'toggle': return `toggle:${action.targetId}`;
+      case 'enable': return `enable:${action.targetId}`;
+      case 'disable': return `disable:${action.targetId}`;
       case 'setTab': return `setTab:${action.tabsId}:${action.index}`;
       case 'navigateItems': return action.screens.map(s => `navigate:${s}`).join(',');
     }
