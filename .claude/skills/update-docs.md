@@ -36,15 +36,47 @@ For each file that needs updating, read the current content first, then apply ta
 | `specs/VALIDATION-RULES.md` | New validation rules (EVT-*, layout rules, etc.) |
 | `.ai/AI-INSTRUCTIONS-MAIN.md` | Core concepts changed (containers count, event system, important files) |
 
-### Step 3 — Verify consistency
+### Step 3 — Mirror changes to `apps/docs`
+
+The `apps/docs/` Astro site has counterpart files that must stay in sync with the `docs/` source files. After updating any `docs/` file, apply the same content changes to the corresponding app file — preserving the Astro frontmatter (`---` block at the top).
+
+| Source (`docs/`) | App counterpart (`apps/docs/src/content/docs/`) |
+|---|---|
+| `docs/DSL-SYNTAX.md` | `language/syntax.md` |
+| `docs/COMPONENTS-REFERENCE.md` | `language/components.md` |
+| `docs/CONTAINERS-REFERENCE.md` | `language/containers.md` |
+| `docs/ICONS-GUIDE.md` | `language/icons.md` |
+| `docs/THEME-GUIDE.md` | `language/configuration.md` |
+| `docs/CLI-REFERENCE.md` | `tooling/cli.md` (if it exists) |
+
+Only update app files whose source counterpart was changed in Step 2. Do not touch app files that have no corresponding source change.
+
+### Step 4 — Update `llms.txt` and regenerate `llms-full.txt`
+
+**`llms.txt`** is a manually maintained index of all user-facing docs (used as the LLM-friendly entry point). Update it only if:
+- A new `docs/` file was added or removed
+- A section title or link changed
+
+Do **not** update `llms.txt` for content-only edits that don't change file paths or section structure.
+
+**`llms-full.txt`** is generated automatically. After any `docs/` file change (content or structure), regenerate it by running:
+
+```bash
+pnpm docs:llms
+```
+
+This runs `scripts/generate-llms-full.js`, which concatenates `docs/DSL-SYNTAX.md`, `docs/COMPONENTS-REFERENCE.md`, `docs/CONTAINERS-REFERENCE.md`, `docs/ICONS-GUIDE.md`, and the CLI section into `llms-full.txt`. Always regenerate after Step 2 if any of those files were touched.
+
+### Step 5 — Verify consistency
 
 After updates, cross-check:
 - Container count in AI-INSTRUCTIONS-MAIN.md matches actual containers in CONTAINERS-REFERENCE.md
 - Event rules in VALIDATION-RULES.md match what the IR generator actually enforces
 - LLM-PROMPTING.md examples are valid Wire DSL (parseable by current parser)
 - Component events table in COMPONENTS-REFERENCE.md matches `supportedEvents` in `packages/language-support/src/components.ts`
+- `apps/docs` counterpart files reflect the same changes as their `docs/` sources
 
-### Step 4 — Report
+### Step 6 — Report
 
 Summarize what was updated and what was left unchanged. If any documentation section cannot be updated without more context, flag it explicitly so the user can provide clarification.
 
