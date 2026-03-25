@@ -2,7 +2,9 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import { handleDocumentation } from './tools/documentation.js';
 import { handleValidate } from './tools/validate.js';
-import { handleRender } from './tools/render.js';
+import { handleRender, initSvgRenderer } from './tools/render.js';
+
+export { initSvgRenderer };
 
 export function createServer(): McpServer {
   const server = new McpServer({ name: 'wire-dsl', version: '0.1.0' });

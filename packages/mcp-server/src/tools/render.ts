@@ -7,9 +7,28 @@ import {
   SketchSVGRenderer,
   resolveDevicePreset,
 } from '@wire-dsl/engine';
-import { renderAsync } from '@resvg/resvg-js';
+import { initWasm, Resvg } from '@resvg/resvg-wasm';
 
 type RenderMode = 'standard' | 'skeleton' | 'sketch';
+
+// WASM init state — initSvgRenderer() must be called before any PNG render.
+let wasmReady = false;
+
+/**
+ * Initialize the WASM rasterizer. Must be called once before render_wire
+ * is invoked with format: "png".
+ *
+ * - Node.js:       pass a Buffer from fs.readFileSync on the .wasm file
+ * - CF Workers:    pass the imported .wasm module binding
+ * - Any runtime:   pass a fetch() Response pointing to the .wasm file
+ */
+export async function initSvgRenderer(
+  wasm: Parameters<typeof initWasm>[0]
+): Promise<void> {
+  if (wasmReady) return;
+  await initWasm(wasm);
+  wasmReady = true;
+}
 
 function renderScreen(
   ir: ReturnType<typeof generateIR>,
@@ -19,14 +38,8 @@ function renderScreen(
   theme: 'light' | 'dark'
 ): string {
   const options = { screenName, theme };
-  if (mode === 'skeleton') {
-    const r = new SkeletonSVGRenderer(ir, layout, options);
-    return r.render();
-  }
-  if (mode === 'sketch') {
-    const r = new SketchSVGRenderer(ir, layout, options);
-    return r.render();
-  }
+  if (mode === 'skeleton') return new SkeletonSVGRenderer(ir, layout, options).render();
+  if (mode === 'sketch') return new SketchSVGRenderer(ir, layout, options).render();
   return renderToSVG(ir, layout, options);
 }
 
@@ -81,26 +94,33 @@ export async function handleRender({
   const resolvedTheme: 'light' | 'dark' = theme ?? (ir.project.style.theme as 'light' | 'dark') ?? 'light';
 
   if (format === 'png') {
+    if (!wasmReady) {
+      return {
+        content: [{
+          type: 'text' as const,
+          text: JSON.stringify({ error: 'PNG renderer not initialized. Call initSvgRenderer() before using format: "png".' }),
+        }],
+      };
+    }
+
     const deviceWidth = device
       ? resolveDevicePreset(device).width
       : (ir.project.screens[0]?.viewport.width ?? 1280);
 
-    const results = await Promise.all(
-      targets.map(async (name) => {
-        const svg = renderScreen(ir, layout, name, renderer, resolvedTheme);
-        const rendered = await renderAsync(svg, {
-          fitTo: { mode: 'width', value: deviceWidth },
-          background: resolvedTheme === 'dark' ? '#1a1a1a' : '#ffffff',
-          logLevel: 'off',
-        });
-        return {
-          screen: name,
-          data: rendered.asPng().toString('base64'),
-          width: rendered.width,
-          height: rendered.height,
-        };
-      })
-    );
+    const results = targets.map((name) => {
+      const svg = renderScreen(ir, layout, name, renderer, resolvedTheme);
+      const rendered = new Resvg(svg, {
+        fitTo: { mode: 'width', value: deviceWidth },
+        background: resolvedTheme === 'dark' ? '#1a1a1a' : '#ffffff',
+      }).render();
+      const png = rendered.asPng();
+      return {
+        screen: name,
+        data: Buffer.from(png).toString('base64'),
+        width: rendered.width,
+        height: rendered.height,
+      };
+    });
 
     return {
       content: results.flatMap((r) => [
@@ -131,11 +151,9 @@ export async function handleRender({
   }));
 
   return {
-    content: [
-      {
-        type: 'text' as const,
-        text: JSON.stringify({ renders, screens_count: renders.length }),
-      },
-    ],
+    content: [{
+      type: 'text' as const,
+      text: JSON.stringify({ renders, screens_count: renders.length }),
+    }],
   };
 }
