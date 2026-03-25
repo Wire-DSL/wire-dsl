@@ -99,6 +99,16 @@ export function createServer(): McpServer {
       title: 'Wire DSL Wireframe Viewer',
       description: 'Interactive HTML widget that renders Wire DSL wireframes. Loaded by MCP clients (e.g. ChatGPT) as an embedded iframe; receives screen SVG data from the render_wire_widget tool via the MCP Apps bridge.',
       mimeType: 'text/html;profile=mcp-app',
+      // CSP: widget is fully self-contained — no external fetch, scripts, fonts or frames needed.
+      // connectDomains / resourceDomains / frameDomains are intentionally empty.
+      _meta: {
+        ui: {
+          csp: {
+            connectDomains: [] as string[],
+            resourceDomains: [] as string[],
+          },
+        },
+      },
     },
     async (uri) => ({
       contents: [
