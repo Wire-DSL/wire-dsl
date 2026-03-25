@@ -58,10 +58,22 @@ export const WIREFRAME_VIEWER_HTML = `<!DOCTYPE html>
       }).join('');
       applyTheme(data.theme || 'light');
     }
-    // ChatGPT: window.openai.toolOutput (MCP Apps SDK bridge)
-    if (typeof window.openai !== 'undefined' && window.openai.toolOutput) {
-      Promise.resolve(window.openai.toolOutput).then(render).catch(console.error);
+    // ChatGPT: window.openai is injected asynchronously after the iframe loads.
+    // Poll until it's available (up to 10 seconds) before falling back.
+    var pollAttempts = 0;
+    var pollMax = 200; // 200 * 50ms = 10s
+    function pollOpenAI() {
+      if (window.openai && window.openai.toolOutput) {
+        Promise.resolve(window.openai.toolOutput).then(render).catch(console.error);
+      } else if (pollAttempts < pollMax) {
+        pollAttempts++;
+        setTimeout(pollOpenAI, 50);
+      } else {
+        // Timeout — leave postMessage listener active as final fallback
+        console.warn('[wire-dsl] window.openai not available after 10s');
+      }
     }
+    pollOpenAI();
     // postMessage fallback for other MCP clients
     window.addEventListener('message', function(e) {
       var d = e.data;
