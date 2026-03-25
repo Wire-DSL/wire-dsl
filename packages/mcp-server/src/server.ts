@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { handleDocumentation } from './tools/documentation.js';
 import { handleValidate } from './tools/validate.js';
 import { handleRender, initSvgRenderer } from './tools/render.js';
+import { handleGetWireframeWidget, WIREFRAME_VIEWER_HTML } from './tools/html.js';
 
 export { initSvgRenderer };
 
@@ -91,6 +92,57 @@ export function createServer(): McpServer {
       },
     },
     handleRender
+  );
+
+  server.registerResource(
+    'wireframe-viewer',
+    'ui://widget/wireframe-viewer',
+    {
+      title: 'Wire DSL Wireframe Viewer',
+      description: 'Interactive HTML widget that renders Wire DSL wireframes. Loaded by MCP clients (e.g. ChatGPT) as an embedded iframe; receives screen SVG data from the render_wire_widget tool via the MCP Apps bridge.',
+      mimeType: 'text/html;profile=mcp-app',
+    },
+    async (uri) => ({
+      contents: [
+        {
+          uri: uri.toString(),
+          mimeType: 'text/html;profile=mcp-app',
+          text: WIREFRAME_VIEWER_HTML,
+        },
+      ],
+    })
+  );
+
+  server.registerTool(
+    'render_wire_widget',
+    {
+      description:
+        'Renders Wire DSL source code as an interactive wireframe widget. ' +
+        'Clients that support MCP Apps (e.g. ChatGPT) will embed the widget as an HTML iframe — the user sees the wireframe rendered directly in the chat. ' +
+        'Returns SVG screen data as structuredContent and links the registered wireframe-viewer resource via _meta.ui.resourceUri. ' +
+        'For showing a static image in the chat (all clients), use render_wire with format: "png" instead.',
+      inputSchema: {
+        wire_code: z.string().max(50_000).describe('Wire DSL source code to render'),
+        screen: z
+          .string()
+          .optional()
+          .describe('Render a specific screen by name. Omit to render all screens.'),
+        device: z
+          .enum(['mobile', 'tablet', 'desktop'])
+          .optional()
+          .describe('Viewport preset: mobile (375px), tablet (768px), desktop (1280px). Overrides the device set in the DSL style block.'),
+        renderer: z
+          .enum(['standard', 'skeleton', 'sketch'])
+          .optional()
+          .default('standard')
+          .describe('"standard" (default), "skeleton" (loading placeholders), "sketch" (hand-drawn).'),
+        theme: z
+          .enum(['light', 'dark'])
+          .optional()
+          .describe('Color theme. Overrides the theme set in the DSL style block. Defaults to "light".'),
+      },
+    },
+    handleGetWireframeWidget
   );
 
   return server;
