@@ -8,6 +8,7 @@ import {
   resolveDevicePreset,
 } from '@wire-dsl/engine';
 import { initWasm, Resvg } from '@resvg/resvg-wasm';
+import { INTER_REGULAR } from '../assets/fonts.js';
 
 type RenderMode = 'standard' | 'skeleton' | 'sketch';
 
@@ -112,6 +113,11 @@ export async function handleRender({
       const rendered = new Resvg(svg, {
         fitTo: { mode: 'width', value: deviceWidth },
         background: resolvedTheme === 'dark' ? '#1a1a1a' : '#ffffff',
+        font: {
+          fontBuffers: [INTER_REGULAR],
+          loadSystemFonts: false,
+          defaultFontFamily: 'Inter',
+        },
       }).render();
       const png = rendered.asPng();
       return {
