@@ -44,9 +44,10 @@ export function createServer(): McpServer {
     {
       description:
         'Renders Wire DSL source code into a visual wireframe. ' +
-        'Use format: "png" to return an image the user can see directly in the chat. ' +
-        'Use format: "svg" when you need to inspect or reason about the markup (returns raw SVG text). ' +
-        'Always prefer "png" when the goal is to show the wireframe to the user. ' +
+        'When format is "png", the tool returns an image/png content block — display it directly in your response so the user can see it. ' +
+        'Do not describe or summarize the image; just show it. ' +
+        'Use format: "svg" only when you need to inspect or reason about the markup (returns raw SVG text, not visible to the user). ' +
+        'Always use format: "png" when the goal is to show the wireframe to the user. ' +
         'Use "device" to set the viewport (mobile/tablet/desktop). ' +
         'Use "renderer" to change the visual style: standard (default), skeleton (loading placeholders), or sketch (hand-drawn look). ' +
         'Use "theme" to switch between light and dark mode; overrides the DSL style block.',
