@@ -147,8 +147,5 @@ export async function handleGetWireframeWidget({
       renderer,
       device: device ?? ir.project.style.device ?? 'desktop',
     },
-    _meta: {
-      ui: { resourceUri: 'ui://widget/wireframe-viewer' },
-    },
   };
 }
