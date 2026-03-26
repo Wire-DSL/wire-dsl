@@ -1,5 +1,11 @@
 # @wire-dsl/mcp-server
 
+## 0.1.2
+
+### Patch Changes
+
+- [#87](https://github.com/Wire-DSL/wire-dsl/pull/87) [`ba385e8`](https://github.com/Wire-DSL/wire-dsl/commit/ba385e8ec780cc20b653c69d3741e0c2cdcf3aee) Thanks [@roxguel](https://github.com/roxguel)! - Change resvg-js by resvg-wasm
+
 ## 0.1.1
 
 ### Patch Changes
