@@ -25,8 +25,12 @@ export const WIREFRAME_VIEWER_HTML = `<!DOCTYPE html>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: system-ui, sans-serif; padding: 24px; background: transparent; color: #1a1a1a; }
     #loading { opacity: 0.4; font-size: 13px; }
-    .label { font-size: 11px; font-weight: 600; opacity: 0.45; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 10px; }
     .screen { margin-bottom: 40px; }
+    .screen-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .label { font-size: 11px; font-weight: 600; opacity: 0.45; letter-spacing: 0.08em; text-transform: uppercase; }
+    .actions { display: flex; gap: 6px; }
+    .btn-dl { font-size: 10px; font-weight: 500; padding: 3px 8px; border-radius: 4px; border: 1px solid currentColor; opacity: 0.45; background: transparent; color: inherit; cursor: pointer; letter-spacing: 0.03em; transition: opacity 0.15s; }
+    .btn-dl:hover { opacity: 0.85; }
     .card { border-radius: 8px; padding: 16px; display: inline-block; max-width: 100%; overflow: auto; box-shadow: 0 1px 4px rgba(0,0,0,0.10); background: #ffffff; }
     .card svg { display: block; max-width: 100%; height: auto; }
     @media (prefers-color-scheme: dark) {
@@ -42,6 +46,17 @@ export const WIREFRAME_VIEWER_HTML = `<!DOCTYPE html>
     function esc(s) {
       return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
+    function dl(filename, content, mime) {
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([content], { type: mime }));
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(a.href);
+    }
+    var _screens = [];
+    var _wireCode = '';
     // Detect ChatGPT's host theme via OpenAI Apps SDK, fallback to prefers-color-scheme.
     // Body background stays transparent so the widget blends with ChatGPT's own background.
     function getHostTheme() {
@@ -64,8 +79,20 @@ export const WIREFRAME_VIEWER_HTML = `<!DOCTYPE html>
         root.innerHTML = '<p style="color:#c0392b">' + esc((data && data.error) || 'No data received') + '</p>';
         return;
       }
-      root.innerHTML = (data.screens || []).map(function(s) {
-        return '<div class="screen"><p class="label">' + esc(s.name) + '</p><div class="card">' + s.svg + '</div></div>';
+      _screens = data.screens || [];
+      _wireCode = data.wire_code || '';
+      root.innerHTML = _screens.map(function(s, i) {
+        var slug = s.name.toLowerCase().replace(/\\s+/g, '-');
+        return '<div class="screen">' +
+          '<div class="screen-header">' +
+            '<span class="label">' + esc(s.name) + '</span>' +
+            '<div class="actions">' +
+              '<button class="btn-dl" onclick="dl(\'' + slug + '.svg\',_screens[' + i + '].svg,\'image/svg+xml\')">↓ SVG</button>' +
+              (_wireCode ? '<button class="btn-dl" onclick="dl(\'wireframe.wire\',_wireCode,\'text/plain\')">↓ .wire</button>' : '') +
+            '</div>' +
+          '</div>' +
+          '<div class="card">' + s.svg + '</div>' +
+        '</div>';
       }).join('');
       applyTheme();
     }
@@ -172,6 +199,7 @@ export async function handleGetWireframeWidget({
     content: [{ type: 'text' as const, text: `Wireframe ready: ${screens.map((s) => s.name).join(', ')}` }],
     structuredContent: {
       screens,
+      wire_code,
       theme: resolvedTheme,
       renderer,
       device: device ?? ir.project.style.device ?? 'desktop',
