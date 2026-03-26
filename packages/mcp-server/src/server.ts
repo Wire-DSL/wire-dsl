@@ -15,6 +15,12 @@ export function createServer(): McpServer {
     {
       description:
         'Returns Wire DSL reference documentation. Call this before generating .wire code to learn available syntax, components, and containers.',
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
       inputSchema: {
         section: z
           .enum(['syntax', 'components', 'containers', 'theme', 'examples', 'best_practices', 'mcp_render', 'all'])
@@ -33,6 +39,12 @@ export function createServer(): McpServer {
     'validate_wire',
     {
       description: 'Validates Wire DSL source code. Returns errors with line/column positions.',
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
       inputSchema: {
         wire_code: z.string().max(50_000).describe('Wire DSL source code to validate'),
       },
@@ -43,6 +55,12 @@ export function createServer(): McpServer {
   server.registerTool(
     'render_wire',
     {
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
       description:
         'Renders Wire DSL source code into a visual wireframe. ' +
         'For Claude.ai: always use format "svg", then pass the returned SVG markup directly to your built-in Visualizer tool (show_widget) to display it inline in the chat. Do NOT use format "png" on Claude.ai — the image won\'t render. ' +
@@ -124,6 +142,12 @@ export function createServer(): McpServer {
   server.registerTool(
     'render_wire_widget',
     {
+      annotations: {
+        readOnlyHint: true,
+        destructiveHint: false,
+        idempotentHint: true,
+        openWorldHint: false,
+      },
       description:
         'Renders Wire DSL source code as an interactive wireframe widget. ' +
         'Clients that support MCP Apps (e.g. ChatGPT) will embed the widget as an HTML iframe — the user sees the wireframe rendered directly in the chat. ' +
