@@ -38,7 +38,13 @@ function renderScreen(
   mode: RenderMode,
   theme: 'light' | 'dark'
 ): string {
-  const options = { screenName, theme };
+  const screen = ir.project.screens.find((s) => s.name === screenName);
+  const options = {
+    screenName,
+    theme,
+    width: screen?.viewport.width,
+    height: screen?.viewport.height,
+  };
   if (mode === 'skeleton') return new SkeletonSVGRenderer(ir, layout, options).render();
   if (mode === 'sketch') return new SketchSVGRenderer(ir, layout, options).render();
   return renderToSVG(ir, layout, options);
