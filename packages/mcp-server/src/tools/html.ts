@@ -23,12 +23,16 @@ export const WIREFRAME_VIEWER_HTML = `<!DOCTYPE html>
   <title>Wire DSL Wireframe</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: system-ui, sans-serif; padding: 24px; transition: background 0.15s; }
+    body { font-family: system-ui, sans-serif; padding: 24px; background: transparent; color: #1a1a1a; }
     #loading { opacity: 0.4; font-size: 13px; }
     .label { font-size: 11px; font-weight: 600; opacity: 0.45; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 10px; }
     .screen { margin-bottom: 40px; }
-    .card { border-radius: 8px; padding: 16px; display: inline-block; max-width: 100%; overflow: auto; box-shadow: 0 1px 4px rgba(0,0,0,0.10); }
+    .card { border-radius: 8px; padding: 16px; display: inline-block; max-width: 100%; overflow: auto; box-shadow: 0 1px 4px rgba(0,0,0,0.10); background: #ffffff; }
     .card svg { display: block; max-width: 100%; height: auto; }
+    @media (prefers-color-scheme: dark) {
+      body { color: #e0e0e0; }
+      .card { background: #2a2a2a; box-shadow: 0 1px 4px rgba(0,0,0,0.30); }
+    }
   </style>
 </head>
 <body>
@@ -38,12 +42,19 @@ export const WIREFRAME_VIEWER_HTML = `<!DOCTYPE html>
     function esc(s) {
       return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
-    function applyTheme(theme) {
-      var dark = theme === 'dark';
-      document.body.style.background = dark ? '#1a1a1a' : '#f5f5f5';
-      document.body.style.color = dark ? '#e0e0e0' : '#333333';
+    // Detect ChatGPT's host theme via OpenAI Apps SDK, fallback to prefers-color-scheme.
+    // Body background stays transparent so the widget blends with ChatGPT's own background.
+    function getHostTheme() {
+      if (window.openai && window.openai.theme) return window.openai.theme;
+      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) return 'dark';
+      return 'light';
+    }
+    function applyTheme() {
+      var dark = getHostTheme() === 'dark';
+      document.body.style.color = dark ? '#e0e0e0' : '#1a1a1a';
       document.querySelectorAll('.card').forEach(function(el) {
         el.style.background = dark ? '#2a2a2a' : '#ffffff';
+        el.style.boxShadow = dark ? '0 1px 4px rgba(0,0,0,0.30)' : '0 1px 4px rgba(0,0,0,0.10)';
       });
     }
     function render(data) {
@@ -56,7 +67,7 @@ export const WIREFRAME_VIEWER_HTML = `<!DOCTYPE html>
       root.innerHTML = (data.screens || []).map(function(s) {
         return '<div class="screen"><p class="label">' + esc(s.name) + '</p><div class="card">' + s.svg + '</div></div>';
       }).join('');
-      applyTheme(data.theme || 'light');
+      applyTheme();
     }
     // ChatGPT: window.openai is injected asynchronously after the iframe loads.
     // Poll until it's available (up to 10 seconds) before falling back.
