@@ -70,6 +70,7 @@ export default defineConfig({
 						{ label: 'CLI Reference', slug: 'tooling/cli' },
 						{ label: 'Web Editor', slug: 'tooling/web-editor' },
 						{ label: 'LLM Prompting', slug: 'tooling/llm-prompting' },
+						{ label: 'MCP Server', slug: 'tooling/mcp-server' },
 					],
 				},
 				{
