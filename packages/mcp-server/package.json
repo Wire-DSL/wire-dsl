@@ -18,18 +18,21 @@
     "dist"
   ],
   "scripts": {
+    "prebuild": "node ../../scripts/embed-fonts.js",
     "build": "tsup src/index.ts src/server.ts --format esm --dts --no-splitting --target node20",
     "dev": "tsx watch src/index.ts",
     "dev:http": "tsx watch src/index.ts --http",
     "build:watch": "tsup src/index.ts --watch --format esm --target node20",
     "start": "node dist/index.js",
     "start:http": "node dist/index.js --http",
+    "sync-docs": "node ../../scripts/sync-mcp-docs.js",
+    "embed-fonts": "node ../../scripts/embed-fonts.js",
     "type-check": "tsc --noEmit",
     "lint": "eslint src --ext .ts"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.15.0",
-    "@resvg/resvg-js": "^2.6.2",
+    "@resvg/resvg-wasm": "^2.6.2",
     "@wire-dsl/engine": "workspace:*",
     "zod": "4.3.6"
   },

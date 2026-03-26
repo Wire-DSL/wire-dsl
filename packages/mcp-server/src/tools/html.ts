@@ -1,0 +1,208 @@
+import {
+  parseWireDSL,
+  generateIR,
+  calculateLayout,
+  renderToSVG,
+  SkeletonSVGRenderer,
+  SketchSVGRenderer,
+  resolveDevicePreset,
+} from '@wire-dsl/engine';
+
+type RenderMode = 'standard' | 'skeleton' | 'sketch';
+
+/**
+ * Static HTML widget served as a registered MCP resource.
+ * ChatGPT embeds this in an iframe and passes tool result data via window.openai.toolOutput.
+ * Other clients can use the postMessage fallback.
+ */
+export const WIREFRAME_VIEWER_HTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wire DSL Wireframe</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; padding: 24px; background: transparent; color: #1a1a1a; }
+    #loading { opacity: 0.4; font-size: 13px; }
+    .screen { margin-bottom: 40px; }
+    .screen-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .label { font-size: 11px; font-weight: 600; opacity: 0.45; letter-spacing: 0.08em; text-transform: uppercase; }
+    .actions { display: flex; gap: 6px; }
+    .btn-dl { font-size: 10px; font-weight: 500; padding: 3px 8px; border-radius: 4px; border: 1px solid currentColor; opacity: 0.45; background: transparent; color: inherit; cursor: pointer; letter-spacing: 0.03em; transition: opacity 0.15s; }
+    .btn-dl:hover { opacity: 0.85; }
+    .card { border-radius: 8px; padding: 16px; display: inline-block; max-width: 100%; overflow: auto; box-shadow: 0 1px 4px rgba(0,0,0,0.10); background: #ffffff; }
+    .card svg { display: block; max-width: 100%; height: auto; }
+    @media (prefers-color-scheme: dark) {
+      body { color: #e0e0e0; }
+      .card { background: #2a2a2a; box-shadow: 0 1px 4px rgba(0,0,0,0.30); }
+    }
+  </style>
+</head>
+<body>
+  <p id="loading">Loading wireframe\u2026</p>
+  <div id="root"></div>
+  <script>
+    function esc(s) {
+      return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+    function dl(filename, content, mime) {
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([content], { type: mime }));
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(a.href);
+    }
+    var _screens = [];
+    var _wireCode = '';
+    // Detect ChatGPT's host theme via OpenAI Apps SDK, fallback to prefers-color-scheme.
+    // Body background stays transparent so the widget blends with ChatGPT's own background.
+    function getHostTheme() {
+      if (window.openai && window.openai.theme) return window.openai.theme;
+      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) return 'dark';
+      return 'light';
+    }
+    function applyTheme() {
+      var dark = getHostTheme() === 'dark';
+      document.body.style.color = dark ? '#e0e0e0' : '#1a1a1a';
+      document.querySelectorAll('.card').forEach(function(el) {
+        el.style.background = dark ? '#2a2a2a' : '#ffffff';
+        el.style.boxShadow = dark ? '0 1px 4px rgba(0,0,0,0.30)' : '0 1px 4px rgba(0,0,0,0.10)';
+      });
+    }
+    function render(data) {
+      document.getElementById('loading').style.display = 'none';
+      var root = document.getElementById('root');
+      if (!data || data.error) {
+        root.innerHTML = '<p style="color:#c0392b">' + esc((data && data.error) || 'No data received') + '</p>';
+        return;
+      }
+      _screens = data.screens || [];
+      _wireCode = data.wire_code || '';
+      root.innerHTML = _screens.map(function(s, i) {
+        var slug = s.name.toLowerCase().replace(/\\s+/g, '-');
+        return '<div class="screen">' +
+          '<div class="screen-header">' +
+            '<span class="label">' + esc(s.name) + '</span>' +
+            '<div class="actions">' +
+              '<button class="btn-dl" onclick="dl(\'' + slug + '.svg\',_screens[' + i + '].svg,\'image/svg+xml\')">↓ SVG</button>' +
+              (_wireCode ? '<button class="btn-dl" onclick="dl(\'wireframe.wire\',_wireCode,\'text/plain\')">↓ .wire</button>' : '') +
+            '</div>' +
+          '</div>' +
+          '<div class="card">' + s.svg + '</div>' +
+        '</div>';
+      }).join('');
+      applyTheme();
+    }
+    // ChatGPT: window.openai is injected asynchronously after the iframe loads.
+    // Poll until it's available (up to 10 seconds) before falling back.
+    var pollAttempts = 0;
+    var pollMax = 200; // 200 * 50ms = 10s
+    function pollOpenAI() {
+      if (window.openai && window.openai.toolOutput) {
+        Promise.resolve(window.openai.toolOutput).then(render).catch(console.error);
+      } else if (pollAttempts < pollMax) {
+        pollAttempts++;
+        setTimeout(pollOpenAI, 50);
+      } else {
+        // Timeout — leave postMessage listener active as final fallback
+        console.warn('[wire-dsl] window.openai not available after 10s');
+      }
+    }
+    pollOpenAI();
+    // postMessage fallback for other MCP clients
+    window.addEventListener('message', function(e) {
+      var d = e.data;
+      if (!d) return;
+      if (d.method === 'ui/notifications/tool-result' && d.params) render(d.params);
+      else if (d.type === 'tool-result') render(d.data);
+    });
+  </script>
+</body>
+</html>`;
+
+function renderScreen(
+  ir: ReturnType<typeof generateIR>,
+  layout: ReturnType<typeof calculateLayout>,
+  screenName: string,
+  mode: RenderMode,
+  theme: 'light' | 'dark'
+): string {
+  const screen = ir.project.screens.find((s) => s.name === screenName);
+  const options = {
+    screenName,
+    theme,
+    width: screen?.viewport.width,
+    height: screen?.viewport.height,
+  };
+  if (mode === 'skeleton') return new SkeletonSVGRenderer(ir, layout, options).render();
+  if (mode === 'sketch') return new SketchSVGRenderer(ir, layout, options).render();
+  return renderToSVG(ir, layout, options);
+}
+
+export async function handleGetWireframeWidget({
+  wire_code,
+  screen,
+  device,
+  renderer = 'standard',
+  theme,
+}: {
+  wire_code: string;
+  screen?: string;
+  device?: 'mobile' | 'tablet' | 'desktop';
+  renderer?: RenderMode;
+  theme?: 'light' | 'dark';
+}) {
+  let ast: ReturnType<typeof parseWireDSL>;
+  try {
+    ast = parseWireDSL(wire_code);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    return {
+      content: [{ type: 'text' as const, text: `Parse error: ${msg}` }],
+      isError: true,
+    };
+  }
+
+  let ir: ReturnType<typeof generateIR>;
+  try {
+    ir = generateIR(ast);
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    return {
+      content: [{ type: 'text' as const, text: `IR error: ${msg}` }],
+      isError: true,
+    };
+  }
+
+  if (device) {
+    const preset = resolveDevicePreset(device);
+    for (const s of ir.project.screens) {
+      s.viewport = { width: preset.width, height: preset.minHeight };
+    }
+  }
+
+  const layout = calculateLayout(ir);
+  const resolvedTheme: 'light' | 'dark' =
+    theme ?? (ir.project.style.theme as 'light' | 'dark') ?? 'light';
+  const allScreens = ir.project.screens.map((s) => s.name);
+  const targets = screen ? [screen] : allScreens;
+
+  const screens = targets.map((name) => ({
+    name,
+    svg: renderScreen(ir, layout, name, renderer, resolvedTheme),
+  }));
+
+  return {
+    content: [{ type: 'text' as const, text: `Wireframe ready: ${screens.map((s) => s.name).join(', ')}` }],
+    structuredContent: {
+      screens,
+      wire_code,
+      theme: resolvedTheme,
+      renderer,
+      device: device ?? ir.project.style.device ?? 'desktop',
+    },
+  };
+}
