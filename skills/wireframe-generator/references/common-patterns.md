@@ -617,10 +617,14 @@ project "Settings" {
         layout card(padding: md) {
           component Label text: "Profile Photo"
           layout grid(columns: 5, gap: md) {
-            component Image type: icon icon: "user" circle: true height: 100
-            layout stack(direction: horizontal, gap: sm, justify: start) {
-              component Button text: "Upload New" variant: primary icon: "upload"
-              component Button text: "Remove" variant: secondary
+            cell span: 2 {
+              component Image type: icon icon: "user" circle: true height: 100
+            }
+            cell span: 3 {
+              layout stack(direction: horizontal, gap: sm, justify: start) {
+                component Button text: "Upload New" variant: primary icon: "upload"
+                component Button text: "Remove" variant: secondary
+              }
             }
           }
         }
@@ -728,3 +732,220 @@ project "Users Management" {
 All patterns are production-ready and can be customized by changing text, colors, and spacing values.
 
 <!-- Source: @wire-dsl/language-support components.ts -->
+
+---
+
+## Interactive Patterns (New)
+
+### Confirm Modal Flow
+
+```wire
+project "Confirm Flow" {
+  style {
+    density: "normal"
+    spacing: "md"
+    radius: "md"
+    stroke: "normal"
+    font: "base"
+  }
+
+  screen Main {
+    layout stack(direction: horizontal, gap: md, padding: lg) {
+      component Input id: nameInput label: "Name"
+      component Button text: "Delete User" variant: danger onClick: show(confirmDelete) labelSpace: true size: md
+
+      layout modal(id: confirmDelete, title: "Delete user?", visible: true, onClose: hide(self)) {
+        body {
+          layout stack(direction: vertical, padding: md) {
+            component Text text: "This action cannot be undone."
+          }
+        }
+        footer {
+          component Button text: "Cancel" variant: secondary onClick: hide(self)
+          component Button text: "Delete" variant: danger onClick: hide(self)
+        }
+      }
+    }
+  }
+}
+```
+
+### Tabs + Tabs Layout
+
+```wire
+project "Tabbed Profile" {
+  style {
+    density: "normal"
+    spacing: "md"
+    radius: "md"
+    stroke: "normal"
+    font: "base"
+  }
+
+  screen Profile {
+    layout stack(direction: vertical, gap: md, padding: lg) {
+      component Tabs items: "Overview,Security,Billing" initialActive: 0 tabsId: profileTabs
+
+      layout tabs(id: profileTabs) {
+        tab {
+          component Heading text: "Overview"
+          component Input label: "Full name"
+          component Input label: "Email"
+        }
+        tab {
+          component Heading text: "Security"
+          component Toggle label: "Two-factor auth"
+          component Button text: "Go Billing" onClick: setTab(profileTabs, 2)
+        }
+        tab {
+          component Heading text: "Billing"
+          component Table columns: "Date,Amount,Status" rows: 5
+        }
+      }
+    }
+  }
+}
+```
+
+### Sidebar Navigation by Screen
+
+```wire
+project "Admin Navigation" {
+  style {
+    density: "normal"
+    spacing: "md"
+    radius: "md"
+    stroke: "normal"
+    font: "base"
+  }
+
+  define Component "MyMenu" {
+    layout stack(direction: vertical, gap: md, padding: md) {
+      component Heading text: "Admin"
+      component SidebarMenu items: "Dashboard,Users,Settings"
+        onItemsClick: "DashboardScreen,UsersScreen,SettingsScreen"
+        active: prop_active
+    }
+  }
+
+  screen DashboardScreen {
+    layout split(left: 260, gap: md) {
+      component MyMenu active: 0
+      layout stack(direction: vertical, gap: md, padding: lg) {
+        component Heading text: "Dashboard"
+        layout card(padding: md, gap: md, onClick: navigate(UsersScreen)) {
+          component Text text: "Open users section"
+        }
+      }
+    }
+  }
+
+  screen UsersScreen {
+    layout split(left: 260, gap: md) {
+      component MyMenu active: 1
+      layout stack(direction: vertical, gap: md, padding: lg) {
+        component Heading text: "Users"
+        component Table columns: "Name,Email,Role" rows: 8 onRowClick: navigate(UserDetail)
+      }
+    }
+  }
+
+  screen SettingsScreen {
+    layout split(left: 260, gap: md) {
+      component MyMenu active: 2
+      layout stack(direction: vertical, gap: md, padding: lg) {
+        component Heading text: "Settings"
+        component List items: "Profile,Notifications,Billing" onItemClick: navigate(UserDetail)
+      }
+    }
+  }
+
+  screen UserDetail {
+    layout split(left: 260, gap: md) {
+      component MyMenu active: 3
+      layout stack(direction: vertical, gap: md, padding: lg) {
+        component Heading text: "User Detail"
+        component Link text: "Back to Dashboard" onClick: navigate(DashboardScreen)
+      }
+    }
+  }
+}
+```
+
+### Progressive Enable/Disable
+
+```wire
+project "Progressive Form" {
+  style {
+    density: "normal"
+    spacing: "md"
+    radius: "md"
+    stroke: "normal"
+    font: "base"
+  }
+
+  screen Form {
+    layout stack(direction: vertical, gap: md, padding: lg) {
+      component Checkbox label: "I accept terms"
+        onActive: enable(emailInput) & enable(submitBtn)
+        onInactive: disable(emailInput) & disable(submitBtn)
+
+      component Input id: emailInput label: "Email" placeholder: "you@example.com" disabled: true
+      component Button id: submitBtn text: "Submit" variant: primary disabled: true
+    }
+  }
+}
+```
+
+### Wizard with `layout tabs`
+
+```wire
+project "Wizard" {
+  style {
+    density: "normal"
+    spacing: "md"
+    radius: "md"
+    stroke: "normal"
+    font: "base"
+  }
+
+  screen Setup {
+    layout stack(direction: vertical, gap: md, padding: lg) {
+      layout tabs(id: wizardTabs, active: 0) {
+        tab {
+          component Heading text: "Step 1"
+          layout grid(columns: 4) {
+            cell span: 3 {
+              component Input label: "Company name"
+            }
+            cell {
+              component Button text: "Next" onClick: setTab(wizardTabs, 1) block: true labelSpace: true size: md
+            }
+          }
+        }
+        tab {
+          component Heading text: "Step 2"
+          layout grid(columns: 4) {
+            cell span: 3 {
+              component Select label: "Plan" items: "Starter,Pro,Enterprise"
+            }
+            cell {
+              layout stack(direction: horizontal) {
+                component Button text: "Back" onClick: setTab(wizardTabs, 0) labelSpace: true size: md
+                component Button text: "Finish" variant: primary onClick: navigate(Done) labelSpace: true size: md
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  screen Done {
+    layout stack(direction: vertical, gap: md, padding: lg) {
+      component Heading text: "Setup Complete"
+      component Text text: "Your workspace is ready."
+    }
+  }
+}
+```

@@ -29,6 +29,7 @@ import type {
   Position,
   CapturedTokens,
   PropertySourceMap,
+  EventSourceMap,
 } from './types';
 
 /**
@@ -166,7 +167,26 @@ export class SourceMapBuilder {
         this.counters.set('cell', idx + 1);
         return `cell-${idx}`;
       }
-        
+
+      case 'tab': {
+        // tab-0, tab-1, etc.
+        const idx = this.counters.get('tab') || 0;
+        this.counters.set('tab', idx + 1);
+        return `tab-${idx}`;
+      }
+
+      case 'modal-body': {
+        const idx = this.counters.get('modal-body') || 0;
+        this.counters.set('modal-body', idx + 1);
+        return `modal-body-${idx}`;
+      }
+
+      case 'modal-footer': {
+        const idx = this.counters.get('modal-footer') || 0;
+        this.counters.set('modal-footer', idx + 1);
+        return `modal-footer-${idx}`;
+      }
+
       case 'component-definition':
         // define-MyButton, define-Card, etc.
         return `define-${metadata?.name || 'unknown'}`;
@@ -265,6 +285,70 @@ export class SourceMapBuilder {
   }
 
   /**
+   * Add an event handler to an existing node in the SourceMap
+   * Events have action expressions as values (e.g., "show(modal) & navigate(Home)")
+   *
+   * @param nodeId - ID of the node that owns this event
+   * @param eventName - Name of the event (e.g., "onClick", "onClose")
+   * @param tokens - Captured tokens: name token for event key, CST node for actionChain
+   * @returns The EventSourceMap entry created
+   */
+  addEvent(
+    nodeId: string,
+    eventName: string,
+    tokens: {
+      name: any;    // Token for the event name (propKey, e.g. the "onClick" Identifier token)
+      value: any;   // CST node for the actionChain
+    }
+  ): EventSourceMap {
+    const entry = this.entries.find(e => e.nodeId === nodeId);
+    if (!entry) {
+      throw new Error(`Cannot add event to non-existent node: ${nodeId}`);
+    }
+
+    if (!entry.events) {
+      entry.events = {};
+    }
+
+    const nameRange: CodeRange = {
+      start: this.getTokenStart(tokens.name),
+      end: this.getTokenEnd(tokens.name),
+    };
+
+    // getTokenStart/End handle CST nodes via getFirstToken/getLastToken
+    const valueRange: CodeRange = {
+      start: this.getTokenStart(tokens.value),
+      end: this.getTokenEnd(tokens.value),
+    };
+
+    const fullRange: CodeRange = {
+      start: nameRange.start,
+      end: valueRange.end,
+    };
+
+    // Extract raw source text of the action expression
+    let rawValue = '';
+    if (
+      this.sourceCode &&
+      valueRange.start.offset !== undefined &&
+      valueRange.end.offset !== undefined
+    ) {
+      rawValue = this.sourceCode.slice(valueRange.start.offset, valueRange.end.offset + 1);
+    }
+
+    const eventSourceMap: EventSourceMap = {
+      name: eventName,
+      value: rawValue,
+      range: fullRange,
+      nameRange,
+      valueRange,
+    };
+
+    entry.events[eventName] = eventSourceMap;
+    return eventSourceMap;
+  }
+
+  /**
    * Push a parent onto the stack (when entering a container node)
    */
   pushParent(nodeId: string): void {
@@ -303,10 +387,13 @@ export class SourceMapBuilder {
    */
   private calculateAllInsertionPoints(): void {
     const containerTypes: SourceMapNodeType[] = [
-      'project', 
-      'screen', 
-      'layout', 
-      'cell', 
+      'project',
+      'screen',
+      'layout',
+      'cell',
+      'tab',
+      'modal-body',
+      'modal-footer',
       'component-definition',
       'layout-definition',
     ];

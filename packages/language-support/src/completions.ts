@@ -93,6 +93,20 @@ export const CONTAINER_COMPLETIONS: CompletionItem[] = [
     documentation: 'layout split() { ... }',
     insertText: 'split(',
   },
+  {
+    label: 'tabs',
+    kind: 'Component',
+    detail: 'Tabbed content container',
+    documentation: 'layout tabs(id: mainTabs) { tab { ... } tab { ... } }',
+    insertText: 'tabs(',
+  },
+  {
+    label: 'modal',
+    kind: 'Component',
+    detail: 'Modal overlay container',
+    documentation: 'layout modal(title: "Confirm?", visible: false) { ... }',
+    insertText: 'modal(',
+  },
 ];
 
 export const COMPONENT_COMPLETIONS: CompletionItem[] = [
@@ -111,9 +125,9 @@ export const PROPERTY_COMPLETIONS: CompletionItem[] = [
   {
     label: 'id',
     kind: 'Property',
-    detail: 'Element identifier',
-    documentation: 'id: "my-element"',
-    insertText: 'id: "${1:element}"',
+    detail: 'Element identifier for show/hide targeting',
+    documentation: 'id: myElement  (identifier, no quotes)',
+    insertText: 'id: ${1:myId}',
   },
   {
     label: 'label',
@@ -265,7 +279,8 @@ export function getComponentProperties(componentName: string): CompletionSuggest
 
 /**
  * Get available properties for a component
- * Filters out properties already declared in current line
+ * Filters out properties already declared in current line.
+ * Includes both regular props and event handlers from supportedEvents.
  */
 export function getComponentPropertiesForCompletion(
   componentName: string,
@@ -280,21 +295,26 @@ export function getComponentPropertiesForCompletion(
     .filter((prop) => !alreadyDeclaredProps.includes(prop.name))
     .map((prop) => ({
       label: prop.name,
-      kind: 'Property',
+      kind: 'Property' as const,
       documentation: `Type: ${prop.type}`,
       insertText: `${prop.name}: `,
       detail: `${componentName} property`,
     }));
 
-  return [...availableProps, ...PROPERTY_COMPLETIONS];
+  const eventProps = getComponentEventCompletions(componentName, alreadyDeclaredProps);
+
+  return [...availableProps, ...eventProps, ...PROPERTY_COMPLETIONS];
 }
 
 /**
- * Get property value suggestions for a given component property
+ * Get property value suggestions for a given component property.
+ * Handles enum props (discrete options) and action props (event handlers).
  */
 export function getPropertyValueSuggestions(
   componentName: string,
-  propertyName: string
+  propertyName: string,
+  screenNames: string[] = [],
+  declaredIds: string[] = []
 ): CompletionSuggestion[] {
   const componentMeta = COMPONENTS[componentName as keyof typeof COMPONENTS];
   if (!componentMeta) {
@@ -302,15 +322,169 @@ export function getPropertyValueSuggestions(
   }
 
   const propDef = componentMeta.properties[propertyName];
+
+  if (propDef?.type === 'action') {
+    return getActionValueCompletions(screenNames, declaredIds);
+  }
+
+  // Check if propertyName is a supported event (e.g. onClick, onClose)
+  if (componentMeta.supportedEvents?.includes(propertyName as any)) {
+    return getActionValueCompletions(screenNames, declaredIds);
+  }
+
   if (!propDef || propDef.type !== 'enum' || !propDef.options) {
     return [];
   }
 
-  return (propDef.options).map((value) => ({
+  return propDef.options.map((value) => ({
     label: value.toString(),
-    kind: 'Value',
+    kind: 'Value' as const,
     documentation: `Value for ${propertyName}`,
   }));
+}
+
+/**
+ * Action function completions — shown after an event prop (onClick: , onClose: , etc.)
+ * Covers all action keywords: navigate, show, hide, toggle, setTab
+ */
+export const ACTION_COMPLETIONS: CompletionItem[] = [
+  {
+    label: 'navigate',
+    kind: 'Keyword',
+    detail: 'Navigate to a screen',
+    documentation: 'navigate(ScreenName)',
+    insertText: 'navigate(${1:ScreenName})',
+  },
+  {
+    label: 'show',
+    kind: 'Keyword',
+    detail: 'Make a component visible',
+    documentation: 'show(id) or show(self)',
+    insertText: 'show(${1:id})',
+  },
+  {
+    label: 'hide',
+    kind: 'Keyword',
+    detail: 'Hide a component',
+    documentation: 'hide(id) or hide(self)',
+    insertText: 'hide(${1:id})',
+  },
+  {
+    label: 'toggle',
+    kind: 'Keyword',
+    detail: 'Toggle visibility of a component',
+    documentation: 'toggle(id) or toggle(self)',
+    insertText: 'toggle(${1:id})',
+  },
+  {
+    label: 'enable',
+    kind: 'Keyword',
+    detail: 'Enable a component (set disabled: false)',
+    documentation: 'enable(id) or enable(self)',
+    insertText: 'enable(${1:id})',
+  },
+  {
+    label: 'disable',
+    kind: 'Keyword',
+    detail: 'Disable a component (set disabled: true)',
+    documentation: 'disable(id) or disable(self)',
+    insertText: 'disable(${1:id})',
+  },
+  {
+    label: 'setTab',
+    kind: 'Keyword',
+    detail: 'Change the active tab in a tabs container',
+    documentation: 'setTab(tabsId, index)',
+    insertText: 'setTab(${1:tabsId}, ${2:0})',
+  },
+];
+
+/**
+ * Get event prop completions for a component.
+ * Returns items for each event name in component.supportedEvents.
+ * Excludes events already declared in alreadyDeclaredProps.
+ */
+export function getComponentEventCompletions(
+  componentName: string,
+  alreadyDeclaredProps: string[] = []
+): CompletionSuggestion[] {
+  const componentMeta = COMPONENTS[componentName as keyof typeof COMPONENTS];
+  if (!componentMeta?.supportedEvents) return [];
+
+  return componentMeta.supportedEvents
+    .filter((ev) => !alreadyDeclaredProps.includes(ev))
+    .map((ev) => ({
+      label: ev,
+      kind: 'Property' as const,
+      detail: `Event handler for ${componentName}`,
+      documentation: `${ev}: navigate(Screen) | show(id) | hide(id) | toggle(id) | enable(id) | disable(id) | setTab(tabsId, n)`,
+      insertText: `${ev}: `,
+    }));
+}
+
+/**
+ * Get action value completions.
+ * Called when cursor is after an event prop colon (e.g. "onClick: ").
+ * Optionally enriched with document-aware screen names and declared IDs.
+ */
+export function getActionValueCompletions(
+  screenNames: string[] = [],
+  declaredIds: string[] = []
+): CompletionSuggestion[] {
+  const base = [...ACTION_COMPLETIONS];
+
+  // Enrich navigate() with known screen names
+  const navigateItems: CompletionSuggestion[] = screenNames.map((name) => ({
+    label: `navigate(${name})`,
+    kind: 'Value' as const,
+    detail: 'Navigate to screen',
+    documentation: `Navigate to screen "${name}"`,
+    insertText: `navigate(${name})`,
+  }));
+
+  // Enrich show/hide/toggle/enable/disable with known IDs + self
+  const idTargets = [...declaredIds, 'self'];
+  const idItems: CompletionSuggestion[] = idTargets.flatMap((id) => [
+    { label: `show(${id})`,    kind: 'Value' as const, detail: 'Show',    insertText: `show(${id})` },
+    { label: `hide(${id})`,    kind: 'Value' as const, detail: 'Hide',    insertText: `hide(${id})` },
+    { label: `toggle(${id})`,  kind: 'Value' as const, detail: 'Toggle',  insertText: `toggle(${id})` },
+    { label: `enable(${id})`,  kind: 'Value' as const, detail: 'Enable',  insertText: `enable(${id})` },
+    { label: `disable(${id})`, kind: 'Value' as const, detail: 'Disable', insertText: `disable(${id})` },
+  ]);
+
+  return [...base, ...navigateItems, ...idItems];
+}
+
+/**
+ * Detect if the cursor is positioned after an event prop colon.
+ * E.g. "component Button text: "X" onClick: " → returns "onClick"
+ * Returns the event name if in action value context, null otherwise.
+ */
+export function detectEventValueContext(lineText: string): string | null {
+  // All known event prop names
+  const eventProps = [
+    'onClick', 'onChange', 'onActive', 'onInactive',
+    'onClose', 'onItemsClick', 'onItemClick', 'onRowClick',
+  ];
+  // Match "eventProp: " at the end of the typed text (possibly after other props)
+  const match = lineText.match(/(\w+)\s*:\s*$/);
+  if (!match) return null;
+  const propName = match[1];
+  return eventProps.includes(propName) ? propName : null;
+}
+
+/**
+ * Detect if cursor is inside an action call argument.
+ * E.g. "onClick: navigate(" → returns { action: 'navigate', partial: '' }
+ * E.g. "onClick: show(con" → returns { action: 'show', partial: 'con' }
+ */
+export function detectActionCallContext(
+  lineText: string
+): { action: string; partial: string } | null {
+  // Match the last unclosed action call: navigate(, show(, hide(, toggle(, setTab(
+  const match = lineText.match(/\b(navigate|show|hide|toggle|setTab)\(([^)]*?)$/);
+  if (!match) return null;
+  return { action: match[1], partial: match[2] };
 }
 
 /**
@@ -396,15 +570,36 @@ export function getScopeBasedCompletions(
       return layoutCompletions;
 
     case 'inside-layout':
-      // Suggest components, nested layouts, and cells
+      // Suggest components, nested layouts, and section keywords (cell/tab/body/footer)
       return [
         ...CONTAINER_COMPLETIONS,  // Allow nested layouts
         {
           label: 'cell',
           kind: 'Keyword',
-          detail: 'Grid cell within layout',
+          detail: 'Grid cell — valid inside layout grid',
           documentation: 'cell span: 2 { ... }',
           insertText: 'cell span: ${1:1} {\n\t$0\n}',
+        },
+        {
+          label: 'tab',
+          kind: 'Keyword',
+          detail: 'Tab section — valid inside layout tabs',
+          documentation: 'tab { ... }',
+          insertText: 'tab {\n\t$0\n}',
+        },
+        {
+          label: 'body',
+          kind: 'Keyword',
+          detail: 'Body section — valid inside layout modal',
+          documentation: 'body { ... }',
+          insertText: 'body {\n\t$0\n}',
+        },
+        {
+          label: 'footer',
+          kind: 'Keyword',
+          detail: 'Footer section — valid inside layout modal',
+          documentation: 'footer { ... }',
+          insertText: 'footer {\n\t$0\n}',
         },
         {
           label: 'component',
@@ -426,12 +621,17 @@ export default {
   CONTAINER_COMPLETIONS,
   COMPONENT_COMPLETIONS,
   PROPERTY_COMPLETIONS,
+  ACTION_COMPLETIONS,
   isPropertyContext,
   getComponentPropertiesForCompletion,
+  getComponentEventCompletions,
   getPropertyValueSuggestions,
+  getActionValueCompletions,
   getScopeBasedCompletions,
   detectComponentKeyword,
   detectPropertyValueContext,
+  detectEventValueContext,
+  detectActionCallContext,
   getAvailableComponents,
   getComponentProperties,
 };

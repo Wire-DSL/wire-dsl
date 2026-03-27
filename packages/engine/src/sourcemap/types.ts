@@ -37,6 +37,18 @@ export interface PropertySourceMap {
 }
 
 /**
+ * SourceMap for a single event handler
+ * Captures ranges for event name and the full action expression
+ */
+export interface EventSourceMap {
+  name: string;              // Event name (e.g., "onClick", "onClose", "onChange")
+  value: string;             // Raw source text of the action expression (e.g., "show(modal) & navigate(Home)")
+  range: CodeRange;          // Full range "eventName: actionExpression"
+  nameRange: CodeRange;      // Range of just the event name
+  valueRange: CodeRange;     // Range of just the action expression (for precise replacement)
+}
+
+/**
  * Types of nodes in Wire DSL
  */
 export type SourceMapNodeType =
@@ -47,6 +59,9 @@ export type SourceMapNodeType =
   | 'component-definition'  // For user-defined components (define Component "Name")
   | 'layout-definition'     // For user-defined layouts (define Layout "Name")
   | 'cell'                  // For grid cells
+  | 'tab'                   // Tab section inside layout tabs
+  | 'modal-body'            // Body section inside layout modal
+  | 'modal-footer'          // Footer section inside layout modal
   | 'style'                 // Style configuration block
   | 'mocks'                 // Mocks data block
   | 'colors';               // Colors palette block
@@ -78,7 +93,8 @@ export interface SourceMapEntry {
   keywordRange?: CodeRange;          // Only the keyword (e.g., "component", "layout", "screen")
   nameRange?: CodeRange;             // Only the name (e.g., "Main" in "screen Main")
   bodyRange?: CodeRange;             // Only the body { ... }
-  properties?: Record<string, PropertySourceMap>;  // Map of properties
+  properties?: Record<string, PropertySourceMap>;  // Map of regular properties
+  events?: Record<string, EventSourceMap>;         // Map of event handlers (onClick, onClose, etc.)
   insertionPoint?: InsertionPoint;   // Where to insert new children (for editing)
 }
 

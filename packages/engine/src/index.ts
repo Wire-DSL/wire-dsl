@@ -5,6 +5,7 @@
 export * from './parser/index';
 export * from './ir/index';
 export * from './ir/device-presets';
+export * from './state';
 export * from './layout/index';
 export * from './renderer/index';
 export * from './renderer/skeleton';

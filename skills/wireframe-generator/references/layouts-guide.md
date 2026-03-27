@@ -1,11 +1,11 @@
 ---
 name: Layouts Guide
-description: Complete guide to layout containers (Stack, Grid, Split, Panel, Card) with patterns
+description: Complete guide to layout containers (Stack, Grid, Split, Panel, Card, Tabs, Modal) with patterns
 ---
 
 # Wire DSL Layouts Guide
 
-Layouts are containers that organize components and other layouts. Wire DSL provides 5 layout types, each optimized for different UI patterns.
+Layouts are containers that organize components and other layouts. This guide preserves the original 5 core layouts and adds the current branch updates (`tabs` and `modal`) so reference coverage stays complete for LLM usage.
 
 ## Layout Overview
 
@@ -16,6 +16,12 @@ Layouts are containers that organize components and other layouts. Wire DSL prov
 | **Split** | Two-column area | Exactly 2 | Admin panels, navigation + content |
 | **Panel** | Bordered section | Exactly 1 | Highlighted sections, form groups |
 | **Card** | Content card | Multiple | Product cards, user profiles, info boxes |
+| **Tabs** | Tabbed content container | `tab` blocks | Multi-panel workflows and settings |
+| **Modal** | Overlay dialog | Implicit children or `body`/`footer` | Confirmations, quick forms, focused actions |
+
+**Shared Notes:**
+- Layout containers can include `id` and `visible` for show/hide/toggle targeting.
+- Action handlers on layouts are layout-specific (`card.onClick`, `modal.onClose`).
 
 ---
 
@@ -474,6 +480,7 @@ Content card container with multiple children, border, and rounded corners.
 | `radius` | enum | `none`, `sm`, `md`, `lg` | `md` | Corner radius |
 | `border` | boolean | `true`, `false` | `true` | Show border |
 | `background` | string | color name or hex | - | Background color |
+| `onClick` | action | any action | - | Make the full card clickable in play test |
 
 **Radius Values:**
 - `none` = 0px
@@ -550,6 +557,120 @@ layout card(padding: xl, gap: lg, radius: lg, border: true) {
   component Button text: "Choose Plan" variant: primary
 }
 ```
+
+**Interactive Card:**
+```wire
+layout card(padding: md, gap: md, onClick: navigate(UserDetail)) {
+  component Heading text: "John Doe"
+  component Text text: "Click card to open profile"
+}
+```
+
+---
+
+## Tabs Layout
+
+Tabbed content container. Use it together with `component Tabs` for navigation + panel rendering.
+
+### Properties
+
+| Property | Type | Values | Default | Description |
+|----------|------|--------|---------|-------------|
+| `id` | identifier | `[a-zA-Z_][a-zA-Z0-9_]*` | required | Links to `component Tabs tabsId: ...` |
+| `active` | number | `0+` | `0` | Initially active tab index |
+| `visible` | boolean | `true`, `false` | `true` | Initial visibility |
+
+### Syntax
+
+```wire
+component Tabs items: "Profile,Settings,Billing" initialActive: 0 tabsId: mainTabs
+
+layout tabs(id: mainTabs) {
+  tab { component Heading text: "Profile" }
+  tab { component Heading text: "Settings" }
+  tab { component Heading text: "Billing" }
+}
+```
+
+### Critical Rules
+
+- `id` is required.
+- Children must be `tab { ... }` blocks.
+- `tabsId` in `component Tabs` must match this `id` in the same screen.
+
+### Tabs Example (Wizard)
+
+```wire
+component Tabs items: "Step 1,Step 2,Done" initialActive: 0 tabsId: wizardSteps
+
+layout tabs(id: wizardSteps) {
+  tab {
+    component Heading text: "Step 1"
+    component Button text: "Next" onClick: setTab(wizardSteps, 1)
+  }
+  tab {
+    component Heading text: "Step 2"
+    component Button text: "Finish" onClick: setTab(wizardSteps, 2)
+  }
+  tab {
+    component Heading text: "Completed"
+    component Button text: "Go Home" onClick: navigate(Home)
+  }
+}
+```
+
+---
+
+## Modal Layout
+
+Overlay dialog container shown above page content.
+
+### Properties
+
+| Property | Type | Values | Default | Description |
+|----------|------|--------|---------|-------------|
+| `id` | identifier | `[a-zA-Z_][a-zA-Z0-9_]*` | - | Target for `show/hide/toggle` actions |
+| `title` | string | any text | - | Header text (optional) |
+| `visible` | boolean | `true`, `false` | `true` | Initial visibility |
+| `closable` | boolean | `true`, `false` | `true` | Show close button (requires title) |
+| `size` | enum | `sm`, `md`, `lg` | `md` | Modal width preset |
+| `onClose` | action | any action | - | Action when close button is clicked |
+
+### Syntax
+
+```wire
+layout modal(id: confirmDelete, title: "Delete item?", visible: false, closable: true, onClose: hide(self)) {
+  body {
+    component Text text: "This action cannot be undone."
+  }
+  footer {
+    component Button text: "Cancel" onClick: hide(self)
+    component Button text: "Delete" variant: danger onClick: hide(self)
+  }
+}
+```
+
+### Section Modes
+
+- Explicit mode: uses `body { ... }` and/or `footer { ... }`.
+- Implicit mode: direct children (components/layouts) without named sections.
+- Do not mix explicit and implicit children in the same modal.
+
+### Modal Example (Implicit Mode)
+
+```wire
+layout modal(id: helpModal, title: "Need help?", visible: false) {
+  component Heading text: "Support"
+  component Text text: "Contact support@example.com"
+  component Button text: "Close" onClick: hide(self)
+}
+
+component Button text: "Help" onClick: show(helpModal)
+```
+
+### Migration Note
+
+`Modal` is no longer a standalone component in the catalog. Use `layout modal(...)` instead.
 
 ---
 
@@ -669,5 +790,16 @@ layout stack(direction: vertical, gap: lg, padding: lg) {
 - Building user profile cards
 - Creating pricing cards
 - Need self-contained content boxes with styling
+- Need clickable containers (`onClick`) for card-level interactions
 
-<!-- Source: @wire-dsl/language-support components.ts LAYOUTS -->
+**Use Tabs when:**
+- Building settings/profile multi-panel pages
+- Creating step flows with `setTab(...)`
+- Separating related content without route changes
+
+**Use Modal when:**
+- Confirming destructive actions
+- Showing focused forms or details
+- Displaying temporary overlays controlled by `show/hide/toggle`
+
+<!-- Sources: docs/CONTAINERS-REFERENCE.md, packages/language-support/src/components.ts -->

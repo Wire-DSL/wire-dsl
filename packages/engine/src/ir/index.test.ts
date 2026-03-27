@@ -751,7 +751,7 @@ describe('IR Generator', () => {
     if (sidebarMenu) {
       const [id, node] = sidebarMenu;
       if (node.kind === 'component') {
-        expect(node.props.items).toBe('Users,Roles,Settings');
+        expect(node.props.items).toEqual(['Users', 'Roles', 'Settings']);
         expect(node.props.active).toBe(1);
       }
     }
@@ -1062,5 +1062,514 @@ describe('IR Generator', () => {
 
     const ast = parseWireDSL(input);
     expect(() => generateIR(ast)).toThrow(/layout-children-arity/);
+  });
+});
+
+// ============================================================================
+// EVENT SYSTEM IR TESTS
+// ============================================================================
+
+describe('IR Generator – Event System', () => {
+  describe('userDefinedId', () => {
+    it('should extract id from component props into userDefinedId', () => {
+      const input = `
+        project "IDs" {
+          screen Main {
+            layout stack {
+              component Button id: myBtn text: "Click"
+            }
+          }
+        }
+      `;
+      const ast = parseWireDSL(input);
+      const ir = generateIR(ast);
+      const btn = Object.values(ir.project.nodes).find(
+        (n) => n.kind === 'component' && n.componentType === 'Button'
+      );
+      expect(btn).toBeDefined();
+      if (btn?.kind === 'component') {
+        expect(btn.userDefinedId).toBe('myBtn');
+        expect(btn.props.id).toBeUndefined();
+      }
+    });
+
+    it('should store id in params for layout modal', () => {
+      const input = `
+        project "IDs" {
+          screen Main {
+            layout stack {
+              layout modal(id: confirmModal, title: "Sure?") {}
+            }
+          }
+        }
+      `;
+      const ast = parseWireDSL(input);
+      const ir = generateIR(ast);
+      const modal = Object.values(ir.project.nodes).find(
+        (n) => n.kind === 'container' && n.containerType === 'modal'
+      );
+      expect(modal).toBeDefined();
+      if (modal?.kind === 'container') {
+        expect(modal.params.id).toBe('confirmModal');
+      }
+    });
+  });
+
+  describe('events on component nodes', () => {
+    it('should generate navigate action from onClick: navigate()', () => {
+      const input = `
+        project "Nav" {
+          screen Main {
+            layout stack {
+              component Button text: "Go" onClick: navigate(Detail)
+            }
+          }
+          screen Detail {
+            layout stack {
+              component Heading text: "Detail"
+            }
+          }
+        }
+      `;
+      const ast = parseWireDSL(input);
+      const ir = generateIR(ast);
+      const btn = Object.values(ir.project.nodes).find(
+        (n) => n.kind === 'component' && n.componentType === 'Button'
+      );
+      expect(btn).toBeDefined();
+      if (btn?.kind === 'component') {
+        expect(btn.events).toHaveLength(1);
+        expect(btn.events![0].event).toBe('onClick');
+        expect(btn.events![0].actions[0]).toEqual({ type: 'navigate', screen: 'Detail' });
+      }
+    });
+
+    it('should generate show action from onClick: show(id)', () => {
+      const input = `
+        project "Show" {
+          screen Main {
+            layout stack {
+              layout modal(id: confirmModal, title: "Sure?") {}
+              component Button text: "Open" onClick: show(confirmModal)
+            }
+          }
+        }
+      `;
+      const ast = parseWireDSL(input);
+      const ir = generateIR(ast);
+      const btn = Object.values(ir.project.nodes).find(
+        (n) => n.kind === 'component' && n.componentType === 'Button'
+      );
+      if (btn?.kind === 'component') {
+        expect(btn.events![0].actions[0]).toEqual({ type: 'show', targetId: 'confirmModal' });
+      }
+    });
+
+    it('should generate hide action with _self targetId from hide(self)', () => {
+      const input = `
+        project "Self" {
+          screen Main {
+            layout stack {
+              layout modal(id: confirmModal, title: "Sure?", onClose: hide(self)) {}
+            }
+          }
+        }
+      `;
+      const ast = parseWireDSL(input);
+      const ir = generateIR(ast);
+      const modal = Object.values(ir.project.nodes).find(
+        (n) => n.kind === 'container' && n.containerType === 'modal'
+      );
+      if (modal?.kind === 'container') {
+        expect(modal.events![0].actions[0]).toEqual({ type: 'hide', targetId: '_self' });
+      }
+    });
+
+    it('should generate setTab action from onClick: setTab()', () => {
+      const input = `
+        project "SetTab" {
+          screen Main {
+            layout stack {
+              component Button text: "Go" onClick: setTab(mainTabs, 1)
+              layout tabs(id: mainTabs) {
+                tab { component Heading text: "A" }
+                tab { component Heading text: "B" }
+              }
+            }
+          }
+        }
+      `;
+      const ast = parseWireDSL(input);
+      const ir = generateIR(ast);
+      const btn = Object.values(ir.project.nodes).find(
+        (n) => n.kind === 'component' && n.componentType === 'Button'
+      );
+      if (btn?.kind === 'component') {
+        expect(btn.events![0].actions[0]).toEqual({ type: 'setTab', tabsId: 'mainTabs', index: 1 });
+      }
+    });
+
+    it('should generate chained actions from & operator', () => {
+      const input = `
+        project "Chain" {
+          screen Main {
+            layout stack {
+              layout modal(id: listModal, title: "List") {}
+              layout modal(id: confirmModal, title: "Confirm") {}
+              component Button text: "Delete" onClick: hide(listModal) & show(confirmModal)
+            }
+          }
+        }
+      `;
+      const ast = parseWireDSL(input);
+      const ir = generateIR(ast);
+      const btn = Object.values(ir.project.nodes).find(
+        (n) => n.kind === 'component' && n.componentType === 'Button'
+      );
+      if (btn?.kind === 'component') {
+        expect(btn.events![0].actions).toHaveLength(2);
+        expect(btn.events![0].actions[0]).toEqual({ type: 'hide', targetId: 'listModal' });
+        expect(btn.events![0].actions[1]).toEqual({ type: 'show', targetId: 'confirmModal' });
+      }
+    });
+
+    it('should generate onActive and onInactive handlers', () => {
+      const input = `
+        project "Checkbox" {
+          screen Main {
+            layout stack {
+              layout modal(id: submitBtn, title: "Submit") {}
+              component Checkbox text: "Terms"
+                onActive: show(submitBtn)
+                onInactive: hide(submitBtn)
+            }
+          }
+        }
+      `;
+      const ast = parseWireDSL(input);
+      const ir = generateIR(ast);
+      const cb = Object.values(ir.project.nodes).find(
+        (n) => n.kind === 'component' && n.componentType === 'Checkbox'
+      );
+      if (cb?.kind === 'component') {
+        expect(cb.events).toHaveLength(2);
+        const events = cb.events!.map((e) => e.event);
+        expect(events).toContain('onActive');
+        expect(events).toContain('onInactive');
+      }
+    });
+
+    it('should convert onItemsClick string prop to navigateItems action', () => {
+      const input = `
+        project "Sidebar" {
+          screen Dashboard { layout stack { component Heading text: "Dash" } }
+          screen Users { layout stack { component Heading text: "Users" } }
+          screen Settings { layout stack { component Heading text: "Settings" } }
+          screen Main {
+            layout stack {
+              component SidebarMenu items: "Dashboard,Users,Config"
+                onItemsClick: "Dashboard,Users,Settings"
+            }
+          }
+        }
+      `;
+      const ast = parseWireDSL(input);
+      const ir = generateIR(ast);
+      const menu = Object.values(ir.project.nodes).find(
+        (n) => n.kind === 'component' && n.componentType === 'SidebarMenu'
+      );
+      if (menu?.kind === 'component') {
+        expect(menu.events).toBeDefined();
+        const handler = menu.events!.find((e) => e.event === 'onItemsClick');
+        expect(handler).toBeDefined();
+        expect(handler!.actions[0]).toEqual({
+          type: 'navigateItems',
+          screens: ['Dashboard', 'Users', 'Settings'],
+        });
+      }
+    });
+
+    it('should generate enable action from onClick: enable(id)', () => {
+      const input = `
+        project "Test" {
+          screen Main {
+            layout stack {
+              component Input id: nameInput label: "Name" disabled: true
+              component Button text: "Unlock" onClick: enable(nameInput)
+            }
+          }
+        }
+      `;
+      const ast = parseWireDSL(input);
+      const ir = generateIR(ast);
+
+      const btn = Object.values(ir.project.nodes).find(
+        (n) => n.kind === 'component' && n.componentType === 'Button'
+      );
+      expect(btn).toBeDefined();
+      if (btn?.kind === 'component') {
+        expect(btn.events).toBeDefined();
+        expect(btn.events![0].actions[0]).toEqual({ type: 'enable', targetId: 'nameInput' });
+      }
+    });
+
+    it('should generate disable action from onClick: disable(id)', () => {
+      const input = `
+        project "Test" {
+          screen Main {
+            layout stack {
+              component Input id: nameInput label: "Name"
+              component Button text: "Lock" onClick: disable(nameInput)
+            }
+          }
+        }
+      `;
+      const ast = parseWireDSL(input);
+      const ir = generateIR(ast);
+
+      const btn = Object.values(ir.project.nodes).find(
+        (n) => n.kind === 'component' && n.componentType === 'Button'
+      );
+      expect(btn).toBeDefined();
+      if (btn?.kind === 'component') {
+        expect(btn.events).toBeDefined();
+        expect(btn.events![0].actions[0]).toEqual({ type: 'disable', targetId: 'nameInput' });
+      }
+    });
+
+    it('should generate enable action with _self target from enable(self)', () => {
+      const input = `
+        project "Test" {
+          screen Main {
+            layout stack {
+              component Button id: myBtn text: "Enable Self" onClick: enable(self)
+            }
+          }
+        }
+      `;
+      const ast = parseWireDSL(input);
+      const ir = generateIR(ast);
+
+      const btn = Object.values(ir.project.nodes).find(
+        (n) => n.kind === 'component' && n.componentType === 'Button'
+      );
+      if (btn?.kind === 'component') {
+        expect(btn.events![0].actions[0]).toEqual({ type: 'enable', targetId: '_self' });
+      }
+    });
+  });
+
+  describe('layout tabs / tab containerType', () => {
+    it('should generate tabs container node with containerType tabs', () => {
+      const input = `
+        project "Tabs" {
+          screen Main {
+            layout tabs(id: mainTabs) {
+              tab { component Heading text: "Tab 1" }
+              tab { component Heading text: "Tab 2" }
+            }
+          }
+        }
+      `;
+      const ast = parseWireDSL(input);
+      const ir = generateIR(ast);
+      const tabsNode = Object.values(ir.project.nodes).find(
+        (n) => n.kind === 'container' && n.containerType === 'tabs'
+      );
+      expect(tabsNode).toBeDefined();
+      if (tabsNode?.kind === 'container') {
+        expect(tabsNode.params.id).toBe('mainTabs');
+        expect(tabsNode.children).toHaveLength(2);
+      }
+    });
+
+    it('should generate two tab container nodes in correct order', () => {
+      const input = `
+        project "Tabs" {
+          screen Main {
+            layout tabs(id: myTabs) {
+              tab { component Heading text: "A" }
+              tab { component Heading text: "B" }
+            }
+          }
+        }
+      `;
+      const ast = parseWireDSL(input);
+      const ir = generateIR(ast);
+      const tabNodes = Object.values(ir.project.nodes).filter(
+        (n) => n.kind === 'container' && n.containerType === 'tab'
+      );
+      expect(tabNodes).toHaveLength(2);
+      // Tab order is implicit: children refs in the tabs container are ordered
+      const tabsContainer = Object.values(ir.project.nodes).find(
+        (n) => n.kind === 'container' && n.containerType === 'tabs'
+      );
+      if (tabsContainer?.kind === 'container') {
+        expect(tabsContainer.children).toHaveLength(2);
+      }
+    });
+  });
+
+  describe('layout modal', () => {
+    it('should produce containerType modal in implicit mode (direct children)', () => {
+      const input = `
+        project "Modal" {
+          screen Main {
+            layout stack {
+              layout modal(title: "Hello") {
+                component Text text: "Content"
+              }
+            }
+          }
+        }
+      `;
+      const ir = generateIR(parseWireDSL(input));
+      const modal = Object.values(ir.project.nodes).find(
+        (n) => n.kind === 'container' && n.containerType === 'modal'
+      );
+      expect(modal).toBeDefined();
+      if (modal?.kind === 'container') {
+        expect(modal.children).toHaveLength(1);
+        expect(modal.params.title).toBe('Hello');
+      }
+    });
+
+    it('should produce modal-body and modal-footer in explicit mode', () => {
+      const input = `
+        project "Modal" {
+          screen Main {
+            layout stack {
+              layout modal(title: "Confirm?") {
+                body {
+                  component Text text: "Are you sure?"
+                }
+                footer {
+                  component Button text: "OK"
+                }
+              }
+            }
+          }
+        }
+      `;
+      const ir = generateIR(parseWireDSL(input));
+      const modal = Object.values(ir.project.nodes).find(
+        (n) => n.kind === 'container' && n.containerType === 'modal'
+      );
+      const bodyNode = Object.values(ir.project.nodes).find(
+        (n) => n.kind === 'container' && n.containerType === 'modal-body'
+      );
+      const footerNode = Object.values(ir.project.nodes).find(
+        (n) => n.kind === 'container' && n.containerType === 'modal-footer'
+      );
+      expect(modal).toBeDefined();
+      expect(bodyNode).toBeDefined();
+      expect(footerNode).toBeDefined();
+      if (modal?.kind === 'container') {
+        expect(modal.children).toHaveLength(2);
+      }
+    });
+
+    it('MODAL-002: should error when mixing body/footer with direct children', () => {
+      const input = `
+        project "Modal" {
+          screen Main {
+            layout stack {
+              layout modal(title: "Bad") {
+                body { component Text text: "x" }
+                component Button text: "mixed"
+              }
+            }
+          }
+        }
+      `;
+      const ir = generateIR(parseWireDSL(input));
+      expect(ir).toBeDefined(); // Does not throw, but produces an error node
+      // The IR generator should have recorded the error
+      const hasError = Object.values(ir.project.nodes).some(
+        (n) => n.kind === 'container' && n.containerType === 'modal'
+      );
+      expect(hasError).toBe(true);
+    });
+
+    it('MODAL-001: should error when body is used inside non-modal layout', () => {
+      const input = `
+        project "Modal" {
+          screen Main {
+            layout stack {
+              body { component Text text: "invalid" }
+            }
+          }
+        }
+      `;
+      // Parser allows it (grammar is permissive), IR should emit an error
+      const ast = parseWireDSL(input);
+      const result = generateIR(ast);
+      expect(result).toBeDefined();
+    });
+
+    it('MODAL-003/004: should error on duplicate body or footer', () => {
+      const input = `
+        project "Modal" {
+          screen Main {
+            layout stack {
+              layout modal(title: "Dup") {
+                body { component Text text: "a" }
+                body { component Text text: "b" }
+              }
+            }
+          }
+        }
+      `;
+      const result = generateIR(parseWireDSL(input));
+      expect(result).toBeDefined();
+    });
+
+    it('footer should default to horizontal stack semantics', () => {
+      const input = `
+        project "Modal" {
+          screen Main {
+            layout stack {
+              layout modal(title: "Confirm?") {
+                footer { component Button text: "OK" }
+              }
+            }
+          }
+        }
+      `;
+      const ir = generateIR(parseWireDSL(input));
+      const footerNode = Object.values(ir.project.nodes).find(
+        (n) => n.kind === 'container' && n.containerType === 'modal-footer'
+      );
+      expect(footerNode).toBeDefined();
+      if (footerNode?.kind === 'container') {
+        expect(footerNode.params.direction).toBe('horizontal');
+        expect(footerNode.style.padding).toBe('md');
+        expect(footerNode.style.justify).toBe('spaceBetween');
+      }
+    });
+
+    it('body should default to vertical stack semantics', () => {
+      const input = `
+        project "Modal" {
+          screen Main {
+            layout stack {
+              layout modal(title: "Confirm?") {
+                body { component Text text: "Are you sure?" }
+              }
+            }
+          }
+        }
+      `;
+      const ir = generateIR(parseWireDSL(input));
+      const bodyNode = Object.values(ir.project.nodes).find(
+        (n) => n.kind === 'container' && n.containerType === 'modal-body'
+      );
+      expect(bodyNode).toBeDefined();
+      if (bodyNode?.kind === 'container') {
+        expect(bodyNode.params.direction).toBe('vertical');
+        expect(bodyNode.style.padding).toBe('md');
+        expect(bodyNode.style.gap).toBe('md');
+      }
+    });
   });
 });

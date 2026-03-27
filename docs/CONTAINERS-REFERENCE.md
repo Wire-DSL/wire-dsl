@@ -6,7 +6,7 @@ Complete guide to container types (layouts) for organizing content in Wire-DSL w
 
 ## Overview
 
-Containers are structural elements that organize and position child components. Wire-DSL provides 5 main container types, each with specific use cases and properties.
+Containers are structural elements that organize and position child components. Wire-DSL provides 6 main container types, each with specific use cases and properties.
 
 | Container | Purpose | Children | Use Case |
 |-----------|---------|----------|----------|
@@ -15,6 +15,7 @@ Containers are structural elements that organize and position child components. 
 | **Split** | Two-panel layout | Two stacks | Sidebar + content |
 | **Panel** | Single bordered container | Single | Grouped content sections |
 | **Card** | Flexible content box | Multiple | Product cards, profiles |
+| **Tabs** | Tabbed content container | Tab blocks | Multi-panel tabbed views |
 
 ---
 
@@ -483,6 +484,11 @@ layout card(padding: lg, gap: md, radius: md, border: true) {
 | `gap` | string | `xs`, `sm`, `md`, `lg`, `xl` | `md` | Spacing between children |
 | `radius` | string | `none`, `sm`, `md`, `lg` | `md` | Corner radius |
 | `border` | boolean | `true`, `false` | `true` | Show border |
+| `onClick` | action | any action | — | Makes the whole card clickable (play test) |
+
+**Events** (optional):
+- `onClick: navigate(Screen)` — navigates when the card is clicked
+- `onClick: show(id)` / `hide(id)` / `toggle(id)` — also supported, chainable with `&`
 
 ### Radius Values
 
@@ -544,6 +550,14 @@ layout card(padding: lg, gap: lg, radius: lg, border: false) {
 }
 ```
 
+**Clickable Card (play test)**:
+```
+layout card(padding: md, gap: md, onClick: navigate(UserDetail)) {
+  component Heading text: "User #1234"
+  component Text text: "Click to view profile"
+}
+```
+
 ### Important Notes
 
 ⚠️ **Automatic Stacking**: Children stack vertically automatically
@@ -551,6 +565,189 @@ layout card(padding: lg, gap: lg, radius: lg, border: false) {
 ⚠️ **Dynamic Height**: Card height adjusts based on content
 
 ⚠️ **Image Aspect Ratio**: Images within cards maintain proper aspect ratios
+
+---
+
+## Tabs Container
+
+Tabbed content container. Pairs with the `component Tabs` navigation bar to create a full tabbed interface.
+
+### Purpose
+
+Display different content sections under a tab bar. Each `tab` block maps to one tab panel — the active tab (zero-based index) controls which content is visible during play test.
+
+### Syntax
+
+```
+layout tabs(id: mainTabs) {
+  tab {
+    // content for tab 0
+  }
+  tab {
+    // content for tab 1
+  }
+}
+```
+
+### Properties
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `id` | identifier | **Yes** | Links this container to a `component Tabs tabsId: ...`. Must be unique within the screen. |
+| `active` | number | No | Initial active tab index (default: 0) |
+
+### Tab Children
+
+Each `tab` block is a content panel:
+- Tabs are identified by their **declaration order** (0-based index)
+- Each `tab` can contain any number of child components or layouts
+- Only the active tab's content is visible during play test
+
+### Examples
+
+**Full tabbed interface**:
+```
+component Tabs items: "Profile,Settings,Billing" initialActive: 0 tabsId: mainTabs
+
+layout tabs(id: mainTabs) {
+  tab {
+    component Heading text: "Profile"
+    component Input label: "Full name"
+    component Input label: "Email"
+    component Button text: "Save changes" variant: primary
+  }
+  tab {
+    component Heading text: "Settings"
+    component Toggle label: "Email notifications" enabled: true
+    component Toggle label: "Dark mode"
+  }
+  tab {
+    component Heading text: "Billing"
+    component Table columns: "Date,Amount,Status" rows: 4
+  }
+}
+```
+
+**Tabs without a navigation bar** (programmatically controlled):
+```
+layout tabs(id: wizardSteps) {
+  tab {
+    component Heading text: "Step 1: Personal Info"
+    component Input label: "Name"
+    component Button text: "Next" onClick: setTab(wizardSteps, 1)
+  }
+  tab {
+    component Heading text: "Step 2: Payment"
+    component Input label: "Card number"
+    component Button text: "Complete" onClick: navigate(Confirmation)
+  }
+}
+```
+
+### Important Notes
+
+⚠️ **`id` is required**: The `layout tabs` container must have an `id` parameter.
+
+⚠️ **`tab` is a keyword**: `tab { }` is special syntax only valid inside `layout tabs`. It is not a component.
+
+⚠️ **Order defines index**: The first `tab` block is index 0, the second is index 1, etc.
+
+⚠️ **`tabsId` must match `id`**: If using `component Tabs tabsId: X`, there must be a `layout tabs(id: X)` in the same screen.
+
+---
+
+## Modal Container
+
+Modal dialog overlay. Accepts child layouts inside `body` and `footer` sections.
+
+### Purpose
+
+Display a modal dialog that floats above the screen content. Can be shown/hidden via events (`show`, `hide`, `toggle`). When `visible: false`, the modal is not rendered and does not affect layout.
+
+### Syntax
+
+```
+layout modal(id: confirmDialog, title: "Confirm", closable: true) {
+  body {
+    component Text text: "Are you sure?"
+  }
+  footer {
+    component Button text: "Cancel" onClick: hide(self)
+    component Button text: "Confirm" variant: primary onClick: hide(self)
+  }
+}
+```
+
+### Properties
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `id` | identifier | No | ID for `show`/`hide`/`toggle` targeting. Format: `[a-zA-Z_][a-zA-Z0-9_]*`. |
+| `title` | string | No | Modal header text. Omit for a header-less modal. |
+| `visible` | boolean | No | Initial visibility (default: `true`). When `false`, modal is not rendered and doesn't occupy space. |
+| `closable` | boolean | No | Show close button in header (default: `true`). Only visible when `title` is set. |
+| `size` | enum | No | `sm` (380px) \| `md` (520px) \| `lg` (720px) (default: `md`). On mobile, all sizes use full viewport width. |
+| `onClose` | action | No | Event fired when the close button is clicked. |
+
+### Sections
+
+A modal supports two optional named sections:
+- **`body { }`** — main content area, stacks children vertically
+- **`footer { }`** — action area, stacks children horizontally
+
+Without `body`/`footer`, all direct children go into the content area (implicit mode).
+
+### Examples
+
+**Confirmation dialog (explicit sections)**:
+```
+layout modal(id: deleteConfirm, title: "Delete Item?", size: md, closable: true) {
+  body {
+    component Text text: "This action cannot be undone."
+  }
+  footer {
+    component Button text: "Cancel" variant: secondary onClick: hide(self)
+    component Button text: "Delete" variant: danger onClick: hide(self)
+  }
+}
+
+component Button text: "Delete Item" variant: danger onClick: show(deleteConfirm)
+```
+
+**Form modal with nested layout (explicit sections)**:
+```
+layout modal(id: editUser, title: "Edit User", size: lg) {
+  body {
+    layout stack(gap: md) {
+      component Input label: "Name"
+      component Input label: "Email"
+      component Select label: "Role" items: "Admin,User,Guest"
+    }
+  }
+  footer {
+    component Button text: "Save" variant: primary
+    component Button text: "Cancel" onClick: hide(self)
+  }
+}
+```
+
+**Modal hidden initially, shown by button**:
+```
+layout modal(id: infoModal, title: "Information", visible: false) {
+  component Text text: "This is important information."
+}
+component Button text: "More info" onClick: show(infoModal)
+```
+
+### Important Notes
+
+⚠️ **Overlay positioning**: Modals are positioned absolutely over the canvas — centered horizontally, 64px from the top. Their position in the DSL tree does not affect visual placement.
+
+⚠️ **Visibility and layout space**: When `visible: false`, the modal is not rendered and does not affect sibling layout.
+
+⚠️ **Close button requires title**: `closable` only shows the close button when a `title` is set.
+
+⚠️ **No section mixing**: Children inside a modal must be either all `body`/`footer` sections (explicit mode) or all normal components/layouts (implicit mode). Mixing both is a validation warning.
 
 ---
 
@@ -652,13 +849,14 @@ Rules:
 
 ### Do's ✅
 
-✅ Use Stack for sequential content  
-✅ Use Grid for responsive multi-column layouts  
-✅ Use Split for navigation + content pattern  
-✅ Use Panel for grouped content sections  
-✅ Use Card for self-contained items  
-✅ Limit nesting depth to 3-4 levels  
-✅ Use consistent spacing with style tokens  
+✅ Use Stack for sequential content
+✅ Use Grid for responsive multi-column layouts
+✅ Use Split for navigation + content pattern
+✅ Use Panel for grouped content sections
+✅ Use Card for self-contained items (add `onClick` to make them interactive)
+✅ Use Tabs container + `component Tabs` for multi-panel tabbed interfaces
+✅ Limit nesting depth to 3-4 levels
+✅ Use consistent spacing with style tokens
 
 ### Don'ts ❌
 

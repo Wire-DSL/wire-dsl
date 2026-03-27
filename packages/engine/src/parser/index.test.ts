@@ -1215,3 +1215,363 @@ describe('WireDSL Parser', () => {
     expect(() => parseWireDSL(input)).toThrow(/A → app_shell → A/);
   });
 });
+
+// ============================================================================
+// EVENT SYSTEM TESTS
+// ============================================================================
+
+describe('WireDSL Parser – Event System', () => {
+  describe('Component IDs', () => {
+    it('should parse id prop on a component', () => {
+      const input = `
+        project "IDs" {
+          screen Main {
+            layout stack {
+              component Button id: myBtn text: "Click"
+            }
+          }
+        }
+      `;
+      const ast = parseWireDSL(input);
+      const btn = ast.screens[0].layout.children[0];
+      expect(btn.type).toBe('component');
+      if (btn.type === 'component') {
+        expect(btn.props.id).toBe('myBtn');
+      }
+    });
+
+    it('should parse id param in layout tabs', () => {
+      const input = `
+        project "TabIds" {
+          screen Main {
+            layout tabs(id: mainTabs) {
+              tab {
+                component Heading text: "Tab 1"
+              }
+            }
+          }
+        }
+      `;
+      const ast = parseWireDSL(input);
+      const layout = ast.screens[0].layout;
+      expect(layout.layoutType).toBe('tabs');
+      expect(layout.params.id).toBe('mainTabs');
+    });
+  });
+
+  describe('onClick event', () => {
+    it('should parse onClick: navigate(Screen)', () => {
+      const input = `
+        project "Nav" {
+          screen Main {
+            layout stack {
+              component Button text: "Go" onClick: navigate(Detail)
+            }
+          }
+          screen Detail {
+            layout stack { component Heading text: "Detail" }
+          }
+        }
+      `;
+      const ast = parseWireDSL(input);
+      const btn = ast.screens[0].layout.children[0];
+      expect(btn.type).toBe('component');
+      if (btn.type === 'component') {
+        expect(btn.events).toHaveLength(1);
+        expect(btn.events[0].event).toBe('onClick');
+        expect(btn.events[0].actions).toHaveLength(1);
+        expect(btn.events[0].actions[0].type).toBe('navigate');
+        if (btn.events[0].actions[0].type === 'navigate') {
+          expect(btn.events[0].actions[0].screen).toBe('Detail');
+        }
+      }
+    });
+
+    it('should parse onClick: show(targetId)', () => {
+      const input = `
+        project "Show" {
+          screen Main {
+            layout stack {
+              layout modal(id: confirmModal, title: "Sure?") {}
+              component Button text: "Open" onClick: show(confirmModal)
+            }
+          }
+        }
+      `;
+      const ast = parseWireDSL(input);
+      const btn = ast.screens[0].layout.children[1];
+      if (btn.type === 'component') {
+        const action = btn.events[0].actions[0];
+        expect(action.type).toBe('show');
+        if (action.type === 'show' || action.type === 'hide' || action.type === 'toggle') {
+          expect(action.targetId).toBe('confirmModal');
+        }
+      }
+    });
+
+    it('should parse onClick: hide(targetId)', () => {
+      const input = `
+        project "Hide" {
+          screen Main {
+            layout stack {
+              layout modal(id: myPanel, title: "Panel") {}
+              component Button text: "Close" onClick: hide(myPanel)
+            }
+          }
+        }
+      `;
+      const ast = parseWireDSL(input);
+      const btn = ast.screens[0].layout.children[1];
+      if (btn.type === 'component') {
+        const action = btn.events[0].actions[0];
+        expect(action.type).toBe('hide');
+      }
+    });
+
+    it('should parse onClick: toggle(targetId)', () => {
+      const input = `
+        project "ToggleBtn" {
+          screen Main {
+            layout stack {
+              layout modal(id: sidePanel, title: "Side") {}
+              component Button text: "Toggle" onClick: toggle(sidePanel)
+            }
+          }
+        }
+      `;
+      const ast = parseWireDSL(input);
+      const btn = ast.screens[0].layout.children[1];
+      if (btn.type === 'component') {
+        const action = btn.events[0].actions[0];
+        expect(action.type).toBe('toggle');
+      }
+    });
+
+    it('should parse hide(self) — self reference', () => {
+      const input = `
+        project "Self" {
+          screen Main {
+            layout stack {
+              layout modal(id: confirmModal, title: "Sure?", onClose: hide(self)) {}
+            }
+          }
+        }
+      `;
+      const ast = parseWireDSL(input);
+      const modal = ast.screens[0].layout.children[0];
+      if (modal.type === 'layout') {
+        expect(modal.events).toHaveLength(1);
+        expect(modal.events[0].event).toBe('onClose');
+        const action = modal.events[0].actions[0];
+        expect(action.type).toBe('hide');
+        if (action.type === 'hide' || action.type === 'show' || action.type === 'toggle') {
+          expect(action.targetId).toBe('_self');
+        }
+      }
+    });
+
+    it('should parse setTab(tabsId, index)', () => {
+      const input = `
+        project "SetTab" {
+          screen Main {
+            layout stack {
+              component Button text: "Profile" onClick: setTab(mainTabs, 2)
+              layout tabs(id: mainTabs) {
+                tab { component Heading text: "A" }
+                tab { component Heading text: "B" }
+                tab { component Heading text: "C" }
+              }
+            }
+          }
+        }
+      `;
+      const ast = parseWireDSL(input);
+      const btn = ast.screens[0].layout.children[0];
+      if (btn.type === 'component') {
+        const action = btn.events[0].actions[0];
+        expect(action.type).toBe('setTab');
+        if (action.type === 'setTab') {
+          expect(action.tabsId).toBe('mainTabs');
+          expect(action.index).toBe(2);
+        }
+      }
+    });
+  });
+
+  describe('Action chaining with &', () => {
+    it('should parse two chained actions', () => {
+      const input = `
+        project "Chain" {
+          screen Main {
+            layout stack {
+              layout modal(id: listModal, title: "List") {}
+              layout modal(id: confirmModal, title: "Confirm") {}
+              component Button text: "Delete" onClick: hide(listModal) & show(confirmModal)
+            }
+          }
+        }
+      `;
+      const ast = parseWireDSL(input);
+      const btn = ast.screens[0].layout.children[2];
+      if (btn.type === 'component') {
+        expect(btn.events[0].actions).toHaveLength(2);
+        expect(btn.events[0].actions[0].type).toBe('hide');
+        expect(btn.events[0].actions[1].type).toBe('show');
+      }
+    });
+
+    it('should parse three chained actions', () => {
+      const input = `
+        project "Chain3" {
+          screen Main {
+            layout stack {
+              layout modal(id: step1, title: "Step 1") {}
+              layout modal(id: step2, title: "Step 2") {}
+              component Button text: "Continue" onClick: hide(step1) & show(step2) & navigate(Summary)
+            }
+          }
+          screen Summary {
+            layout stack { component Heading text: "Summary" }
+          }
+        }
+      `;
+      const ast = parseWireDSL(input);
+      const btn = ast.screens[0].layout.children[2];
+      if (btn.type === 'component') {
+        expect(btn.events[0].actions).toHaveLength(3);
+        expect(btn.events[0].actions[2].type).toBe('navigate');
+      }
+    });
+  });
+
+  describe('onChange / onActive / onInactive events', () => {
+    it('should parse onChange on Toggle', () => {
+      const input = `
+        project "ToggleChange" {
+          screen Main {
+            layout stack {
+              layout modal(id: myPanel, title: "Panel") {}
+              component Toggle text: "Show panel" onChange: toggle(myPanel)
+            }
+          }
+        }
+      `;
+      const ast = parseWireDSL(input);
+      const toggle = ast.screens[0].layout.children[1];
+      if (toggle.type === 'component') {
+        expect(toggle.events[0].event).toBe('onChange');
+        expect(toggle.events[0].actions[0].type).toBe('toggle');
+      }
+    });
+
+    it('should parse onActive and onInactive on Checkbox', () => {
+      const input = `
+        project "Checkbox" {
+          screen Main {
+            layout stack {
+              component Checkbox text: "Terms"
+                onActive: show(submitBtn)
+                onInactive: hide(submitBtn)
+            }
+          }
+        }
+      `;
+      const ast = parseWireDSL(input);
+      const cb = ast.screens[0].layout.children[0];
+      if (cb.type === 'component') {
+        expect(cb.events).toHaveLength(2);
+        const events = cb.events.map((e) => e.event);
+        expect(events).toContain('onActive');
+        expect(events).toContain('onInactive');
+      }
+    });
+  });
+
+  describe('layout tabs / tab', () => {
+    it('should parse layout tabs with tab children', () => {
+      const input = `
+        project "Tabs" {
+          screen Main {
+            layout tabs(id: mainTabs) {
+              tab {
+                component Heading text: "Tab 1"
+              }
+              tab {
+                component Heading text: "Tab 2"
+              }
+            }
+          }
+        }
+      `;
+      const ast = parseWireDSL(input);
+      const layout = ast.screens[0].layout;
+      expect(layout.layoutType).toBe('tabs');
+      const tabs = layout.children.filter((c) => c.type === 'tab');
+      expect(tabs).toHaveLength(2);
+    });
+
+    it('should parse tab children recursively', () => {
+      const input = `
+        project "TabContent" {
+          screen Main {
+            layout tabs(id: myTabs) {
+              tab {
+                component Input label: "Email"
+                component Button text: "Save"
+              }
+            }
+          }
+        }
+      `;
+      const ast = parseWireDSL(input);
+      const tab = ast.screens[0].layout.children[0];
+      expect(tab.type).toBe('tab');
+      if (tab.type === 'tab') {
+        expect(tab.children).toHaveLength(2);
+      }
+    });
+  });
+
+  describe('onItemsClick on SidebarMenu', () => {
+    it('should parse onItemsClick as a string prop', () => {
+      const input = `
+        project "Sidebar" {
+          screen Main {
+            layout stack {
+              component SidebarMenu items: "Dashboard,Users,Config"
+                onItemsClick: "DashboardScreen,UsersScreen,SettingsScreen"
+            }
+          }
+        }
+      `;
+      const ast = parseWireDSL(input);
+      const menu = ast.screens[0].layout.children[0];
+      if (menu.type === 'component') {
+        expect(menu.props.onItemsClick).toBe('DashboardScreen,UsersScreen,SettingsScreen');
+      }
+    });
+  });
+
+  describe('onRowClick / onItemClick', () => {
+    it('should parse onRowClick on Table', () => {
+      const input = `
+        project "TableNav" {
+          screen Main {
+            layout stack {
+              component Table columns: "Name,Email" rows: 8 onRowClick: navigate(UserDetail)
+            }
+          }
+          screen UserDetail {
+            layout stack { component Heading text: "User" }
+          }
+        }
+      `;
+      const ast = parseWireDSL(input);
+      const table = ast.screens[0].layout.children[0];
+      if (table.type === 'component') {
+        expect(table.events[0].event).toBe('onRowClick');
+        expect(table.events[0].actions[0].type).toBe('navigate');
+      }
+    });
+  });
+});

@@ -384,3 +384,116 @@ describe('SourceMap Phase 2 & 3: Integration', () => {
     expect(path.length).toBeGreaterThan(1);
   });
 });
+
+describe('SourceMap: section nodes (tab, modal-body, modal-footer)', () => {
+  const tabsCode = `project "Tabs Test" {
+  screen Main {
+    layout stack(direction: vertical) {
+      layout tabs(id: mainTabs) {
+        tab {
+          component Heading text: "Tab 1"
+          component Text text: "Content 1"
+        }
+        tab {
+          component Button text: "Action"
+        }
+        tab {}
+      }
+    }
+  }
+}`;
+
+  it('tab nodes appear in SourceMap with correct type and parentId', () => {
+    const { sourceMap } = parseWireDSLWithSourceMap(tabsCode);
+    const tabs = sourceMap.filter(e => e.type === 'tab');
+    expect(tabs.length).toBe(3);
+
+    const tabsLayout = sourceMap.find(e => e.type === 'layout' && e.layoutType === 'tabs');
+    expect(tabsLayout).toBeDefined();
+
+    tabs.forEach(tab => {
+      expect(tab.parentId).toBe(tabsLayout!.nodeId);
+      expect(tab.keywordRange).toBeDefined();
+      expect(tab.bodyRange).toBeDefined();
+      expect(tab.range).toBeDefined();
+    });
+  });
+
+  it('tab-0, tab-1, tab-2 get sequential nodeIds', () => {
+    const { sourceMap } = parseWireDSLWithSourceMap(tabsCode);
+    const tabIds = sourceMap.filter(e => e.type === 'tab').map(e => e.nodeId);
+    expect(tabIds).toEqual(['tab-0', 'tab-1', 'tab-2']);
+  });
+
+  it('tab with children gets insertionPoint.after pointing to last child', () => {
+    const { sourceMap } = parseWireDSLWithSourceMap(tabsCode);
+    const tab0 = sourceMap.find(e => e.nodeId === 'tab-0');
+    expect(tab0?.insertionPoint).toBeDefined();
+    expect(tab0?.insertionPoint?.after).toBeDefined();
+    // after should point to the last child (component-text-0)
+    const lastChild = sourceMap.find(e => e.nodeId === tab0!.insertionPoint!.after);
+    expect(lastChild?.type).toBe('component');
+  });
+
+  it('empty tab gets insertionPoint without after', () => {
+    const { sourceMap } = parseWireDSLWithSourceMap(tabsCode);
+    const tab2 = sourceMap.find(e => e.nodeId === 'tab-2');
+    expect(tab2?.insertionPoint).toBeDefined();
+    expect(tab2?.insertionPoint?.after).toBeUndefined();
+  });
+
+  it('tab children have correct parentId', () => {
+    const { sourceMap } = parseWireDSLWithSourceMap(tabsCode);
+    const tab0 = sourceMap.find(e => e.nodeId === 'tab-0');
+    const resolver = new SourceMapResolver(sourceMap);
+    const children = resolver.getChildren(tab0!.nodeId);
+    expect(children.length).toBe(2);
+    children.forEach(c => expect(c.parentId).toBe('tab-0'));
+  });
+
+  it('resolver.getChildren on layout tabs returns tab nodes', () => {
+    const { sourceMap } = parseWireDSLWithSourceMap(tabsCode);
+    const resolver = new SourceMapResolver(sourceMap);
+    const tabsLayout = sourceMap.find(e => e.type === 'layout' && e.layoutType === 'tabs')!;
+    const children = resolver.getChildren(tabsLayout.nodeId);
+    expect(children.length).toBe(3);
+    children.forEach(c => expect(c.type).toBe('tab'));
+  });
+
+  const modalCode = `project "Modal Test" {
+  screen Main {
+    layout stack(direction: vertical) {
+      layout modal(title: "Confirm") {
+        body {
+          component Text text: "Are you sure?"
+          component Input label: "Reason"
+        }
+        footer {
+          component Button text: "Cancel"
+          component Button text: "Confirm"
+        }
+      }
+    }
+  }
+}`;
+
+  it('modal-body and modal-footer get insertionPoint', () => {
+    const { sourceMap } = parseWireDSLWithSourceMap(modalCode);
+    const body = sourceMap.find(e => e.type === 'modal-body');
+    const footer = sourceMap.find(e => e.type === 'modal-footer');
+
+    expect(body?.insertionPoint).toBeDefined();
+    expect(body?.insertionPoint?.after).toBeDefined(); // has 2 children
+
+    expect(footer?.insertionPoint).toBeDefined();
+    expect(footer?.insertionPoint?.after).toBeDefined(); // has 2 children
+  });
+
+  it('modal-body and modal-footer get stable nodeIds', () => {
+    const { sourceMap } = parseWireDSLWithSourceMap(modalCode);
+    const body = sourceMap.find(e => e.type === 'modal-body');
+    const footer = sourceMap.find(e => e.type === 'modal-footer');
+    expect(body?.nodeId).toBe('modal-body-0');
+    expect(footer?.nodeId).toBe('modal-footer-0');
+  });
+});

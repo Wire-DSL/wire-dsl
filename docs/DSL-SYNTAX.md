@@ -613,7 +613,7 @@ component Button text: "Click me" variant: primary
 | `Stat` | `title`, `value`, `caption`, `icon` | `component Stat title: "Total Users" value: "1,234" icon: "users"` |
 | `Separate` | `size` | `component Separate size: md` |
 | `Code` | `code` | `component Code code: "const x = 10;"` |
-| `Modal` | `title`, `visible` | `component Modal title: "Confirm?" visible: false` |
+| `Modal` | — | Use `layout modal(...)` container instead. |
 
 ---
 
@@ -681,6 +681,205 @@ project "Admin Dashboard" {
   }
 }
 ```
+
+---
+
+## Events & Interactivity
+
+Wire DSL supports **declarative event annotations** — metadata that describes prototype interaction flows. The engine stays 100% static; events are recorded in the IR and interpreted by the canvas during play test.
+
+### Component IDs
+
+Any component that needs to be a target of `show`, `hide`, or `toggle` actions must declare an `id`:
+
+```
+layout modal(id: confirmModal, title: "Confirm?") { ... }
+component Button id: submitBtn text: "Submit"
+```
+
+**ID format**: `[a-zA-Z_][a-zA-Z0-9_]*` — same convention as JavaScript identifiers.
+
+Layouts that are `tabs` containers also take an `id` as a parameter (see [Tabs Layout](#tabs-layout) below).
+
+---
+
+### Event Props on Components
+
+Events are declared as inline properties on components:
+
+```
+component Button text: "Delete" onClick: show(confirmModal)
+component Link text: "Back" onClick: navigate(Home)
+component Table columns: "Name,Email" rows: 8 onRowClick: navigate(UserDetail)
+component List items: "A,B,C" onItemClick: navigate(Detail)
+```
+
+---
+
+### Supported Events per Component
+
+| Component | Supported Events |
+|-----------|-----------------|
+| `Button`, `IconButton` | `onClick` |
+| `Link` | `onClick` |
+| `Toggle`, `Checkbox`, `Radio` | `onChange` **or** `onActive` + `onInactive` (mutually exclusive) |
+| `SidebarMenu` | `onItemsClick` |
+| `List` | `onItemClick` |
+| `Table` | `onRowClick` |
+| `Modal` | `onClose` |
+| `layout card(...)` | `onClick` (in parentheses, like other params) |
+
+---
+
+### Actions
+
+| Action | Syntax | Description |
+|--------|--------|-------------|
+| Navigate | `navigate(ScreenName)` | Navigate to another screen |
+| Show | `show(id)` | Make a component visible |
+| Hide | `hide(id)` | Hide a component |
+| Toggle | `toggle(id)` | Toggle a component's visibility |
+| Set Tab | `setTab(tabsId, index)` | Switch to a tab by index (0-based) |
+
+**`self` keyword**: Use `hide(self)`, `show(self)`, `toggle(self)` to reference the component itself without needing an explicit `id`.
+
+---
+
+### Action Chaining with `&`
+
+Multiple actions can be chained with `&`:
+
+```
+component Button text: "Delete user"
+  onClick: hide(userListModal) & show(confirmDeleteModal)
+
+component Button text: "Next step"
+  onClick: hide(step1) & show(step2) & navigate(Summary)
+```
+
+---
+
+### Toggle / Checkbox / Radio Events
+
+Three options (mutually exclusive):
+
+```
+// onChange — fires on any state change (most common)
+component Toggle label: "Show panel" onChange: toggle(myPanel)
+
+// onActive + onInactive — control each direction separately
+component Checkbox label: "Accept terms"
+  onActive: show(submitBtn) & hide(disabledHint)
+  onInactive: hide(submitBtn) & show(disabledHint)
+```
+
+---
+
+### Card Layout with onClick
+
+For `layout card`, the `onClick` event goes inside the parentheses alongside other params:
+
+```
+layout card(padding: lg, onClick: navigate(UserDetail)) {
+  component Heading text: "User #1234"
+  component Text text: "View full profile"
+}
+```
+
+---
+
+### SidebarMenu Navigation
+
+`onItemsClick` uses a comma-separated string of screen names aligned by index with `items`:
+
+```
+component SidebarMenu
+  items: "Dashboard,Users,Settings"
+  onItemsClick: "DashboardScreen,UsersScreen,SettingsScreen"
+```
+
+---
+
+### Modal Layout
+
+The `layout modal` container replaces `component Modal`. It floats as an overlay regardless of where it appears in the DSL tree:
+
+```
+// Modal with sections
+layout modal(id: confirmDelete, title: "Delete?", closable: true) {
+  body {
+    component Text text: "This cannot be undone."
+  }
+  footer {
+    component Button text: "Cancel" onClick: hide(self)
+    component Button text: "Delete" variant: danger onClick: hide(self)
+  }
+}
+
+// Trigger it from any component on the same screen
+component Button text: "Delete" variant: danger onClick: show(confirmDelete)
+
+// Start hidden — show on demand
+layout modal(id: editModal, title: "Edit", visible: false) {
+  component Input label: "Name"
+}
+```
+
+**Modal parameters**: `id`, `title`, `visible` (default `true`), `closable` (default `true`), `size` (`sm`/`md`/`lg`, default `md`), `onClose`
+
+**Section keywords**: `body { }` and `footer { }` are optional. Without them all direct children go into the content area (implicit mode).
+
+---
+
+### Tabs Layout
+
+The `layout tabs` container works parallel to `layout grid` — its children are `tab` blocks:
+
+```
+// Tab bar component — use initialActive for design-time default, active for runtime
+component Tabs items: "Profile,Settings,Billing" initialActive: 0 tabsId: mainTabs
+
+// Content panels — one tab block per panel
+layout tabs(id: mainTabs) {
+  tab {
+    component Heading text: "Profile"
+    component Input label: "Name"
+  }
+  tab {
+    component Heading text: "Settings"
+    component Toggle label: "Notifications"
+  }
+  tab {
+    component Heading text: "Billing"
+    component Table columns: "Date,Amount" rows: 4
+  }
+}
+```
+
+**Rules:**
+- `tab` is a keyword (like `cell` inside `grid`) — children are components and layouts
+- Tabs are identified by **0-based index** (order of declaration)
+- `tabsId` in `component Tabs` must reference the `id` of a `layout tabs` on the same screen
+- `setTab(tabsId, index)` lets any component switch the active tab
+
+---
+
+### Event Validation Rules
+
+| Code | Rule |
+|------|------|
+| EVT-001 | Event must be supported by the component type |
+| EVT-002 | `navigate(X)` — X must be a declared screen |
+| EVT-003 | `show/hide/toggle(X)` — X must have `id: X` on the same screen |
+| EVT-004 | Duplicate `id` on the same screen |
+| EVT-006 | `tabsId` must reference a `layout tabs(id: ...)` on the same screen |
+| EVT-007 | `onItemsClick` screen count must match `items` count |
+| EVT-008 | `active` index must be valid (0 ≤ active < tab count) |
+| EVT-009 | ID must match `[a-zA-Z_][a-zA-Z0-9_]*` |
+| EVT-010 | `onChange`/`onActive`/`onInactive` only on Toggle, Checkbox, Radio |
+| EVT-012 | `onChange` is mutually exclusive with `onActive`/`onInactive` |
+| EVT-013 | `setTab` tabsId must exist; index must be ≥ 0 |
+| EVT-014 | `self` only valid inside `show`, `hide`, `toggle` |
 
 ---
 

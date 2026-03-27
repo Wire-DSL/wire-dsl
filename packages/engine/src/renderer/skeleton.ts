@@ -14,6 +14,7 @@
  */
 
 import { SVGRenderer } from './index';
+import { toStringArray } from '../shared/list-utils.js';
 import type { IRComponentNode } from '../ir';
 import {
   resolveActionControlHeight,
@@ -108,11 +109,7 @@ export class SkeletonSVGRenderer extends SVGRenderer {
    * Render breadcrumbs as skeleton blocks: <rect> / <rect> / <rect accent>
    */
   protected renderBreadcrumbs(node: IRComponentNode, pos: any): string {
-    const itemsStr = String(node.props.items || 'Home');
-    const items = itemsStr
-      .split(',')
-      .map((s) => s.trim())
-      .filter(Boolean);
+    const items = toStringArray(node.props.items || 'Home');
     const separator = String(node.props.separator || '/');
     const blockColor = this.renderTheme.border;
     const charWidth = 6.2;
@@ -471,16 +468,9 @@ export class SkeletonSVGRenderer extends SVGRenderer {
    */
   protected renderTable(node: IRComponentNode, pos: any): string {
     const title = String(node.props.title || '');
-    const columnsStr = String(node.props.columns || 'Col1,Col2,Col3');
-    const columns = columnsStr
-      .split(',')
-      .map((c) => c.trim())
-      .filter(Boolean);
+    const columns = toStringArray(node.props.columns || 'Col1,Col2,Col3');
     const rowCount = Number(node.props.rows || node.props.rowsMock || 5);
-    const actions = String(node.props.actions || '')
-      .split(',')
-      .map((value) => value.trim())
-      .filter(Boolean);
+    const actions = toStringArray(node.props.actions);
     const hasActions = actions.length > 0;
     const pagination = this.parseBooleanProp(node.props.pagination, false);
     const parsedPageCount = Number(node.props.pages || 5);
@@ -829,7 +819,7 @@ export class SkeletonSVGRenderer extends SVGRenderer {
     const itemsStr = String(node.props.items || '');
     let items: string[] = [];
     if (itemsStr) {
-      items = itemsStr.split(',').map((i) => i.trim());
+      items = toStringArray(itemsStr);
     } else {
       const itemCount = Number(node.props.itemsMock || 6);
       items = Array(itemCount).fill('Item');
@@ -872,8 +862,7 @@ export class SkeletonSVGRenderer extends SVGRenderer {
    * Render SidebarMenu with gray blocks instead of text and no icons
    */
   protected renderSidebarMenu(node: IRComponentNode, pos: any): string {
-    const itemsStr = String(node.props.items || 'Item 1,Item 2,Item 3');
-    const items = itemsStr.split(',').map((s) => s.trim());
+    const items = toStringArray(node.props.items || 'Item 1,Item 2,Item 3');
     const itemHeight = 40;
     const activeIndex = Number(node.props.active || 0);
     const accentColor = this.resolveAccentColor();

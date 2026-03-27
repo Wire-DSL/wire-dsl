@@ -361,6 +361,22 @@ export function extractScreenDefinitions(text: string): ComponentDefinition[] {
 }
 
 /**
+ * Extract all declared component IDs from a document.
+ * Matches patterns like: id: myId  (identifier, not a quoted string)
+ * Used to provide show()/hide()/toggle() argument completions.
+ */
+export function extractDeclaredIds(text: string): string[] {
+  const ids: string[] = [];
+  // Match "id: identifier" — identifier is [a-zA-Z_][a-zA-Z0-9_]*
+  const regex = /\bid\s*:\s*([a-zA-Z_][a-zA-Z0-9_]*)/g;
+  let match;
+  while ((match = regex.exec(text)) !== null) {
+    ids.push(match[1]);
+  }
+  return Array.from(new Set(ids));
+}
+
+/**
  * Find the definition position of a component, screen, or layout
  */
 export function getPositionOfDefinition(text: string, name: string): { line: number; character: number } | null {

@@ -1,11 +1,11 @@
 ---
 name: Components Catalog
-description: Complete reference of all 31 Wire DSL components with properties and examples
+description: Complete reference of all 30 Wire DSL components with properties, data types, and examples
 ---
 
 # Wire DSL Components Catalog
 
-Wire DSL provides 31 UI components organized into 8 categories. This reference lists all components with their properties and usage examples.
+Wire DSL provides 30 UI components organized into 8 categories. This reference lists all components with their properties and usage examples.
 
 ## Text Components (5)
 
@@ -158,6 +158,9 @@ Checkbox input with label.
 - `label` (string, required): Checkbox label
 - `checked` (boolean, optional): Initial checked state (default: `false`)
 - `disabled` (boolean, optional): Dims the component (default: `false`)
+- `id` (string, optional): Identifier for event actions
+- `clickable` (boolean, optional): Enables/disables interaction in play test (default: `true`)
+- `onChange` | `onActive` + `onInactive` (action, optional): State-change handlers
 
 **Example:**
 ```wire
@@ -175,6 +178,9 @@ Radio button input with label.
 - `label` (string, required): Radio label
 - `checked` (boolean, optional): Initial checked state (default: `false`)
 - `disabled` (boolean, optional): Dims the component (default: `false`)
+- `id` (string, optional): Identifier for event actions
+- `clickable` (boolean, optional): Enables/disables interaction in play test (default: `true`)
+- `onChange` | `onActive` + `onInactive` (action, optional): State-change handlers
 
 **Example:**
 ```wire
@@ -202,6 +208,9 @@ Toggle switch input.
 - `label` (string, required): Toggle label
 - `enabled` (boolean, optional): Initial enabled state (default: `false`)
 - `disabled` (boolean, optional): Dims the component (default: `false`)
+- `id` (string, optional): Identifier for event actions
+- `clickable` (boolean, optional): Enables/disables interaction in play test (default: `true`)
+- `onChange` | `onActive` + `onInactive` (action, optional): State-change handlers
 
 **Example:**
 ```wire
@@ -361,7 +370,9 @@ Horizontal tab navigation.
 
 **Properties:**
 - `items` (string, required): Comma-separated tab labels
-- `active` (number, optional): Active tab index (0-based, default: 0)
+- `initialActive` (number, optional): Design-time default tab index
+- `active` (number, optional): Runtime active tab index (0-based)
+- `tabsId` (string, optional): Links this nav bar to `layout tabs(id: ...)`
 - `variant` (enum, optional): `default` | `primary` | `secondary` | `success` | `warning` | `danger` | `info` | Material Design colors
 - `radius` (enum, optional): `none` | `sm` | `md` | `lg` | `full` (default: `md`)
 - `size` (enum, optional): `sm` | `md` | `lg` (default: `md`)
@@ -373,6 +384,7 @@ Horizontal tab navigation.
 **Example:**
 ```wire
 component Tabs items: "Profile,Settings,Notifications" active: 0
+component Tabs items: "General,Security" initialActive: 1 tabsId: settingsTabs
 component Tabs items: "Overview,Details,Reviews" active: 1 flat: true
 component Tabs items: "All,Active,Completed" icons: "list,check-circle,archive"
 ```
@@ -549,7 +561,7 @@ component Separate size: xl
 
 ---
 
-## Feedback Components (3)
+## Feedback Components (2)
 
 ### Badge
 Small status label.
@@ -588,20 +600,76 @@ component Alert variant: info text: "New updates are available"
 
 ---
 
-### Modal
-Modal overlay container.
+## Interactivity Addendum (Current Branch)
 
-**Properties:**
-- `title` (string, required): Modal title
-- `visible` (boolean, optional): Show/hide modal (default: `true`)
+The sections above preserve the original examples and type-oriented explanations. Use the following rules as **the current source of truth** for interactive behavior introduced in this branch.
 
-**Example:**
+### Modal Migration
+
+`Modal` is no longer a component. Use `layout modal(...)` container instead.
+
 ```wire
-component Modal title: "Confirm action" visible: true
-component Modal title: "Welcome" visible: false
+layout modal(id: confirmModal, title: "Confirm?", visible: false, onClose: hide(self)) {
+  body { component Text text: "Are you sure?" }
+  footer { component Button text: "Close" onClick: hide(self) }
+}
 ```
 
----
+### New/Updated Event-Capable Components
+
+- `Button`, `IconButton`, `Link`: support `onClick`
+- `Checkbox`, `Radio`, `Toggle`: support `onChange` **or** `onActive` + `onInactive` (mutually exclusive)
+- `SidebarMenu`: supports `onItemsClick`
+- `Table`: supports `onRowClick`
+- `List`: supports `onItemClick`
+- `layout card(...)`: supports `onClick`
+- `layout modal(...)`: supports `onClose`
+
+### Updated Props
+
+- `Checkbox`, `Radio`, `Toggle` now support:
+  - `id` (optional)
+  - `clickable` (boolean, default `true`)
+  - event props listed above
+- `Tabs` now supports:
+  - `initialActive` (design-time default)
+  - `active` (runtime state)
+  - `tabsId` (links to `layout tabs(id: ...)`)
+
+### Action Functions
+
+Event handlers can use:
+- `navigate(ScreenName)`
+- `show(id)`
+- `hide(id)`
+- `toggle(id)`
+- `enable(id)`
+- `disable(id)`
+- `setTab(tabsId, index)`
+
+Action chaining is supported with `&`.
+
+### Updated Examples
+
+```wire
+component Button text: "Delete" onClick: hide(listPanel) & show(confirmModal)
+component Button text: "Unlock" onClick: enable(nameInput)
+component Button text: "Lock" onClick: disable(nameInput)
+
+component SidebarMenu items: "Dashboard,Users,Settings"
+  onItemsClick: "DashboardScreen,UsersScreen,SettingsScreen"
+
+component Tabs items: "Profile,Settings,Billing" initialActive: 0 tabsId: mainTabs
+layout tabs(id: mainTabs) {
+  tab { component Heading text: "Profile" }
+  tab { component Heading text: "Settings" }
+  tab { component Heading text: "Billing" }
+}
+
+component Toggle label: "Advanced"
+  onActive: show(advancedPanel)
+  onInactive: hide(advancedPanel)
+```
 
 ## Component Categories Summary
 
@@ -614,8 +682,8 @@ component Modal title: "Welcome" visible: false
 | **Data** | Table, List, Stat, Chart | 4 |
 | **Media** | Image, Icon | 2 |
 | **Layout** | Card, Divider, Separate | 3 |
-| **Feedback** | Badge, Alert, Modal | 3 |
-| **TOTAL** | | **31** |
+| **Feedback** | Badge, Alert | 2 |
+| **TOTAL** | | **30** |
 
 ## Usage Patterns
 
@@ -664,3 +732,4 @@ layout split(left: 240, gap: md) {
 ```
 
 <!-- Source: @wire-dsl/language-support components.ts -->
+

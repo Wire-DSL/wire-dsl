@@ -29,8 +29,9 @@ export function generateGrammar(): TextMateGrammar {
       ...KEYWORDS.screen,
       ...KEYWORDS.layout,
       ...KEYWORDS.component,
-      ...KEYWORDS.cell,
+      ...KEYWORDS.sections,
       ...KEYWORDS.special,
+      ...KEYWORDS.events,
     ])
   );
   const components: string[] = Object.keys(COMPONENTS);

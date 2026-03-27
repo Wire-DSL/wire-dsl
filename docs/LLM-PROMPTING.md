@@ -46,7 +46,7 @@ project "ProjectName" {
 
 ### 3. Layout Root
 - Every screen must have exactly ONE root layout
-- Valid layouts: `stack`, `grid`, `split`, `panel`, `card`
+- Valid layouts: `stack`, `grid`, `split`, `panel`, `card`, `tabs`
 - Layouts can be nested inside other layouts
 
 **Layout Purposes**:
@@ -55,6 +55,7 @@ project "ProjectName" {
 - `split` - Two-panel layout with one fixed side + one flexible side
 - `panel` - Container with automatic border, padding, and background
 - `card` - Vertical container ideal for product/profile cards with rounded corners
+- `tabs` - Tabbed content container; children must be `tab { }` blocks
 
 ### 4. Property Syntax
 - Property format: `propertyName: value`
@@ -581,6 +582,128 @@ Before generating output, verify:
 - Default `columns` to `12` for grids
 - Default `direction` to `vertical` for stacks
 - Default split fixed panel to `left: 260` when no side is specified by the user
+
+---
+
+## Events & Interactivity
+
+When the user asks for an interactive prototype or clickable wireframe, add event annotations. Events are **metadata only** — they do not affect static rendering but enable play test interactions.
+
+### Component IDs
+
+Assign an `id` to components that will be shown/hidden/toggled by events:
+
+```wire
+layout modal(id: confirmModal, title: "Confirm deletion?") {
+  body { component Text text: "This cannot be undone." }
+  footer { component Button text: "Delete" variant: danger onClick: hide(confirmModal) }
+}
+component Button text: "Delete" onClick: show(confirmModal)
+```
+
+ID rules: `[a-zA-Z_][a-zA-Z0-9_]*` — no hyphens, cannot start with a digit.
+
+### Supported Events
+
+```wire
+// Button / IconButton / Link
+component Button text: "Go" onClick: navigate(Dashboard)
+component Button text: "Open" onClick: show(myPanel)
+component Button text: "Close" onClick: hide(myPanel)
+component Button text: "Toggle" onClick: toggle(sidePanel)
+component Button text: "Tab 2" onClick: setTab(mainTabs, 1)
+
+// Chained actions (& operator)
+component Button text: "Delete" onClick: hide(listModal) & show(confirmModal)
+component Button text: "Continue" onClick: hide(step1) & show(step2) & navigate(Summary)
+
+// Toggle / Checkbox / Radio — use onChange OR onActive+onInactive (not both)
+component Toggle label: "Show panel" onChange: toggle(advancedPanel)
+component Checkbox label: "I agree"
+  onActive: show(submitBtn)
+  onInactive: hide(submitBtn)
+
+// Table rows / List items
+component Table columns: "Name,Role" rows: 8 onRowClick: navigate(UserDetail)
+component List items: "A,B,C" onItemClick: navigate(ItemDetail)
+
+// Modal (layout container — replaces component Modal)
+layout modal(id: confirmModal, title: "Sure?", onClose: hide(self)) {
+  body { component Text text: "Confirm?" }
+  footer { component Button text: "Yes" onClick: hide(self) }
+}
+
+// SidebarMenu navigation
+component SidebarMenu items: "Dashboard,Users,Settings"
+  onItemsClick: "DashboardScreen,UsersScreen,SettingsScreen"
+```
+
+### Tabs Container
+
+Pair `component Tabs` with `layout tabs` using a shared `id`/`tabsId`:
+
+```wire
+component Tabs items: "Profile,Settings,Billing" initialActive: 0 tabsId: mainTabs
+
+layout tabs(id: mainTabs) {
+  tab {
+    component Heading text: "Profile"
+    component Input label: "Full name"
+  }
+  tab {
+    component Heading text: "Settings"
+    component Toggle label: "Notifications"
+  }
+  tab {
+    component Heading text: "Billing"
+    component Table columns: "Date,Amount" rows: 4
+  }
+}
+```
+
+### Clickable Card
+
+```wire
+layout card(padding: md, gap: md, onClick: navigate(UserDetail)) {
+  component Heading text: "User #1234"
+  component Text text: "Click to view profile"
+}
+```
+
+### Modal Layout
+
+Use `layout modal` (not `component Modal`) for overlay dialogs. Modal starts hidden, shown by a button:
+
+```wire
+layout modal(id: confirmModal, title: "Delete?", visible: false, closable: true) {
+  body {
+    component Text text: "This action cannot be undone."
+  }
+  footer {
+    component Button text: "Cancel" onClick: hide(self)
+    component Button text: "Delete" variant: danger onClick: hide(self)
+  }
+}
+component Button text: "Delete Item" variant: danger onClick: show(confirmModal)
+```
+
+### Self Reference
+
+Use `self` when a container/component closes itself — no explicit `id` needed on the action target:
+
+```wire
+layout modal(id: confirmModal, title: "Done?", onClose: hide(self)) {
+  footer { component Button text: "Close" onClick: hide(self) }
+}
+```
+
+### Validation Rules (brief)
+
+- `navigate(X)` — X must be a declared screen name
+- `show/hide/toggle(X)` — X must have `id: X` in the same screen (or use `self`)
+- Duplicate IDs in the same screen → error
+- `onItemsClick` screen count must equal `items` count
+- `onChange` and `onActive`/`onInactive` are mutually exclusive
 
 ---
 

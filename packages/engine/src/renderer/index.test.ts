@@ -495,7 +495,7 @@ describe('SVG Renderer', () => {
         screen Main {
           layout stack {
             component Heading text: "Dashboard"
-            component Modal title: "Confirm Delete" visible: false
+            layout modal(title: "Confirm Delete", visible: false) {}
           }
         }
       }
@@ -508,8 +508,6 @@ describe('SVG Renderer', () => {
 
     expect(svg).toContain('Dashboard');
     expect(svg).not.toContain('Confirm Delete');
-    expect(svg).not.toContain('Modal backdrop');
-    expect(svg).not.toContain('Modal content');
   });
 
   it('should render topbar component', () => {
@@ -2534,5 +2532,411 @@ describe('Sketch SVG Renderer', () => {
     expect(svg).toContain('points="15 18 9 12 15 6"');
     expect(svg).toContain('points="9 18 15 12 9 6"');
     expect(svg).toContain('M1 12s4-8 11-8 11 8');
+  });
+});
+
+// ============================================================================
+// EVENT SYSTEM RENDERER TESTS
+// ============================================================================
+
+describe('SVG Renderer – Event System', () => {
+  function renderInput(input: string): string {
+    const ast = parseWireDSL(input);
+    const ir = generateIR(ast);
+    const layout = calculateLayout(ir);
+    return renderToSVG(ir, layout);
+  }
+
+  describe('data-node-id attributes', () => {
+    it('should emit data-node-id on component wrapper when parsed with sourcemap', () => {
+      const input = `
+        project "NodeId" {
+          screen Main {
+            layout stack {
+              component Button text: "Click"
+            }
+          }
+        }
+      `;
+      const { ast } = parseWireDSLWithSourceMap(input);
+      const ir = generateIR(ast);
+      const layout = calculateLayout(ir);
+      const svg = renderToSVG(ir, layout);
+      expect(svg).toContain('data-node-id=');
+    });
+  });
+
+  describe('data-user-id attribute', () => {
+    it('should emit data-user-id when component has userDefinedId', () => {
+      const input = `
+        project "UserId" {
+          screen Main {
+            layout stack {
+              component Button id: myBtn text: "Click"
+            }
+          }
+        }
+      `;
+      const svg = renderInput(input);
+      expect(svg).toContain('data-user-id="myBtn"');
+    });
+
+    it('should NOT emit data-user-id when component has no id', () => {
+      const input = `
+        project "NoUserId" {
+          screen Main {
+            layout stack {
+              component Button text: "Click"
+            }
+          }
+        }
+      `;
+      const svg = renderInput(input);
+      expect(svg).not.toContain('data-user-id=');
+    });
+  });
+
+  describe('data-event-click attribute', () => {
+    it('should emit data-event-click for onClick: navigate()', () => {
+      const input = `
+        project "Nav" {
+          screen Main {
+            layout stack {
+              component Button text: "Go" onClick: navigate(Detail)
+            }
+          }
+          screen Detail {
+            layout stack { component Heading text: "Detail" }
+          }
+        }
+      `;
+      const svg = renderInput(input);
+      expect(svg).toContain('data-event-click="navigate:Detail"');
+    });
+
+    it('should emit data-event-click for onClick: show()', () => {
+      const input = `
+        project "Show" {
+          screen Main {
+            layout stack {
+              layout modal(id: confirmModal, title: "Sure?") {}
+              component Button text: "Open" onClick: show(confirmModal)
+            }
+          }
+        }
+      `;
+      const svg = renderInput(input);
+      expect(svg).toContain('data-event-click="show:confirmModal"');
+    });
+
+    it('should emit chained actions separated by | in data-event-click', () => {
+      const input = `
+        project "Chain" {
+          screen Main {
+            layout stack {
+              layout modal(id: listModal, title: "List") {}
+              layout modal(id: confirmModal, title: "Confirm") {}
+              component Button text: "Delete" onClick: hide(listModal) & show(confirmModal)
+            }
+          }
+        }
+      `;
+      const svg = renderInput(input);
+      expect(svg).toContain('data-event-click="hide:listModal|show:confirmModal"');
+    });
+
+    it('should emit data-event-click with setTab serialization', () => {
+      const input = `
+        project "SetTab" {
+          screen Main {
+            layout stack {
+              component Button text: "Profile" onClick: setTab(mainTabs, 2)
+              layout tabs(id: mainTabs) {
+                tab { component Heading text: "A" }
+                tab { component Heading text: "B" }
+                tab { component Heading text: "C" }
+              }
+            }
+          }
+        }
+      `;
+      const svg = renderInput(input);
+      expect(svg).toContain('data-event-click="setTab:mainTabs:2"');
+    });
+
+    it('should emit data-event-click with enable serialization', () => {
+      const input = `
+        project "Test" {
+          screen Main {
+            layout stack {
+              component Input id: nameInput label: "Name" disabled: true
+              component Button text: "Unlock" onClick: enable(nameInput)
+            }
+          }
+        }
+      `;
+      const svg = renderInput(input);
+      expect(svg).toContain('data-event-click="enable:nameInput"');
+    });
+
+    it('should emit data-event-click with disable serialization', () => {
+      const input = `
+        project "Test" {
+          screen Main {
+            layout stack {
+              component Input id: nameInput label: "Name"
+              component Button text: "Lock" onClick: disable(nameInput)
+            }
+          }
+        }
+      `;
+      const svg = renderInput(input);
+      expect(svg).toContain('data-event-click="disable:nameInput"');
+    });
+  });
+
+  describe('data-event-close attribute', () => {
+    it('should emit data-event-close for onClose: hide(self)', () => {
+      const input = `
+        project "Close" {
+          screen Main {
+            layout stack {
+              layout modal(id: confirmModal, title: "Sure?", onClose: hide(self)) {}
+            }
+          }
+        }
+      `;
+      const svg = renderInput(input);
+      expect(svg).toContain('data-event-close="hide:_self"');
+    });
+  });
+
+  describe('data-event-change / data-event-active / data-event-inactive', () => {
+    it('should emit data-event-change for onChange', () => {
+      const input = `
+        project "Change" {
+          screen Main {
+            layout stack {
+              layout modal(id: myPanel, title: "Panel") {}
+              component Toggle text: "Show panel" onChange: toggle(myPanel)
+            }
+          }
+        }
+      `;
+      const svg = renderInput(input);
+      expect(svg).toContain('data-event-change="toggle:myPanel"');
+    });
+
+    it('should emit data-event-active and data-event-inactive for onActive/onInactive', () => {
+      const input = `
+        project "ActiveInactive" {
+          screen Main {
+            layout stack {
+              layout modal(id: submitBtn, title: "Submit") {}
+              component Checkbox text: "Terms"
+                onActive: show(submitBtn)
+                onInactive: hide(submitBtn)
+            }
+          }
+        }
+      `;
+      const svg = renderInput(input);
+      expect(svg).toContain('data-event-active="show:submitBtn"');
+      expect(svg).toContain('data-event-inactive="hide:submitBtn"');
+    });
+  });
+
+  describe('data-tabs-id and data-tabs-active attributes', () => {
+    it('should emit data-tabs-id on tabs container when parsed with sourcemap', () => {
+      const input = `
+        project "Tabs" {
+          screen Main {
+            layout stack {
+              component Heading text: "Tabs Demo"
+              layout tabs(id: mainTabs) {
+                tab { component Heading text: "Tab 1" }
+                tab { component Heading text: "Tab 2" }
+              }
+            }
+          }
+        }
+      `;
+      const { ast } = parseWireDSLWithSourceMap(input);
+      const ir = generateIR(ast);
+      const layout = calculateLayout(ir);
+      const svg = renderToSVG(ir, layout);
+      expect(svg).toContain('data-tabs-id="mainTabs"');
+    });
+  });
+
+  describe('layout modal rendering', () => {
+    it('should render backdrop and modal box', () => {
+      const svg = renderInput(`
+        project "M" {
+          screen Main {
+            layout stack {
+              layout modal(title: "Hello") {
+                component Text text: "Body"
+              }
+            }
+          }
+        }
+      `);
+      expect(svg).toContain('opacity="0.28"'); // backdrop
+      expect(svg).toContain('rx="8"');         // modal box
+      expect(svg).toContain('Hello');           // title
+      expect(svg).toContain('Body');            // content
+    });
+
+    it('should render header only when title is present', () => {
+      const withTitle = renderInput(`
+        project "M" {
+          screen Main {
+            layout stack {
+              layout modal(title: "My Modal") { component Text text: "x" }
+            }
+          }
+        }
+      `);
+      const withoutTitle = renderInput(`
+        project "M" {
+          screen Main {
+            layout stack {
+              layout modal() { component Text text: "x" }
+            }
+          }
+        }
+      `);
+      expect(withTitle).toContain('My Modal');
+      expect(withTitle).toContain('✕'); // close button present when title + closable
+      expect(withoutTitle).not.toContain('✕'); // no close button without title
+    });
+
+    it('should not render close button when closable is false', () => {
+      const svg = renderInput(`
+        project "M" {
+          screen Main {
+            layout stack {
+              layout modal(title: "Modal", closable: false) { component Text text: "x" }
+            }
+          }
+        }
+      `);
+      expect(svg).toContain('Modal');
+      expect(svg).not.toContain('✕');
+    });
+
+    it('should not render modal when visible is false', () => {
+      const svg = renderInput(`
+        project "M" {
+          screen Main {
+            layout stack {
+              layout modal(title: "Hidden", visible: false) { component Text text: "x" }
+              component Heading text: "Visible"
+            }
+          }
+        }
+      `);
+      expect(svg).not.toContain('Hidden');
+      expect(svg).toContain('Visible');
+    });
+
+    it('should emit data-event-close on close button', () => {
+      const svg = renderInput(`
+        project "M" {
+          screen Main {
+            layout stack {
+              layout modal(title: "Confirm", onClose: hide(self)) { component Text text: "x" }
+            }
+          }
+        }
+      `);
+      expect(svg).toContain('data-event-close="hide:_self"');
+    });
+
+    it('should render footer separator line', () => {
+      const svg = renderInput(`
+        project "M" {
+          screen Main {
+            layout stack {
+              layout modal(title: "Confirm") {
+                body { component Text text: "Content" }
+                footer { component Button text: "OK" }
+              }
+            }
+          }
+        }
+      `);
+      expect(svg).toContain('Content');
+      expect(svg).toContain('OK');
+    });
+  });
+
+  describe('data-clickable attribute on interactive components', () => {
+    it('should NOT emit data-clickable when clickable is default (true) on Checkbox', () => {
+      const svg = renderInput(`
+        project "Test" {
+          screen Main {
+            layout stack { component Checkbox label: "Accept" }
+          }
+        }
+      `);
+      expect(svg).not.toContain('data-clickable');
+    });
+
+    it('should emit data-clickable="false" when clickable: false on Checkbox', () => {
+      const svg = renderInput(`
+        project "Test" {
+          screen Main {
+            layout stack { component Checkbox label: "Completed" clickable: false }
+          }
+        }
+      `);
+      expect(svg).toContain('data-clickable="false"');
+    });
+
+    it('should NOT emit data-clickable when clickable is default (true) on Toggle', () => {
+      const svg = renderInput(`
+        project "Test" {
+          screen Main {
+            layout stack { component Toggle label: "Notifications" }
+          }
+        }
+      `);
+      expect(svg).not.toContain('data-clickable');
+    });
+
+    it('should emit data-clickable="false" when clickable: false on Toggle', () => {
+      const svg = renderInput(`
+        project "Test" {
+          screen Main {
+            layout stack { component Toggle label: "Notifications" clickable: false }
+          }
+        }
+      `);
+      expect(svg).toContain('data-clickable="false"');
+    });
+
+    it('should NOT emit data-clickable when clickable is default (true) on Radio', () => {
+      const svg = renderInput(`
+        project "Test" {
+          screen Main {
+            layout stack { component Radio label: "Option A" }
+          }
+        }
+      `);
+      expect(svg).not.toContain('data-clickable');
+    });
+
+    it('should emit data-clickable="false" when clickable: false on Radio', () => {
+      const svg = renderInput(`
+        project "Test" {
+          screen Main {
+            layout stack { component Radio label: "Option A" clickable: false }
+          }
+        }
+      `);
+      expect(svg).toContain('data-clickable="false"');
+    });
   });
 });

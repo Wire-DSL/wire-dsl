@@ -6,14 +6,20 @@ import {
   type LayoutMetadata,
   type PropertyMetadata,
 } from '@wire-dsl/language-support/components';
+import { toStringArray } from '../shared/list-utils.js';
 import type {
   AST,
   ASTScreen,
   ASTLayout,
   ASTComponent,
   ASTCell,
+  ASTTab,
+  ASTModalBody,
+  ASTModalFooter,
   ASTDefinedComponent,
   ASTDefinedLayout,
+  ASTEventHandler,
+  ASTEventAction,
 } from '../parser/index';
 import { resolveDevicePreset } from './device-presets';
 
@@ -64,14 +70,41 @@ export interface IRScreen {
   root: { ref: string };
 }
 
+// ============================================================================
+// EVENT TYPES
+// ============================================================================
+
+export type IREventAction =
+  | { type: 'navigate'; screen: string }
+  | { type: 'show'; targetId: string }     // targetId can be '_self'
+  | { type: 'hide'; targetId: string }     // targetId can be '_self'
+  | { type: 'toggle'; targetId: string }   // targetId can be '_self'
+  | { type: 'enable'; targetId: string }   // sets disabled: false
+  | { type: 'disable'; targetId: string }  // sets disabled: true
+  | { type: 'setTab'; tabsId: string; index: number }
+  | { type: 'navigateItems'; screens: string[] }; // SidebarMenu onItemsClick
+
+export type IREventName =
+  | 'onClick' | 'onChange' | 'onActive' | 'onInactive'
+  | 'onItemsClick' | 'onItemClick' | 'onRowClick' | 'onClose';
+
+export interface IREventHandler {
+  event: IREventName;
+  actions: IREventAction[];
+}
+
+/** Special target id used when event target is self (hide(self), show(self), toggle(self)) */
+export const SELF_TARGET = '_self';
+
 export type IRNode = IRContainerNode | IRComponentNode | IRInstanceNode;
 
 export interface IRContainerNode {
   id: string;
   kind: 'container';
-  containerType: 'stack' | 'grid' | 'split' | 'panel' | 'card';
-  params: Record<string, string | number>;
+  containerType: 'stack' | 'grid' | 'split' | 'panel' | 'card' | 'tabs' | 'tab' | 'modal' | 'modal-body' | 'modal-footer';
+  params: Record<string, string | number | string[]>;
   children: Array<{ ref: string }>;
+  events?: IREventHandler[];
   style: IRNodeStyle;
   meta: IRMeta;
 }
@@ -80,7 +113,9 @@ export interface IRComponentNode {
   id: string;
   kind: 'component';
   componentType: string;
-  props: Record<string, string | number>;
+  props: Record<string, string | number | string[]>;
+  userDefinedId?: string;
+  events?: IREventHandler[];
   style: IRNodeStyle;
   meta: IRMeta;
 }
@@ -111,7 +146,7 @@ export interface IRInstanceNode {
   /** Whether it originated from a `define Component` or `define Layout` */
   definitionKind: 'component' | 'layout';
   /** Props/params passed at the call site (e.g. { text: "Hello" }) */
-  invocationProps: Record<string, string | number>;
+  invocationProps: Record<string, string | number | string[]>;
   /** Reference to the root IR node produced by expanding the definition */
   expandedRoot: { ref: string };
   style: IRNodeStyle;
@@ -144,12 +179,29 @@ const IRMetaSchema = z.object({
   nodeId: z.string().optional(),
 });
 
+const IREventActionSchema: z.ZodType<IREventAction> = z.union([
+  z.object({ type: z.literal('navigate'), screen: z.string() }),
+  z.object({ type: z.literal('show'), targetId: z.string() }),
+  z.object({ type: z.literal('hide'), targetId: z.string() }),
+  z.object({ type: z.literal('toggle'), targetId: z.string() }),
+  z.object({ type: z.literal('enable'), targetId: z.string() }),
+  z.object({ type: z.literal('disable'), targetId: z.string() }),
+  z.object({ type: z.literal('setTab'), tabsId: z.string(), index: z.number().int().min(0) }),
+  z.object({ type: z.literal('navigateItems'), screens: z.array(z.string()) }),
+]);
+
+const IREventHandlerSchema = z.object({
+  event: z.enum(['onClick', 'onChange', 'onActive', 'onInactive', 'onItemsClick', 'onItemClick', 'onRowClick', 'onClose']),
+  actions: z.array(IREventActionSchema),
+});
+
 const IRContainerNodeSchema = z.object({
   id: z.string(),
   kind: z.literal('container'),
-  containerType: z.enum(['stack', 'grid', 'split', 'panel', 'card']),
-  params: z.record(z.string(), z.union([z.string(), z.number()])),
+  containerType: z.enum(['stack', 'grid', 'split', 'panel', 'card', 'tabs', 'tab', 'modal', 'modal-body', 'modal-footer']),
+  params: z.record(z.string(), z.union([z.string(), z.number(), z.array(z.string())])),
   children: z.array(z.object({ ref: z.string() })),
+  events: z.array(IREventHandlerSchema).optional(),
   style: IRNodeStyleSchema,
   meta: IRMetaSchema,
 });
@@ -158,7 +210,9 @@ const IRComponentNodeSchema = z.object({
   id: z.string(),
   kind: z.literal('component'),
   componentType: z.string(),
-  props: z.record(z.string(), z.union([z.string(), z.number()])),
+  props: z.record(z.string(), z.union([z.string(), z.number(), z.array(z.string())])),
+  userDefinedId: z.string().regex(/^[a-zA-Z_][a-zA-Z0-9_]*$/, 'ID must match [a-zA-Z_][a-zA-Z0-9_]*').optional(),
+  events: z.array(IREventHandlerSchema).optional(),
   style: IRNodeStyleSchema,
   meta: IRMetaSchema,
 });
@@ -168,7 +222,7 @@ const IRInstanceNodeSchema = z.object({
   kind: z.literal('instance'),
   definitionName: z.string(),
   definitionKind: z.enum(['component', 'layout']),
-  invocationProps: z.record(z.string(), z.union([z.string(), z.number()])),
+  invocationProps: z.record(z.string(), z.union([z.string(), z.number(), z.array(z.string())])),
   expandedRoot: z.object({ ref: z.string() }),
   style: IRNodeStyleSchema,
   meta: IRMetaSchema,
@@ -229,7 +283,7 @@ class IDGenerator {
 type ExpansionTargetKind = 'component-property' | 'layout-parameter';
 
 interface ExpansionContext {
-  args: Record<string, string | number>;
+  args: Record<string, string | number | string[]>;
   providedArgNames: Set<string>;
   usedArgNames: Set<string>;
   definitionName: string;
@@ -440,23 +494,26 @@ export class IRGenerator {
     if (layout.children && layout.children.length > 0) {
       layout.children.forEach((child) => {
         if (child.type === 'component') {
-          found.push({
-            componentType: child.componentType,
-            location: 'layout',
-          });
+          found.push({ componentType: child.componentType, location: 'layout' });
         } else if (child.type === 'layout') {
           this.findComponentsInLayout(child, found);
         } else if (child.type === 'cell') {
-          // For cells, check their children
           if (child.children) {
             child.children.forEach((cellChild) => {
               if (cellChild.type === 'component') {
-                found.push({
-                  componentType: cellChild.componentType,
-                  location: 'cell',
-                });
+                found.push({ componentType: cellChild.componentType, location: 'cell' });
               } else if (cellChild.type === 'layout') {
                 this.findComponentsInLayout(cellChild, found);
+              }
+            });
+          }
+        } else if (child.type === 'tab') {
+          if (child.children) {
+            child.children.forEach((tabChild) => {
+              if (tabChild.type === 'component') {
+                found.push({ componentType: tabChild.componentType, location: 'tab' });
+              } else if (tabChild.type === 'layout') {
+                this.findComponentsInLayout(tabChild, found);
               }
             });
           }
@@ -478,19 +535,60 @@ export class IRGenerator {
     if (layout.layoutType === 'split') {
       layoutParams = this.normalizeSplitParams(layoutParams);
     }
-    const layoutChildren = layout.children;
 
+    // Filter out tab children for defined layout expansion (tabs not valid there)
+    const nonTabChildren = layout.children.filter(c => c.type !== 'tab') as (ASTComponent | ASTLayout | ASTCell)[];
     const layoutDefinition = this.definedLayouts.get(layout.layoutType);
     if (layoutDefinition) {
-      return this.expandDefinedLayout(layoutDefinition, layoutParams, layoutChildren, context, layout._meta?.nodeId);
+      return this.expandDefinedLayout(layoutDefinition, layoutParams, nonTabChildren, context, layout._meta?.nodeId);
     }
 
     const nodeId = this.idGen.generate('node');
     const childRefs: Array<{ ref: string }> = [];
 
-    // Process children
-    for (const child of layoutChildren) {
-      if (child.type === 'layout') {
+    // Modal-specific validations
+    if (layout.layoutType === 'modal') {
+      const bodyChildren = layout.children.filter(c => c.type === 'modal-body');
+      const footerChildren = layout.children.filter(c => c.type === 'modal-footer');
+      const normalChildren = layout.children.filter(c => c.type !== 'modal-body' && c.type !== 'modal-footer');
+
+      if (bodyChildren.length > 1 || footerChildren.length > 1) {
+        if (bodyChildren.length > 1) {
+          this.warnings.push({
+            type: 'modal-003-duplicate-body',
+            message: 'MODAL-003: A modal can only have one body section.',
+          });
+        }
+        if (footerChildren.length > 1) {
+          this.warnings.push({
+            type: 'modal-004-duplicate-footer',
+            message: 'MODAL-004: A modal can only have one footer section.',
+          });
+        }
+      }
+      if ((bodyChildren.length > 0 || footerChildren.length > 0) && normalChildren.length > 0) {
+        this.warnings.push({
+          type: 'modal-002-mixed-children',
+          message: 'MODAL-002: Cannot mix body/footer sections with direct children in a modal. Use either body/footer sections or direct children, not both.',
+        });
+      }
+    }
+
+    // Process children in order
+    for (const child of layout.children) {
+      if (child.type === 'modal-body' || child.type === 'modal-footer') {
+        if (layout.layoutType !== 'modal') {
+          this.warnings.push({
+            type: 'modal-001-invalid-context',
+            message: `MODAL-001: "${child.type}" sections are only valid inside layout modal.`,
+          });
+          continue;
+        }
+        const childId = child.type === 'modal-body'
+          ? this.convertModalBody(child as ASTModalBody, context)
+          : this.convertModalFooter(child as ASTModalFooter, context);
+        if (childId) childRefs.push({ ref: childId });
+      } else if (child.type === 'layout') {
         const childId = this.convertLayout(child, context);
         if (childId) childRefs.push({ ref: childId });
       } else if (child.type === 'component') {
@@ -498,6 +596,9 @@ export class IRGenerator {
         if (childId) childRefs.push({ ref: childId });
       } else if (child.type === 'cell') {
         const childId = this.convertCell(child, context);
+        if (childId) childRefs.push({ ref: childId });
+      } else if (child.type === 'tab') {
+        const childId = this.convertTab(child, context);
         if (childId) childRefs.push({ ref: childId });
       }
     }
@@ -507,7 +608,6 @@ export class IRGenerator {
     if (layoutParams.padding !== undefined) {
       style.padding = String(layoutParams.padding);
     } else {
-      // Layouts without explicit padding have no padding by default
       style.padding = 'none';
     }
     if (layoutParams.gap !== undefined) {
@@ -523,18 +623,128 @@ export class IRGenerator {
       style.background = String(layoutParams.background);
     }
 
+    // EVT-009: validate layout id (e.g. layout tabs(id: mainTabs))
+    if (layoutParams.id !== undefined) {
+      const layoutId = String(layoutParams.id);
+      if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(layoutId)) {
+        this.errors.push({
+          type: 'evt-009-invalid-id',
+          message: `EVT-009: id "${layoutId}" is not a valid identifier. Must match [a-zA-Z_][a-zA-Z0-9_]* (cannot start with a digit or contain hyphens).`,
+        });
+      }
+    }
+
+    // Convert layout events (e.g. card onClick)
+    const irEvents = this.convertASTEvents(layout.events || []);
+
     const containerNode: IRContainerNode = {
       id: nodeId,
       kind: 'container',
-      containerType: layout.layoutType as 'stack' | 'grid' | 'split' | 'panel' | 'card',
+      containerType: layout.layoutType as IRContainerNode['containerType'],
       params: this.cleanParams(layoutParams),
       children: childRefs,
+      ...(irEvents.length > 0 ? { events: irEvents } : {}),
       style,
       meta: {
-        // Scope nodeId per instance so each expansion gets a unique identifier
         nodeId: context?.instanceScope
           ? `${layout._meta?.nodeId}@${context.instanceScope}`
           : layout._meta?.nodeId,
+      },
+    };
+
+    this.nodes[nodeId] = containerNode;
+    return nodeId;
+  }
+
+  private convertTab(tab: ASTTab, context?: ExpansionContext): string {
+    const nodeId = this.idGen.generate('node');
+    const childRefs: Array<{ ref: string }> = [];
+
+    for (const child of tab.children) {
+      if (child.type === 'layout') {
+        const childId = this.convertLayout(child, context);
+        if (childId) childRefs.push({ ref: childId });
+      } else if (child.type === 'component') {
+        const childId = this.convertComponent(child, context);
+        if (childId) childRefs.push({ ref: childId });
+      }
+    }
+
+    const containerNode: IRContainerNode = {
+      id: nodeId,
+      kind: 'container',
+      containerType: 'tab',
+      params: {},
+      children: childRefs,
+      style: { padding: 'none' },
+      meta: {
+        nodeId: context?.instanceScope
+          ? `${tab._meta?.nodeId}@${context.instanceScope}`
+          : tab._meta?.nodeId,
+      },
+    };
+
+    this.nodes[nodeId] = containerNode;
+    return nodeId;
+  }
+
+  private convertModalBody(body: ASTModalBody, context?: ExpansionContext): string {
+    const nodeId = this.idGen.generate('node');
+    const childRefs: Array<{ ref: string }> = [];
+
+    for (const child of body.children) {
+      if (child.type === 'layout') {
+        const childId = this.convertLayout(child, context);
+        if (childId) childRefs.push({ ref: childId });
+      } else if (child.type === 'component') {
+        const childId = this.convertComponent(child, context);
+        if (childId) childRefs.push({ ref: childId });
+      }
+    }
+
+    const containerNode: IRContainerNode = {
+      id: nodeId,
+      kind: 'container',
+      containerType: 'modal-body',
+      params: { direction: 'vertical' },
+      children: childRefs,
+      style: { padding: 'md', gap: 'md' },
+      meta: {
+        nodeId: context?.instanceScope
+          ? `${body._meta?.nodeId}@${context.instanceScope}`
+          : body._meta?.nodeId,
+      },
+    };
+
+    this.nodes[nodeId] = containerNode;
+    return nodeId;
+  }
+
+  private convertModalFooter(footer: ASTModalFooter, context?: ExpansionContext): string {
+    const nodeId = this.idGen.generate('node');
+    const childRefs: Array<{ ref: string }> = [];
+
+    for (const child of footer.children) {
+      if (child.type === 'layout') {
+        const childId = this.convertLayout(child, context);
+        if (childId) childRefs.push({ ref: childId });
+      } else if (child.type === 'component') {
+        const childId = this.convertComponent(child, context);
+        if (childId) childRefs.push({ ref: childId });
+      }
+    }
+
+    const containerNode: IRContainerNode = {
+      id: nodeId,
+      kind: 'container',
+      containerType: 'modal-footer',
+      params: { direction: 'horizontal' },
+      children: childRefs,
+      style: { padding: 'md', justify: 'spaceBetween' },
+      meta: {
+        nodeId: context?.instanceScope
+          ? `${footer._meta?.nodeId}@${context.instanceScope}`
+          : footer._meta?.nodeId,
       },
     };
 
@@ -609,7 +819,7 @@ export class IRGenerator {
       'Button', 'Input', 'Heading', 'Text', 'Label', 'Paragraph', 'Image',
       'Card', 'Stat', 'Topbar', 'Table', 'Chart',
       'Textarea', 'Select', 'Checkbox', 'Toggle', 'Divider', 'Breadcrumbs',
-      'SidebarMenu', 'Radio', 'Icon', 'IconButton', 'Alert', 'Badge', 'Modal', 'List', 'Sidebar', 'Tabs', 'Code', 'Link', 'Separate'
+      'SidebarMenu', 'Radio', 'Icon', 'IconButton', 'Alert', 'Badge', 'List', 'Sidebar', 'Tabs', 'Code', 'Link', 'Separate'
     ]);
 
     if (!builtInComponents.has(component.componentType)) {
@@ -620,14 +830,35 @@ export class IRGenerator {
     // Create IR node for built-in component (or undefined - will error later)
     const nodeId = this.idGen.generate('node');
 
+    // Extract user-defined id from props — EVT-009: must match [a-zA-Z_][a-zA-Z0-9_]*
+    const rawId = resolvedProps.id !== undefined ? String(resolvedProps.id) : undefined;
+    if (rawId !== undefined && !/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(rawId)) {
+      this.errors.push({
+        type: 'evt-009-invalid-id',
+        message: `EVT-009: id "${rawId}" is not a valid identifier. Must match [a-zA-Z_][a-zA-Z0-9_]* (cannot start with a digit or contain hyphens).`,
+      });
+    }
+    const userDefinedId = rawId;
+    const propsWithoutId: Record<string, string | number | string[]> = { ...resolvedProps };
+    delete propsWithoutId.id;
+
+    // Convert events from AST events + handle onItemsClick from props
+    const irEvents: IREventHandler[] = this.convertASTEvents(component.events || []);
+    const onItemsClickEvent = this.extractOnItemsClickEvent(propsWithoutId);
+    if (onItemsClickEvent) {
+      irEvents.push(onItemsClickEvent);
+      delete propsWithoutId.onItemsClick;
+    }
+
     const componentNode: IRComponentNode = {
       id: nodeId,
       kind: 'component',
       componentType: component.componentType,
-      props: resolvedProps,
+      props: propsWithoutId,
+      ...(userDefinedId ? { userDefinedId } : {}),
+      ...(irEvents.length > 0 ? { events: irEvents } : {}),
       style: {},
       meta: {
-        // Scope nodeId per instance so each expansion gets a unique identifier
         nodeId: context?.instanceScope
           ? `${component._meta?.nodeId}@${context.instanceScope}`
           : component._meta?.nodeId,
@@ -638,9 +869,38 @@ export class IRGenerator {
     return nodeId;
   }
 
+  private convertASTEventAction(action: ASTEventAction): IREventAction {
+    switch (action.type) {
+      case 'navigate': return { type: 'navigate', screen: action.screen! };
+      case 'show': return { type: 'show', targetId: action.targetId! };
+      case 'hide': return { type: 'hide', targetId: action.targetId! };
+      case 'toggle': return { type: 'toggle', targetId: action.targetId! };
+      case 'enable': return { type: 'enable', targetId: action.targetId! };
+      case 'disable': return { type: 'disable', targetId: action.targetId! };
+      case 'setTab': return { type: 'setTab', tabsId: action.tabsId!, index: action.index! };
+    }
+  }
+
+  private convertASTEvents(events: ASTEventHandler[]): IREventHandler[] {
+    return events.map(handler => ({
+      event: handler.event as IREventHandler['event'],
+      actions: handler.actions.map(a => this.convertASTEventAction(a)),
+    }));
+  }
+
+  private extractOnItemsClickEvent(props: Record<string, string | number | string[]>): IREventHandler | null {
+    const value = props.onItemsClick;
+    if (!value) return null;
+    const screens = toStringArray(value);
+    return {
+      event: 'onItemsClick',
+      actions: [{ type: 'navigateItems', screens }],
+    };
+  }
+
   private expandDefinedComponent(
     definition: ASTDefinedComponent,
-    invocationArgs: Record<string, string | number>,
+    invocationArgs: Record<string, string | number | string[]>,
     callSiteNodeId: string | undefined,
     parentContext?: ExpansionContext
   ): string | null {
@@ -687,7 +947,7 @@ export class IRGenerator {
 
   private expandDefinedLayout(
     definition: ASTDefinedLayout,
-    invocationParams: Record<string, string | number>,
+    invocationParams: Record<string, string | number | string[]>,
     invocationChildren: (ASTComponent | ASTLayout | ASTCell)[],
     parentContext?: ExpansionContext,
     callSiteNodeId?: string
@@ -762,10 +1022,10 @@ export class IRGenerator {
 
   private resolveLayoutParams(
     layoutType: string,
-    params: Record<string, string | number>,
+    params: Record<string, string | number | string[]>,
     context?: ExpansionContext
-  ): Record<string, string | number> {
-    const resolved: Record<string, string | number> = {};
+  ): Record<string, string | number | string[]> {
+    const resolved: Record<string, string | number | string[]> = {};
     for (const [key, value] of Object.entries(params)) {
       const resolvedValue = this.resolveBindingValue(
         value,
@@ -796,9 +1056,9 @@ export class IRGenerator {
   }
 
   private normalizeSplitParams(
-    params: Record<string, string | number>
-  ): Record<string, string | number> {
-    const normalized: Record<string, string | number> = { ...params };
+    params: Record<string, string | number | string[]>
+  ): Record<string, string | number | string[]> {
+    const normalized: Record<string, string | number | string[]> = { ...params };
 
     if (
       normalized.sidebar !== undefined &&
@@ -860,10 +1120,10 @@ export class IRGenerator {
 
   private resolveComponentProps(
     componentType: string,
-    props: Record<string, string | number>,
+    props: Record<string, string | number | string[]>,
     context?: ExpansionContext
-  ): Record<string, string | number> {
-    const resolved: Record<string, string | number> = {};
+  ): Record<string, string | number | string[]> {
+    const resolved: Record<string, string | number | string[]> = {};
     for (const [key, value] of Object.entries(props)) {
       const resolvedValue = this.resolveBindingValue(
         value,
@@ -873,33 +1133,39 @@ export class IRGenerator {
         key
       );
       if (resolvedValue !== undefined) {
+        const metadata = COMPONENTS[componentType as keyof typeof COMPONENTS] as ComponentMetadata | undefined;
+        const propMeta = metadata?.properties?.[key] as PropertyMetadata | undefined;
+
+        // Validate enum bindings
         const wasPropReference = typeof value === 'string' && value.startsWith('prop_');
-        if (wasPropReference) {
-          const metadata = COMPONENTS[componentType as keyof typeof COMPONENTS] as ComponentMetadata | undefined;
-          const property = metadata?.properties?.[key] as PropertyMetadata | undefined;
-          if (property?.type === 'enum' && Array.isArray(property.options)) {
-            const normalizedValue = String(resolvedValue);
-            if (!property.options.includes(normalizedValue)) {
-              this.warnings.push({
-                type: 'invalid-bound-enum-value',
-                message: `Invalid value "${normalizedValue}" for property "${key}" in component "${componentType}". Expected one of: ${property.options.join(', ')}.`,
-              });
-            }
+        if (wasPropReference && propMeta?.type === 'enum' && Array.isArray(propMeta.options)) {
+          const normalizedValue = String(resolvedValue);
+          if (!propMeta.options.includes(normalizedValue)) {
+            this.warnings.push({
+              type: 'invalid-bound-enum-value',
+              message: `Invalid value "${normalizedValue}" for property "${key}" in component "${componentType}". Expected one of: ${propMeta.options.join(', ')}.`,
+            });
           }
         }
-        resolved[key] = resolvedValue;
+
+        // Normalize list properties: CSV string → string[]
+        if (propMeta?.type === 'list' && !Array.isArray(resolvedValue)) {
+          resolved[key] = toStringArray(resolvedValue);
+        } else {
+          resolved[key] = resolvedValue;
+        }
       }
     }
     return resolved;
   }
 
   private resolveBindingValue(
-    value: string | number,
+    value: string | number | string[],
     context: ExpansionContext | undefined,
     kind: ExpansionTargetKind,
     targetType: string,
     targetName: string
-  ): string | number | undefined {
+  ): string | number | string[] | undefined {
     if (typeof value !== 'string' || !value.startsWith('prop_')) {
       return value;
     }
@@ -967,8 +1233,8 @@ export class IRGenerator {
     }
   }
 
-  private cleanParams(params: Record<string, string | number>): Record<string, string | number> {
-    const cleaned: Record<string, string | number> = {};
+  private cleanParams(params: Record<string, string | number | string[]>): Record<string, string | number | string[]> {
+    const cleaned: Record<string, string | number | string[]> = {};
     for (const [key, value] of Object.entries(params)) {
       // Skip style-related params (already in style object)
       if (!['padding', 'gap', 'align', 'justify'].includes(key)) {

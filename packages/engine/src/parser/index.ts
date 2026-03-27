@@ -15,7 +15,7 @@ import type {
  *
  * Converts .wire files to AST using Chevrotain
  *
- * Supported layout types: stack, grid, split, panel, card
+ * Supported layout types: stack, grid, split, panel, card, tabs
  * Component example: Stat, Image, Button, Heading, Text, etc.
  *
  * Example:
@@ -66,6 +66,19 @@ const Style = createToken({ name: 'Style', pattern: /style\b/ });
 const Mocks = createToken({ name: 'Mocks', pattern: /mocks\b/ });
 const Colors = createToken({ name: 'Colors', pattern: /colors(?=\s*\{)/ });
 const Cell = createToken({ name: 'Cell', pattern: /cell\b/ });
+const Tab = createToken({ name: 'Tab', pattern: /tab\b/ });
+const Body = createToken({ name: 'Body', pattern: /body\b/ });
+const Footer = createToken({ name: 'Footer', pattern: /footer\b/ });
+
+// Event action keywords (must come before Identifier)
+const Navigate = createToken({ name: 'Navigate', pattern: /navigate\b/ });
+const Show = createToken({ name: 'Show', pattern: /show\b/ });
+const Hide = createToken({ name: 'Hide', pattern: /hide\b/ });
+const ToggleAction = createToken({ name: 'ToggleAction', pattern: /toggle\b/ });
+const EnableAction = createToken({ name: 'EnableAction', pattern: /enable\b/ });
+const DisableAction = createToken({ name: 'DisableAction', pattern: /disable\b/ });
+const SetTab = createToken({ name: 'SetTab', pattern: /setTab\b/ });
+const Self = createToken({ name: 'Self', pattern: /self\b/ });
 
 // Punctuation
 const LCurly = createToken({ name: 'LCurly', pattern: /{/ });
@@ -74,6 +87,9 @@ const LParen = createToken({ name: 'LParen', pattern: /\(/ });
 const RParen = createToken({ name: 'RParen', pattern: /\)/ });
 const Colon = createToken({ name: 'Colon', pattern: /:/ });
 const Comma = createToken({ name: 'Comma', pattern: /,/ });
+const Ampersand = createToken({ name: 'Ampersand', pattern: /&/ });
+const LBracket = createToken({ name: 'LBracket', pattern: /\[/ });
+const RBracket = createToken({ name: 'RBracket', pattern: /\]/ });
 
 // Literals
 const StringLiteral = createToken({
@@ -134,6 +150,18 @@ const allTokens = [
   Mocks,
   Colors,
   Cell,
+  Tab,
+  Body,
+  Footer,
+  // Event action keywords (must come before Identifier)
+  Navigate,
+  Show,
+  Hide,
+  ToggleAction,
+  EnableAction,
+  DisableAction,
+  SetTab,
+  Self,
   // Punctuation
   LCurly,
   RCurly,
@@ -141,6 +169,9 @@ const allTokens = [
   RParen,
   Colon,
   Comma,
+  Ampersand,
+  LBracket,
+  RBracket,
   // Literals
   StringLiteral,
   NumberLiteral,
@@ -267,6 +298,95 @@ class WireDSLParser extends CstParser {
     this.CONSUME(RCurly);
   });
 
+  // singleAction: navigate(Screen) | show(id|self) | hide(id|self) | toggle(id|self) | setTab(tabsId, index)
+  private singleAction = this.RULE('singleAction', () => {
+    this.OR([
+      {
+        ALT: () => {
+          this.CONSUME(Navigate, { LABEL: 'navigate' });
+          this.CONSUME(LParen);
+          this.CONSUME(Identifier, { LABEL: 'targetScreen' });
+          this.CONSUME(RParen);
+        },
+      },
+      {
+        ALT: () => {
+          this.OR2([
+            { ALT: () => this.CONSUME(Show, { LABEL: 'sht' }) },
+            { ALT: () => this.CONSUME(Hide, { LABEL: 'sht' }) },
+            { ALT: () => this.CONSUME(ToggleAction, { LABEL: 'sht' }) },
+            { ALT: () => this.CONSUME(EnableAction, { LABEL: 'sht' }) },
+            { ALT: () => this.CONSUME(DisableAction, { LABEL: 'sht' }) },
+          ]);
+          this.CONSUME2(LParen);
+          this.OR3([
+            { ALT: () => this.CONSUME(Self, { LABEL: 'targetId' }) },
+            { ALT: () => this.CONSUME2(Identifier, { LABEL: 'targetId' }) },
+          ]);
+          this.CONSUME2(RParen);
+        },
+      },
+      {
+        ALT: () => {
+          this.CONSUME(SetTab, { LABEL: 'setTab' });
+          this.CONSUME3(LParen);
+          this.CONSUME3(Identifier, { LABEL: 'tabsId' });
+          this.CONSUME(Comma);
+          this.CONSUME(NumberLiteral, { LABEL: 'tabIndex' });
+          this.CONSUME3(RParen);
+        },
+      },
+    ]);
+  });
+
+  // actionChain: singleAction (& singleAction)*
+  private actionChain = this.RULE('actionChain', () => {
+    this.SUBRULE(this.singleAction);
+    this.MANY(() => {
+      this.CONSUME(Ampersand);
+      this.SUBRULE2(this.singleAction);
+    });
+  });
+
+  // tab { ... } — children block inside layout tabs
+  private tab = this.RULE('tab', () => {
+    this.CONSUME(Tab);
+    this.CONSUME(LCurly);
+    this.MANY(() => {
+      this.OR([
+        { ALT: () => this.SUBRULE(this.component) },
+        { ALT: () => this.SUBRULE(this.layout) },
+      ]);
+    });
+    this.CONSUME(RCurly);
+  });
+
+  // body { ... } — content section inside layout modal
+  private body = this.RULE('body', () => {
+    this.CONSUME(Body);
+    this.CONSUME(LCurly);
+    this.MANY(() => {
+      this.OR([
+        { ALT: () => this.SUBRULE(this.component) },
+        { ALT: () => this.SUBRULE(this.layout) },
+      ]);
+    });
+    this.CONSUME(RCurly);
+  });
+
+  // footer { ... } — footer section inside layout modal
+  private footer = this.RULE('footer', () => {
+    this.CONSUME(Footer);
+    this.CONSUME(LCurly);
+    this.MANY(() => {
+      this.OR([
+        { ALT: () => this.SUBRULE(this.component) },
+        { ALT: () => this.SUBRULE(this.layout) },
+      ]);
+    });
+    this.CONSUME(RCurly);
+  });
+
   // layout stack(...) { ... }
   private layout = this.RULE('layout', () => {
     this.CONSUME(Layout);
@@ -280,6 +400,9 @@ class WireDSLParser extends CstParser {
         { ALT: () => this.SUBRULE(this.component) },
         { ALT: () => this.SUBRULE2(this.layout) },
         { ALT: () => this.SUBRULE(this.cell) },
+        { ALT: () => this.SUBRULE(this.tab) },
+        { ALT: () => this.SUBRULE(this.body) },
+        { ALT: () => this.SUBRULE(this.footer) },
       ]);
     });
     this.CONSUME(RCurly);
@@ -310,15 +433,27 @@ class WireDSLParser extends CstParser {
     });
   });
 
-  // property: key: value
+  // property: key: value  (value can be string, number, identifier, or action chain)
   private property = this.RULE('property', () => {
     this.CONSUME(Identifier, { LABEL: 'propKey' });
     this.CONSUME(Colon);
     this.OR([
+      { ALT: () => this.SUBRULE(this.actionChain) },
+      { ALT: () => this.SUBRULE(this.arrayLiteral) },
       { ALT: () => this.CONSUME(StringLiteral, { LABEL: 'propValue' }) },
       { ALT: () => this.CONSUME(NumberLiteral, { LABEL: 'propValue' }) },
       { ALT: () => this.CONSUME2(Identifier, { LABEL: 'propValue' }) },
     ]);
+  });
+
+  // ["item1", "item2", "item3"]
+  private arrayLiteral = this.RULE('arrayLiteral', () => {
+    this.CONSUME(LBracket);
+    this.MANY_SEP({
+      SEP: Comma,
+      DEF: () => this.CONSUME(StringLiteral, { LABEL: 'arrayItem' }),
+    });
+    this.CONSUME(RBracket);
   });
 
   // (param1: value1, param2: value2)
@@ -364,8 +499,51 @@ export interface ASTDefinedComponent {
 export interface ASTScreen {
   type: 'screen';
   name: string;
-  params: Record<string, string | number>;
+  params: Record<string, string | number | string[]>;
   layout: ASTLayout;
+  _meta?: {
+    nodeId: string;
+  };
+}
+
+// Event action types
+export type ASTEventActionType = 'navigate' | 'show' | 'hide' | 'toggle' | 'enable' | 'disable' | 'setTab';
+
+export interface ASTEventAction {
+  type: ASTEventActionType;
+  // navigate: target screen name
+  screen?: string;
+  // show | hide | toggle: target id ('_self' for self-reference)
+  targetId?: string;
+  // setTab: tabs layout id + tab index
+  tabsId?: string;
+  index?: number;
+}
+
+export interface ASTEventHandler {
+  event: string; // 'onClick' | 'onChange' | 'onActive' | 'onInactive' | 'onClose' | 'onItemClick' | 'onRowClick'
+  actions: ASTEventAction[];
+}
+
+export interface ASTTab {
+  type: 'tab';
+  children: (ASTComponent | ASTLayout)[];
+  _meta?: {
+    nodeId: string;
+  };
+}
+
+export interface ASTModalBody {
+  type: 'modal-body';
+  children: (ASTComponent | ASTLayout)[];
+  _meta?: {
+    nodeId: string;
+  };
+}
+
+export interface ASTModalFooter {
+  type: 'modal-footer';
+  children: (ASTComponent | ASTLayout)[];
   _meta?: {
     nodeId: string;
   };
@@ -374,8 +552,9 @@ export interface ASTScreen {
 export interface ASTLayout {
   type: 'layout';
   layoutType: string;
-  params: Record<string, string | number>;
-  children: (ASTComponent | ASTLayout | ASTCell)[];
+  params: Record<string, string | number | string[]>;
+  events: ASTEventHandler[];
+  children: (ASTComponent | ASTLayout | ASTCell | ASTTab | ASTModalBody | ASTModalFooter)[];
   _meta?: {
     nodeId: string;
   };
@@ -383,7 +562,7 @@ export interface ASTLayout {
 
 export interface ASTCell {
   type: 'cell';
-  props: Record<string, string | number>;
+  props: Record<string, string | number | string[]>;
   children: (ASTComponent | ASTLayout)[];
   _meta?: {
     nodeId: string;
@@ -393,7 +572,8 @@ export interface ASTCell {
 export interface ASTComponent {
   type: 'component';
   componentType: string;
-  props: Record<string, string | number>;
+  props: Record<string, string | number | string[]>;
+  events: ASTEventHandler[];
   _meta?: {
     nodeId: string;
   };
@@ -549,7 +729,7 @@ class WireDSLVisitor extends BaseCstVisitor {
   }
 
   screen(ctx: any): ASTScreen {
-    const params = ctx.paramList ? this.visit(ctx.paramList[0]) : {};
+    const { params } = ctx.paramList ? this.visit(ctx.paramList[0]) : { params: {} };
     return {
       type: 'screen',
       name: ctx.screenName[0].image,
@@ -560,21 +740,21 @@ class WireDSLVisitor extends BaseCstVisitor {
 
   layout(ctx: any): ASTLayout {
     const layoutType = ctx.layoutType[0].image;
-    const params: Record<string, string | number> = {};
-    const children: (ASTComponent | ASTLayout | ASTCell)[] = [];
+    const params: Record<string, string | number | string[]> = {};
+    const events: ASTEventHandler[] = [];
+    const children: (ASTComponent | ASTLayout | ASTCell | ASTTab | ASTModalBody | ASTModalFooter)[] = [];
 
     if (ctx.paramList) {
       const paramResult = this.visit(ctx.paramList);
-      Object.assign(params, paramResult);
+      Object.assign(params, paramResult.params);
+      events.push(...paramResult.events);
     }
 
     // Process children in the order they appear in the input
-    // We need to merge component, layout, and cell arrays while preserving order
     const childNodes: Array<{ type: string; node: any; index: number }> = [];
 
     if (ctx.component) {
       ctx.component.forEach((comp: any) => {
-        // Get the token position from the CST node (always present in Chevrotain)
         const startToken = comp.children?.Component?.[0] || comp.children?.componentType?.[0];
         childNodes.push({ type: 'component', node: comp, index: startToken.startOffset });
       });
@@ -591,30 +771,43 @@ class WireDSLVisitor extends BaseCstVisitor {
         childNodes.push({ type: 'cell', node: cell, index: startToken.startOffset });
       });
     }
+    if (ctx.tab) {
+      ctx.tab.forEach((tab: any) => {
+        const startToken = tab.children?.Tab?.[0];
+        childNodes.push({ type: 'tab', node: tab, index: startToken.startOffset });
+      });
+    }
+    if (ctx.body) {
+      ctx.body.forEach((body: any) => {
+        const startToken = body.children?.Body?.[0];
+        childNodes.push({ type: 'body', node: body, index: startToken.startOffset });
+      });
+    }
+    if (ctx.footer) {
+      ctx.footer.forEach((footer: any) => {
+        const startToken = footer.children?.Footer?.[0];
+        childNodes.push({ type: 'footer', node: footer, index: startToken.startOffset });
+      });
+    }
 
     // Sort by token position in source
     childNodes.sort((a, b) => a.index - b.index);
 
     childNodes.forEach((item) => {
-      if (item.type === 'component') {
-        children.push(this.visit(item.node));
-      } else if (item.type === 'layout') {
-        children.push(this.visit(item.node));
-      } else if (item.type === 'cell') {
-        children.push(this.visit(item.node));
-      }
+      children.push(this.visit(item.node));
     });
 
     return {
       type: 'layout',
       layoutType,
       params,
+      events,
       children,
     };
   }
 
   cell(ctx: any): ASTCell {
-    const props: Record<string, string | number> = {};
+    const props: Record<string, string | number | string[]> = {};
     const children: (ASTComponent | ASTLayout)[] = [];
 
     if (ctx.property) {
@@ -658,14 +851,130 @@ class WireDSLVisitor extends BaseCstVisitor {
     };
   }
 
+  singleAction(ctx: any): ASTEventAction {
+    if (ctx.navigate) {
+      return { type: 'navigate', screen: ctx.targetScreen[0].image };
+    }
+    if (ctx.sht) {
+      const tokenName: string = ctx.sht[0].tokenType.name;
+      const typeMap: Record<string, ASTEventActionType> = {
+        Show: 'show', Hide: 'hide', ToggleAction: 'toggle',
+        EnableAction: 'enable', DisableAction: 'disable',
+      };
+      const type = typeMap[tokenName] ?? 'show';
+      const targetToken = ctx.targetId[0];
+      const isSelf = targetToken.tokenType.name === 'Self';
+      const targetId = isSelf ? '_self' : targetToken.image;
+      return { type, targetId };
+    }
+    if (ctx.setTab) {
+      return {
+        type: 'setTab',
+        tabsId: ctx.tabsId[0].image,
+        index: Number(ctx.tabIndex[0].image),
+      };
+    }
+    throw new Error('Unknown action type in singleAction visitor');
+  }
+
+  actionChain(ctx: any): ASTEventAction[] {
+    const actions: ASTEventAction[] = [];
+    if (ctx.singleAction) {
+      ctx.singleAction.forEach((action: any) => {
+        actions.push(this.visit(action));
+      });
+    }
+    return actions;
+  }
+
+  tab(ctx: any): ASTTab {
+    const children: (ASTComponent | ASTLayout)[] = [];
+    const childNodes: Array<{ type: string; node: any; index: number }> = [];
+
+    if (ctx.component) {
+      ctx.component.forEach((comp: any) => {
+        const startToken = comp.children?.Component?.[0] || comp.children?.componentType?.[0];
+        childNodes.push({ type: 'component', node: comp, index: startToken.startOffset });
+      });
+    }
+    if (ctx.layout) {
+      ctx.layout.forEach((layout: any) => {
+        const startToken = layout.children?.Layout?.[0] || layout.children?.layoutType?.[0];
+        childNodes.push({ type: 'layout', node: layout, index: startToken.startOffset });
+      });
+    }
+
+    childNodes.sort((a, b) => a.index - b.index);
+    childNodes.forEach((item) => {
+      children.push(this.visit(item.node));
+    });
+
+    return { type: 'tab', children };
+  }
+
+  body(ctx: any): ASTModalBody {
+    const children: (ASTComponent | ASTLayout)[] = [];
+    const childNodes: Array<{ type: string; node: any; index: number }> = [];
+
+    if (ctx.component) {
+      ctx.component.forEach((comp: any) => {
+        const startToken = comp.children?.Component?.[0] || comp.children?.componentType?.[0];
+        childNodes.push({ type: 'component', node: comp, index: startToken.startOffset });
+      });
+    }
+    if (ctx.layout) {
+      ctx.layout.forEach((layout: any) => {
+        const startToken = layout.children?.Layout?.[0] || layout.children?.layoutType?.[0];
+        childNodes.push({ type: 'layout', node: layout, index: startToken.startOffset });
+      });
+    }
+
+    childNodes.sort((a, b) => a.index - b.index);
+    childNodes.forEach((item) => {
+      children.push(this.visit(item.node));
+    });
+
+    return { type: 'modal-body', children };
+  }
+
+  footer(ctx: any): ASTModalFooter {
+    const children: (ASTComponent | ASTLayout)[] = [];
+    const childNodes: Array<{ type: string; node: any; index: number }> = [];
+
+    if (ctx.component) {
+      ctx.component.forEach((comp: any) => {
+        const startToken = comp.children?.Component?.[0] || comp.children?.componentType?.[0];
+        childNodes.push({ type: 'component', node: comp, index: startToken.startOffset });
+      });
+    }
+    if (ctx.layout) {
+      ctx.layout.forEach((layout: any) => {
+        const startToken = layout.children?.Layout?.[0] || layout.children?.layoutType?.[0];
+        childNodes.push({ type: 'layout', node: layout, index: startToken.startOffset });
+      });
+    }
+
+    childNodes.sort((a, b) => a.index - b.index);
+    childNodes.forEach((item) => {
+      children.push(this.visit(item.node));
+    });
+
+    return { type: 'modal-footer', children };
+  }
+
   component(ctx: any): ASTComponent {
     const componentType = ctx.componentType[0].image;
-    const props: Record<string, string | number> = {};
+    const props: Record<string, string | number | string[]> = {};
+    const events: ASTEventHandler[] = [];
 
     if (ctx.property) {
       ctx.property.forEach((prop: any) => {
         const result = this.visit(prop);
-        props[result.key] = result.value;
+        if (result.isEvent) {
+          events.push({ event: result.key, actions: result.actions });
+        } else {
+          props[result.key] = result.value;
+        }
       });
     }
 
@@ -673,11 +982,25 @@ class WireDSLVisitor extends BaseCstVisitor {
       type: 'component',
       componentType,
       props,
+      events,
     };
   }
 
-  property(ctx: any) {
+  property(ctx: any): { key: string; isEvent?: true; actions?: ASTEventAction[]; value?: string | number | string[] } {
     const key = ctx.propKey[0].image;
+
+    // Check if it's an action chain value
+    if (ctx.actionChain && ctx.actionChain.length > 0) {
+      const actions: ASTEventAction[] = this.visit(ctx.actionChain[0]);
+      return { key, isEvent: true, actions };
+    }
+
+    // Check if it's an array literal value
+    if (ctx.arrayLiteral && ctx.arrayLiteral.length > 0) {
+      const items: string[] = this.visit(ctx.arrayLiteral[0]);
+      return { key, value: items };
+    }
+
     const rawValue: string = ctx.propValue[0].image;
     let value: string | number = rawValue;
 
@@ -693,17 +1016,30 @@ class WireDSLVisitor extends BaseCstVisitor {
     return { key, value };
   }
 
-  paramList(ctx: any): Record<string, string | number> {
-    const params: Record<string, string | number> = {};
+  arrayLiteral(ctx: any): string[] {
+    if (!ctx.arrayItem) return [];
+    return ctx.arrayItem.map((token: any) => {
+      const raw: string = token.image;
+      return raw.startsWith('"') ? raw.slice(1, -1) : raw;
+    });
+  }
+
+  paramList(ctx: any): { params: Record<string, string | number | string[]>; events: ASTEventHandler[] } {
+    const params: Record<string, string | number | string[]> = {};
+    const events: ASTEventHandler[] = [];
 
     if (ctx.property) {
       ctx.property.forEach((prop: any) => {
         const result = this.visit(prop);
-        params[result.key] = result.value;
+        if (result.isEvent) {
+          events.push({ event: result.key, actions: result.actions! });
+        } else {
+          params[result.key] = result.value!;
+        }
       });
     }
 
-    return params;
+    return { params, events };
   }
 }
 
@@ -801,7 +1137,7 @@ class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
 
   screen(ctx: any): ASTScreen {
     // Build AST manually (same as parent, but with SourceMap tracking)
-    const params = ctx.paramList ? this.visit(ctx.paramList[0]) : {};
+    const { params } = ctx.paramList ? this.visit(ctx.paramList[0]) : { params: {} };
     const screenName = ctx.screenName[0].image;
     
     // Capture tokens
@@ -846,11 +1182,13 @@ class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
   layout(ctx: any): ASTLayout {
     // Build AST manually
     const layoutType = ctx.layoutType[0].image;
-    const params: Record<string, string | number> = {};
+    const params: Record<string, string | number | string[]> = {};
+    const events: ASTEventHandler[] = [];
 
     if (ctx.paramList) {
       const paramResult = this.visit(ctx.paramList);
-      Object.assign(params, paramResult);
+      Object.assign(params, paramResult.params);
+      events.push(...paramResult.events);
     }
 
     // Capture tokens
@@ -865,6 +1203,7 @@ class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
       type: 'layout',
       layoutType,
       params,
+      events,
       children: [],  // Will be filled after push
     };
 
@@ -882,13 +1221,22 @@ class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
       if (ctx.paramList && ctx.paramList[0]?.children?.property) {
         ctx.paramList[0].children.property.forEach((propCtx: any) => {
           const propResult = this.visit(propCtx);
+          if (propResult.isEvent) {
+            this.sourceMapBuilder!.addEvent(nodeId, propResult.key, {
+              name: propCtx.children.propKey[0],
+              value: propCtx.children.actionChain[0],
+            });
+            return;
+          }
+          // For array literals, use the arrayLiteral CST node for value range
+          const valueToken = propCtx.children.propValue?.[0] ?? propCtx.children.arrayLiteral?.[0];
           this.sourceMapBuilder!.addProperty(
             nodeId,
             propResult.key,
-            propResult.value,
+            propResult.value!,
             {
               name: propCtx.children.propKey[0],
-              value: propCtx.children.propValue[0],
+              value: valueToken,
             }
           );
         });
@@ -919,6 +1267,24 @@ class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
         childNodes.push({ type: 'cell', node: cell, index: startToken.startOffset });
       });
     }
+    if (ctx.tab) {
+      ctx.tab.forEach((tab: any) => {
+        const startToken = tab.children?.Tab?.[0];
+        childNodes.push({ type: 'tab', node: tab, index: startToken.startOffset });
+      });
+    }
+    if (ctx.body) {
+      ctx.body.forEach((body: any) => {
+        const startToken = body.children?.Body?.[0];
+        childNodes.push({ type: 'body', node: body, index: startToken.startOffset });
+      });
+    }
+    if (ctx.footer) {
+      ctx.footer.forEach((footer: any) => {
+        const startToken = footer.children?.Footer?.[0];
+        childNodes.push({ type: 'footer', node: footer, index: startToken.startOffset });
+      });
+    }
 
     // Sort by position
     childNodes.sort((a, b) => a.index - b.index);
@@ -938,7 +1304,7 @@ class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
 
   cell(ctx: any): ASTCell {
     // Build AST manually
-    const props: Record<string, string | number> = {};
+    const props: Record<string, string | number | string[]> = {};
 
     if (ctx.property) {
       ctx.property.forEach((prop: any) => {
@@ -973,13 +1339,22 @@ class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
       if (ctx.property) {
         ctx.property.forEach((propCtx: any) => {
           const propResult = this.visit(propCtx);
+          if (propResult.isEvent) {
+            this.sourceMapBuilder!.addEvent(nodeId, propResult.key, {
+              name: propCtx.children.propKey[0],
+              value: propCtx.children.actionChain[0],
+            });
+            return;
+          }
+          // For array literals, use the arrayLiteral CST node for value range
+          const valueToken = propCtx.children.propValue?.[0] ?? propCtx.children.arrayLiteral?.[0];
           this.sourceMapBuilder!.addProperty(
             nodeId,
             propResult.key,
-            propResult.value,
+            propResult.value!,
             {
               name: propCtx.children.propKey[0],
-              value: propCtx.children.propValue[0],
+              value: valueToken,
             }
           );
         });
@@ -1019,6 +1394,132 @@ class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
     return ast;
   }
 
+  body(ctx: any): ASTModalBody {
+    const tokens: CapturedTokens = {
+      keyword: ctx.Body[0],
+      body: ctx.RCurly[0],
+    };
+
+    const ast: ASTModalBody = {
+      type: 'modal-body',
+      children: [],
+    };
+
+    if (this.sourceMapBuilder) {
+      const nodeId = this.sourceMapBuilder.addNode('modal-body', tokens);
+      ast._meta = { nodeId };
+      this.sourceMapBuilder.pushParent(nodeId);
+    }
+
+    const childNodes: Array<{ type: string; node: any; index: number }> = [];
+    if (ctx.component) {
+      ctx.component.forEach((comp: any) => {
+        const startToken = comp.children?.Component?.[0] || comp.children?.componentType?.[0];
+        childNodes.push({ type: 'component', node: comp, index: startToken.startOffset });
+      });
+    }
+    if (ctx.layout) {
+      ctx.layout.forEach((layout: any) => {
+        const startToken = layout.children?.Layout?.[0] || layout.children?.layoutType?.[0];
+        childNodes.push({ type: 'layout', node: layout, index: startToken.startOffset });
+      });
+    }
+    childNodes.sort((a, b) => a.index - b.index);
+    childNodes.forEach((item) => {
+      ast.children.push(this.visit(item.node));
+    });
+
+    if (this.sourceMapBuilder) {
+      this.sourceMapBuilder.popParent();
+    }
+
+    return ast;
+  }
+
+  tab(ctx: any): ASTTab {
+    const tokens: CapturedTokens = {
+      keyword: ctx.Tab[0],
+      body: ctx.RCurly[0],
+    };
+
+    const ast: ASTTab = {
+      type: 'tab',
+      children: [],
+    };
+
+    if (this.sourceMapBuilder) {
+      const nodeId = this.sourceMapBuilder.addNode('tab', tokens);
+      ast._meta = { nodeId };
+      this.sourceMapBuilder.pushParent(nodeId);
+    }
+
+    const childNodes: Array<{ type: string; node: any; index: number }> = [];
+    if (ctx.component) {
+      ctx.component.forEach((comp: any) => {
+        const startToken = comp.children?.Component?.[0] || comp.children?.componentType?.[0];
+        childNodes.push({ type: 'component', node: comp, index: startToken.startOffset });
+      });
+    }
+    if (ctx.layout) {
+      ctx.layout.forEach((layout: any) => {
+        const startToken = layout.children?.Layout?.[0] || layout.children?.layoutType?.[0];
+        childNodes.push({ type: 'layout', node: layout, index: startToken.startOffset });
+      });
+    }
+    childNodes.sort((a, b) => a.index - b.index);
+    childNodes.forEach((item) => {
+      ast.children.push(this.visit(item.node));
+    });
+
+    if (this.sourceMapBuilder) {
+      this.sourceMapBuilder.popParent();
+    }
+
+    return ast;
+  }
+
+  footer(ctx: any): ASTModalFooter {
+    const tokens: CapturedTokens = {
+      keyword: ctx.Footer[0],
+      body: ctx.RCurly[0],
+    };
+
+    const ast: ASTModalFooter = {
+      type: 'modal-footer',
+      children: [],
+    };
+
+    if (this.sourceMapBuilder) {
+      const nodeId = this.sourceMapBuilder.addNode('modal-footer', tokens);
+      ast._meta = { nodeId };
+      this.sourceMapBuilder.pushParent(nodeId);
+    }
+
+    const childNodes: Array<{ type: string; node: any; index: number }> = [];
+    if (ctx.component) {
+      ctx.component.forEach((comp: any) => {
+        const startToken = comp.children?.Component?.[0] || comp.children?.componentType?.[0];
+        childNodes.push({ type: 'component', node: comp, index: startToken.startOffset });
+      });
+    }
+    if (ctx.layout) {
+      ctx.layout.forEach((layout: any) => {
+        const startToken = layout.children?.Layout?.[0] || layout.children?.layoutType?.[0];
+        childNodes.push({ type: 'layout', node: layout, index: startToken.startOffset });
+      });
+    }
+    childNodes.sort((a, b) => a.index - b.index);
+    childNodes.forEach((item) => {
+      ast.children.push(this.visit(item.node));
+    });
+
+    if (this.sourceMapBuilder) {
+      this.sourceMapBuilder.popParent();
+    }
+
+    return ast;
+  }
+
   component(ctx: any): ASTComponent {
     // Capture tokens
     const tokens: CapturedTokens = {
@@ -1050,13 +1551,22 @@ class WireDSLVisitorWithSourceMap extends WireDSLVisitor {
       if (ctx.property) {
         ctx.property.forEach((propCtx: any) => {
           const propResult = this.visit(propCtx);
+          if (propResult.isEvent) {
+            this.sourceMapBuilder!.addEvent(nodeId, propResult.key, {
+              name: propCtx.children.propKey[0],
+              value: propCtx.children.actionChain[0],
+            });
+            return;
+          }
+          // For array literals, use the arrayLiteral CST node for value range
+          const valueToken = propCtx.children.propValue?.[0] ?? propCtx.children.arrayLiteral?.[0];
           this.sourceMapBuilder!.addProperty(
             nodeId,
             propResult.key,
-            propResult.value,
+            propResult.value!,
             {
               name: propCtx.children.propKey[0],
-              value: propCtx.children.propValue[0],
+              value: valueToken,
             }
           );
         });
@@ -1518,13 +2028,15 @@ function createParserDiagnostic(error: any): ParseError {
   };
 }
 
-function isBooleanLike(value: string | number): boolean {
+function isBooleanLike(value: string | number | string[]): boolean {
+  if (Array.isArray(value)) return false;
   if (typeof value === 'number') return value === 0 || value === 1;
   const normalized = String(value).trim().toLowerCase();
   return normalized === 'true' || normalized === 'false';
 }
 
-function parseBooleanLike(value: string | number, fallback: boolean = false): boolean {
+function parseBooleanLike(value: string | number | string[], fallback: boolean = false): boolean {
+  if (Array.isArray(value)) return fallback;
   if (typeof value === 'number') {
     if (value === 1) return true;
     if (value === 0) return false;
@@ -1554,7 +2066,7 @@ function formatAllowedNames(names: string[], emptyMessage: string): string {
 
 function getMissingRequiredNames(
   requiredNames: string[],
-  providedValues: Record<string, string | number>
+  providedValues: Record<string, string | number | string[]>
 ): string[] {
   return requiredNames.filter((name) => providedValues[name] === undefined);
 }
@@ -1613,6 +2125,14 @@ function validateSemanticDiagnostics(ast: AST, sourceMap: SourceMapEntry[]): Par
             if (cellChild.componentType === 'Children') count += 1;
           } else if (cellChild.type === 'layout') {
             count += countChildrenSlots(cellChild);
+          }
+        }
+      } else if (child.type === 'tab') {
+        for (const tabChild of child.children) {
+          if (tabChild.type === 'component') {
+            if (tabChild.componentType === 'Children') count += 1;
+          } else if (tabChild.type === 'layout') {
+            count += countChildrenSlots(tabChild);
           }
         }
       }
@@ -1897,6 +2417,11 @@ function validateSemanticDiagnostics(ast: AST, sourceMap: SourceMapEntry[]): Par
         checkLayout(child, insideDefinedLayout);
       } else if (child.type === 'cell') {
         checkCell(child, insideDefinedLayout);
+      } else if (child.type === 'tab') {
+        for (const tabChild of child.children) {
+          if (tabChild.type === 'component') checkComponent(tabChild, insideDefinedLayout);
+          if (tabChild.type === 'layout') checkLayout(tabChild, insideDefinedLayout);
+        }
       }
     }
   };
@@ -2163,6 +2688,16 @@ function validateDefinitionCycles(ast: AST): void {
             }
           } else if (cellChild.type === 'layout') {
             collectLayoutDependencies(cellChild, deps);
+          }
+        }
+      } else if (child.type === 'tab') {
+        for (const tabChild of child.children) {
+          if (tabChild.type === 'component') {
+            if (shouldTrackComponentDependency(tabChild.componentType)) {
+              deps.add(makeComponentKey(tabChild.componentType));
+            }
+          } else if (tabChild.type === 'layout') {
+            collectLayoutDependencies(tabChild, deps);
           }
         }
       }

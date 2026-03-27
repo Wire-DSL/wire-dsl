@@ -498,6 +498,94 @@ layout card(padding: md, gap: md, radius: md, border: true) {
 
 ---
 
+## Tabs Container
+
+Tabbed content container. Pairs with `component Tabs` to create a full tabbed interface.
+
+### Syntax
+
+```wire
+component Tabs items: "Profile,Settings,Billing" initialActive: 0 tabsId: mainTabs
+
+layout tabs(id: mainTabs) {
+  tab {
+    component Heading text: "Profile"
+    component Input label: "Full name"
+  }
+  tab {
+    component Heading text: "Settings"
+    component Toggle label: "Notifications"
+  }
+  tab {
+    component Heading text: "Billing"
+    component Table columns: "Date,Amount" rows: 4
+  }
+}
+```
+
+### Properties
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `id` | identifier | **Yes** | Links to `component Tabs tabsId`. Must be unique within the screen. |
+| `active` | number | No | Initial active tab index (default: `0`) |
+
+### Important Notes
+
+⚠️ **`id` is required**: Must match the `tabsId` on the paired `component Tabs`.
+
+⚠️ **`tab` is a keyword**: `tab { }` is special syntax only valid inside `layout tabs`. It is not a component.
+
+⚠️ **Order defines index**: First `tab` = index 0, second = index 1, etc.
+
+---
+
+## Modal Container
+
+Modal dialog overlay. Accepts child layouts inside `body` and `footer` sections.
+
+### Syntax
+
+```wire
+layout modal(id: confirmDialog, title: "Confirm", closable: true) {
+  body {
+    component Text text: "Are you sure?"
+  }
+  footer {
+    component Button text: "Cancel" onClick: hide(self)
+    component Button text: "Confirm" variant: primary onClick: hide(self)
+  }
+}
+
+component Button text: "Open Modal" onClick: show(confirmDialog)
+```
+
+### Properties
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| `id` | identifier | No | For `show`/`hide`/`toggle` targeting |
+| `title` | string | No | Header text. Omit for a header-less modal. |
+| `visible` | boolean | No | Initial visibility (default: `true`). When `false`, modal is not rendered and doesn't occupy space. |
+| `closable` | boolean | No | Show close button (default: `true`). Requires `title`. |
+| `size` | enum | No | `sm` (380px) \| `md` (520px) \| `lg` (720px) (default: `md`) |
+| `onClose` | action | No | Fired when close button is clicked |
+
+### Sections
+
+- **`body { }`** — main content area
+- **`footer { }`** — action area (buttons)
+
+Without sections, direct children go into the content area (implicit mode).
+
+### Important Notes
+
+⚠️ **Overlay positioning**: Modals float above all content regardless of DSL tree position.
+
+⚠️ **`visible: false`**: Hidden modal doesn't render and doesn't affect sibling layout.
+
+---
+
 ## User-Defined Layouts
 
 In addition to built-in containers, you can define reusable layout shells:

@@ -1,4 +1,4 @@
-import type { IRContract, IRNode, IRComponentNode, IRContainerNode, IRInstanceNode } from '../ir/index';
+import type { IRContract, IRNode, IRComponentNode, IRContainerNode, IRInstanceNode, IREventHandler, IREventAction } from '../ir/index';
 import type { LayoutResult } from '../layout/index';
 import { MockDataGenerator } from './mock-data';
 import { ColorResolver } from './colors';
@@ -14,6 +14,7 @@ import {
 } from '../shared/component-sizes';
 import { resolveHeadingTypography } from '../shared/heading-levels';
 import { resolveHeadingVerticalPadding } from '../shared/heading-spacing';
+import { toStringArray } from '../shared/list-utils';
 
 /**
  * SVG Renderer
@@ -218,6 +219,11 @@ export class SVGRenderer {
     this.renderedNodeIds.add(nodeId);
 
     if (node.kind === 'container') {
+      // All containers respect params.visible — skip rendering if explicitly false
+      if (String(node.params.visible) === 'false') {
+        return;
+      }
+
       // Wrapper group for all containers (enables selection in editor)
       const containerGroup: string[] = [];
       const hasNodeId = node.meta?.nodeId;
@@ -248,6 +254,12 @@ export class SVGRenderer {
       }
       if (node.containerType === 'split') {
         this.renderSplitDecoration(node, pos, containerGroup);
+      }
+      if (node.containerType === 'modal') {
+        this.renderModalDecoration(node, pos, containerGroup);
+      }
+      if (node.containerType === 'modal-footer') {
+        this.renderModalFooterDecoration(pos, containerGroup);
       }
 
       // Render container children, or a diagnostic placeholder when empty
@@ -289,6 +301,10 @@ export class SVGRenderer {
       }
       output.push(...instanceGroup);
     } else if (node.kind === 'component') {
+      // Skip rendering if explicitly hidden
+      if (String(node.props.visible) === 'false') {
+        return;
+      }
       // Render built-in component
       const componentSvg = this.renderComponent(node, pos);
       if (componentSvg) {
@@ -359,8 +375,6 @@ export class SVGRenderer {
         return this.renderAlert(node, pos);
       case 'Badge':
         return this.renderBadge(node, pos);
-      case 'Modal':
-        return this.renderModal(node, pos);
       case 'List':
         return this.renderList(node, pos);
       case 'Stat':
@@ -905,11 +919,8 @@ export class SVGRenderer {
 
   protected renderTable(node: IRComponentNode, pos: any): string {
     const title = String(node.props.title || '');
-    const columnsStr = String(node.props.columns || 'Col1,Col2,Col3');
-    const columns = columnsStr
-      .split(',')
-      .map((c) => c.trim())
-      .filter(Boolean);
+    const parsedColumns = toStringArray(node.props.columns);
+    const columns = parsedColumns.length > 0 ? parsedColumns : ['Col1', 'Col2', 'Col3'];
     const rowCount = Number(node.props.rows || node.props.rowsMock || 5);
     const mockStr = String(node.props.mock || '');
     const random = this.parseBooleanProp(node.props.random, false);
@@ -917,10 +928,7 @@ export class SVGRenderer {
     const parsedPageCount = Number(node.props.pages || 5);
     const pageCount = Number.isFinite(parsedPageCount) && parsedPageCount > 0 ? Math.floor(parsedPageCount) : 5;
     const paginationAlign = String(node.props.paginationAlign || 'right');
-    const actions = String(node.props.actions || '')
-      .split(',')
-      .map((value) => value.trim())
-      .filter(Boolean);
+    const actions = toStringArray(node.props.actions);
     const hasActions = actions.length > 0;
     const caption = String(node.props.caption || '').trim();
     const hasCaption = caption.length > 0;
@@ -940,12 +948,7 @@ export class SVGRenderer {
     const sameFooterAlign = hasCaption && pagination && captionAlign === paginationAlign;
 
     // Parse mock types by column. If not provided, infer from column names.
-    const mockTypes = mockStr
-      ? mockStr
-          .split(',')
-          .map((m) => m.trim())
-          .filter(Boolean)
-      : [];
+    const mockTypes = toStringArray(mockStr);
     const safeColumns = columns.length > 0 ? columns : ['Column'];
     while (mockTypes.length < safeColumns.length) {
       const inferred = MockDataGenerator.inferMockTypeFromColumn(safeColumns[mockTypes.length] || 'item');
@@ -1064,6 +1067,14 @@ export class SVGRenderer {
           }
           currentX += buttonSize + buttonGap;
         });
+      }
+
+      const rowEventAttrs = this.getScopedEventAttrs(node, 'onRowClick', { index: rowIdx });
+      if (rowEventAttrs) {
+        svg += `
+    <rect x="${pos.x}" y="${rowY}"
+          width="${pos.width}" height="${rowHeight}"
+          fill="transparent" stroke="none" pointer-events="all"${rowEventAttrs}/>`;
       }
     });
 
@@ -1517,16 +1528,17 @@ export class SVGRenderer {
     const label = String(node.props.label || 'Checkbox');
     const checked = String(node.props.checked || 'false').toLowerCase() === 'true';
     const disabled = this.parseBooleanProp(node.props.disabled, false);
+    const clickable = String(node.props.clickable ?? 'true') !== 'false';
     const controlColor = this.resolveControlColor();
 
     const checkboxSize = 18;
     const checkboxY = pos.y + pos.height / 2 - checkboxSize / 2;
 
-    return `<g${this.getDataNodeId(node)}${disabled ? ' opacity="0.45"' : ''}>
-    <rect x="${pos.x}" y="${checkboxY}" 
-          width="${checkboxSize}" height="${checkboxSize}" 
-          rx="4" 
-          fill="${checked ? controlColor : this.renderTheme.cardBg}" 
+    return `<g${this.getDataNodeId(node)}${disabled ? ' opacity="0.45"' : ''}${!clickable ? ' data-clickable="false"' : ''}>
+    <rect x="${pos.x}" y="${checkboxY}"
+          width="${checkboxSize}" height="${checkboxSize}"
+          rx="4"
+          fill="${checked ? controlColor : this.renderTheme.cardBg}"
           stroke="${this.renderTheme.border}" 
           stroke-width="1"/>
     ${
@@ -1549,15 +1561,16 @@ export class SVGRenderer {
     const label = String(node.props.label || 'Radio');
     const checked = String(node.props.checked || 'false').toLowerCase() === 'true';
     const disabled = this.parseBooleanProp(node.props.disabled, false);
+    const clickable = String(node.props.clickable ?? 'true') !== 'false';
     const controlColor = this.resolveControlColor();
 
     const radioSize = 16;
     const radioY = pos.y + pos.height / 2 - radioSize / 2;
 
-    return `<g${this.getDataNodeId(node)}${disabled ? ' opacity="0.45"' : ''}>
-    <circle cx="${pos.x + radioSize / 2}" cy="${radioY + radioSize / 2}" 
-            r="${radioSize / 2}" 
-            fill="${this.renderTheme.cardBg}" 
+    return `<g${this.getDataNodeId(node)}${disabled ? ' opacity="0.45"' : ''}${!clickable ? ' data-clickable="false"' : ''}>
+    <circle cx="${pos.x + radioSize / 2}" cy="${radioY + radioSize / 2}"
+            r="${radioSize / 2}"
+            fill="${this.renderTheme.cardBg}"
             stroke="${this.renderTheme.border}" 
             stroke-width="1"/>
     ${
@@ -1578,14 +1591,15 @@ export class SVGRenderer {
     const label = String(node.props.label || 'Toggle');
     const enabled = String(node.props.enabled || 'false').toLowerCase() === 'true';
     const disabled = this.parseBooleanProp(node.props.disabled, false);
+    const clickable = String(node.props.clickable ?? 'true') !== 'false';
     const controlColor = this.resolveControlColor();
 
     const toggleWidth = 40;
     const toggleHeight = 20;
     const toggleY = pos.y + pos.height / 2 - toggleHeight / 2;
 
-    return `<g${this.getDataNodeId(node)}${disabled ? ' opacity="0.45"' : ''}>
-    <rect x="${pos.x}" y="${toggleY}" 
+    return `<g${this.getDataNodeId(node)}${disabled ? ' opacity="0.45"' : ''}${!clickable ? ' data-clickable="false"' : ''}>
+    <rect x="${pos.x}" y="${toggleY}"
           width="${toggleWidth}" height="${toggleHeight}" 
           rx="10" 
           fill="${enabled ? controlColor : this.renderTheme.border}" 
@@ -1606,13 +1620,10 @@ export class SVGRenderer {
 
   protected renderSidebar(node: IRComponentNode, pos: any): string {
     const title = String(node.props.title || 'Sidebar');
-    const itemsStr = String(node.props.items || '');
     const activeItem = String(node.props.active || '');
 
-    let items: string[] = [];
-    if (itemsStr) {
-      items = itemsStr.split(',').map((i) => i.trim());
-    } else {
+    let items = toStringArray(node.props.items);
+    if (items.length === 0) {
       // Generate mock items
       const itemCount = Number(node.props.itemsMock || 6);
       items = MockDataGenerator.generateMockList('name', itemCount);
@@ -1659,9 +1670,9 @@ export class SVGRenderer {
   }
 
   protected renderTabs(node: IRComponentNode, pos: any): string {
-    const itemsStr = String(node.props.items || '');
-    const tabs = itemsStr ? itemsStr.split(',').map((t) => t.trim()) : ['Tab 1', 'Tab 2', 'Tab 3'];
-    const activeProp = node.props.active ?? 0;
+    const parsedTabs = toStringArray(node.props.items);
+    const tabs = parsedTabs.length > 0 ? parsedTabs : ['Tab 1', 'Tab 2', 'Tab 3'];
+    const activeProp = node.props.active ?? node.props.initialActive ?? 0;
     const activeIndex = Number.isFinite(Number(activeProp))
       ? Math.max(0, Math.floor(Number(activeProp)))
       : 0;
@@ -1680,8 +1691,7 @@ export class SVGRenderer {
     const fontSize = 13;
     const textY = pos.y + Math.round(tabHeight / 2) + Math.round(fontSize * 0.4);
 
-    const iconsStr = String(node.props.icons || '');
-    const iconList = iconsStr ? iconsStr.split(',').map((s) => s.trim()) : [];
+    const iconList = toStringArray(node.props.icons);
     const isFlat = this.parseBooleanProp(node.props.flat, false);
     const showBorder = this.parseBooleanProp(node.props.border, true);
     const tabWidth = pos.width / tabs.length;
@@ -1804,6 +1814,14 @@ export class SVGRenderer {
           fill="${isActive ? activeTextColor : this.renderTheme.text}"
           text-anchor="middle">${this.escapeXml(tab)}</text>`;
         }
+      }
+
+      const tabsTriggerAttrs = this.getTabsTriggerAttrs(node, i);
+      if (tabsTriggerAttrs) {
+        svg += `
+    <rect x="${tabX}" y="${pos.y}"
+          width="${tabWidth}" height="${tabHeight}"
+          fill="transparent" stroke="none" pointer-events="all"${tabsTriggerAttrs}/>`;
       }
     });
 
@@ -1953,76 +1971,64 @@ export class SVGRenderer {
   </g>`;
   }
 
-  protected renderModal(node: IRComponentNode, pos: any): string {
-    const visible = this.parseBooleanProp(node.props.visible, true);
-    if (!visible) {
-      return '';
-    }
+  protected renderModalDecoration(node: IRNode, pos: any, output: string[]): void {
+    if (node.kind !== 'container') return;
 
-    const title = String(node.props.title || 'Modal');
-
+    const canvasWidth = this.options.width;
+    const canvasHeight = Math.max(this.options.height, this.calculateContentHeight());
     const padding = 16;
     const headerHeight = 48;
+    const hasTitle = node.params.title !== undefined && node.params.title !== '';
+    const closable = node.params.closable !== 'false' && node.params.closable !== 0;
+    const title = hasTitle ? String(node.params.title) : '';
 
-    // Use full-canvas overlay so it sits above prior content
-    const overlayHeight = Math.max(this.options.height, this.calculateContentHeight());
-    const modalX = (this.options.width - pos.width) / 2;
-    const modalY = Math.max(40, (overlayHeight - pos.height) / 2);
+    // Backdrop
+    output.push(
+      `<rect x="0" y="0" width="${canvasWidth}" height="${canvasHeight}" fill="black" opacity="0.28" pointer-events="none"/>`
+    );
 
-    return `<g${this.getDataNodeId(node)}>
-    <!-- Modal backdrop -->
-      <rect x="0" y="0" 
-        width="${this.options.width}" height="${overlayHeight}" 
-        fill="black" opacity="0.28"/>
-    
-    <!-- Modal box -->
-      <rect x="${modalX}" y="${modalY}" 
-        width="${pos.width}" height="${pos.height}" 
-          rx="8" 
-          fill="${this.renderTheme.cardBg}" 
-        stroke="${this.renderTheme.border}" 
-          stroke-width="1"/>
-    
-    <!-- Header -->
-      <line x1="${modalX}" y1="${modalY + headerHeight}" 
-        x2="${modalX + pos.width}" y2="${modalY + headerHeight}" 
-          stroke="${this.renderTheme.border}" 
-          stroke-width="1"/>
-    
-      <text x="${modalX + padding}" y="${modalY + padding + 16}" 
-          font-family="Arial, Helvetica, sans-serif" 
-          font-size="16" 
-          font-weight="600" 
-          fill="${this.renderTheme.text}">${this.escapeXml(title)}</text>
-    
-    <!-- Close button -->
-      <text x="${modalX + pos.width - 16}" y="${modalY + padding + 12}" 
-          font-family="Arial, Helvetica, sans-serif" 
-          font-size="18" 
-          fill="${this.renderTheme.textMuted}">✕</text>
-    
-    <!-- Content placeholder -->
-      <text x="${modalX + pos.width / 2}" y="${modalY + headerHeight + (pos.height - headerHeight) / 2}" 
-          font-family="Arial, Helvetica, sans-serif" 
-          font-size="13" 
-          fill="${this.renderTheme.textMuted}" 
-          text-anchor="middle">Modal content</text>
-  </g>`;
+    // Modal box
+    output.push(
+      `<rect x="${pos.x}" y="${pos.y}" width="${pos.width}" height="${pos.height}" rx="8" fill="${this.renderTheme.cardBg}" stroke="${this.renderTheme.border}" stroke-width="1"/>`
+    );
+
+    if (hasTitle) {
+      // Header separator
+      output.push(
+        `<line x1="${pos.x}" y1="${pos.y + headerHeight}" x2="${pos.x + pos.width}" y2="${pos.y + headerHeight}" stroke="${this.renderTheme.border}" stroke-width="1"/>`
+      );
+      // Title text
+      output.push(
+        `<text x="${pos.x + padding}" y="${pos.y + padding + 15}" font-family="Arial, Helvetica, sans-serif" font-size="15" font-weight="600" fill="${this.renderTheme.text}">${this.escapeXml(title)}</text>`
+      );
+      // Close button (only if closable and has title)
+      if (closable) {
+        const events = node.events?.find(e => e.event === 'onClose');
+        const closeEventAttr = events ? this.serializeEventHandler(events) : '';
+        const closeX = pos.x + pos.width - padding - 14;
+        const closeY = pos.y + padding + 14;
+        output.push(
+          `<rect x="${closeX - 12}" y="${closeY - 12}" width="24" height="24" rx="4" fill="transparent" stroke="none" pointer-events="all"${closeEventAttr}/>`,
+          `<text x="${closeX}" y="${closeY}" font-family="Arial, Helvetica, sans-serif" font-size="16" fill="${this.renderTheme.textMuted}" text-anchor="middle" dominant-baseline="central" pointer-events="none">✕</text>`
+        );
+      }
+    }
+  }
+
+  protected renderModalFooterDecoration(pos: any, output: string[]): void {
+    // Separator line above footer
+    output.push(
+      `<line x1="${pos.x}" y1="${pos.y}" x2="${pos.x + pos.width}" y2="${pos.y}" stroke="${this.renderTheme.border}" stroke-width="1"/>`
+    );
   }
 
   protected renderList(node: IRComponentNode, pos: any): string {
     const title = String(node.props.title || '');
-    const itemsStr = String(node.props.items || '');
     const mockType = String(node.props.mock || '').trim();
     const random = this.parseBooleanProp(node.props.random, false);
 
-    let items: string[] = [];
-    if (itemsStr) {
-      items = itemsStr
-        .split(',')
-        .map((i) => i.trim())
-        .filter(Boolean);
-    } else {
+    let items = toStringArray(node.props.items);
+    if (items.length === 0) {
       // Generate mock items from provided mock type or fallback to deterministic names.
       const parsedItemsMock = Number(node.props.itemsMock ?? 4);
       const itemCount = Number.isFinite(parsedItemsMock)
@@ -2060,6 +2066,7 @@ export class SVGRenderer {
     items.forEach((item, i) => {
       const itemY = pos.y + titleHeight + i * itemHeight;
       if (itemY + itemHeight <= pos.y + pos.height) {
+        const itemEventAttrs = this.getScopedEventAttrs(node, 'onItemClick', { index: i });
         svg += `
     <line x1="${pos.x}" y1="${itemY + itemHeight}" 
           x2="${pos.x + pos.width}" y2="${itemY + itemHeight}" 
@@ -2068,7 +2075,10 @@ export class SVGRenderer {
     <text x="${pos.x + padding}" y="${itemY + 24}" 
           font-family="Arial, Helvetica, sans-serif" 
           font-size="13" 
-          fill="${this.renderTheme.text}">${this.escapeXml(item)}</text>`;
+          fill="${this.renderTheme.text}">${this.escapeXml(item)}</text>
+    ${itemEventAttrs ? `<rect x="${pos.x}" y="${itemY}"
+          width="${pos.width}" height="${itemHeight}"
+          fill="transparent" stroke="none" pointer-events="all"${itemEventAttrs}/>` : ''}`;
       }
     });
 
@@ -2370,8 +2380,8 @@ export class SVGRenderer {
   }
 
   protected renderBreadcrumbs(node: IRComponentNode, pos: any): string {
-    const itemsStr = String(node.props.items || 'Home');
-    const items = itemsStr.split(',').map((s) => s.trim());
+    const parsedBreadcrumbs = toStringArray(node.props.items);
+    const items = parsedBreadcrumbs.length > 0 ? parsedBreadcrumbs : ['Home'];
     const separator = String(node.props.separator || '/');
     const fontSize = 12;
     const separatorWidth = 20; // Increased for spacing
@@ -2412,10 +2422,9 @@ export class SVGRenderer {
   }
 
   protected renderSidebarMenu(node: IRComponentNode, pos: any): string {
-    const itemsStr = String(node.props.items || 'Item 1,Item 2,Item 3');
-    const iconsStr = String(node.props.icons || '');
-    const items = itemsStr.split(',').map((s) => s.trim());
-    const icons = iconsStr ? iconsStr.split(',').map((s) => s.trim()) : [];
+    const parsedMenuItems = toStringArray(node.props.items);
+    const items = parsedMenuItems.length > 0 ? parsedMenuItems : ['Item 1', 'Item 2', 'Item 3'];
+    const icons = toStringArray(node.props.icons);
 
     const itemHeight = 40;
     const fontSize = 14;
@@ -2475,6 +2484,14 @@ export class SVGRenderer {
           font-size="${fontSize}"
           font-weight="${fontWeight}"
           fill="${textColor}">${this.escapeXml(item)}</text>`;
+
+      const itemEventAttrs = this.getScopedEventAttrs(node, 'onItemsClick', { index });
+      if (itemEventAttrs) {
+        svg += `
+    <rect x="${pos.x}" y="${itemY}"
+          width="${pos.width}" height="${itemHeight}"
+          fill="transparent" stroke="none" pointer-events="all"${itemEventAttrs}/>`;
+      }
     });
 
     svg += '\n  </g>';
@@ -2935,10 +2952,7 @@ export class SVGRenderer {
       rightCursor = x - 8;
     }
 
-    const actionLabels = actions
-      .split(',')
-      .map((a) => a.trim())
-      .filter(Boolean);
+    const actionLabels = toStringArray(actions);
     const actionHeight = 32;
     const actionY = pos.y + (pos.height - actionHeight) / 2;
     const actionGap = 8;
@@ -3053,11 +3067,109 @@ export class SVGRenderer {
   }
 
   /**
-   * Get data-node-id attribute string for SVG elements
-   * Enables bidirectional selection between code and canvas
+   * Get data-node-id and event data attributes for SVG elements.
+   * Enables bidirectional selection between code and canvas (data-node-id)
+   * and play test interactivity (data-event-*, data-user-id, data-tabs-id).
    */
   protected getDataNodeId(node: IRComponentNode | IRContainerNode | IRInstanceNode): string {
-    return node.meta.nodeId ? ` data-node-id="${node.meta.nodeId}"` : '';
+    let attrs = '';
+
+    if (node.meta.nodeId) {
+      attrs += ` data-node-id="${node.meta.nodeId}"`;
+    }
+
+    if (node.kind === 'component') {
+      if (node.userDefinedId) {
+        attrs += ` data-user-id="${node.userDefinedId}"`;
+      }
+      if (node.events && node.events.length > 0) {
+        for (const handler of node.events) {
+          if (!this.isScopedEvent(handler.event)) {
+            attrs += this.serializeEventHandler(handler);
+          }
+        }
+      }
+    }
+
+    if (node.kind === 'container') {
+      if (node.containerType === 'tabs' && node.params.id) {
+        attrs += ` data-tabs-id="${node.params.id}"`;
+        if (node.params.active !== undefined) {
+          attrs += ` data-tabs-active="${node.params.active}"`;
+        }
+      }
+      if (node.events && node.events.length > 0) {
+        for (const handler of node.events) {
+          // onClose on modal is scoped to the close button — not emitted on the wrapper <g>
+          if (node.containerType === 'modal' && handler.event === 'onClose') continue;
+          attrs += this.serializeEventHandler(handler);
+        }
+      }
+    }
+
+    return attrs;
+  }
+
+  private isScopedEvent(event: IREventHandler['event']): boolean {
+    return event === 'onClose' || event === 'onItemClick' || event === 'onRowClick' || event === 'onItemsClick';
+  }
+
+  private getScopedEventAttrs(
+    node: IRComponentNode,
+    eventName: IREventHandler['event'],
+    options: { index?: number } = {}
+  ): string {
+    const handler = node.events?.find((event) => event.event === eventName);
+    if (!handler) return '';
+
+    let attrs = '';
+    if (node.meta.nodeId) {
+      attrs += ` data-node-id="${node.meta.nodeId}"`;
+    }
+    if (node.userDefinedId) {
+      attrs += ` data-user-id="${node.userDefinedId}"`;
+    }
+    attrs += this.serializeEventHandler(handler);
+    if (options.index !== undefined) {
+      attrs += ` data-event-index="${options.index}"`;
+    }
+    return attrs;
+  }
+
+  private getTabsTriggerAttrs(node: IRComponentNode, index: number): string {
+    const tabsId = String(node.props.tabsId || '').trim();
+    if (!tabsId) return '';
+
+    let attrs = '';
+    if (node.meta.nodeId) {
+      attrs += ` data-node-id="${node.meta.nodeId}"`;
+    }
+    attrs += ` data-tabs-id="${tabsId}" data-tabs-trigger-index="${index}"`;
+    return attrs;
+  }
+
+  private serializeEventHandler(handler: IREventHandler): string {
+    const attrName = this.eventNameToDataAttr(handler.event);
+    const value = handler.actions.map(a => this.serializeEventAction(a)).join('|');
+    return ` data-event-${attrName}="${value}"`;
+  }
+
+  private eventNameToDataAttr(event: string): string {
+    // onClick → click, onChange → change, onActive → active, onItemsClick → itemsclick, etc.
+    return event.replace(/^on/, '').toLowerCase();
+  }
+
+  private serializeEventAction(action: IREventAction): string {
+    switch (action.type) {
+      case 'navigate': return `navigate:${action.screen}`;
+      case 'show': return `show:${action.targetId}`;
+      case 'hide': return `hide:${action.targetId}`;
+      case 'toggle': return `toggle:${action.targetId}`;
+      case 'enable': return `enable:${action.targetId}`;
+      case 'disable': return `disable:${action.targetId}`;
+      case 'setTab': return `setTab:${action.tabsId}:${action.index}`;
+      case 'navigateItems': return action.screens.map(s => `navigate:${s}`).join(',');
+    }
   }
 
 }

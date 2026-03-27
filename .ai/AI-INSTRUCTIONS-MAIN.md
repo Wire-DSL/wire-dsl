@@ -86,7 +86,8 @@ project "Dashboard" {
 - Block-based syntax (inspired by Mermaid)
 - Property-value pairs for configuration
 - 23 UI components available
-- 5 layout containers (Stack, Grid, Split, Panel, Card)
+- 6 layout containers (Stack, Grid, Split, Panel, Card, Tabs)
+- Declarative event annotations for interactive prototyping
 - Theming system for visual consistency
 
 **References:**
@@ -137,14 +138,16 @@ Output (SVG / IR / AST)
 | **Navigation** | Topbar, SidebarMenu, Breadcrumbs, Tabs |
 | **Data Display** | Table, List |
 | **Media & Display** | Image, Icon, Avatar, Divider, Badge, Link, Alert, Stat, Code, Chart |
-| **Modal & Feedback** | Modal, Spinner |
+| **Media & Display** | Image, Icon, Avatar, Divider, Badge, Link, Alert, Stat, Code, Chart, Spinner |
 
-**5 Layout Containers:**
+**7 Layout Containers:**
 - **Stack** - Vertical/horizontal flow
 - **Grid** - CSS Grid-based layout
 - **Split** - Side-by-side with divider
 - **Panel** - Card-like container
-- **Card** - Elevated container with shadow
+- **Card** - Elevated container with shadow (supports `onClick`)
+- **Tabs** - Tabbed content container with `tab` children
+- **Modal** - Overlay dialog with optional `body`/`footer` sections; shown/hidden via events
 
 **References:**
 - Full catalog: [COMPONENTS-REFERENCE.md](../docs/COMPONENTS-REFERENCE.md)
@@ -162,6 +165,74 @@ Apply visual consistency through theming:
 - **font**: Font configuration
 
 **Reference:** [THEME-GUIDE.md](../docs/THEME-GUIDE.md)
+
+---
+
+### 5. Event System
+
+Wire-DSL supports **declarative interaction annotations** — metadata that describes prototype flows. The engine remains 100% static; events live in the IR and SVG as metadata that external consumers (canvas, preview tools) interpret.
+
+**Core principle:** The engine always produces static SVG. `data-event-*` attributes are the communication channel for play test. The canvas maintains a mutable copy of the IR for the session; events modify that IR and trigger re-rendering.
+
+**Component IDs** (all components and containers support `id` and `visible`):
+```wire
+layout modal(id: confirmModal, title: "Confirm?") { ... }
+layout stack(id: sidePanel, padding: md) { ... }
+component Button id: submitBtn text: "Submit" visible: false
+```
+
+**Events on components (inline):**
+```wire
+component Button text: "Delete" onClick: hide(listModal) & show(confirmModal)
+component Toggle text: "Show panel" onChange: toggle(advPanel)
+layout modal(id: m1, title: "Sure?", onClose: hide(self)) { ... }
+```
+
+**Tabs container** (`initialActive` for design-time, `active` for runtime):
+```wire
+component Tabs items: "Profile,Settings" initialActive: 0 tabsId: mainTabs
+layout tabs(id: mainTabs) {
+  tab { component Heading text: "Profile" }
+  tab { component Heading text: "Settings" }
+}
+```
+
+**Modal container:**
+```wire
+layout modal(id: confirmModal, title: "Delete?", visible: false, closable: true) {
+  body { component Text text: "This cannot be undone." }
+  footer {
+    component Button text: "Cancel" onClick: hide(self)
+    component Button text: "Delete" variant: danger onClick: hide(self)
+  }
+}
+component Button text: "Delete" variant: danger onClick: show(confirmModal)
+```
+
+**Visibility:** `show/hide/toggle` affect both rendering AND layout space. Hidden elements don't occupy space.
+
+**Actions:**
+| Action | Description |
+|--------|-------------|
+| `navigate(ScreenName)` | Navigate to another screen |
+| `show(id \| self)` | Make component visible |
+| `hide(id \| self)` | Hide component |
+| `toggle(id \| self)` | Toggle visibility |
+| `setTab(tabsId, index)` | Change active tab |
+
+**Action chaining** with `&`: `onClick: hide(a) & show(b) & navigate(Home)`
+
+**`applyStateChange` API:** The engine exports a function to mutate the IR for play test:
+```typescript
+const newIR = applyStateChange(currentIR, { type: 'setVisible', targetId: 'modal1', visible: true });
+```
+
+**References:**
+- Event syntax: [DSL-SYNTAX.md](../docs/DSL-SYNTAX.md)
+- Components with events: [COMPONENTS-REFERENCE.md](../docs/COMPONENTS-REFERENCE.md)
+- Tabs container: [CONTAINERS-REFERENCE.md](../docs/CONTAINERS-REFERENCE.md)
+- Validation rules EVT-001–EVT-014: [VALIDATION-RULES.md](../specs/VALIDATION-RULES.md)
+- State API: `packages/engine/src/state.ts`
 
 ---
 
@@ -228,6 +299,7 @@ All `.wire` files must comply with:
 | `packages/engine/src/ir/` | IR generation and schema |
 | `packages/engine/src/layout/` | Layout calculation engine |
 | `packages/engine/src/renderer/` | SVG output generation |
+| `packages/engine/src/state.ts` | `applyStateChange` — IR mutation for play test |
 | `packages/engine/tests/` | Test suites |
 | `docs/ARCHITECTURE.md` | System design documentation |
 | `specs/IR-CONTRACT.md` | IR schema specification |
@@ -275,6 +347,7 @@ Example: Instead of creating RECOMMENDATION.md + VISUAL-ANALYSIS.md + DECISION.m
 - **System Design** → [ARCHITECTURE.md](../docs/ARCHITECTURE.md)
 - **Components** → [COMPONENTS-REFERENCE.md](../docs/COMPONENTS-REFERENCE.md)
 - **Layouts** → [CONTAINERS-REFERENCE.md](../docs/CONTAINERS-REFERENCE.md)
+- **Events & Interactivity** → [COMPONENTS-REFERENCE.md](../docs/COMPONENTS-REFERENCE.md#events--interactivity) + [CONTAINERS-REFERENCE.md](../docs/CONTAINERS-REFERENCE.md) + [VALIDATION-RULES.md](../specs/VALIDATION-RULES.md#event-system-validation-rules-evt-001--evt-014)
 - **Theming** → [THEME-GUIDE.md](../docs/THEME-GUIDE.md)
 - **CLI Usage** → [CLI-REFERENCE.md](../docs/CLI-REFERENCE.md)
 - **Prompt Engineering** → [LLM-PROMPTING.md](../docs/LLM-PROMPTING.md)
