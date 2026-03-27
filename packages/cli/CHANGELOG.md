@@ -1,5 +1,13 @@
 # @wire-dsl/cli
 
+## 0.3.14
+
+### Patch Changes
+
+- Updated dependencies [[`d370b36`](https://github.com/Wire-DSL/wire-dsl/commit/d370b36003234e11465cd2c8d5d576264a816d52)]:
+  - @wire-dsl/engine@0.10.0
+  - @wire-dsl/exporters@0.2.8
+
 ## 0.3.13
 
 ### Patch Changes

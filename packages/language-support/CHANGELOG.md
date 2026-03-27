@@ -1,5 +1,11 @@
 # @wire-dsl/language-support
 
+## 0.10.0
+
+### Minor Changes
+
+- [#83](https://github.com/Wire-DSL/wire-dsl/pull/83) [`d370b36`](https://github.com/Wire-DSL/wire-dsl/commit/d370b36003234e11465cd2c8d5d576264a816d52) Thanks [@roxguel](https://github.com/roxguel)! - Add event system
+
 ## 0.9.0
 
 ### Minor Changes
