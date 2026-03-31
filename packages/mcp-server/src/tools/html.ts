@@ -29,7 +29,7 @@ export const WIREFRAME_VIEWER_HTML = `<!DOCTYPE html>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: system-ui, sans-serif; padding: 24px; background: transparent; color: #1a1a1a; }
     #loading { opacity: 0.4; font-size: 13px; }
-    .screen { margin-bottom: 40px; }
+    /* .screen { margin-bottom: 40px; } */
     .screen-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
     .label { font-size: 11px; font-weight: 600; opacity: 0.45; letter-spacing: 0.08em; text-transform: uppercase; }
     .actions { display: flex; gap: 6px; }
