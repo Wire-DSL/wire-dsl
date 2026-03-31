@@ -13,7 +13,7 @@ Wire DSL is a declarative language for creating UI wireframes with code. This MC
 | `get_documentation` | Returns Wire DSL syntax reference, component catalog, and examples |
 | `validate_wire` | Validates `.wire` source code and returns errors with line/column positions |
 | `render_wire` | Renders wireframes as SVG or PNG |
-| `render_wire_widget` | Renders wireframes as an interactive embedded widget (ChatGPT) |
+| `render_wire_widget` | Renders wireframes as an interactive embedded widget (Claude Desktop, ChatGPT, and other MCP Apps hosts) |
 
 ---
 
@@ -137,8 +137,8 @@ Full reference available via the `get_documentation` tool.
 **The model generates code but nothing renders**
 Ask the model to call `validate_wire` first to check for syntax errors, then `render_wire` or `render_wire_widget`.
 
-**Widget shows "Loading wireframe…" and doesn't update (ChatGPT)**
-The widget initializes asynchronously. If it stays on loading, refresh the widget panel (F5 or reload the page).
+**Widget shows "Loading wireframe…" and doesn't update**
+Fully quit and relaunch the host app (Claude Desktop aggressively caches widget resources). If using Claude Desktop against a remote HTTP MCP server, wrap with `mcp-remote` and force `--transport http-only`.
 
 **SVG dimensions look wrong (too wide for mobile)**
 Make sure your `.wire` file includes `device: "mobile"` in the `style` block, or pass `device: mobile` as a parameter to the render tool.
