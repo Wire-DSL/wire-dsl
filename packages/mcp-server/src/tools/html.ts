@@ -160,6 +160,23 @@ export const WIREFRAME_VIEWER_HTML = `<!DOCTYPE html>
         return;
       }
     });
+
+    // ── ChatGPT legacy fallback (window.openai.toolOutput) ──────────
+    // Older ChatGPT builds inject window.openai asynchronously.
+    // Poll for it; if the MCP Apps handshake fires first, this is a no-op.
+    var _rendered = false;
+    var _origRender = render;
+    render = function(data) { _rendered = true; _origRender(data); };
+    (function pollOpenAI() {
+      if (_rendered) return;
+      if (window.openai && window.openai.toolOutput) {
+        Promise.resolve(window.openai.toolOutput).then(function(d) {
+          if (!_rendered) render(d);
+        }).catch(function(){});
+      } else {
+        setTimeout(pollOpenAI, 100);
+      }
+    })();
   </script>
 </body>
 </html>`;
