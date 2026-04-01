@@ -1,11 +1,18 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import {
+  registerAppTool,
+  registerAppResource,
+  RESOURCE_MIME_TYPE,
+} from '@modelcontextprotocol/ext-apps/server';
 import { handleDocumentation } from './tools/documentation.js';
 import { handleValidate } from './tools/validate.js';
 import { handleRender, initSvgRenderer } from './tools/render.js';
 import { handleGetWireframeWidget, WIREFRAME_VIEWER_HTML } from './tools/html.js';
 
 export { initSvgRenderer };
+
+const VIEWER_RESOURCE_URI = 'ui://wire-dsl/wireframe-viewer';
 
 export function createServer(): McpServer {
   const server = new McpServer({ name: 'wire-dsl', version: '0.1.0' });
@@ -110,38 +117,32 @@ export function createServer(): McpServer {
     handleRender
   );
 
-  server.registerResource(
-    'wireframe-viewer',
-    'ui://widget/wireframe-viewer',
+  // MCP App resource — serves the self-contained HTML widget
+  registerAppResource(
+    server,
+    'Wire DSL Wireframe Viewer',
+    VIEWER_RESOURCE_URI,
     {
-      title: 'Wire DSL Wireframe Viewer',
-      description: 'Interactive HTML widget that renders Wire DSL wireframes. Loaded by MCP clients (e.g. ChatGPT) as an embedded iframe; receives screen SVG data from the render_wire_widget tool via the MCP Apps bridge.',
-      mimeType: 'text/html;profile=mcp-app',
-      // CSP: widget is fully self-contained — no external fetch, scripts, fonts or frames needed.
-      // connectDomains / resourceDomains / frameDomains are intentionally empty.
-      _meta: {
-        ui: {
-          csp: {
-            connectDomains: [] as string[],
-            resourceDomains: [] as string[],
-          },
-        },
-      },
+      description: 'Interactive wireframe viewer widget for Wire DSL.',
+      mimeType: RESOURCE_MIME_TYPE,
     },
-    async (uri) => ({
+    async () => ({
       contents: [
         {
-          uri: uri.toString(),
-          mimeType: 'text/html;profile=mcp-app',
+          uri: VIEWER_RESOURCE_URI,
+          mimeType: RESOURCE_MIME_TYPE,
           text: WIREFRAME_VIEWER_HTML,
         },
       ],
     })
   );
 
-  server.registerTool(
+  // MCP App tool — renders Wire DSL and pushes structuredContent to the widget
+  registerAppTool(
+    server,
     'render_wire_widget',
     {
+      title: 'Render Wire DSL Widget',
       annotations: {
         readOnlyHint: true,
         destructiveHint: false,
@@ -149,12 +150,12 @@ export function createServer(): McpServer {
         openWorldHint: false,
       },
       description:
-        'Renders Wire DSL source code as an interactive wireframe widget. ' +
-        'Clients that support MCP Apps (e.g. ChatGPT) will embed the widget as an HTML iframe — the user sees the wireframe rendered directly in the chat. ' +
-        'Returns SVG screen data as structuredContent and links the registered wireframe-viewer resource via _meta.ui.resourceUri. ' +
-        'For showing a static image in the chat (all clients), use render_wire with format: "png" instead.',
+        'Renders Wire DSL source code as an interactive wireframe widget displayed inline in the chat. ' +
+        'Supported by Claude, ChatGPT, and any MCP Apps-compliant host. ' +
+        'The widget shows each screen as an SVG card with download buttons. ' +
+        'For a static PNG image instead, use render_wire with format: "png".',
       _meta: {
-        ui: { resourceUri: 'ui://widget/wireframe-viewer' },
+        ui: { resourceUri: VIEWER_RESOURCE_URI },
       },
       inputSchema: {
         wire_code: z.string().max(50_000).describe('Wire DSL source code to render'),
