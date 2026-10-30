@@ -12,8 +12,12 @@ type RenderMode = 'standard' | 'skeleton' | 'sketch';
 
 /**
  * Static HTML widget served as a registered MCP resource.
- * ChatGPT embeds this in an iframe and passes tool result data via window.openai.toolOutput.
- * Other clients can use the postMessage fallback.
+ * Implements the MCP Apps protocol (JSON-RPC over postMessage) for Claude, ChatGPT,
+ * and any compliant host. The handshake works as follows:
+ *   1. Host sends  ui/initialize  → app replies with capabilities
+ *   2. Host sends  ui/notifications/initialized  (ack)
+ *   3. Host sends  ui/notifications/tool-result  with the structuredContent
+ *   4. App renders the wireframe SVG screens
  */
 export const WIREFRAME_VIEWER_HTML = `<!DOCTYPE html>
 <html lang="en">
@@ -25,7 +29,7 @@ export const WIREFRAME_VIEWER_HTML = `<!DOCTYPE html>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: system-ui, sans-serif; padding: 24px; background: transparent; color: #1a1a1a; }
     #loading { opacity: 0.4; font-size: 13px; }
-    .screen { margin-bottom: 40px; }
+    /* .screen { margin-bottom: 40px; } */
     .screen-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
     .label { font-size: 11px; font-weight: 600; opacity: 0.45; letter-spacing: 0.08em; text-transform: uppercase; }
     .actions { display: flex; gap: 6px; }
@@ -43,6 +47,7 @@ export const WIREFRAME_VIEWER_HTML = `<!DOCTYPE html>
   <p id="loading">Loading wireframe\u2026</p>
   <div id="root"></div>
   <script>
+    // ── Helpers ──────────────────────────────────────────────────────
     function esc(s) {
       return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
@@ -55,23 +60,27 @@ export const WIREFRAME_VIEWER_HTML = `<!DOCTYPE html>
       document.body.removeChild(a);
       URL.revokeObjectURL(a.href);
     }
+
     var _screens = [];
     var _wireCode = '';
-    // Detect ChatGPT's host theme via OpenAI Apps SDK, fallback to prefers-color-scheme.
-    // Body background stays transparent so the widget blends with ChatGPT's own background.
-    function getHostTheme() {
-      if (window.openai && window.openai.theme) return window.openai.theme;
+    var _hostTheme = null; // set by the host via ui/initialize or context-changed
+
+    function getTheme() {
+      if (_hostTheme) return _hostTheme;
       if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) return 'dark';
       return 'light';
     }
+
     function applyTheme() {
-      var dark = getHostTheme() === 'dark';
+      var dark = getTheme() === 'dark';
       document.body.style.color = dark ? '#e0e0e0' : '#1a1a1a';
       document.querySelectorAll('.card').forEach(function(el) {
         el.style.background = dark ? '#2a2a2a' : '#ffffff';
         el.style.boxShadow = dark ? '0 1px 4px rgba(0,0,0,0.30)' : '0 1px 4px rgba(0,0,0,0.10)';
       });
     }
+
+    // ── Render wireframe screens ────────────────────────────────────
     function render(data) {
       document.getElementById('loading').style.display = 'none';
       var root = document.getElementById('root');
@@ -87,8 +96,8 @@ export const WIREFRAME_VIEWER_HTML = `<!DOCTYPE html>
           '<div class="screen-header">' +
             '<span class="label">' + esc(s.name) + '</span>' +
             '<div class="actions">' +
-              '<button class="btn-dl" onclick="dl(\'' + slug + '.svg\',_screens[' + i + '].svg,\'image/svg+xml\')">↓ SVG</button>' +
-              (_wireCode ? '<button class="btn-dl" onclick="dl(\'wireframe.wire\',_wireCode,\'text/plain\')">↓ .wire</button>' : '') +
+              '<button class="btn-dl" onclick="dl(\\''+slug+'.svg\\',_screens['+i+'].svg,\\'image/svg+xml\\')">\\u2193 SVG</button>' +
+              (_wireCode ? '<button class="btn-dl" onclick="dl(\\'wireframe.wire\\',_wireCode,\\'text/plain\\')">\\u2193 .wire</button>' : '') +
             '</div>' +
           '</div>' +
           '<div class="card">' + s.svg + '</div>' +
@@ -96,29 +105,78 @@ export const WIREFRAME_VIEWER_HTML = `<!DOCTYPE html>
       }).join('');
       applyTheme();
     }
-    // ChatGPT: window.openai is injected asynchronously after the iframe loads.
-    // Poll until it's available (up to 10 seconds) before falling back.
-    var pollAttempts = 0;
-    var pollMax = 200; // 200 * 50ms = 10s
-    function pollOpenAI() {
-      if (window.openai && window.openai.toolOutput) {
-        Promise.resolve(window.openai.toolOutput).then(render).catch(console.error);
-      } else if (pollAttempts < pollMax) {
-        pollAttempts++;
-        setTimeout(pollOpenAI, 50);
-      } else {
-        // Timeout — leave postMessage listener active as final fallback
-        console.warn('[wire-dsl] window.openai not available after 10s');
-      }
-    }
-    pollOpenAI();
-    // postMessage fallback for other MCP clients
+
+    // ── MCP Apps protocol (JSON-RPC 2.0 over postMessage) ───────────
+    // Handles the handshake and tool-result delivery for Claude, ChatGPT
+    // and any compliant MCP Apps host.
+    var _msgId = 0;
+    function send(msg) { window.parent.postMessage(msg, '*'); }
+    function rpcResult(id, result) { send({ jsonrpc: '2.0', id: id, result: result }); }
+
     window.addEventListener('message', function(e) {
-      var d = e.data;
-      if (!d) return;
-      if (d.method === 'ui/notifications/tool-result' && d.params) render(d.params);
-      else if (d.type === 'tool-result') render(d.data);
+      var msg = e.data;
+      if (!msg || msg.jsonrpc !== '2.0') return;
+
+      // ui/initialize — host asks the app for its capabilities
+      if (msg.method === 'ui/initialize') {
+        var ctx = (msg.params && msg.params.hostContext) || {};
+        if (ctx.theme) _hostTheme = ctx.theme;
+        rpcResult(msg.id, {
+          protocolVersion: '2026-01-26',
+          capabilities: {},
+          appInfo: { name: 'Wire DSL Wireframe Viewer', version: '0.1.0' }
+        });
+        return;
+      }
+
+      // ui/notifications/initialized — handshake complete (no response needed)
+      if (msg.method === 'ui/notifications/initialized') return;
+
+      // ui/notifications/tool-result — the structured wireframe data
+      if (msg.method === 'ui/notifications/tool-result') {
+        var params = msg.params || {};
+        // structuredContent holds our screen data; fall back to parsing text content
+        var sc = params.structuredContent;
+        if (sc) {
+          render(sc);
+        } else if (params.content) {
+          // Try to parse the text content as JSON (fallback)
+          var textBlock = params.content.find(function(c) { return c.type === 'text'; });
+          if (textBlock) { try { render(JSON.parse(textBlock.text)); } catch(ex) {} }
+        }
+        return;
+      }
+
+      // ui/notifications/host-context-changed — theme updates
+      if (msg.method === 'ui/notifications/host-context-changed') {
+        var hctx = (msg.params && msg.params.hostContext) || {};
+        if (hctx.theme) { _hostTheme = hctx.theme; applyTheme(); }
+        return;
+      }
+
+      // ping — keep-alive
+      if (msg.method === 'ping') {
+        rpcResult(msg.id, {});
+        return;
+      }
     });
+
+    // ── ChatGPT legacy fallback (window.openai.toolOutput) ──────────
+    // Older ChatGPT builds inject window.openai asynchronously.
+    // Poll for it; if the MCP Apps handshake fires first, this is a no-op.
+    var _rendered = false;
+    var _origRender = render;
+    render = function(data) { _rendered = true; _origRender(data); };
+    (function pollOpenAI() {
+      if (_rendered) return;
+      if (window.openai && window.openai.toolOutput) {
+        Promise.resolve(window.openai.toolOutput).then(function(d) {
+          if (!_rendered) render(d);
+        }).catch(function(){});
+      } else {
+        setTimeout(pollOpenAI, 100);
+      }
+    })();
   </script>
 </body>
 </html>`;
