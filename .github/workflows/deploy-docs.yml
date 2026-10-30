@@ -14,7 +14,7 @@ jobs:
 
     environment:
       name: production
-      url: ${{ steps.deploy.outputs.url }}
+      url: ${{ steps.deploy.outputs.deployment-url }}
 
     steps:
       - uses: actions/checkout@v4
@@ -44,10 +44,9 @@ jobs:
 
       - name: Deploy to Cloudflare Pages
         id: deploy
-        uses: cloudflare/pages-action@v1
+        uses: cloudflare/wrangler-action@953926a2e2182532811c01a25e53647d93bf07c0 # v4.1.3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: ${{ vars.CLOUDFLARE_DOCS_PROJECT_NAME }}
-          directory: apps/docs/dist
+          command: pages deploy apps/docs/dist --project-name=${{ vars.CLOUDFLARE_DOCS_PROJECT_NAME }} --branch=${{ github.ref_name }}
 
