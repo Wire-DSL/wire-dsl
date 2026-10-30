@@ -1,0 +1,28 @@
+---
+// GA4 for the Wire DSL property. Only loads on wire-dsl.org hosts, so local
+// development, previews and forks never send hits. Honours Do Not Track and
+// Global Privacy Control, and turns off advertising features.
+const measurementId = 'G-JRJRDEYCE0'
+---
+
+<script is:inline define:vars={{ measurementId }}>
+  (function () {
+    var host = location.hostname
+    var onWireDsl = host === 'wire-dsl.org' || host.endsWith('.wire-dsl.org')
+    var optedOut = navigator.doNotTrack === '1' || navigator.globalPrivacyControl === true
+    if (!onWireDsl || optedOut) return
+
+    window.dataLayer = window.dataLayer || []
+    window.gtag = function () { window.dataLayer.push(arguments) }
+    window.gtag('js', new Date())
+    window.gtag('config', measurementId, {
+      allow_google_signals: false,
+      allow_ad_personalization_signals: false,
+    })
+
+    var s = document.createElement('script')
+    s.async = true
+    s.src = 'https://www.googletagmanager.com/gtag/js?id=' + measurementId
+    document.head.appendChild(s)
+  })()
+</script>

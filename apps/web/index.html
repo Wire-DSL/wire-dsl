@@ -5,6 +5,24 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>WireDSL - Wireframes as Code</title>
+    <!-- GA4 (Wire DSL property): only on wire-dsl.org hosts; honours Do Not Track / GPC -->
+    <script>
+      (function () {
+        var host = location.hostname
+        var onWireDsl = host === "wire-dsl.org" || host.endsWith(".wire-dsl.org")
+        var optedOut = navigator.doNotTrack === "1" || navigator.globalPrivacyControl === true
+        if (!onWireDsl || optedOut) return
+        var id = "G-JRJRDEYCE0"
+        window.dataLayer = window.dataLayer || []
+        window.gtag = function () { window.dataLayer.push(arguments) }
+        window.gtag("js", new Date())
+        window.gtag("config", id, { allow_google_signals: false, allow_ad_personalization_signals: false })
+        var s = document.createElement("script")
+        s.async = true
+        s.src = "https://www.googletagmanager.com/gtag/js?id=" + id
+        document.head.appendChild(s)
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>
