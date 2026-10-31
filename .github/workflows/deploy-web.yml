@@ -48,6 +48,11 @@ jobs:
       - name: Build web preview
         run: pnpm --filter @wire-dsl/web build
 
+      - name: Setup Node.js 22 (required by wrangler 4)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+
       - name: Deploy to Cloudflare Pages
         id: deploy
         env:
