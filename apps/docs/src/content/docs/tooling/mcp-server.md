@@ -16,7 +16,7 @@ The Wire DSL MCP server exposes the engine to any MCP-compatible AI client. The 
 | `get_documentation` | Returns Wire DSL syntax reference, component catalog, and usage examples |
 | `validate_wire` | Validates `.wire` source code and returns errors with line/column positions |
 | `render_wire` | Renders wireframes as SVG or PNG |
-| `render_wire_widget` | Renders wireframes as an interactive embedded widget (ChatGPT) |
+| `render_wire_widget` | Renders wireframes as an interactive embedded widget (Claude Desktop, ChatGPT, and other MCP Apps hosts) |
 
 ---
 
@@ -146,9 +146,9 @@ project "Login" {
 
 Ask the model to call `validate_wire` first to check for syntax errors, then retry the render.
 
-**Widget shows "Loading wireframe…" and doesn't update (ChatGPT)**
+**Widget shows "Loading wireframe…" and doesn't update**
 
-The widget bridge initializes asynchronously. If it stays on loading, refresh the widget panel.
+Fully quit and relaunch the host app (Claude Desktop aggressively caches widget resources). If using Claude Desktop against a remote HTTP MCP server, wrap with `mcp-remote` and force `--transport http-only`.
 
 **SVG dimensions look wrong (too wide for mobile)**
 
